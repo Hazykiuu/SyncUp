@@ -293,6 +293,13 @@ def match_html(resultado: ResultadoConciliacao, fontes: dict[str, str] | None = 
                 f'<div>{_chips(principal.recomendacoes_para_a, 4, "rec")}</div></div>'
             )
         comuns = principal.artistas_comuns
+        estilo = ''
+        if principal.pontuacao_generos is not None:
+            estilo = (
+                f'<div class="su-chips"><span class="su-chip-label">No estilo · '
+                f'{fmt_num(principal.pontuacao_generos, 1)}%</span>'
+                f'{_chips(principal.generos_comuns, 5)}</div>'
+            )
         cartoes.append(
             f'<article class="su-match-card" style="--i:{k}">'
             f'<div class="su-match-top"><div class="su-avatars">{avatares}</div>'
@@ -306,6 +313,7 @@ def match_html(resultado: ResultadoConciliacao, fontes: dict[str, str] | None = 
                 if comuns
                 else ''
             )
+            + estilo
             + trocas
             + (f'<div class="su-srcs">{selos}</div>' if selos else '')
             + '</article>'

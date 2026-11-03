@@ -345,6 +345,7 @@ def test_perfil_novo_aparece_depois_de_atualizar_lista(tmp_path: Path, monkeypat
     salvar_perfil(_perfil('Caio', ['Y']), tmp_path)
     salvar_perfil(_perfil('Dani', ['Y', 'Z']), tmp_path)
     entradas = [None, '', ['Caio', 'Dani'], 'America/Sao_Paulo', '', '', 'manter', False, False]
+    entradas.append(False)  # sem MusicBrainz
 
     async def fluxo() -> None:
         sessao = SessionState(demo)

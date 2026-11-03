@@ -15,12 +15,13 @@ Não mede afinidade pessoal: só a sobreposição dos rankings musicais enviados
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cache
 from itertools import combinations
 
 import pandas as pd
 
+from generos import generos_declarados, vetor_generos
 from metricas import contribuicoes_cosseno, cosseno, jaccard
 from perfil_gosto import PerfilGosto, musicas_favoritas, nomes_exibicao, vetor_artistas
 
@@ -50,6 +51,9 @@ class Compatibilidade:
     jaccard_artistas: float
     recomendacoes_para_a: list[str]  # favoritos de B ausentes no ranking de A
     recomendacoes_para_b: list[str]
+    # Segundo eixo (v0.9): estilo. None quando alguém não tem gêneros conhecidos.
+    pontuacao_generos: float | None = None
+    generos_comuns: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -99,6 +103,15 @@ def comparar_perfis(a: PerfilGosto, b: PerfilGosto, n_exemplos: int = 8) -> Comp
         if c > 0
     ]
     rotulo, frase = nivel(pontuacao)
+    ga, gb = vetor_generos(a), vetor_generos(b)
+    valor_generos = cosseno(ga, gb) if ga and gb else None
+    # Só gêneros de verdade; as palavras derivadas ("rock" de "brazilian rock") ficam de fora.
+    declarados = generos_declarados(a) | generos_declarados(b)
+    generos_comuns = [
+        g
+        for g, c in sorted(contribuicoes_cosseno(ga, gb).items(), key=lambda x: (-x[1], x[0]))
+        if c > 0 and g in declarados
+    ]
     return Compatibilidade(
         a=a.nome,
         b=b.nome,
@@ -110,6 +123,8 @@ def comparar_perfis(a: PerfilGosto, b: PerfilGosto, n_exemplos: int = 8) -> Comp
         jaccard_artistas=jaccard(va.keys(), vb.keys()) or 0.0,
         recomendacoes_para_a=_recomendar(vb, va, nomes_exibicao(b), n_exemplos),
         recomendacoes_para_b=_recomendar(va, vb, nomes_exibicao(a), n_exemplos),
+        pontuacao_generos=None if valor_generos is None else round(valor_generos * 100, 1),
+        generos_comuns=generos_comuns,
     )
 
 

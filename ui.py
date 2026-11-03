@@ -36,6 +36,7 @@ from dados import (
 )
 from exportacoes import exportar_playlist
 from formatacao import escape_html, escape_markdown, fmt_horas, fmt_num, fmt_pct, listar_markdown
+from generos import ConsultaMusicBrainz, preencher_generos
 from graficos import (
     butterfly,
     evolucao_mensal,
@@ -578,6 +579,7 @@ def executar_match(
     varios: str,
     disco: bool,
     deduplicar: bool,
+    buscar_generos: bool = False,
     progress: gr.Progress = gr.Progress(),
 ) -> list[Any]:
     """Junta perfis de ZIP e do Spotify, concilia todos e mostra os melhores pares."""
@@ -599,6 +601,14 @@ def executar_match(
             perfil = carregar_perfil(PASTA_PERFIS / f'{nome}.json')
             perfis.append(perfil)
             fontes[perfil.nome] = f'Spotify · {perfil.coletado_em[:10]}'
+        if buscar_generos:
+            consulta = ConsultaMusicBrainz()
+            try:
+                for i, perfil in enumerate(perfis):
+                    progress(0.65 + 0.1 * i / len(perfis), desc=f'Gêneros de {perfil.nome}')
+                    perfis[i] = preencher_generos(perfil, consulta)
+            finally:
+                consulta.fechar()
         progress(0.75, desc='Comparando todos com todos')
         r = conciliar(perfis)
         ranking = pd.DataFrame(
@@ -1093,6 +1103,15 @@ def criar_interface() -> gr.Blocks:
                             label='Perfis coletados pelo Spotify',
                         )
                         recarregar = gr.Button('Atualizar lista', elem_classes='su-secondary')
+                generos_mb = gr.Checkbox(
+                    value=False,
+                    label='Comparar também o estilo: buscar gêneros no MusicBrainz',
+                    info=(
+                        'Base aberta (CC0). Envia só nomes de artistas pela internet, 1 por '
+                        'segundo; na primeira vez leva até ~25 s por pessoa. Perfis do Spotify '
+                        'já trazem gêneros. As tags são colaborativas: o estilo é aproximado.'
+                    ),
+                )
                 with gr.Accordion(
                     'Como configurar o login do Spotify (uma vez, ~5 min)', open=False
                 ):
@@ -1131,7 +1150,7 @@ def criar_interface() -> gr.Blocks:
                 demo.load(atualizar_perfis, salvos, salvos, api_name=False)
                 buscar.click(
                     executar_match,
-                    [fm, nm, salvos, *opcoes],
+                    [fm, nm, salvos, *opcoes, generos_mb],
                     [match_cartoes, match_plot, match_ranking, match_resultados],
                     api_name='encontrar_matches',
                     scroll_to_output=True,

@@ -181,3 +181,20 @@ def test_match_na_tela_busca_generos_e_avisa_falha(tmp_path: Path, monkeypatch) 
     assert fechadas == [True] and avisos and 'MusicBrainz' in avisos[0]
     assert 'No estilo' in html
     assert estado['resultado'].par('Ana', 'Bia').generos_comuns == ['rock']
+
+
+def test_falha_passageira_ganha_uma_nova_tentativa(tmp_path: Path) -> None:
+    respostas = iter(
+        [
+            httpx.Response(503),
+            httpx.Response(
+                200, json={'artists': [{'score': 100, 'tags': [{'name': 'rock', 'count': 1}]}]}
+            ),
+        ]
+    )
+    consulta = ConsultaMusicBrainz(
+        httpx.Client(transport=httpx.MockTransport(lambda pedido: next(respostas))),
+        tmp_path / 'g.json',
+        dormir=lambda s: None,
+    )
+    assert consulta.generos('Legião Urbana') == ['rock'] and consulta.falhas == 1

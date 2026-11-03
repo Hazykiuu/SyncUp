@@ -33,6 +33,7 @@ MAXIMO_TAGS = 5
 ARTISTAS_POR_PERFIL = 25
 PESO_PALAVRA = 0.5
 MAXIMO_FALHAS = 3
+TENTATIVAS = 2
 ARQUIVO_CACHE = 'generos_musicbrainz.json'
 # Mesma pasta do cache Parquet (ConfiguracaoCarga.diretorio_cache); a UI passa a configurada.
 CACHE_PADRAO = Path(ConfiguracaoCarga().diretorio_cache) / ARQUIVO_CACHE
@@ -74,24 +75,28 @@ class ConsultaMusicBrainz:
             return []
         if chave in self._cache:
             return self._cache[chave]
-        if self.falhas >= MAXIMO_FALHAS:
-            return []  # Sem internet ou serviço fora: não espera o timeout de cada artista.
-        if self._ultima is not None:
-            espera = INTERVALO_S - (self._relogio() - self._ultima)
-            if espera > 0:
-                self._dormir(espera)
-        self._ultima = self._relogio()
         nome = str(artista).replace('\\', '\\\\').replace('"', '\\"')
-        try:
-            resposta = self.cliente.get(
-                URL_MUSICBRAINZ,
-                params={'query': f'artist:"{nome}"', 'fmt': 'json', 'limit': 1},
-                headers={'User-Agent': USER_AGENT},
-            )
-            resposta.raise_for_status()
-            artistas = resposta.json().get('artists') or []
-        except (httpx.HTTPError, ValueError):
-            self.falhas += 1
+        artistas = None
+        for _ in range(TENTATIVAS):  # uma falha passageira (conexão fria, 503) ganha outra chance
+            if self.falhas >= MAXIMO_FALHAS:
+                return []  # Sem internet ou serviço fora: não espera o timeout de cada artista.
+            if self._ultima is not None:
+                espera = INTERVALO_S - (self._relogio() - self._ultima)
+                if espera > 0:
+                    self._dormir(espera)
+            self._ultima = self._relogio()
+            try:
+                resposta = self.cliente.get(
+                    URL_MUSICBRAINZ,
+                    params={'query': f'artist:"{nome}"', 'fmt': 'json', 'limit': 1},
+                    headers={'User-Agent': USER_AGENT},
+                )
+                resposta.raise_for_status()
+                artistas = resposta.json().get('artists') or []
+                break
+            except (httpx.HTTPError, ValueError):
+                self.falhas += 1
+        if artistas is None:
             return []  # Falha de rede não entra no cache: tenta de novo na próxima vez.
         tags: list[str] = []
         if artistas and int(artistas[0].get('score', 0)) >= SCORE_MINIMO:

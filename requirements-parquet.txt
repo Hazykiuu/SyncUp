@@ -1,0 +1,4 @@
+# Opcional; instale também requirements.txt para executar o aplicativo.
+# pyarrow 17 não tem binários para Python 3.13+; a 26 cobre 3.10–3.14.
+pyarrow==17.0.0; python_version < "3.13"
+pyarrow==26.0.0; python_version >= "3.13"

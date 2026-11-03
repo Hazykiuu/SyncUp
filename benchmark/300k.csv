@@ -1,0 +1,4 @@
+﻿Cenário;Antes (s);Depois (s);Redução
+Cache de dados frio;5,272;5,839;-10,8%
+Cache em memória quente;0,459;0,236;48,5%
+Cache Parquet quente;—;0,294;—

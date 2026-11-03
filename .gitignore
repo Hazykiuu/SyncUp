@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.syncup_cache/
+.venv/
+.ipynb_checkpoints/
+exemplos_ficticios/
+exportacoes_notebook/
+# Históricos reais não devem ser acrescentados ao código-fonte.
+*.zip
+
+# Perfis coletados pelo login do Spotify (dados pessoais)
+perfis_spotify/

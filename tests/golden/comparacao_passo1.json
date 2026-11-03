@@ -1,0 +1,98 @@
+{
+  "comum": {
+    "metricas": {
+      "cosseno": 0.15488864127525345,
+      "jaccard": 1.0,
+      "jaccard_top20": 0.21212121212121213,
+      "jaccard_ponderado": 0.21369161868202174
+    },
+    "perfis": [
+      {
+        "plays": 949,
+        "horas": 52.322338055555555,
+        "quantidade_artistas": 61,
+        "arquetipos": {
+          "favoritos": {
+            "nome": "Gosto distribuído",
+            "proporcao": 0.34141201264488935
+          },
+          "repeticao": {
+            "nome": "Repertório variado",
+            "proporcao": 0.1517386722866175
+          },
+          "madrugada": {
+            "nome": "Fora da madrugada",
+            "proporcao": 0.2665964172813488
+          }
+        }
+      },
+      {
+        "plays": 948,
+        "horas": 51.31710805555556,
+        "quantidade_artistas": 61,
+        "arquetipos": {
+          "favoritos": {
+            "nome": "Gosto distribuído",
+            "proporcao": 0.33649789029535865
+          },
+          "repeticao": {
+            "nome": "Repertório variado",
+            "proporcao": 0.14767932489451477
+          },
+          "madrugada": {
+            "nome": "Fora da madrugada",
+            "proporcao": 0.2626582278481013
+          }
+        }
+      }
+    ]
+  },
+  "completo": {
+    "metricas": {
+      "cosseno": 0.15458083609640622,
+      "jaccard": 1.0,
+      "jaccard_top20": 0.21212121212121213,
+      "jaccard_ponderado": 0.2134185303514377
+    },
+    "perfis": [
+      {
+        "plays": 950,
+        "horas": 52.39440916666667,
+        "quantidade_artistas": 61,
+        "arquetipos": {
+          "favoritos": {
+            "nome": "Gosto distribuído",
+            "proporcao": 0.34210526315789475
+          },
+          "repeticao": {
+            "nome": "Repertório variado",
+            "proporcao": 0.15157894736842106
+          },
+          "madrugada": {
+            "nome": "Fora da madrugada",
+            "proporcao": 0.2673684210526316
+          }
+        }
+      },
+      {
+        "plays": 949,
+        "horas": 51.32678416666667,
+        "quantidade_artistas": 61,
+        "arquetipos": {
+          "favoritos": {
+            "nome": "Gosto distribuído",
+            "proporcao": 0.3361433087460485
+          },
+          "repeticao": {
+            "nome": "Repertório variado",
+            "proporcao": 0.1475237091675448
+          },
+          "madrugada": {
+            "nome": "Fora da madrugada",
+            "proporcao": 0.2623814541622761
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "ambiente": {
+    "python": "3.12.14",
+    "sistema": "Linux-6.18.44-x86_64-with-glibc2.39",
+    "bibliotecas": {
+      "pandas": "2.2.3",
+      "plotly": "6.9.0",
+      "pyarrow": "25.0.1"
+    }
+  },
+  "entradas": [
+    {
+      "sha256": "b3051c661f822ab0a3a76ffd6e075eb3e63172950432bcc22fc51f757bb33ef6",
+      "bytes": 8926337
+    },
+    {
+      "sha256": "5db37f366258d4e643de6b2b3b9a6cf2bd3f0971afd666729bb705731c1304d3",
+      "bytes": 8924417
+    }
+  ],
+  "referencia": "/workspace/scratch/e50d3becda93/v05_step2/SyncUp/tests/fixtures/v05_passo1",
+  "repeticoes": 3,
+  "escopo": "núcleo e apresentação",
+  "periodo_comum": true,
+  "notas": [
+    "Frio significa caches de dados do aplicativo vazios; não esvazia cache do sistema operacional.",
+    "Quente em memória reutiliza dados preparados; quente Parquet limpa a memória e relê disco.",
+    "Não inclui importações, abertura, upload, rede, renderização no navegador ou escrita inicial do Parquet."
+  ],
+  "medidas": {
+    "antes": [
+      {
+        "frio": 5.366516862000026,
+        "memoria": 0.453527273999498,
+        "parquet": null
+      },
+      {
+        "frio": 4.994817464000334,
+        "memoria": 0.5222397600000477,
+        "parquet": null
+      },
+      {
+        "frio": 5.272107397000582,
+        "memoria": 0.45879061200048454,
+        "parquet": null
+      }
+    ],
+    "depois": [
+      {
+        "frio": 5.838903152999592,
+        "memoria": 0.23129372099992906,
+        "parquet": 0.3228090910006358
+      },
+      {
+        "frio": 5.6051431899995805,
+        "memoria": 0.23646952800027066,
+        "parquet": 0.2938002110004163
+      },
+      {
+        "frio": 5.8679632150006,
+        "memoria": 0.29373033800038684,
+        "parquet": 0.28351080899938097
+      }
+    ]
+  },
+  "medianas": {
+    "antes": {
+      "frio": 5.272107397000582,
+      "memoria": 0.45879061200048454,
+      "parquet": null
+    },
+    "depois": {
+      "frio": 5.838903152999592,
+      "memoria": 0.23646952800027066,
+      "parquet": 0.2938002110004163
+    }
+  }
+}

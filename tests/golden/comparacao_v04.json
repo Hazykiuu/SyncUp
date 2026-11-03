@@ -1,0 +1,4957 @@
+{
+  "versao": "0.4",
+  "ambiente": {
+    "python": "3.12.14",
+    "pandas": "2.2.3",
+    "plotly": "6.9.0"
+  },
+  "fontes_sha256": {
+    "app.py": "34c49f3974985d20dfd38eef3433a867fe6793c039245626c7c96cf8a063df13",
+    "ui.py": "3c52fac33a6c5405a01fe3cb36253d2974b41860d8362ec09cbfd815ba4db1d7",
+    "requirements.txt": "6fa67229a8033940de21ded634af322e004b319d49372b7dbf5db5e2d9023a59"
+  },
+  "config_a": {
+    "linhas": 1200,
+    "artistas": 60,
+    "seed": 41,
+    "tamanho_bloco": 250,
+    "proporcao_podcasts": 0.05,
+    "proporcao_various_artists": 0.01,
+    "proporcao_duplicados": 0.002,
+    "expoente_cauda": 1.1
+  },
+  "config_b": {
+    "linhas": 1200,
+    "artistas": 60,
+    "seed": 97,
+    "tamanho_bloco": 250,
+    "proporcao_podcasts": 0.05,
+    "proporcao_various_artists": 0.01,
+    "proporcao_duplicados": 0.002,
+    "expoente_cauda": 1.1
+  },
+  "resultados": {
+    "comum": [
+      {
+        "tipo": "texto",
+        "valor": "## Similaridade musical: 15.5%\n**Cosseno:** compara o padrão de frequência por artista. **Jaccard geral:** 100.0%. **Jaccard do Top 20:** 21.2%.\n\nPeríodo: 31/12/2019 a 09/01/2020 (horário de Brasília)\n\n| Perfil | Plays ≥30s | Horas ouvidas (todas as execuções) | Artistas com plays ≥30s |\n|---|---:|---:|---:|\n| Perfil A | 949 | 52.3 | 61 |\n| Perfil B | 948 | 51.3 | 61 |\n\nO percentual mede semelhança dos dados musicais. Valores ausentes de escuta são tratados como zero; ausência no arquivo não prova que a pessoa não gosta do artista.\n\n\n**Os históricos recebidos possuem registros diferentes.**"
+      },
+      {
+        "tipo": "plotly",
+        "valor": {
+          "data": [
+            {
+              "alignmentgroup": "True",
+              "hovertemplate": "%{y}<br>%{x:.2f}% das reproduções<extra>%{fullData.name}</extra>",
+              "legendgroup": "A · Perfil A",
+              "marker": {
+                "color": "#1db954",
+                "pattern": {
+                  "shape": ""
+                }
+              },
+              "name": "A · Perfil A",
+              "offsetgroup": "A · Perfil A",
+              "orientation": "h",
+              "showlegend": true,
+              "textposition": "auto",
+              "x": {
+                "dtype": "f8",
+                "bdata": "SvYTnp5kN0C2QxHAWDvUP/FXEkwOfyVAvChlBbyLAkAhkQ7iEhIhQLZDEcBYO+Q/tkMRwFg79D+2QxHAWDvkP7ZDEcBYOxRAtkMRwFg79D+vXr169eoFQBTYw8I2gQ1A"
+              },
+              "xaxis": "x",
+              "y": [
+                "Artista fictício 0020",
+                "Artista fictício 0015",
+                "Artista fictício 0033",
+                "Artista fictício 0007",
+                "Artista fictício 0038",
+                "Artista fictício 0014",
+                "Artista fictício 0023",
+                "Artista fictício 0006",
+                "Artista fictício 0052",
+                "Artista fictício 0032",
+                "Artista fictício 0058",
+                "Artista fictício 0050"
+              ],
+              "yaxis": "y",
+              "type": "bar"
+            },
+            {
+              "alignmentgroup": "True",
+              "hovertemplate": "%{y}<br>%{x:.2f}% das reproduções<extra>%{fullData.name}</extra>",
+              "legendgroup": "B · Perfil B",
+              "marker": {
+                "color": "#b1a5ff",
+                "pattern": {
+                  "shape": ""
+                }
+              },
+              "name": "B · Perfil B",
+              "offsetgroup": "B · Perfil B",
+              "orientation": "h",
+              "showlegend": true,
+              "textposition": "auto",
+              "x": {
+                "dtype": "f8",
+                "bdata": "l8Qy9fGg5z+XxDL18aA3QLfuT84lsfw/wMZoO80KJEBsjLbTrODwP51LYpn6eBhA/+RcEsvUE0CNttOs4PAVQKzg8IUUAcs/nUtimfp4CECXxDL18aD3P6zg8IUUAds/"
+              },
+              "xaxis": "x",
+              "y": [
+                "Artista fictício 0020",
+                "Artista fictício 0015",
+                "Artista fictício 0033",
+                "Artista fictício 0007",
+                "Artista fictício 0038",
+                "Artista fictício 0014",
+                "Artista fictício 0023",
+                "Artista fictício 0006",
+                "Artista fictício 0052",
+                "Artista fictício 0032",
+                "Artista fictício 0058",
+                "Artista fictício 0050"
+              ],
+              "yaxis": "y",
+              "type": "bar"
+            }
+          ],
+          "layout": {
+            "template": {
+              "data": {
+                "barpolar": [
+                  {
+                    "marker": {
+                      "line": {
+                        "color": "rgb(17,17,17)",
+                        "width": 0.5
+                      },
+                      "pattern": {
+                        "fillmode": "overlay",
+                        "size": 10,
+                        "solidity": 0.2
+                      }
+                    },
+                    "type": "barpolar"
+                  }
+                ],
+                "bar": [
+                  {
+                    "error_x": {
+                      "color": "#f2f5fa"
+                    },
+                    "error_y": {
+                      "color": "#f2f5fa"
+                    },
+                    "marker": {
+                      "line": {
+                        "color": "rgb(17,17,17)",
+                        "width": 0.5
+                      },
+                      "pattern": {
+                        "fillmode": "overlay",
+                        "size": 10,
+                        "solidity": 0.2
+                      }
+                    },
+                    "type": "bar"
+                  }
+                ],
+                "carpet": [
+                  {
+                    "aaxis": {
+                      "endlinecolor": "#A2B1C6",
+                      "gridcolor": "#506784",
+                      "linecolor": "#506784",
+                      "minorgridcolor": "#506784",
+                      "startlinecolor": "#A2B1C6"
+                    },
+                    "baxis": {
+                      "endlinecolor": "#A2B1C6",
+                      "gridcolor": "#506784",
+                      "linecolor": "#506784",
+                      "minorgridcolor": "#506784",
+                      "startlinecolor": "#A2B1C6"
+                    },
+                    "type": "carpet"
+                  }
+                ],
+                "choropleth": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "type": "choropleth"
+                  }
+                ],
+                "contourcarpet": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "type": "contourcarpet"
+                  }
+                ],
+                "contour": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "contour"
+                  }
+                ],
+                "heatmap": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "heatmap"
+                  }
+                ],
+                "histogram2dcontour": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "histogram2dcontour"
+                  }
+                ],
+                "histogram2d": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "histogram2d"
+                  }
+                ],
+                "histogram": [
+                  {
+                    "marker": {
+                      "pattern": {
+                        "fillmode": "overlay",
+                        "size": 10,
+                        "solidity": 0.2
+                      }
+                    },
+                    "type": "histogram"
+                  }
+                ],
+                "mesh3d": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "type": "mesh3d"
+                  }
+                ],
+                "parcoords": [
+                  {
+                    "line": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "parcoords"
+                  }
+                ],
+                "pie": [
+                  {
+                    "automargin": true,
+                    "type": "pie"
+                  }
+                ],
+                "scatter3d": [
+                  {
+                    "line": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatter3d"
+                  }
+                ],
+                "scattercarpet": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattercarpet"
+                  }
+                ],
+                "scattergeo": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattergeo"
+                  }
+                ],
+                "scattergl": [
+                  {
+                    "marker": {
+                      "line": {
+                        "color": "#283442"
+                      }
+                    },
+                    "type": "scattergl"
+                  }
+                ],
+                "scattermapbox": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattermapbox"
+                  }
+                ],
+                "scattermap": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattermap"
+                  }
+                ],
+                "scatterpolargl": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatterpolargl"
+                  }
+                ],
+                "scatterpolar": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatterpolar"
+                  }
+                ],
+                "scatter": [
+                  {
+                    "marker": {
+                      "line": {
+                        "color": "#283442"
+                      }
+                    },
+                    "type": "scatter"
+                  }
+                ],
+                "scatterternary": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatterternary"
+                  }
+                ],
+                "surface": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "surface"
+                  }
+                ],
+                "table": [
+                  {
+                    "cells": {
+                      "fill": {
+                        "color": "#506784"
+                      },
+                      "line": {
+                        "color": "rgb(17,17,17)"
+                      }
+                    },
+                    "header": {
+                      "fill": {
+                        "color": "#2a3f5f"
+                      },
+                      "line": {
+                        "color": "rgb(17,17,17)"
+                      }
+                    },
+                    "type": "table"
+                  }
+                ]
+              },
+              "layout": {
+                "annotationdefaults": {
+                  "arrowcolor": "#f2f5fa",
+                  "arrowhead": 0,
+                  "arrowwidth": 1
+                },
+                "autotypenumbers": "strict",
+                "coloraxis": {
+                  "colorbar": {
+                    "outlinewidth": 0,
+                    "ticks": ""
+                  }
+                },
+                "colorscale": {
+                  "diverging": [
+                    [
+                      0,
+                      "#8e0152"
+                    ],
+                    [
+                      0.1,
+                      "#c51b7d"
+                    ],
+                    [
+                      0.2,
+                      "#de77ae"
+                    ],
+                    [
+                      0.3,
+                      "#f1b6da"
+                    ],
+                    [
+                      0.4,
+                      "#fde0ef"
+                    ],
+                    [
+                      0.5,
+                      "#f7f7f7"
+                    ],
+                    [
+                      0.6,
+                      "#e6f5d0"
+                    ],
+                    [
+                      0.7,
+                      "#b8e186"
+                    ],
+                    [
+                      0.8,
+                      "#7fbc41"
+                    ],
+                    [
+                      0.9,
+                      "#4d9221"
+                    ],
+                    [
+                      1,
+                      "#276419"
+                    ]
+                  ],
+                  "sequential": [
+                    [
+                      0.0,
+                      "#0d0887"
+                    ],
+                    [
+                      0.1111111111111111,
+                      "#46039f"
+                    ],
+                    [
+                      0.2222222222222222,
+                      "#7201a8"
+                    ],
+                    [
+                      0.3333333333333333,
+                      "#9c179e"
+                    ],
+                    [
+                      0.4444444444444444,
+                      "#bd3786"
+                    ],
+                    [
+                      0.5555555555555556,
+                      "#d8576b"
+                    ],
+                    [
+                      0.6666666666666666,
+                      "#ed7953"
+                    ],
+                    [
+                      0.7777777777777778,
+                      "#fb9f3a"
+                    ],
+                    [
+                      0.8888888888888888,
+                      "#fdca26"
+                    ],
+                    [
+                      1.0,
+                      "#f0f921"
+                    ]
+                  ],
+                  "sequentialminus": [
+                    [
+                      0.0,
+                      "#0d0887"
+                    ],
+                    [
+                      0.1111111111111111,
+                      "#46039f"
+                    ],
+                    [
+                      0.2222222222222222,
+                      "#7201a8"
+                    ],
+                    [
+                      0.3333333333333333,
+                      "#9c179e"
+                    ],
+                    [
+                      0.4444444444444444,
+                      "#bd3786"
+                    ],
+                    [
+                      0.5555555555555556,
+                      "#d8576b"
+                    ],
+                    [
+                      0.6666666666666666,
+                      "#ed7953"
+                    ],
+                    [
+                      0.7777777777777778,
+                      "#fb9f3a"
+                    ],
+                    [
+                      0.8888888888888888,
+                      "#fdca26"
+                    ],
+                    [
+                      1.0,
+                      "#f0f921"
+                    ]
+                  ]
+                },
+                "colorway": [
+                  "#636efa",
+                  "#EF553B",
+                  "#00cc96",
+                  "#ab63fa",
+                  "#FFA15A",
+                  "#19d3f3",
+                  "#FF6692",
+                  "#B6E880",
+                  "#FF97FF",
+                  "#FECB52"
+                ],
+                "font": {
+                  "color": "#f2f5fa"
+                },
+                "geo": {
+                  "bgcolor": "rgb(17,17,17)",
+                  "lakecolor": "rgb(17,17,17)",
+                  "landcolor": "rgb(17,17,17)",
+                  "showlakes": true,
+                  "showland": true,
+                  "subunitcolor": "#506784"
+                },
+                "hoverlabel": {
+                  "align": "left"
+                },
+                "hovermode": "closest",
+                "mapbox": {
+                  "style": "dark"
+                },
+                "paper_bgcolor": "rgb(17,17,17)",
+                "plot_bgcolor": "rgb(17,17,17)",
+                "polar": {
+                  "angularaxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  },
+                  "bgcolor": "rgb(17,17,17)",
+                  "radialaxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  }
+                },
+                "scene": {
+                  "xaxis": {
+                    "backgroundcolor": "rgb(17,17,17)",
+                    "gridcolor": "#506784",
+                    "gridwidth": 2,
+                    "linecolor": "#506784",
+                    "showbackground": true,
+                    "ticks": "",
+                    "zerolinecolor": "#C8D4E3"
+                  },
+                  "yaxis": {
+                    "backgroundcolor": "rgb(17,17,17)",
+                    "gridcolor": "#506784",
+                    "gridwidth": 2,
+                    "linecolor": "#506784",
+                    "showbackground": true,
+                    "ticks": "",
+                    "zerolinecolor": "#C8D4E3"
+                  },
+                  "zaxis": {
+                    "backgroundcolor": "rgb(17,17,17)",
+                    "gridcolor": "#506784",
+                    "gridwidth": 2,
+                    "linecolor": "#506784",
+                    "showbackground": true,
+                    "ticks": "",
+                    "zerolinecolor": "#C8D4E3"
+                  }
+                },
+                "shapedefaults": {
+                  "line": {
+                    "color": "#f2f5fa"
+                  }
+                },
+                "sliderdefaults": {
+                  "bgcolor": "#C8D4E3",
+                  "bordercolor": "rgb(17,17,17)",
+                  "borderwidth": 1,
+                  "tickwidth": 0
+                },
+                "ternary": {
+                  "aaxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  },
+                  "baxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  },
+                  "bgcolor": "rgb(17,17,17)",
+                  "caxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  }
+                },
+                "title": {
+                  "x": 0.05
+                },
+                "updatemenudefaults": {
+                  "bgcolor": "#506784",
+                  "borderwidth": 0
+                },
+                "xaxis": {
+                  "automargin": true,
+                  "gridcolor": "#283442",
+                  "linecolor": "#506784",
+                  "ticks": "",
+                  "title": {
+                    "standoff": 15
+                  },
+                  "zerolinecolor": "#283442",
+                  "zerolinewidth": 2
+                },
+                "yaxis": {
+                  "automargin": true,
+                  "gridcolor": "#283442",
+                  "linecolor": "#506784",
+                  "ticks": "",
+                  "title": {
+                    "standoff": 15
+                  },
+                  "zerolinecolor": "#283442",
+                  "zerolinewidth": 2
+                }
+              }
+            },
+            "xaxis": {
+              "anchor": "y",
+              "domain": [
+                0.0,
+                1.0
+              ],
+              "title": {
+                "text": "Participação (%)"
+              },
+              "gridcolor": "#30383e",
+              "ticksuffix": "%"
+            },
+            "yaxis": {
+              "anchor": "x",
+              "domain": [
+                0.0,
+                1.0
+              ],
+              "title": {},
+              "categoryorder": "array",
+              "categoryarray": [
+                "Artista fictício 0050",
+                "Artista fictício 0058",
+                "Artista fictício 0032",
+                "Artista fictício 0052",
+                "Artista fictício 0006",
+                "Artista fictício 0023",
+                "Artista fictício 0014",
+                "Artista fictício 0038",
+                "Artista fictício 0007",
+                "Artista fictício 0033",
+                "Artista fictício 0015",
+                "Artista fictício 0020"
+              ]
+            },
+            "legend": {
+              "title": {
+                "text": "Perfil"
+              },
+              "tracegroupgap": 0,
+              "orientation": "h",
+              "y": 1.08,
+              "x": 0
+            },
+            "margin": {
+              "t": 65,
+              "l": 20,
+              "r": 30,
+              "b": 40
+            },
+            "barmode": "group",
+            "height": 690,
+            "font": {
+              "family": "Arial",
+              "size": 13,
+              "color": "#dbe2e6"
+            },
+            "transition": {
+              "duration": 500
+            },
+            "paper_bgcolor": "#191c20",
+            "plot_bgcolor": "#191c20",
+            "bargap": 0.24
+          }
+        }
+      },
+      {
+        "tipo": "dataframe",
+        "dtypes": [
+          "object",
+          "int64"
+        ],
+        "valor": {
+          "columns": [
+            "Artista",
+            "Reproduções"
+          ],
+          "index": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "data": [
+            [
+              "Artista fictício 0020",
+              222
+            ],
+            [
+              "Artista fictício 0033",
+              102
+            ],
+            [
+              "Artista fictício 0038",
+              81
+            ],
+            [
+              "Artista fictício 0052",
+              48
+            ],
+            [
+              "Artista fictício 0050",
+              35
+            ],
+            [
+              "Artista fictício 0058",
+              26
+            ],
+            [
+              "Artista fictício 0027",
+              25
+            ],
+            [
+              "Artista fictício 0013",
+              25
+            ],
+            [
+              "Artista fictício 0031",
+              23
+            ],
+            [
+              "Artista fictício 0007",
+              22
+            ],
+            [
+              "Artista fictício 0040",
+              20
+            ],
+            [
+              "Artista fictício 0054",
+              18
+            ],
+            [
+              "Artista fictício 0041",
+              16
+            ],
+            [
+              "Various Artists",
+              14
+            ],
+            [
+              "Artista fictício 0023",
+              12
+            ],
+            [
+              "Artista fictício 0026",
+              12
+            ],
+            [
+              "Artista fictício 0009",
+              12
+            ],
+            [
+              "Artista fictício 0039",
+              12
+            ],
+            [
+              "Artista fictício 0032",
+              12
+            ],
+            [
+              "Artista fictício 0048",
+              9
+            ]
+          ]
+        }
+      },
+      {
+        "tipo": "dataframe",
+        "dtypes": [
+          "object",
+          "int64"
+        ],
+        "valor": {
+          "columns": [
+            "Artista",
+            "Reproduções"
+          ],
+          "index": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "data": [
+            [
+              "Artista fictício 0015",
+              224
+            ],
+            [
+              "Artista fictício 0007",
+              95
+            ],
+            [
+              "Artista fictício 0014",
+              58
+            ],
+            [
+              "Artista fictício 0006",
+              52
+            ],
+            [
+              "Artista fictício 0023",
+              47
+            ],
+            [
+              "Artista fictício 0032",
+              29
+            ],
+            [
+              "Artista fictício 0001",
+              26
+            ],
+            [
+              "Artista fictício 0010",
+              24
+            ],
+            [
+              "Artista fictício 0043",
+              23
+            ],
+            [
+              "Artista fictício 0011",
+              20
+            ],
+            [
+              "Artista fictício 0022",
+              18
+            ],
+            [
+              "Artista fictício 0033",
+              17
+            ],
+            [
+              "Artista fictício 0042",
+              17
+            ],
+            [
+              "Artista fictício 0026",
+              14
+            ],
+            [
+              "Artista fictício 0035",
+              14
+            ],
+            [
+              "Artista fictício 0058",
+              14
+            ],
+            [
+              "Artista fictício 0034",
+              12
+            ],
+            [
+              "Artista fictício 0025",
+              12
+            ],
+            [
+              "Artista fictício 0045",
+              11
+            ],
+            [
+              "Artista fictício 0049",
+              10
+            ]
+          ]
+        }
+      },
+      {
+        "tipo": "dataframe",
+        "dtypes": [
+          "object",
+          "object",
+          "int64"
+        ],
+        "valor": {
+          "columns": [
+            "musica",
+            "artista",
+            "Reproduções"
+          ],
+          "index": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "data": [
+            [
+              "Faixa 06 · Artista fictício 0020",
+              "Artista fictício 0020",
+              17
+            ],
+            [
+              "Faixa 07 · Artista fictício 0020",
+              "Artista fictício 0020",
+              17
+            ],
+            [
+              "Faixa 12 · Artista fictício 0020",
+              "Artista fictício 0020",
+              17
+            ],
+            [
+              "Faixa 13 · Artista fictício 0020",
+              "Artista fictício 0020",
+              17
+            ],
+            [
+              "Faixa 18 · Artista fictício 0020",
+              "Artista fictício 0020",
+              15
+            ],
+            [
+              "Faixa 01 · Artista fictício 0020",
+              "Artista fictício 0020",
+              14
+            ],
+            [
+              "Faixa 08 · Artista fictício 0020",
+              "Artista fictício 0020",
+              13
+            ],
+            [
+              "Faixa 15 · Artista fictício 0020",
+              "Artista fictício 0020",
+              12
+            ],
+            [
+              "Faixa 02 · Artista fictício 0020",
+              "Artista fictício 0020",
+              12
+            ],
+            [
+              "Faixa 05 · Artista fictício 0020",
+              "Artista fictício 0020",
+              10
+            ],
+            [
+              "Faixa 10 · Artista fictício 0020",
+              "Artista fictício 0020",
+              10
+            ],
+            [
+              "Faixa 11 · Artista fictício 0020",
+              "Artista fictício 0020",
+              10
+            ],
+            [
+              "Faixa 09 · Artista fictício 0020",
+              "Artista fictício 0020",
+              9
+            ],
+            [
+              "Faixa 11 · Artista fictício 0033",
+              "Artista fictício 0033",
+              9
+            ],
+            [
+              "Faixa 06 · Artista fictício 0038",
+              "Artista fictício 0038",
+              9
+            ],
+            [
+              "Faixa 14 · Artista fictício 0020",
+              "Artista fictício 0020",
+              8
+            ],
+            [
+              "Faixa 20 · Artista fictício 0033",
+              "Artista fictício 0033",
+              8
+            ],
+            [
+              "Faixa 07 · Artista fictício 0033",
+              "Artista fictício 0033",
+              8
+            ],
+            [
+              "Faixa 17 · Artista fictício 0020",
+              "Artista fictício 0020",
+              8
+            ],
+            [
+              "Faixa 03 · Artista fictício 0020",
+              "Artista fictício 0020",
+              8
+            ]
+          ]
+        }
+      },
+      {
+        "tipo": "dataframe",
+        "dtypes": [
+          "object",
+          "object",
+          "int64"
+        ],
+        "valor": {
+          "columns": [
+            "musica",
+            "artista",
+            "Reproduções"
+          ],
+          "index": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "data": [
+            [
+              "Faixa 20 · Artista fictício 0015",
+              "Artista fictício 0015",
+              21
+            ],
+            [
+              "Faixa 07 · Artista fictício 0015",
+              "Artista fictício 0015",
+              17
+            ],
+            [
+              "Faixa 15 · Artista fictício 0015",
+              "Artista fictício 0015",
+              17
+            ],
+            [
+              "Faixa 02 · Artista fictício 0015",
+              "Artista fictício 0015",
+              14
+            ],
+            [
+              "Faixa 16 · Artista fictício 0015",
+              "Artista fictício 0015",
+              13
+            ],
+            [
+              "Faixa 13 · Artista fictício 0015",
+              "Artista fictício 0015",
+              12
+            ],
+            [
+              "Faixa 12 · Artista fictício 0015",
+              "Artista fictício 0015",
+              12
+            ],
+            [
+              "Faixa 19 · Artista fictício 0015",
+              "Artista fictício 0015",
+              12
+            ],
+            [
+              "Faixa 05 · Artista fictício 0015",
+              "Artista fictício 0015",
+              11
+            ],
+            [
+              "Faixa 11 · Artista fictício 0015",
+              "Artista fictício 0015",
+              11
+            ],
+            [
+              "Faixa 01 · Artista fictício 0015",
+              "Artista fictício 0015",
+              11
+            ],
+            [
+              "Faixa 10 · Artista fictício 0015",
+              "Artista fictício 0015",
+              10
+            ],
+            [
+              "Faixa 09 · Artista fictício 0015",
+              "Artista fictício 0015",
+              10
+            ],
+            [
+              "Faixa 14 · Artista fictício 0015",
+              "Artista fictício 0015",
+              10
+            ],
+            [
+              "Faixa 17 · Artista fictício 0007",
+              "Artista fictício 0007",
+              9
+            ],
+            [
+              "Faixa 08 · Artista fictício 0015",
+              "Artista fictício 0015",
+              8
+            ],
+            [
+              "Faixa 06 · Artista fictício 0015",
+              "Artista fictício 0015",
+              8
+            ],
+            [
+              "Faixa 03 · Artista fictício 0015",
+              "Artista fictício 0015",
+              8
+            ],
+            [
+              "Faixa 09 · Artista fictício 0007",
+              "Artista fictício 0007",
+              7
+            ],
+            [
+              "Faixa 17 · Artista fictício 0015",
+              "Artista fictício 0015",
+              7
+            ]
+          ]
+        }
+      },
+      {
+        "tipo": "texto",
+        "valor": "<article class=\"identity green\"><div class=\"eyebrow\">IDENTIDADE MUSICAL</div><h2>Perfil A</h2>\n    <div class=\"mini-stats\"><div class=\"mini-stat\"><b>949</b><span>plays ≥30s</span></div><div class=\"mini-stat\"><b>52.3</b><span>horas · todas as execuções</span></div><div class=\"mini-stat\"><b>61</b><span>artistas</span></div></div>\n    <div class=\"trait\"><div class=\"trait-title\"><strong>Gosto distribuído</strong><span>34.1%</span></div><div class=\"track\"><i style=\"--value:34.14%\"></i></div><p>Participação dos dois artistas líderes nas reproduções.</p></div>\n    <div class=\"trait\"><div class=\"trait-title\"><strong>Repertório variado</strong><span>15.2%</span></div><div class=\"track\"><i style=\"--value:15.17%\"></i></div><p>Participação das dez faixas líderes nas reproduções. Em amostras pequenas, este valor tende a ser alto.</p></div>\n    <div class=\"trait\"><div class=\"trait-title\"><strong>Fora da madrugada</strong><span>26.7%</span></div><div class=\"track\"><i style=\"--value:26.66%\"></i></div><p>Reproduções entre 00h e 05h59, no horário de Brasília.</p></div>\n    <p class=\"rule-note\">Regras experimentais: favoritos ≥60%; repeat ≥40%; madrugada ≥40%. Descrevem este recorte de escuta; não inferem personalidade.</p></article>"
+      },
+      {
+        "tipo": "texto",
+        "valor": "<article class=\"identity violet\"><div class=\"eyebrow\">IDENTIDADE MUSICAL</div><h2>Perfil B</h2>\n    <div class=\"mini-stats\"><div class=\"mini-stat\"><b>948</b><span>plays ≥30s</span></div><div class=\"mini-stat\"><b>51.3</b><span>horas · todas as execuções</span></div><div class=\"mini-stat\"><b>61</b><span>artistas</span></div></div>\n    <div class=\"trait\"><div class=\"trait-title\"><strong>Gosto distribuído</strong><span>33.6%</span></div><div class=\"track\"><i style=\"--value:33.65%\"></i></div><p>Participação dos dois artistas líderes nas reproduções.</p></div>\n    <div class=\"trait\"><div class=\"trait-title\"><strong>Repertório variado</strong><span>14.8%</span></div><div class=\"track\"><i style=\"--value:14.77%\"></i></div><p>Participação das dez faixas líderes nas reproduções. Em amostras pequenas, este valor tende a ser alto.</p></div>\n    <div class=\"trait\"><div class=\"trait-title\"><strong>Fora da madrugada</strong><span>26.3%</span></div><div class=\"track\"><i style=\"--value:26.27%\"></i></div><p>Reproduções entre 00h e 05h59, no horário de Brasília.</p></div>\n    <p class=\"rule-note\">Regras experimentais: favoritos ≥60%; repeat ≥40%; madrugada ≥40%. Descrevem este recorte de escuta; não inferem personalidade.</p></article>"
+      },
+      {
+        "tipo": "texto",
+        "valor": "**Artistas em comum:** Artista fictício 0020, Artista fictício 0015, Artista fictício 0033, Artista fictício 0007, Artista fictício 0038, Artista fictício 0014, Artista fictício 0023, Artista fictício 0006, Artista fictício 0052, Artista fictício 0032, Artista fictício 0058, Artista fictício 0050, Artista fictício 0001, Artista fictício 0027, Artista fictício 0010, Artista fictício 0043, Artista fictício 0013, Artista fictício 0026, Artista fictício 0031, Artista fictício 0040\n\n**Favoritos de A ausentes no recorte de B:** \n\n**Favoritos de B ausentes no recorte de A:** "
+      },
+      {
+        "tipo": "dataframe",
+        "dtypes": [
+          "object",
+          "float64",
+          "float64"
+        ],
+        "valor": {
+          "columns": [
+            "Medida",
+            "Minutos por execução · A",
+            "Minutos por execução · B"
+          ],
+          "index": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "data": [
+            [
+              "count",
+              1129.0,
+              1139.0
+            ],
+            [
+              "mean",
+              2.780637983466194,
+              2.703271714954639
+            ],
+            [
+              "std",
+              1.819146946001301,
+              1.810551909996064
+            ],
+            [
+              "min",
+              0.0022,
+              0.00105
+            ],
+            [
+              "25%",
+              1.173583333333333,
+              0.987375
+            ],
+            [
+              "50%",
+              2.699833333333333,
+              2.612833333333333
+            ],
+            [
+              "75%",
+              4.399883333333333,
+              4.2728
+            ],
+            [
+              "max",
+              5.995166666666667,
+              5.997333333333334
+            ]
+          ]
+        }
+      },
+      {
+        "tipo": "dataframe",
+        "dtypes": [
+          "object",
+          "object",
+          "object",
+          "int64",
+          "object",
+          "object"
+        ],
+        "valor": {
+          "columns": [
+            "Perfil",
+            "Arquivo",
+            "SHA-256 do arquivo",
+            "Registros de músicas antes do recorte",
+            "Início do histórico",
+            "Fim do histórico"
+          ],
+          "index": [
+            0,
+            1
+          ],
+          "data": [
+            [
+              "Perfil A",
+              "perfil_a.zip",
+              "df4c0a95efa94bb62dd79c36502eea73d60f444eb1176552876e6084479b38ed",
+              1130,
+              "2019-12-31 21:00:14-03:00",
+              "2020-01-09 04:50:55-03:00"
+            ],
+            [
+              "Perfil B",
+              "perfil_b.zip",
+              "9082279fbf32f53d2c4921b72d45a5dcb2d93d73f7888da03849ae8b8aff0072",
+              1140,
+              "2019-12-31 21:00:09-03:00",
+              "2020-01-09 04:50:19-03:00"
+            ]
+          ]
+        }
+      },
+      {
+        "tipo": "plotly",
+        "valor": {
+          "data": [
+            {
+              "hovertemplate": "Perfil=A · Perfil A<br>Mês=%{x}<br>Horas=%{y}<extra></extra>",
+              "legendgroup": "A · Perfil A",
+              "line": {
+                "color": "#1db954",
+                "dash": "solid"
+              },
+              "marker": {
+                "symbol": "circle"
+              },
+              "mode": "lines+markers",
+              "name": "A · Perfil A",
+              "orientation": "v",
+              "showlegend": true,
+              "x": [
+                "2019-12",
+                "2020-01"
+              ],
+              "xaxis": "x",
+              "y": {
+                "dtype": "f8",
+                "bdata": "IK1Es8WI6z9RXMpIH7tJQA=="
+              },
+              "yaxis": "y",
+              "type": "scatter"
+            },
+            {
+              "hovertemplate": "Perfil=B · Perfil B<br>Mês=%{x}<br>Horas=%{y}<extra></extra>",
+              "legendgroup": "B · Perfil B",
+              "line": {
+                "color": "#b1a5ff",
+                "dash": "solid"
+              },
+              "marker": {
+                "symbol": "circle"
+              },
+              "mode": "lines+markers",
+              "name": "B · Perfil B",
+              "orientation": "v",
+              "showlegend": true,
+              "x": [
+                "2019-12",
+                "2020-01"
+              ],
+              "xaxis": "x",
+              "y": {
+                "dtype": "f8",
+                "bdata": "Z+z8ed6+5j+xAESFm01JQA=="
+              },
+              "yaxis": "y",
+              "type": "scatter"
+            }
+          ],
+          "layout": {
+            "template": {
+              "data": {
+                "barpolar": [
+                  {
+                    "marker": {
+                      "line": {
+                        "color": "rgb(17,17,17)",
+                        "width": 0.5
+                      },
+                      "pattern": {
+                        "fillmode": "overlay",
+                        "size": 10,
+                        "solidity": 0.2
+                      }
+                    },
+                    "type": "barpolar"
+                  }
+                ],
+                "bar": [
+                  {
+                    "error_x": {
+                      "color": "#f2f5fa"
+                    },
+                    "error_y": {
+                      "color": "#f2f5fa"
+                    },
+                    "marker": {
+                      "line": {
+                        "color": "rgb(17,17,17)",
+                        "width": 0.5
+                      },
+                      "pattern": {
+                        "fillmode": "overlay",
+                        "size": 10,
+                        "solidity": 0.2
+                      }
+                    },
+                    "type": "bar"
+                  }
+                ],
+                "carpet": [
+                  {
+                    "aaxis": {
+                      "endlinecolor": "#A2B1C6",
+                      "gridcolor": "#506784",
+                      "linecolor": "#506784",
+                      "minorgridcolor": "#506784",
+                      "startlinecolor": "#A2B1C6"
+                    },
+                    "baxis": {
+                      "endlinecolor": "#A2B1C6",
+                      "gridcolor": "#506784",
+                      "linecolor": "#506784",
+                      "minorgridcolor": "#506784",
+                      "startlinecolor": "#A2B1C6"
+                    },
+                    "type": "carpet"
+                  }
+                ],
+                "choropleth": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "type": "choropleth"
+                  }
+                ],
+                "contourcarpet": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "type": "contourcarpet"
+                  }
+                ],
+                "contour": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "contour"
+                  }
+                ],
+                "heatmap": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "heatmap"
+                  }
+                ],
+                "histogram2dcontour": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "histogram2dcontour"
+                  }
+                ],
+                "histogram2d": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "histogram2d"
+                  }
+                ],
+                "histogram": [
+                  {
+                    "marker": {
+                      "pattern": {
+                        "fillmode": "overlay",
+                        "size": 10,
+                        "solidity": 0.2
+                      }
+                    },
+                    "type": "histogram"
+                  }
+                ],
+                "mesh3d": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "type": "mesh3d"
+                  }
+                ],
+                "parcoords": [
+                  {
+                    "line": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "parcoords"
+                  }
+                ],
+                "pie": [
+                  {
+                    "automargin": true,
+                    "type": "pie"
+                  }
+                ],
+                "scatter3d": [
+                  {
+                    "line": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatter3d"
+                  }
+                ],
+                "scattercarpet": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattercarpet"
+                  }
+                ],
+                "scattergeo": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattergeo"
+                  }
+                ],
+                "scattergl": [
+                  {
+                    "marker": {
+                      "line": {
+                        "color": "#283442"
+                      }
+                    },
+                    "type": "scattergl"
+                  }
+                ],
+                "scattermapbox": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattermapbox"
+                  }
+                ],
+                "scattermap": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattermap"
+                  }
+                ],
+                "scatterpolargl": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatterpolargl"
+                  }
+                ],
+                "scatterpolar": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatterpolar"
+                  }
+                ],
+                "scatter": [
+                  {
+                    "marker": {
+                      "line": {
+                        "color": "#283442"
+                      }
+                    },
+                    "type": "scatter"
+                  }
+                ],
+                "scatterternary": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatterternary"
+                  }
+                ],
+                "surface": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "surface"
+                  }
+                ],
+                "table": [
+                  {
+                    "cells": {
+                      "fill": {
+                        "color": "#506784"
+                      },
+                      "line": {
+                        "color": "rgb(17,17,17)"
+                      }
+                    },
+                    "header": {
+                      "fill": {
+                        "color": "#2a3f5f"
+                      },
+                      "line": {
+                        "color": "rgb(17,17,17)"
+                      }
+                    },
+                    "type": "table"
+                  }
+                ]
+              },
+              "layout": {
+                "annotationdefaults": {
+                  "arrowcolor": "#f2f5fa",
+                  "arrowhead": 0,
+                  "arrowwidth": 1
+                },
+                "autotypenumbers": "strict",
+                "coloraxis": {
+                  "colorbar": {
+                    "outlinewidth": 0,
+                    "ticks": ""
+                  }
+                },
+                "colorscale": {
+                  "diverging": [
+                    [
+                      0,
+                      "#8e0152"
+                    ],
+                    [
+                      0.1,
+                      "#c51b7d"
+                    ],
+                    [
+                      0.2,
+                      "#de77ae"
+                    ],
+                    [
+                      0.3,
+                      "#f1b6da"
+                    ],
+                    [
+                      0.4,
+                      "#fde0ef"
+                    ],
+                    [
+                      0.5,
+                      "#f7f7f7"
+                    ],
+                    [
+                      0.6,
+                      "#e6f5d0"
+                    ],
+                    [
+                      0.7,
+                      "#b8e186"
+                    ],
+                    [
+                      0.8,
+                      "#7fbc41"
+                    ],
+                    [
+                      0.9,
+                      "#4d9221"
+                    ],
+                    [
+                      1,
+                      "#276419"
+                    ]
+                  ],
+                  "sequential": [
+                    [
+                      0.0,
+                      "#0d0887"
+                    ],
+                    [
+                      0.1111111111111111,
+                      "#46039f"
+                    ],
+                    [
+                      0.2222222222222222,
+                      "#7201a8"
+                    ],
+                    [
+                      0.3333333333333333,
+                      "#9c179e"
+                    ],
+                    [
+                      0.4444444444444444,
+                      "#bd3786"
+                    ],
+                    [
+                      0.5555555555555556,
+                      "#d8576b"
+                    ],
+                    [
+                      0.6666666666666666,
+                      "#ed7953"
+                    ],
+                    [
+                      0.7777777777777778,
+                      "#fb9f3a"
+                    ],
+                    [
+                      0.8888888888888888,
+                      "#fdca26"
+                    ],
+                    [
+                      1.0,
+                      "#f0f921"
+                    ]
+                  ],
+                  "sequentialminus": [
+                    [
+                      0.0,
+                      "#0d0887"
+                    ],
+                    [
+                      0.1111111111111111,
+                      "#46039f"
+                    ],
+                    [
+                      0.2222222222222222,
+                      "#7201a8"
+                    ],
+                    [
+                      0.3333333333333333,
+                      "#9c179e"
+                    ],
+                    [
+                      0.4444444444444444,
+                      "#bd3786"
+                    ],
+                    [
+                      0.5555555555555556,
+                      "#d8576b"
+                    ],
+                    [
+                      0.6666666666666666,
+                      "#ed7953"
+                    ],
+                    [
+                      0.7777777777777778,
+                      "#fb9f3a"
+                    ],
+                    [
+                      0.8888888888888888,
+                      "#fdca26"
+                    ],
+                    [
+                      1.0,
+                      "#f0f921"
+                    ]
+                  ]
+                },
+                "colorway": [
+                  "#636efa",
+                  "#EF553B",
+                  "#00cc96",
+                  "#ab63fa",
+                  "#FFA15A",
+                  "#19d3f3",
+                  "#FF6692",
+                  "#B6E880",
+                  "#FF97FF",
+                  "#FECB52"
+                ],
+                "font": {
+                  "color": "#f2f5fa"
+                },
+                "geo": {
+                  "bgcolor": "rgb(17,17,17)",
+                  "lakecolor": "rgb(17,17,17)",
+                  "landcolor": "rgb(17,17,17)",
+                  "showlakes": true,
+                  "showland": true,
+                  "subunitcolor": "#506784"
+                },
+                "hoverlabel": {
+                  "align": "left"
+                },
+                "hovermode": "closest",
+                "mapbox": {
+                  "style": "dark"
+                },
+                "paper_bgcolor": "rgb(17,17,17)",
+                "plot_bgcolor": "rgb(17,17,17)",
+                "polar": {
+                  "angularaxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  },
+                  "bgcolor": "rgb(17,17,17)",
+                  "radialaxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  }
+                },
+                "scene": {
+                  "xaxis": {
+                    "backgroundcolor": "rgb(17,17,17)",
+                    "gridcolor": "#506784",
+                    "gridwidth": 2,
+                    "linecolor": "#506784",
+                    "showbackground": true,
+                    "ticks": "",
+                    "zerolinecolor": "#C8D4E3"
+                  },
+                  "yaxis": {
+                    "backgroundcolor": "rgb(17,17,17)",
+                    "gridcolor": "#506784",
+                    "gridwidth": 2,
+                    "linecolor": "#506784",
+                    "showbackground": true,
+                    "ticks": "",
+                    "zerolinecolor": "#C8D4E3"
+                  },
+                  "zaxis": {
+                    "backgroundcolor": "rgb(17,17,17)",
+                    "gridcolor": "#506784",
+                    "gridwidth": 2,
+                    "linecolor": "#506784",
+                    "showbackground": true,
+                    "ticks": "",
+                    "zerolinecolor": "#C8D4E3"
+                  }
+                },
+                "shapedefaults": {
+                  "line": {
+                    "color": "#f2f5fa"
+                  }
+                },
+                "sliderdefaults": {
+                  "bgcolor": "#C8D4E3",
+                  "bordercolor": "rgb(17,17,17)",
+                  "borderwidth": 1,
+                  "tickwidth": 0
+                },
+                "ternary": {
+                  "aaxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  },
+                  "baxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  },
+                  "bgcolor": "rgb(17,17,17)",
+                  "caxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  }
+                },
+                "title": {
+                  "x": 0.05
+                },
+                "updatemenudefaults": {
+                  "bgcolor": "#506784",
+                  "borderwidth": 0
+                },
+                "xaxis": {
+                  "automargin": true,
+                  "gridcolor": "#283442",
+                  "linecolor": "#506784",
+                  "ticks": "",
+                  "title": {
+                    "standoff": 15
+                  },
+                  "zerolinecolor": "#283442",
+                  "zerolinewidth": 2
+                },
+                "yaxis": {
+                  "automargin": true,
+                  "gridcolor": "#283442",
+                  "linecolor": "#506784",
+                  "ticks": "",
+                  "title": {
+                    "standoff": 15
+                  },
+                  "zerolinecolor": "#283442",
+                  "zerolinewidth": 2
+                }
+              }
+            },
+            "xaxis": {
+              "anchor": "y",
+              "domain": [
+                0.0,
+                1.0
+              ],
+              "title": {
+                "text": "Mês"
+              },
+              "nticks": 10,
+              "gridcolor": "#30383e"
+            },
+            "yaxis": {
+              "anchor": "x",
+              "domain": [
+                0.0,
+                1.0
+              ],
+              "title": {
+                "text": "Horas"
+              },
+              "gridcolor": "#30383e"
+            },
+            "legend": {
+              "title": {
+                "text": "Perfil"
+              },
+              "tracegroupgap": 0,
+              "orientation": "h",
+              "y": 1.12
+            },
+            "margin": {
+              "t": 30,
+              "l": 30,
+              "r": 30,
+              "b": 50
+            },
+            "height": 400,
+            "transition": {
+              "duration": 500
+            },
+            "paper_bgcolor": "#191c20",
+            "plot_bgcolor": "#191c20",
+            "hovermode": "x unified"
+          }
+        }
+      }
+    ],
+    "completo": [
+      {
+        "tipo": "texto",
+        "valor": "## Similaridade musical: 15.5%\n**Cosseno:** compara o padrão de frequência por artista. **Jaccard geral:** 100.0%. **Jaccard do Top 20:** 21.2%.\n\nPeríodo: Históricos completos, com coberturas potencialmente diferentes.\n\n| Perfil | Plays ≥30s | Horas ouvidas (todas as execuções) | Artistas com plays ≥30s |\n|---|---:|---:|---:|\n| Perfil A | 950 | 52.4 | 61 |\n| Perfil B | 949 | 51.3 | 61 |\n\nO percentual mede semelhança dos dados musicais. Valores ausentes de escuta são tratados como zero; ausência no arquivo não prova que a pessoa não gosta do artista.\n\n\n**Os históricos recebidos possuem registros diferentes.**"
+      },
+      {
+        "tipo": "plotly",
+        "valor": {
+          "data": [
+            {
+              "alignmentgroup": "True",
+              "hovertemplate": "%{y}<br>%{x:.2f}% das reproduções<extra>%{fullData.name}</extra>",
+              "legendgroup": "A · Perfil A",
+              "marker": {
+                "color": "#1db954",
+                "pattern": {
+                  "shape": ""
+                }
+              },
+              "name": "A · Perfil A",
+              "offsetgroup": "A · Perfil A",
+              "orientation": "h",
+              "showlegend": true,
+              "textposition": "auto",
+              "x": {
+                "dtype": "f8",
+                "bdata": "lNdQXkN5N0BeQ3kN5TXUP5XXUF5DeSVAbCivobyGAkDYUF5DeQ0hQF5DeQ3lNeQ/XkN5DeU19D9eQ3kN5TXkP15DeQ3lNRRAXkN5DeU19D9RXkN5DeUFQJPXUF5DeQ1A"
+              },
+              "xaxis": "x",
+              "y": [
+                "Artista fictício 0020",
+                "Artista fictício 0015",
+                "Artista fictício 0033",
+                "Artista fictício 0007",
+                "Artista fictício 0038",
+                "Artista fictício 0014",
+                "Artista fictício 0023",
+                "Artista fictício 0006",
+                "Artista fictício 0052",
+                "Artista fictício 0032",
+                "Artista fictício 0058",
+                "Artista fictício 0050"
+              ],
+              "yaxis": "y",
+              "type": "bar"
+            },
+            {
+              "alignmentgroup": "True",
+              "hovertemplate": "%{y}<br>%{x:.2f}% das reproduções<extra>%{fullData.name}</extra>",
+              "legendgroup": "B · Perfil B",
+              "marker": {
+                "color": "#b1a5ff",
+                "pattern": {
+                  "shape": ""
+                }
+              },
+              "name": "B · Perfil B",
+              "offsetgroup": "B · Perfil B",
+              "orientation": "h",
+              "showlegend": true,
+              "textposition": "auto",
+              "x": {
+                "dtype": "f8",
+                "bdata": "qXlpNZKa5z+peWk1kpo3QJbKbWVoqfw/VsC7KGUFJEDCDblKH9zwPyaHv5JgchhA9zxmkXHPE0CvXr169eoVQJyvwarL+co/Joe/kmByCECpeWk1kpr3P5yvwarL+do/"
+              },
+              "xaxis": "x",
+              "y": [
+                "Artista fictício 0020",
+                "Artista fictício 0015",
+                "Artista fictício 0033",
+                "Artista fictício 0007",
+                "Artista fictício 0038",
+                "Artista fictício 0014",
+                "Artista fictício 0023",
+                "Artista fictício 0006",
+                "Artista fictício 0052",
+                "Artista fictício 0032",
+                "Artista fictício 0058",
+                "Artista fictício 0050"
+              ],
+              "yaxis": "y",
+              "type": "bar"
+            }
+          ],
+          "layout": {
+            "template": {
+              "data": {
+                "barpolar": [
+                  {
+                    "marker": {
+                      "line": {
+                        "color": "rgb(17,17,17)",
+                        "width": 0.5
+                      },
+                      "pattern": {
+                        "fillmode": "overlay",
+                        "size": 10,
+                        "solidity": 0.2
+                      }
+                    },
+                    "type": "barpolar"
+                  }
+                ],
+                "bar": [
+                  {
+                    "error_x": {
+                      "color": "#f2f5fa"
+                    },
+                    "error_y": {
+                      "color": "#f2f5fa"
+                    },
+                    "marker": {
+                      "line": {
+                        "color": "rgb(17,17,17)",
+                        "width": 0.5
+                      },
+                      "pattern": {
+                        "fillmode": "overlay",
+                        "size": 10,
+                        "solidity": 0.2
+                      }
+                    },
+                    "type": "bar"
+                  }
+                ],
+                "carpet": [
+                  {
+                    "aaxis": {
+                      "endlinecolor": "#A2B1C6",
+                      "gridcolor": "#506784",
+                      "linecolor": "#506784",
+                      "minorgridcolor": "#506784",
+                      "startlinecolor": "#A2B1C6"
+                    },
+                    "baxis": {
+                      "endlinecolor": "#A2B1C6",
+                      "gridcolor": "#506784",
+                      "linecolor": "#506784",
+                      "minorgridcolor": "#506784",
+                      "startlinecolor": "#A2B1C6"
+                    },
+                    "type": "carpet"
+                  }
+                ],
+                "choropleth": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "type": "choropleth"
+                  }
+                ],
+                "contourcarpet": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "type": "contourcarpet"
+                  }
+                ],
+                "contour": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "contour"
+                  }
+                ],
+                "heatmap": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "heatmap"
+                  }
+                ],
+                "histogram2dcontour": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "histogram2dcontour"
+                  }
+                ],
+                "histogram2d": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "histogram2d"
+                  }
+                ],
+                "histogram": [
+                  {
+                    "marker": {
+                      "pattern": {
+                        "fillmode": "overlay",
+                        "size": 10,
+                        "solidity": 0.2
+                      }
+                    },
+                    "type": "histogram"
+                  }
+                ],
+                "mesh3d": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "type": "mesh3d"
+                  }
+                ],
+                "parcoords": [
+                  {
+                    "line": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "parcoords"
+                  }
+                ],
+                "pie": [
+                  {
+                    "automargin": true,
+                    "type": "pie"
+                  }
+                ],
+                "scatter3d": [
+                  {
+                    "line": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatter3d"
+                  }
+                ],
+                "scattercarpet": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattercarpet"
+                  }
+                ],
+                "scattergeo": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattergeo"
+                  }
+                ],
+                "scattergl": [
+                  {
+                    "marker": {
+                      "line": {
+                        "color": "#283442"
+                      }
+                    },
+                    "type": "scattergl"
+                  }
+                ],
+                "scattermapbox": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattermapbox"
+                  }
+                ],
+                "scattermap": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattermap"
+                  }
+                ],
+                "scatterpolargl": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatterpolargl"
+                  }
+                ],
+                "scatterpolar": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatterpolar"
+                  }
+                ],
+                "scatter": [
+                  {
+                    "marker": {
+                      "line": {
+                        "color": "#283442"
+                      }
+                    },
+                    "type": "scatter"
+                  }
+                ],
+                "scatterternary": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatterternary"
+                  }
+                ],
+                "surface": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "surface"
+                  }
+                ],
+                "table": [
+                  {
+                    "cells": {
+                      "fill": {
+                        "color": "#506784"
+                      },
+                      "line": {
+                        "color": "rgb(17,17,17)"
+                      }
+                    },
+                    "header": {
+                      "fill": {
+                        "color": "#2a3f5f"
+                      },
+                      "line": {
+                        "color": "rgb(17,17,17)"
+                      }
+                    },
+                    "type": "table"
+                  }
+                ]
+              },
+              "layout": {
+                "annotationdefaults": {
+                  "arrowcolor": "#f2f5fa",
+                  "arrowhead": 0,
+                  "arrowwidth": 1
+                },
+                "autotypenumbers": "strict",
+                "coloraxis": {
+                  "colorbar": {
+                    "outlinewidth": 0,
+                    "ticks": ""
+                  }
+                },
+                "colorscale": {
+                  "diverging": [
+                    [
+                      0,
+                      "#8e0152"
+                    ],
+                    [
+                      0.1,
+                      "#c51b7d"
+                    ],
+                    [
+                      0.2,
+                      "#de77ae"
+                    ],
+                    [
+                      0.3,
+                      "#f1b6da"
+                    ],
+                    [
+                      0.4,
+                      "#fde0ef"
+                    ],
+                    [
+                      0.5,
+                      "#f7f7f7"
+                    ],
+                    [
+                      0.6,
+                      "#e6f5d0"
+                    ],
+                    [
+                      0.7,
+                      "#b8e186"
+                    ],
+                    [
+                      0.8,
+                      "#7fbc41"
+                    ],
+                    [
+                      0.9,
+                      "#4d9221"
+                    ],
+                    [
+                      1,
+                      "#276419"
+                    ]
+                  ],
+                  "sequential": [
+                    [
+                      0.0,
+                      "#0d0887"
+                    ],
+                    [
+                      0.1111111111111111,
+                      "#46039f"
+                    ],
+                    [
+                      0.2222222222222222,
+                      "#7201a8"
+                    ],
+                    [
+                      0.3333333333333333,
+                      "#9c179e"
+                    ],
+                    [
+                      0.4444444444444444,
+                      "#bd3786"
+                    ],
+                    [
+                      0.5555555555555556,
+                      "#d8576b"
+                    ],
+                    [
+                      0.6666666666666666,
+                      "#ed7953"
+                    ],
+                    [
+                      0.7777777777777778,
+                      "#fb9f3a"
+                    ],
+                    [
+                      0.8888888888888888,
+                      "#fdca26"
+                    ],
+                    [
+                      1.0,
+                      "#f0f921"
+                    ]
+                  ],
+                  "sequentialminus": [
+                    [
+                      0.0,
+                      "#0d0887"
+                    ],
+                    [
+                      0.1111111111111111,
+                      "#46039f"
+                    ],
+                    [
+                      0.2222222222222222,
+                      "#7201a8"
+                    ],
+                    [
+                      0.3333333333333333,
+                      "#9c179e"
+                    ],
+                    [
+                      0.4444444444444444,
+                      "#bd3786"
+                    ],
+                    [
+                      0.5555555555555556,
+                      "#d8576b"
+                    ],
+                    [
+                      0.6666666666666666,
+                      "#ed7953"
+                    ],
+                    [
+                      0.7777777777777778,
+                      "#fb9f3a"
+                    ],
+                    [
+                      0.8888888888888888,
+                      "#fdca26"
+                    ],
+                    [
+                      1.0,
+                      "#f0f921"
+                    ]
+                  ]
+                },
+                "colorway": [
+                  "#636efa",
+                  "#EF553B",
+                  "#00cc96",
+                  "#ab63fa",
+                  "#FFA15A",
+                  "#19d3f3",
+                  "#FF6692",
+                  "#B6E880",
+                  "#FF97FF",
+                  "#FECB52"
+                ],
+                "font": {
+                  "color": "#f2f5fa"
+                },
+                "geo": {
+                  "bgcolor": "rgb(17,17,17)",
+                  "lakecolor": "rgb(17,17,17)",
+                  "landcolor": "rgb(17,17,17)",
+                  "showlakes": true,
+                  "showland": true,
+                  "subunitcolor": "#506784"
+                },
+                "hoverlabel": {
+                  "align": "left"
+                },
+                "hovermode": "closest",
+                "mapbox": {
+                  "style": "dark"
+                },
+                "paper_bgcolor": "rgb(17,17,17)",
+                "plot_bgcolor": "rgb(17,17,17)",
+                "polar": {
+                  "angularaxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  },
+                  "bgcolor": "rgb(17,17,17)",
+                  "radialaxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  }
+                },
+                "scene": {
+                  "xaxis": {
+                    "backgroundcolor": "rgb(17,17,17)",
+                    "gridcolor": "#506784",
+                    "gridwidth": 2,
+                    "linecolor": "#506784",
+                    "showbackground": true,
+                    "ticks": "",
+                    "zerolinecolor": "#C8D4E3"
+                  },
+                  "yaxis": {
+                    "backgroundcolor": "rgb(17,17,17)",
+                    "gridcolor": "#506784",
+                    "gridwidth": 2,
+                    "linecolor": "#506784",
+                    "showbackground": true,
+                    "ticks": "",
+                    "zerolinecolor": "#C8D4E3"
+                  },
+                  "zaxis": {
+                    "backgroundcolor": "rgb(17,17,17)",
+                    "gridcolor": "#506784",
+                    "gridwidth": 2,
+                    "linecolor": "#506784",
+                    "showbackground": true,
+                    "ticks": "",
+                    "zerolinecolor": "#C8D4E3"
+                  }
+                },
+                "shapedefaults": {
+                  "line": {
+                    "color": "#f2f5fa"
+                  }
+                },
+                "sliderdefaults": {
+                  "bgcolor": "#C8D4E3",
+                  "bordercolor": "rgb(17,17,17)",
+                  "borderwidth": 1,
+                  "tickwidth": 0
+                },
+                "ternary": {
+                  "aaxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  },
+                  "baxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  },
+                  "bgcolor": "rgb(17,17,17)",
+                  "caxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  }
+                },
+                "title": {
+                  "x": 0.05
+                },
+                "updatemenudefaults": {
+                  "bgcolor": "#506784",
+                  "borderwidth": 0
+                },
+                "xaxis": {
+                  "automargin": true,
+                  "gridcolor": "#283442",
+                  "linecolor": "#506784",
+                  "ticks": "",
+                  "title": {
+                    "standoff": 15
+                  },
+                  "zerolinecolor": "#283442",
+                  "zerolinewidth": 2
+                },
+                "yaxis": {
+                  "automargin": true,
+                  "gridcolor": "#283442",
+                  "linecolor": "#506784",
+                  "ticks": "",
+                  "title": {
+                    "standoff": 15
+                  },
+                  "zerolinecolor": "#283442",
+                  "zerolinewidth": 2
+                }
+              }
+            },
+            "xaxis": {
+              "anchor": "y",
+              "domain": [
+                0.0,
+                1.0
+              ],
+              "title": {
+                "text": "Participação (%)"
+              },
+              "gridcolor": "#30383e",
+              "ticksuffix": "%"
+            },
+            "yaxis": {
+              "anchor": "x",
+              "domain": [
+                0.0,
+                1.0
+              ],
+              "title": {},
+              "categoryorder": "array",
+              "categoryarray": [
+                "Artista fictício 0050",
+                "Artista fictício 0058",
+                "Artista fictício 0032",
+                "Artista fictício 0052",
+                "Artista fictício 0006",
+                "Artista fictício 0023",
+                "Artista fictício 0014",
+                "Artista fictício 0038",
+                "Artista fictício 0007",
+                "Artista fictício 0033",
+                "Artista fictício 0015",
+                "Artista fictício 0020"
+              ]
+            },
+            "legend": {
+              "title": {
+                "text": "Perfil"
+              },
+              "tracegroupgap": 0,
+              "orientation": "h",
+              "y": 1.08,
+              "x": 0
+            },
+            "margin": {
+              "t": 65,
+              "l": 20,
+              "r": 30,
+              "b": 40
+            },
+            "barmode": "group",
+            "height": 690,
+            "font": {
+              "family": "Arial",
+              "size": 13,
+              "color": "#dbe2e6"
+            },
+            "transition": {
+              "duration": 500
+            },
+            "paper_bgcolor": "#191c20",
+            "plot_bgcolor": "#191c20",
+            "bargap": 0.24
+          }
+        }
+      },
+      {
+        "tipo": "dataframe",
+        "dtypes": [
+          "object",
+          "int64"
+        ],
+        "valor": {
+          "columns": [
+            "Artista",
+            "Reproduções"
+          ],
+          "index": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "data": [
+            [
+              "Artista fictício 0020",
+              223
+            ],
+            [
+              "Artista fictício 0033",
+              102
+            ],
+            [
+              "Artista fictício 0038",
+              81
+            ],
+            [
+              "Artista fictício 0052",
+              48
+            ],
+            [
+              "Artista fictício 0050",
+              35
+            ],
+            [
+              "Artista fictício 0058",
+              26
+            ],
+            [
+              "Artista fictício 0027",
+              25
+            ],
+            [
+              "Artista fictício 0013",
+              25
+            ],
+            [
+              "Artista fictício 0031",
+              23
+            ],
+            [
+              "Artista fictício 0007",
+              22
+            ],
+            [
+              "Artista fictício 0040",
+              20
+            ],
+            [
+              "Artista fictício 0054",
+              18
+            ],
+            [
+              "Artista fictício 0041",
+              16
+            ],
+            [
+              "Various Artists",
+              14
+            ],
+            [
+              "Artista fictício 0023",
+              12
+            ],
+            [
+              "Artista fictício 0026",
+              12
+            ],
+            [
+              "Artista fictício 0009",
+              12
+            ],
+            [
+              "Artista fictício 0039",
+              12
+            ],
+            [
+              "Artista fictício 0032",
+              12
+            ],
+            [
+              "Artista fictício 0048",
+              9
+            ]
+          ]
+        }
+      },
+      {
+        "tipo": "dataframe",
+        "dtypes": [
+          "object",
+          "int64"
+        ],
+        "valor": {
+          "columns": [
+            "Artista",
+            "Reproduções"
+          ],
+          "index": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "data": [
+            [
+              "Artista fictício 0015",
+              224
+            ],
+            [
+              "Artista fictício 0007",
+              95
+            ],
+            [
+              "Artista fictício 0014",
+              58
+            ],
+            [
+              "Artista fictício 0006",
+              52
+            ],
+            [
+              "Artista fictício 0023",
+              47
+            ],
+            [
+              "Artista fictício 0032",
+              29
+            ],
+            [
+              "Artista fictício 0001",
+              27
+            ],
+            [
+              "Artista fictício 0010",
+              24
+            ],
+            [
+              "Artista fictício 0043",
+              23
+            ],
+            [
+              "Artista fictício 0011",
+              20
+            ],
+            [
+              "Artista fictício 0022",
+              18
+            ],
+            [
+              "Artista fictício 0033",
+              17
+            ],
+            [
+              "Artista fictício 0042",
+              17
+            ],
+            [
+              "Artista fictício 0026",
+              14
+            ],
+            [
+              "Artista fictício 0035",
+              14
+            ],
+            [
+              "Artista fictício 0058",
+              14
+            ],
+            [
+              "Artista fictício 0034",
+              12
+            ],
+            [
+              "Artista fictício 0025",
+              12
+            ],
+            [
+              "Artista fictício 0045",
+              11
+            ],
+            [
+              "Artista fictício 0049",
+              10
+            ]
+          ]
+        }
+      },
+      {
+        "tipo": "dataframe",
+        "dtypes": [
+          "object",
+          "object",
+          "int64"
+        ],
+        "valor": {
+          "columns": [
+            "musica",
+            "artista",
+            "Reproduções"
+          ],
+          "index": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "data": [
+            [
+              "Faixa 06 · Artista fictício 0020",
+              "Artista fictício 0020",
+              17
+            ],
+            [
+              "Faixa 07 · Artista fictício 0020",
+              "Artista fictício 0020",
+              17
+            ],
+            [
+              "Faixa 12 · Artista fictício 0020",
+              "Artista fictício 0020",
+              17
+            ],
+            [
+              "Faixa 13 · Artista fictício 0020",
+              "Artista fictício 0020",
+              17
+            ],
+            [
+              "Faixa 18 · Artista fictício 0020",
+              "Artista fictício 0020",
+              15
+            ],
+            [
+              "Faixa 01 · Artista fictício 0020",
+              "Artista fictício 0020",
+              14
+            ],
+            [
+              "Faixa 08 · Artista fictício 0020",
+              "Artista fictício 0020",
+              13
+            ],
+            [
+              "Faixa 15 · Artista fictício 0020",
+              "Artista fictício 0020",
+              12
+            ],
+            [
+              "Faixa 02 · Artista fictício 0020",
+              "Artista fictício 0020",
+              12
+            ],
+            [
+              "Faixa 05 · Artista fictício 0020",
+              "Artista fictício 0020",
+              10
+            ],
+            [
+              "Faixa 10 · Artista fictício 0020",
+              "Artista fictício 0020",
+              10
+            ],
+            [
+              "Faixa 11 · Artista fictício 0020",
+              "Artista fictício 0020",
+              10
+            ],
+            [
+              "Faixa 09 · Artista fictício 0020",
+              "Artista fictício 0020",
+              9
+            ],
+            [
+              "Faixa 14 · Artista fictício 0020",
+              "Artista fictício 0020",
+              9
+            ],
+            [
+              "Faixa 06 · Artista fictício 0038",
+              "Artista fictício 0038",
+              9
+            ],
+            [
+              "Faixa 11 · Artista fictício 0033",
+              "Artista fictício 0033",
+              9
+            ],
+            [
+              "Faixa 20 · Artista fictício 0033",
+              "Artista fictício 0033",
+              8
+            ],
+            [
+              "Faixa 07 · Artista fictício 0033",
+              "Artista fictício 0033",
+              8
+            ],
+            [
+              "Faixa 17 · Artista fictício 0020",
+              "Artista fictício 0020",
+              8
+            ],
+            [
+              "Faixa 03 · Artista fictício 0020",
+              "Artista fictício 0020",
+              8
+            ]
+          ]
+        }
+      },
+      {
+        "tipo": "dataframe",
+        "dtypes": [
+          "object",
+          "object",
+          "int64"
+        ],
+        "valor": {
+          "columns": [
+            "musica",
+            "artista",
+            "Reproduções"
+          ],
+          "index": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "data": [
+            [
+              "Faixa 20 · Artista fictício 0015",
+              "Artista fictício 0015",
+              21
+            ],
+            [
+              "Faixa 07 · Artista fictício 0015",
+              "Artista fictício 0015",
+              17
+            ],
+            [
+              "Faixa 15 · Artista fictício 0015",
+              "Artista fictício 0015",
+              17
+            ],
+            [
+              "Faixa 02 · Artista fictício 0015",
+              "Artista fictício 0015",
+              14
+            ],
+            [
+              "Faixa 16 · Artista fictício 0015",
+              "Artista fictício 0015",
+              13
+            ],
+            [
+              "Faixa 13 · Artista fictício 0015",
+              "Artista fictício 0015",
+              12
+            ],
+            [
+              "Faixa 12 · Artista fictício 0015",
+              "Artista fictício 0015",
+              12
+            ],
+            [
+              "Faixa 19 · Artista fictício 0015",
+              "Artista fictício 0015",
+              12
+            ],
+            [
+              "Faixa 05 · Artista fictício 0015",
+              "Artista fictício 0015",
+              11
+            ],
+            [
+              "Faixa 11 · Artista fictício 0015",
+              "Artista fictício 0015",
+              11
+            ],
+            [
+              "Faixa 01 · Artista fictício 0015",
+              "Artista fictício 0015",
+              11
+            ],
+            [
+              "Faixa 10 · Artista fictício 0015",
+              "Artista fictício 0015",
+              10
+            ],
+            [
+              "Faixa 09 · Artista fictício 0015",
+              "Artista fictício 0015",
+              10
+            ],
+            [
+              "Faixa 14 · Artista fictício 0015",
+              "Artista fictício 0015",
+              10
+            ],
+            [
+              "Faixa 17 · Artista fictício 0007",
+              "Artista fictício 0007",
+              9
+            ],
+            [
+              "Faixa 08 · Artista fictício 0015",
+              "Artista fictício 0015",
+              8
+            ],
+            [
+              "Faixa 06 · Artista fictício 0015",
+              "Artista fictício 0015",
+              8
+            ],
+            [
+              "Faixa 03 · Artista fictício 0015",
+              "Artista fictício 0015",
+              8
+            ],
+            [
+              "Faixa 09 · Artista fictício 0007",
+              "Artista fictício 0007",
+              7
+            ],
+            [
+              "Faixa 17 · Artista fictício 0015",
+              "Artista fictício 0015",
+              7
+            ]
+          ]
+        }
+      },
+      {
+        "tipo": "texto",
+        "valor": "<article class=\"identity green\"><div class=\"eyebrow\">IDENTIDADE MUSICAL</div><h2>Perfil A</h2>\n    <div class=\"mini-stats\"><div class=\"mini-stat\"><b>950</b><span>plays ≥30s</span></div><div class=\"mini-stat\"><b>52.4</b><span>horas · todas as execuções</span></div><div class=\"mini-stat\"><b>61</b><span>artistas</span></div></div>\n    <div class=\"trait\"><div class=\"trait-title\"><strong>Gosto distribuído</strong><span>34.2%</span></div><div class=\"track\"><i style=\"--value:34.21%\"></i></div><p>Participação dos dois artistas líderes nas reproduções.</p></div>\n    <div class=\"trait\"><div class=\"trait-title\"><strong>Repertório variado</strong><span>15.2%</span></div><div class=\"track\"><i style=\"--value:15.16%\"></i></div><p>Participação das dez faixas líderes nas reproduções. Em amostras pequenas, este valor tende a ser alto.</p></div>\n    <div class=\"trait\"><div class=\"trait-title\"><strong>Fora da madrugada</strong><span>26.7%</span></div><div class=\"track\"><i style=\"--value:26.74%\"></i></div><p>Reproduções entre 00h e 05h59, no horário de Brasília.</p></div>\n    <p class=\"rule-note\">Regras experimentais: favoritos ≥60%; repeat ≥40%; madrugada ≥40%. Descrevem este recorte de escuta; não inferem personalidade.</p></article>"
+      },
+      {
+        "tipo": "texto",
+        "valor": "<article class=\"identity violet\"><div class=\"eyebrow\">IDENTIDADE MUSICAL</div><h2>Perfil B</h2>\n    <div class=\"mini-stats\"><div class=\"mini-stat\"><b>949</b><span>plays ≥30s</span></div><div class=\"mini-stat\"><b>51.3</b><span>horas · todas as execuções</span></div><div class=\"mini-stat\"><b>61</b><span>artistas</span></div></div>\n    <div class=\"trait\"><div class=\"trait-title\"><strong>Gosto distribuído</strong><span>33.6%</span></div><div class=\"track\"><i style=\"--value:33.61%\"></i></div><p>Participação dos dois artistas líderes nas reproduções.</p></div>\n    <div class=\"trait\"><div class=\"trait-title\"><strong>Repertório variado</strong><span>14.8%</span></div><div class=\"track\"><i style=\"--value:14.75%\"></i></div><p>Participação das dez faixas líderes nas reproduções. Em amostras pequenas, este valor tende a ser alto.</p></div>\n    <div class=\"trait\"><div class=\"trait-title\"><strong>Fora da madrugada</strong><span>26.2%</span></div><div class=\"track\"><i style=\"--value:26.24%\"></i></div><p>Reproduções entre 00h e 05h59, no horário de Brasília.</p></div>\n    <p class=\"rule-note\">Regras experimentais: favoritos ≥60%; repeat ≥40%; madrugada ≥40%. Descrevem este recorte de escuta; não inferem personalidade.</p></article>"
+      },
+      {
+        "tipo": "texto",
+        "valor": "**Artistas em comum:** Artista fictício 0020, Artista fictício 0015, Artista fictício 0033, Artista fictício 0007, Artista fictício 0038, Artista fictício 0014, Artista fictício 0023, Artista fictício 0006, Artista fictício 0052, Artista fictício 0032, Artista fictício 0058, Artista fictício 0050, Artista fictício 0001, Artista fictício 0027, Artista fictício 0010, Artista fictício 0043, Artista fictício 0013, Artista fictício 0026, Artista fictício 0031, Artista fictício 0040\n\n**Favoritos de A ausentes no recorte de B:** \n\n**Favoritos de B ausentes no recorte de A:** "
+      },
+      {
+        "tipo": "dataframe",
+        "dtypes": [
+          "object",
+          "float64",
+          "float64"
+        ],
+        "valor": {
+          "columns": [
+            "Medida",
+            "Minutos por execução · A",
+            "Minutos por execução · B"
+          ],
+          "index": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "data": [
+            [
+              "count",
+              1130.0,
+              1140.0
+            ],
+            [
+              "mean",
+              2.782004026548673,
+              2.701409692982456
+            ],
+            [
+              "std",
+              1.818920861468191,
+              1.810848611251848
+            ],
+            [
+              "min",
+              0.0022,
+              0.00105
+            ],
+            [
+              "25%",
+              1.173716666666667,
+              0.985608333333333
+            ],
+            [
+              "50%",
+              2.702725,
+              2.610608333333333
+            ],
+            [
+              "75%",
+              4.398270833333333,
+              4.272625
+            ],
+            [
+              "max",
+              5.995166666666667,
+              5.997333333333334
+            ]
+          ]
+        }
+      },
+      {
+        "tipo": "dataframe",
+        "dtypes": [
+          "object",
+          "object",
+          "object",
+          "int64",
+          "object",
+          "object"
+        ],
+        "valor": {
+          "columns": [
+            "Perfil",
+            "Arquivo",
+            "SHA-256 do arquivo",
+            "Registros de músicas antes do recorte",
+            "Início do histórico",
+            "Fim do histórico"
+          ],
+          "index": [
+            0,
+            1
+          ],
+          "data": [
+            [
+              "Perfil A",
+              "perfil_a.zip",
+              "df4c0a95efa94bb62dd79c36502eea73d60f444eb1176552876e6084479b38ed",
+              1130,
+              "2019-12-31 21:00:14-03:00",
+              "2020-01-09 04:50:55-03:00"
+            ],
+            [
+              "Perfil B",
+              "perfil_b.zip",
+              "9082279fbf32f53d2c4921b72d45a5dcb2d93d73f7888da03849ae8b8aff0072",
+              1140,
+              "2019-12-31 21:00:09-03:00",
+              "2020-01-09 04:50:19-03:00"
+            ]
+          ]
+        }
+      },
+      {
+        "tipo": "plotly",
+        "valor": {
+          "data": [
+            {
+              "hovertemplate": "Perfil=A · Perfil A<br>Mês=%{x}<br>Horas=%{y}<extra></extra>",
+              "legendgroup": "A · Perfil A",
+              "line": {
+                "color": "#1db954",
+                "dash": "solid"
+              },
+              "marker": {
+                "symbol": "circle"
+              },
+              "mode": "lines+markers",
+              "name": "A · Perfil A",
+              "orientation": "v",
+              "showlegend": true,
+              "x": [
+                "2019-12",
+                "2020-01"
+              ],
+              "xaxis": "x",
+              "y": {
+                "dtype": "f8",
+                "bdata": "IK1Es8WI6z8E9xbpWMRJQA=="
+              },
+              "yaxis": "y",
+              "type": "scatter"
+            },
+            {
+              "hovertemplate": "Perfil=B · Perfil B<br>Mês=%{x}<br>Horas=%{y}<extra></extra>",
+              "legendgroup": "B · Perfil B",
+              "line": {
+                "color": "#b1a5ff",
+                "dash": "solid"
+              },
+              "marker": {
+                "symbol": "circle"
+              },
+              "mode": "lines+markers",
+              "name": "B · Perfil B",
+              "orientation": "v",
+              "showlegend": true,
+              "x": [
+                "2019-12",
+                "2020-01"
+              ],
+              "xaxis": "x",
+              "y": {
+                "dtype": "f8",
+                "bdata": "nraVwCIO5z+xAESFm01JQA=="
+              },
+              "yaxis": "y",
+              "type": "scatter"
+            }
+          ],
+          "layout": {
+            "template": {
+              "data": {
+                "barpolar": [
+                  {
+                    "marker": {
+                      "line": {
+                        "color": "rgb(17,17,17)",
+                        "width": 0.5
+                      },
+                      "pattern": {
+                        "fillmode": "overlay",
+                        "size": 10,
+                        "solidity": 0.2
+                      }
+                    },
+                    "type": "barpolar"
+                  }
+                ],
+                "bar": [
+                  {
+                    "error_x": {
+                      "color": "#f2f5fa"
+                    },
+                    "error_y": {
+                      "color": "#f2f5fa"
+                    },
+                    "marker": {
+                      "line": {
+                        "color": "rgb(17,17,17)",
+                        "width": 0.5
+                      },
+                      "pattern": {
+                        "fillmode": "overlay",
+                        "size": 10,
+                        "solidity": 0.2
+                      }
+                    },
+                    "type": "bar"
+                  }
+                ],
+                "carpet": [
+                  {
+                    "aaxis": {
+                      "endlinecolor": "#A2B1C6",
+                      "gridcolor": "#506784",
+                      "linecolor": "#506784",
+                      "minorgridcolor": "#506784",
+                      "startlinecolor": "#A2B1C6"
+                    },
+                    "baxis": {
+                      "endlinecolor": "#A2B1C6",
+                      "gridcolor": "#506784",
+                      "linecolor": "#506784",
+                      "minorgridcolor": "#506784",
+                      "startlinecolor": "#A2B1C6"
+                    },
+                    "type": "carpet"
+                  }
+                ],
+                "choropleth": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "type": "choropleth"
+                  }
+                ],
+                "contourcarpet": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "type": "contourcarpet"
+                  }
+                ],
+                "contour": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "contour"
+                  }
+                ],
+                "heatmap": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "heatmap"
+                  }
+                ],
+                "histogram2dcontour": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "histogram2dcontour"
+                  }
+                ],
+                "histogram2d": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "histogram2d"
+                  }
+                ],
+                "histogram": [
+                  {
+                    "marker": {
+                      "pattern": {
+                        "fillmode": "overlay",
+                        "size": 10,
+                        "solidity": 0.2
+                      }
+                    },
+                    "type": "histogram"
+                  }
+                ],
+                "mesh3d": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "type": "mesh3d"
+                  }
+                ],
+                "parcoords": [
+                  {
+                    "line": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "parcoords"
+                  }
+                ],
+                "pie": [
+                  {
+                    "automargin": true,
+                    "type": "pie"
+                  }
+                ],
+                "scatter3d": [
+                  {
+                    "line": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatter3d"
+                  }
+                ],
+                "scattercarpet": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattercarpet"
+                  }
+                ],
+                "scattergeo": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattergeo"
+                  }
+                ],
+                "scattergl": [
+                  {
+                    "marker": {
+                      "line": {
+                        "color": "#283442"
+                      }
+                    },
+                    "type": "scattergl"
+                  }
+                ],
+                "scattermapbox": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattermapbox"
+                  }
+                ],
+                "scattermap": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scattermap"
+                  }
+                ],
+                "scatterpolargl": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatterpolargl"
+                  }
+                ],
+                "scatterpolar": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatterpolar"
+                  }
+                ],
+                "scatter": [
+                  {
+                    "marker": {
+                      "line": {
+                        "color": "#283442"
+                      }
+                    },
+                    "type": "scatter"
+                  }
+                ],
+                "scatterternary": [
+                  {
+                    "marker": {
+                      "colorbar": {
+                        "outlinewidth": 0,
+                        "ticks": ""
+                      }
+                    },
+                    "type": "scatterternary"
+                  }
+                ],
+                "surface": [
+                  {
+                    "colorbar": {
+                      "outlinewidth": 0,
+                      "ticks": ""
+                    },
+                    "colorscale": [
+                      [
+                        0.0,
+                        "#0d0887"
+                      ],
+                      [
+                        0.1111111111111111,
+                        "#46039f"
+                      ],
+                      [
+                        0.2222222222222222,
+                        "#7201a8"
+                      ],
+                      [
+                        0.3333333333333333,
+                        "#9c179e"
+                      ],
+                      [
+                        0.4444444444444444,
+                        "#bd3786"
+                      ],
+                      [
+                        0.5555555555555556,
+                        "#d8576b"
+                      ],
+                      [
+                        0.6666666666666666,
+                        "#ed7953"
+                      ],
+                      [
+                        0.7777777777777778,
+                        "#fb9f3a"
+                      ],
+                      [
+                        0.8888888888888888,
+                        "#fdca26"
+                      ],
+                      [
+                        1.0,
+                        "#f0f921"
+                      ]
+                    ],
+                    "type": "surface"
+                  }
+                ],
+                "table": [
+                  {
+                    "cells": {
+                      "fill": {
+                        "color": "#506784"
+                      },
+                      "line": {
+                        "color": "rgb(17,17,17)"
+                      }
+                    },
+                    "header": {
+                      "fill": {
+                        "color": "#2a3f5f"
+                      },
+                      "line": {
+                        "color": "rgb(17,17,17)"
+                      }
+                    },
+                    "type": "table"
+                  }
+                ]
+              },
+              "layout": {
+                "annotationdefaults": {
+                  "arrowcolor": "#f2f5fa",
+                  "arrowhead": 0,
+                  "arrowwidth": 1
+                },
+                "autotypenumbers": "strict",
+                "coloraxis": {
+                  "colorbar": {
+                    "outlinewidth": 0,
+                    "ticks": ""
+                  }
+                },
+                "colorscale": {
+                  "diverging": [
+                    [
+                      0,
+                      "#8e0152"
+                    ],
+                    [
+                      0.1,
+                      "#c51b7d"
+                    ],
+                    [
+                      0.2,
+                      "#de77ae"
+                    ],
+                    [
+                      0.3,
+                      "#f1b6da"
+                    ],
+                    [
+                      0.4,
+                      "#fde0ef"
+                    ],
+                    [
+                      0.5,
+                      "#f7f7f7"
+                    ],
+                    [
+                      0.6,
+                      "#e6f5d0"
+                    ],
+                    [
+                      0.7,
+                      "#b8e186"
+                    ],
+                    [
+                      0.8,
+                      "#7fbc41"
+                    ],
+                    [
+                      0.9,
+                      "#4d9221"
+                    ],
+                    [
+                      1,
+                      "#276419"
+                    ]
+                  ],
+                  "sequential": [
+                    [
+                      0.0,
+                      "#0d0887"
+                    ],
+                    [
+                      0.1111111111111111,
+                      "#46039f"
+                    ],
+                    [
+                      0.2222222222222222,
+                      "#7201a8"
+                    ],
+                    [
+                      0.3333333333333333,
+                      "#9c179e"
+                    ],
+                    [
+                      0.4444444444444444,
+                      "#bd3786"
+                    ],
+                    [
+                      0.5555555555555556,
+                      "#d8576b"
+                    ],
+                    [
+                      0.6666666666666666,
+                      "#ed7953"
+                    ],
+                    [
+                      0.7777777777777778,
+                      "#fb9f3a"
+                    ],
+                    [
+                      0.8888888888888888,
+                      "#fdca26"
+                    ],
+                    [
+                      1.0,
+                      "#f0f921"
+                    ]
+                  ],
+                  "sequentialminus": [
+                    [
+                      0.0,
+                      "#0d0887"
+                    ],
+                    [
+                      0.1111111111111111,
+                      "#46039f"
+                    ],
+                    [
+                      0.2222222222222222,
+                      "#7201a8"
+                    ],
+                    [
+                      0.3333333333333333,
+                      "#9c179e"
+                    ],
+                    [
+                      0.4444444444444444,
+                      "#bd3786"
+                    ],
+                    [
+                      0.5555555555555556,
+                      "#d8576b"
+                    ],
+                    [
+                      0.6666666666666666,
+                      "#ed7953"
+                    ],
+                    [
+                      0.7777777777777778,
+                      "#fb9f3a"
+                    ],
+                    [
+                      0.8888888888888888,
+                      "#fdca26"
+                    ],
+                    [
+                      1.0,
+                      "#f0f921"
+                    ]
+                  ]
+                },
+                "colorway": [
+                  "#636efa",
+                  "#EF553B",
+                  "#00cc96",
+                  "#ab63fa",
+                  "#FFA15A",
+                  "#19d3f3",
+                  "#FF6692",
+                  "#B6E880",
+                  "#FF97FF",
+                  "#FECB52"
+                ],
+                "font": {
+                  "color": "#f2f5fa"
+                },
+                "geo": {
+                  "bgcolor": "rgb(17,17,17)",
+                  "lakecolor": "rgb(17,17,17)",
+                  "landcolor": "rgb(17,17,17)",
+                  "showlakes": true,
+                  "showland": true,
+                  "subunitcolor": "#506784"
+                },
+                "hoverlabel": {
+                  "align": "left"
+                },
+                "hovermode": "closest",
+                "mapbox": {
+                  "style": "dark"
+                },
+                "paper_bgcolor": "rgb(17,17,17)",
+                "plot_bgcolor": "rgb(17,17,17)",
+                "polar": {
+                  "angularaxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  },
+                  "bgcolor": "rgb(17,17,17)",
+                  "radialaxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  }
+                },
+                "scene": {
+                  "xaxis": {
+                    "backgroundcolor": "rgb(17,17,17)",
+                    "gridcolor": "#506784",
+                    "gridwidth": 2,
+                    "linecolor": "#506784",
+                    "showbackground": true,
+                    "ticks": "",
+                    "zerolinecolor": "#C8D4E3"
+                  },
+                  "yaxis": {
+                    "backgroundcolor": "rgb(17,17,17)",
+                    "gridcolor": "#506784",
+                    "gridwidth": 2,
+                    "linecolor": "#506784",
+                    "showbackground": true,
+                    "ticks": "",
+                    "zerolinecolor": "#C8D4E3"
+                  },
+                  "zaxis": {
+                    "backgroundcolor": "rgb(17,17,17)",
+                    "gridcolor": "#506784",
+                    "gridwidth": 2,
+                    "linecolor": "#506784",
+                    "showbackground": true,
+                    "ticks": "",
+                    "zerolinecolor": "#C8D4E3"
+                  }
+                },
+                "shapedefaults": {
+                  "line": {
+                    "color": "#f2f5fa"
+                  }
+                },
+                "sliderdefaults": {
+                  "bgcolor": "#C8D4E3",
+                  "bordercolor": "rgb(17,17,17)",
+                  "borderwidth": 1,
+                  "tickwidth": 0
+                },
+                "ternary": {
+                  "aaxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  },
+                  "baxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  },
+                  "bgcolor": "rgb(17,17,17)",
+                  "caxis": {
+                    "gridcolor": "#506784",
+                    "linecolor": "#506784",
+                    "ticks": ""
+                  }
+                },
+                "title": {
+                  "x": 0.05
+                },
+                "updatemenudefaults": {
+                  "bgcolor": "#506784",
+                  "borderwidth": 0
+                },
+                "xaxis": {
+                  "automargin": true,
+                  "gridcolor": "#283442",
+                  "linecolor": "#506784",
+                  "ticks": "",
+                  "title": {
+                    "standoff": 15
+                  },
+                  "zerolinecolor": "#283442",
+                  "zerolinewidth": 2
+                },
+                "yaxis": {
+                  "automargin": true,
+                  "gridcolor": "#283442",
+                  "linecolor": "#506784",
+                  "ticks": "",
+                  "title": {
+                    "standoff": 15
+                  },
+                  "zerolinecolor": "#283442",
+                  "zerolinewidth": 2
+                }
+              }
+            },
+            "xaxis": {
+              "anchor": "y",
+              "domain": [
+                0.0,
+                1.0
+              ],
+              "title": {
+                "text": "Mês"
+              },
+              "nticks": 10,
+              "gridcolor": "#30383e"
+            },
+            "yaxis": {
+              "anchor": "x",
+              "domain": [
+                0.0,
+                1.0
+              ],
+              "title": {
+                "text": "Horas"
+              },
+              "gridcolor": "#30383e"
+            },
+            "legend": {
+              "title": {
+                "text": "Perfil"
+              },
+              "tracegroupgap": 0,
+              "orientation": "h",
+              "y": 1.12
+            },
+            "margin": {
+              "t": 30,
+              "l": 30,
+              "r": 30,
+              "b": 50
+            },
+            "height": 400,
+            "transition": {
+              "duration": 500
+            },
+            "paper_bgcolor": "#191c20",
+            "plot_bgcolor": "#191c20",
+            "hovermode": "x unified"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,144 @@
+# Changelog — SyncUp
+
+## [0.8] — 2026-11-03
+
+### Novo
+- **Aba Match**: concilia de 2 a 16 pessoas, mistura histórico ZIP e login com Spotify, forma as duplas que maximizam a compatibilidade total (emparelhamento ótimo exato; trio quando ímpar), explica pelos artistas em comum, sugere trocas e mostra o ranking individual e a matriz.
+- **Login com Spotify** (`spotify_api.py`): OAuth 2.0 com PKCE (sem client secret), rotas `/spotify/login` e `/spotify/callback`, coleta de top artistas/músicas nos 3 períodos, últimas 50 e artistas seguidos. Só o perfil é salvo; o token nunca vai para o disco.
+- **Perfil unificado** (`perfil_gosto.py`): ZIP convertido para os mesmos rankings e janelas da API, para comparar as duas fontes de forma justa.
+- `python app.py` agora sobe FastAPI + Gradio em `127.0.0.1` (necessário para a Redirect URI do Spotify).
+
+### Contrato
+- Novo endpoint `encontrar_matches`. Abas principais: Dupla, Match, Wrapped, Grupo.
+
+## [0.7] — 2026-10-09
+
+### Novo
+- **Wrapped da vida toda** (aba *Meu Wrapped*): 14 stories animados com horas totais, primeira música, artista e músicas da vida, ano a ano, descobertas, dia recorde, música mais repetida num dia, relógio de 24 h, maior sequência de dias, fidelidade ao top 5, hábitos e arquétipo; resumo em PNG 1080×1920 (`cartao.gerar_cartao_wrapped`).
+- **Arquétipos v0.7** (`arquetipos.py`): 12 regras explicáveis, calibradas com históricos reais, com principal, secundários, "quase" e painel de transparência (valor × limiar). Destaque nos cartões da Dupla e do Grupo; Wrapped de A e B lado a lado na Dupla.
+- Ingestão lê `skipped`, `shuffle`, `offline`, `reason_end` e a **família** da `platform` (sem modelo/versão do aparelho). Versão do cache Parquet atualizada.
+
+### Correções
+- As três regras antigas (favoritos ≥60%, repeat ≥40%, madrugada ≥40%) quase nunca eram atingidas com dados reais, então todos recebiam os mesmos rótulos. Elas continuam como "traços no período comparado", e o destaque passa para os arquétipos novos.
+- O filtro padrão de músicas da interface escondia uma música real das análises; agora começa vazio.
+- Regras CSS responsivas que miravam `.gradio-container`/`body` dentro de `@media` eram anuladas pelo prefixo que o Gradio aplica; o espaçamento externo agora usa `clamp()`. No celular, o conteúdo agora usa quase toda a largura da tela.
+- Abas principais com nomes curtos (*Dupla*, *Meu Wrapped*, *Grupo*) e a cópia que o Gradio mede para decidir o menu "…" agora tem o mesmo tamanho das abas visíveis.
+
+### Contrato
+- `executar_dupla` devolve 34 saídas (+ Wrapped da dupla no fim). Novos endpoints: `gerar_wrapped` e `baixar_wrapped`. `COLUNAS_PREPARADAS` ganhou `pulada`, `aleatorio`, `offline`, `plataforma` e `motivo_fim`.
+
+## [0.6] — 2026-10-09
+
+### Correções
+- ZIPs recompactados no macOS (`__MACOSX/`, arquivos `._*`) falhavam por inteiro com "JSON inválido/UTF-8"; agora esses metadados e pastas são ignorados.
+- Nomes `None` vindos da API/Gradio causavam `AttributeError` em `comparar()`/`comparar_grupo()`; agora usam o nome padrão.
+- Instalação falhava no Python 3.13/3.14 (pandas 2.2.3 e PyArrow 17 sem binários). Requisitos agora escolhem versões com binários por versão do Python; suíte validada em 3.12, 3.13 e 3.14.
+- Gráficos: legenda sobrepunha a primeira barra do butterfly e os rótulos do radar; título do slope dizia "oito artistas" mesmo com menos; linha vertical espúria no slope; barra de ferramentas do Plotly cobria a legenda.
+- Mapa de horários com escala começando em zero deixava tudo da mesma cor; agora a escala comum vai do menor ao maior valor observado.
+- Grupo: entropia/Gini nulos quebravam a formatação; diagnóstico era calculado duas vezes por perfil.
+- Diagnóstico usava `idxmin/idxmax` (frágil com índices repetidos); agora usa posições.
+
+### Otimizações
+- Extração JSON colunar (sem tupla por evento) e `orjson` opcional: extração ~2× mais rápida.
+- Limpeza com categorias desde o início: `strip`, filtros e normalização de nomes rodam uma vez por nome distinto (vetorizado); conversão de fuso pelo caminho vetorizado do pandas (~10× mais rápida).
+- Momentos sincronizados: uma única fusão ordenada por (chave, instante) com códigos inteiros, sem `groupby.indices` nem `iloc` por exemplo: ~2× mais rápido, resultados idênticos.
+- Leitura paralela em processos (interface): dupla 300k+300k fria de ~9,2 s para ~4,8 s e grupo 4×300k de ~12,7 s para ~6,4 s numa máquina de 2 núcleos.
+- `tabela_display` coluna a coluna (sem `.at` por célula); fontes do cartão em cache e corte de texto por busca binária.
+
+### Interface
+- Novo tema inspirado no Spotify, Blend com anel animado, cartões Wrapped, listas tipo playlist, corrida de artistas com player, Modo Grupo com cartões e "dupla mais sintonizada", botão de dados fictícios.
+- Animações em botões, números, gráficos e listas; respeitam `prefers-reduced-motion`.
+- Cartão PNG no novo visual (degradê e anel de similaridade).
+- **Contrato:** `executar_dupla` devolve 33 saídas (as 26 anteriores nas mesmas posições + 7 novas no fim); `executar_grupo` devolve 7 (5 anteriores + 2).
+
+## [0.5 — correção de empates] — 2026-10-08
+
+- Rankings com desempate explícito: contagem decrescente, nome crescente, inclusive no corte do top 20. Artistas exclusivos usam ordenação estável.
+- Golden masters originais e fontes congeladas preservados byte a byte. Os testes continuam verificando métricas, contagens, tipos e itens acima do empate no corte; o ranking completo atual é conferido contra contagens independentes dos eventos.
+- Novos testes com 25 itens empatados, títulos homônimos e ordem de entrada invertida. Testes adversariais garantem que o comparador golden recusa nomes, contagens, duplicações, ordem e corte incorretos.
+- Instruções Windows corrigidas para um ambiente Python 3.12 explícito; distingue incompatibilidade de binários Python 3.14 de bloqueio de execução Ruff pelo Windows.
+
+## [0.5] — 2026-10-08
+
+Consolidação dos quatro passos de evolução do protótipo acadêmico. Não inclui autenticação Spotify, coleta em tempo real, hospedagem ou inferência psicológica.
+
+### Arquitetura e compatibilidade — Passo 1
+
+- Separação do núcleo em `dados.py`, `metricas.py`, `analise.py` e `perfis.py`, sem dependências circulares ou gráficos no orquestrador.
+- Dataclasses `ResultadoComparacao`, `PerfilComparado`, `MetricasComparacao` e `PeriodoComparacao` substituem a interpretação de HTML e os índices posicionais do retorno.
+- `app.py` mantém as reexportações `carregar`, `comparar`, `metricas`, `criar_interface` e `limpar_cache`; a interface é construída sob demanda.
+- **Mudança de contrato:** os imports antigos continuam funcionando, mas consumidores da tupla de 12 saídas de `comparar()` precisam migrar para campos do resultado. O adaptador `ui.apresentar()` preserva a fronteira antiga de apresentação para notebook/benchmark.
+- Regras de arquétipos, quantidades de líderes e limiares centralizados em constantes nomeadas, acompanhados de descrições.
+- Gerador `tools/gerar_dados_falsos.py`: ZIPs reproduzíveis por semente, aproximadamente 300 mil eventos/3 mil artistas no padrão, cauda longa, podcasts, Various Artists, duplicações e campos auxiliares realistas.
+- Referências v0.4 congeladas e saídas serializadas em `tests/golden/`, com hashes das fontes que geraram a referência.
+
+### Correções de dados e apresentação — Passo 2
+
+- Datas ISO8601 com variantes de offsets, frações e Z, interpretadas em UTC; datas inválidas são descartadas e contadas.
+- Contadores exclusivos para podcasts, duração inválida, data inválida, identificação, Various Artists, filtros e duplicações; recebidos = descartados + válidos.
+- Durações negativas, booleanas, não numéricas e não finitas recusadas na ingestão.
+- Filtro configurável de músicas/artistas, substituindo condição especial fixa. A preferência anterior permanece editável e pode ser desativada.
+- Política explícita para manter Various Artists como artista agregado ou descartá-lo; não tenta deduzir intérpretes reais.
+- Fuso IANA validado, padrão America/Sao_Paulo, aplicado consistentemente às visualizações, períodos locais e arquétipos.
+- Recorte e deduplicação por UTC, preservando instantes distintos durante horas locais repetidas de horário de verão.
+- `fmt_num`, `fmt_pct` e `fmt_horas` em pt-BR, sem depender do locale do computador.
+- Escapes específicos HTML/Markdown, preservando nomes reais no núcleo; listas limitadas com `itertools.islice`, sem cortar escapes/nomes.
+- Mensagens amigáveis para JSON malformado, ZIP incompleto e problemas de leitura.
+- Diagnóstico de arquivo, cobertura, filtros, descartes, SHA-256 e origem do cache.
+
+### Performance e caches — Passo 2
+
+- Conversão local uma única vez no loader; pré-cálculo inteiro de hora, ano/mês, dia da semana e dia.
+- Artistas/músicas como `category` após limpeza; `observed=True` nos agrupamentos para evitar combinações não observadas.
+- Totais e agregações reutilizados por rankings e regras, eliminando consultas repetitivas de Series por artista.
+- Ranking de contagens de faixas desacoplado do MultiIndex para evitar operações custosas do Pandas no top 10.
+- Cache de históricos em memória por conteúdo/configuração, com cópias nas funções públicas para proteger dados armazenados.
+- Cache Parquet opcional por SHA-256 + esquema + filtros/fuso/política/deduplicação, com manifesto, validação de integridade e gravação atômica.
+- Cache corrompido é reconstruído a partir do original; ausência de PyArrow informa como instalar a dependência opcional.
+- Benchmark em processos isolados: aquecimento fora da medida, ordem alternada antes/depois, medianas frio/memória/Parquet e saída JSON/CSV/Markdown.
+- Os relatórios de 300 mil eventos feitos no Passo 2 foram preservados como registros históricos, sem atribuir seus tempos aos novos recursos.
+
+### Métricas e funcionalidades — Passo 3
+
+- Ponderação selecionável de contagens: bruta, raiz quadrada e log1p; implementações em Python puro/biblioteca padrão, sem NumPy direto.
+- Contribuição individual por artista para o cosseno, soma verificável e valores completos em DataFrame.
+- Jaccard ponderado/Ruzicka com pesos absolutos, entropia normalizada e Gini dos artistas observados.
+- Momentos Sincronizados: pares cronológicos por artista ou artista/música em janela inclusiva de uma hora UTC. Emparelhamento linear após ordenação, sem produto cartesiano ou reutilização de eventos dentro de cada análise.
+- Contagem completa de pares separada dos até 200 exemplos; análises por artista/música são alternativas, sem soma entre totais.
+- Ponte Musical: sugestões de até dez artistas exclusivos por direção, com links Spotify construídos localmente como buscas; não afirma descoberta/influência comprovada.
+- Playlist comum por artista/título, prévia limitada e exportação integral CSV UTF-8 BOM, separador brasileiro e proteção contra fórmulas de planilha.
+- Cartão PNG local RGB 1080×1350 em Pillow, sem rede, com fontes locais/fallback, limites visuais de texto, métricas, regra/limiar e aviso metodológico.
+- União de múltiplas partes de um perfil, categorias preservadas, contadores agregados e deduplicação opcional entre arquivos.
+- Arquivos inteiros com SHA repetido no mesmo perfil são rejeitados, evitando dupla contagem por seleção acidental.
+- `EntradaPerfil` e `ResultadoGrupo`: comparação de 3–6 perfis, agregações reutilizadas, matriz simétrica e recorte UTC comum global quando solicitado.
+
+### Interface e visualizações — Passo 3
+
+- Gradio 5 com `gr.Blocks`, tema nativo configurado por `Base().set(...)`, uploads múltiplos, progressos e aba própria de grupo.
+- Plotly: butterfly divergente, mapas hora × dia lado a lado com escala comum, radar com limiares, slope chart de participações e matriz de grupo.
+- Nomes escapados nos gráficos; dados numéricos permanecem numéricos no núcleo.
+- CSS externo de largura total, responsividade, foco visível, botões de altura mínima 44px, contraste nos pares de texto principais e redução de movimento.
+- Arquétipos exibem proporções, limiares e aviso explícito: não medem personalidade ou afinidade amorosa.
+- Exportações por sessão em diretórios temporários privados; arquivos anteriores são limpos pelo ciclo de vida do estado/cache.
+
+### Testes, qualidade e documentação — Passo 4
+
+- Suíte pytest parametrizada para vetores vazios/nulos, ortogonalidade, proporcionalidade, contribuições, Ruzicka, pesos inválidos e diversidade.
+- Ingestão testada com JSON malformado, ZIP corrompido, partes internas inválidas, campos obrigatórios/opcionais, podcasts e deduplicação entre arquivos.
+- Fluxos sem período comum, identidade de bytes/eventos/recorte, ausência de plays, matriz de grupo e regressão contra os golden masters salvos.
+- Smoke test da árvore Gradio sem iniciar servidor; fluxo HTTP e downloads CSV/PNG anteriores continuam incluídos na descoberta pytest.
+- Fixtures fictícias de sementes fixas e cache isolado. Testes não regravam as referências esperadas nem usam históricos pessoais.
+- **Correção encontrada nos casos de borda:** pesos finitos muito grandes causavam overflow; pesos pequenos podiam virar uma falsa norma zero. Cosseno/contribuições, Ruzicka e diversidade agora reescalam os valores antes das somas. O Ruzicka usa o mesmo divisor em ambos os vetores, preservando a diferença de volumes. Fórmulas e resultados usuais permanecem equivalentes dentro da tolerância numérica.
+- Ajuste de comparação de floats no teste de matriz para tolerância explícita, sem alterar os golden masters.
+- Dependências diretas fixadas, desenvolvimento separado, PyArrow opcional fixado e suporte HTTPX a proxy SOCKS. Gradio fica em 5.x e pandas em 2.2.x.
+- `pyproject.toml` configura pytest e Ruff para Python 3.10, lint/imports/formatação. Fontes históricas ficam excluídas da formatação para preservar hashes.
+- Imports e formatação consolidados no código atual, sem modificar as fontes congeladas.
+- README reescrito com execução, arquitetura, testes, benchmarks, limites e aviso metodológico; validação e guias anteriores preservados.
+- Notebook atualizado nas seis fases do CRISP-DM, importando a arquitetura modular, com demonstração fictícia, EDA Pandas/Seaborn, métricas/traços/grupo e exportações locais.
+- Validação estrutural do notebook e verificador de células em IPython sem servidor/kernel de rede; interface automática desativada por padrão e saídas removidas da entrega.
+
+## [0.4] — Referência anterior preservada
+
+Protótipo local de comparação de dois históricos estendidos Spotify, com rankings, cosseno/Jaccard, arquétipos iniciais e interface visual. A orquestração/presentação tinha saídas posicionais e concentração de responsabilidades; não havia o pacote consolidado de dados configuráveis, recursos avançados, grupo e testes pytest da v0.5.
+
+A implementação congelada permanece em `tests/fixtures/v04/` e a referência numérica em `tests/golden/`. É material histórico de regressão, não o código de entrada atual.

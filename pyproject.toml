@@ -1,0 +1,38 @@
+[tool.pytest.ini_options]
+minversion = "8.3"
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra --strict-config --strict-markers"
+norecursedirs = ["tests/fixtures", "exemplos_ficticios", "exportacoes_notebook"]
+markers = [
+    "golden: regressão contra referências numéricas previamente salvas",
+    "ui: criação de componentes ou fluxo HTTP local do Gradio",
+]
+filterwarnings = [
+    # Avisos de migração para Gradio 6 não se aplicam à dependência fixada em 5.
+    "ignore:.*Gradio 6\\.0.*:DeprecationWarning",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+extend-exclude = [
+    "tests/fixtures", # Fontes congeladas: hashes do golden master não podem mudar.
+    "exemplos_ficticios",
+    "exportacoes_notebook",
+    ".syncup_cache",
+]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "UP"]
+# Tuplas em isinstance são mantidas por legibilidade e compatibilidade acadêmica.
+ignore = ["UP038"]
+
+[tool.ruff.lint.per-file-ignores]
+# Scripts históricos permitem execução direta e ajustam sys.path antes dos imports.
+"tests/*.py" = ["E402"]
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+line-ending = "lf"

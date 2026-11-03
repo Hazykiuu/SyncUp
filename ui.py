@@ -6,6 +6,7 @@ import base64
 import os
 import shutil
 from functools import lru_cache
+from itertools import combinations
 from numbers import Real
 from pathlib import Path
 from tempfile import gettempdir, mkdtemp
@@ -26,7 +27,7 @@ from analise import (
     comparar,
     comparar_grupo,
 )
-from cartao import gerar_cartao, gerar_cartao_wrapped
+from cartao import gerar_cartao, gerar_cartao_match, gerar_cartao_wrapped
 from conciliacao import conciliar
 from configuracao import MUSICAS_IGNORADAS_PADRAO, ConfiguracaoCarga
 from dados import (
@@ -35,6 +36,7 @@ from dados import (
     precarregar,
 )
 from exportacoes import exportar_playlist
+from festa import exportar_csv, exportar_xspf, playlist_festa
 from formatacao import escape_html, escape_markdown, fmt_horas, fmt_num, fmt_pct, listar_markdown
 from generos import ConsultaMusicBrainz, preencher_generos
 from graficos import (
@@ -627,14 +629,68 @@ def executar_match(
             ]
         )
         progress(1, desc='Matches prontos')
+        duplas = [f'{x} × {y}' for g in r.pares for x, y in combinations(g, 2)]
         return [
             componentes.match_html(r, fontes),
             matriz_conciliacao(r),
             ranking,
             gr.Column(visible=True),
+            stories.stories_match_html(r),
+            {'resultado': r, 'perfis': perfis},
+            gr.Dropdown(choices=duplas, value=duplas[0] if duplas else None),
         ]
     except ValueError as erro:
         raise gr.Error(str(erro)) from erro
+
+
+def baixar_festa(match: dict | None, pastas: list[str] | None) -> tuple[str, list[str], list[str]]:
+    """Playlist que cobre o gosto do grupo do último Match, em CSV e XSPF."""
+    if not match:
+        raise gr.Error('Encontre os matches antes de montar a playlist da festa.')
+    faixas = playlist_festa(match['perfis'])
+    if not faixas:
+        raise gr.Error('Os perfis não têm músicas favoritas suficientes para a playlist.')
+    pasta = mkdtemp(prefix='syncup-festa-')
+    try:
+        arquivos = [
+            str(exportar_csv(faixas, Path(pasta) / 'SyncUp_festa.csv')),
+            str(
+                exportar_xspf(
+                    faixas, Path(pasta) / 'SyncUp_festa.xspf', 'SyncUp · Playlist da festa'
+                )
+            ),
+        ]
+    except OSError as erro:
+        shutil.rmtree(pasta, ignore_errors=True)
+        raise gr.Error('Não foi possível gravar a playlist no diretório temporário.') from erro
+    linhas = ''.join(
+        f'<li><a href="{escape_html(f.link)}" target="_blank" rel="noopener">'
+        f'<b>{escape_html(f.musica)}</b> · {escape_html(f.artista)}</a>'
+        f'<small>para {escape_html(", ".join(f.para))}</small></li>'
+        for f in faixas
+    )
+    html = f'<ol class="su-festa">{linhas}</ol>'
+    return html, arquivos, [*(pastas or []), pasta]
+
+
+def baixar_cartao_match(
+    match: dict | None, dupla: str | None, pastas: list[str] | None
+) -> tuple[str, str, list[str]]:
+    """Cartão PNG de uma dupla do último Match."""
+    if not match or not dupla:
+        raise gr.Error('Encontre os matches e escolha uma dupla antes de gerar o cartão.')
+    a, _, b = dupla.partition(' × ')
+    try:
+        compatibilidade = match['resultado'].par(a, b)
+    except KeyError as erro:
+        raise gr.Error('Essa dupla não faz parte do último Match.') from erro
+    pasta = mkdtemp(prefix='syncup-match-')
+    try:
+        arquivo = gerar_cartao_match(compatibilidade, Path(pasta) / 'SyncUp_match.png')
+    except OSError as erro:
+        shutil.rmtree(pasta, ignore_errors=True)
+        raise gr.Error('Não foi possível gravar o cartão no diretório temporário.') from erro
+    return str(arquivo), str(arquivo), [*(pastas or []), pasta]
 
 
 def _limpar_exportacoes(pastas: list[str]) -> None:
@@ -1130,12 +1186,39 @@ def criar_interface() -> gr.Blocks:
                 buscar = gr.Button(
                     'Encontrar os matches', variant='primary', elem_classes='su-play'
                 )
+                estado_m = gr.State(value=None, time_to_live=3600)
+                pastas_m = gr.State(
+                    value=[], time_to_live=3600, delete_callback=_limpar_exportacoes
+                )
                 with gr.Column(visible=False, elem_classes='su-results') as match_resultados:
+                    match_stories = gr.HTML()
                     match_cartoes = gr.HTML()
                     match_plot = gr.Plot(show_label=False, elem_classes='su-chart')
                     match_ranking = gr.Dataframe(
                         interactive=False, wrap=True, label='Ranking de compatibilidade'
                     )
+                    with gr.Tabs():
+                        with gr.Tab('Playlist da festa'):
+                            gr.Markdown(
+                                'Até 30 músicas que cobrem o gosto de todo o grupo, equilibrando '
+                                'quem ainda tem pouco. Baixe em CSV ou XSPF (formato aberto, abre '
+                                'no VLC). Os links são buscas no Spotify.',
+                                elem_classes='su-note',
+                            )
+                            festa_btn = gr.Button(
+                                'Montar playlist da festa', elem_classes='su-secondary'
+                            )
+                            festa_lista = gr.HTML()
+                            festa_arquivos = gr.File(
+                                label='Baixar CSV e XSPF', file_count='multiple', interactive=False
+                            )
+                        with gr.Tab('Cartão da dupla'):
+                            dupla_m = gr.Dropdown(label='Escolha a dupla', choices=[])
+                            cartao_m_btn = gr.Button(
+                                'Gerar cartão PNG', elem_classes='su-secondary'
+                            )
+                            cartao_m_img = gr.Image(show_label=False, interactive=False)
+                            cartao_m_arquivo = gr.File(label='Baixar cartão PNG', interactive=False)
                 conectar.click(
                     None,
                     [cid, nome_sp],
@@ -1151,9 +1234,29 @@ def criar_interface() -> gr.Blocks:
                 buscar.click(
                     executar_match,
                     [fm, nm, salvos, *opcoes, generos_mb],
-                    [match_cartoes, match_plot, match_ranking, match_resultados],
+                    [
+                        match_cartoes,
+                        match_plot,
+                        match_ranking,
+                        match_resultados,
+                        match_stories,
+                        estado_m,
+                        dupla_m,
+                    ],
                     api_name='encontrar_matches',
                     scroll_to_output=True,
+                )
+                festa_btn.click(
+                    baixar_festa,
+                    [estado_m, pastas_m],
+                    [festa_lista, festa_arquivos, pastas_m],
+                    api_name='playlist_festa',
+                )
+                cartao_m_btn.click(
+                    baixar_cartao_match,
+                    [estado_m, dupla_m, pastas_m],
+                    [cartao_m_img, cartao_m_arquivo, pastas_m],
+                    api_name='baixar_cartao_match',
                 )
             with gr.Tab('Wrapped'):
                 gr.HTML(

@@ -57,6 +57,8 @@ class InterfaceTest(unittest.TestCase):
                 'gerar_wrapped',
                 'baixar_wrapped',
                 'encontrar_matches',
+                'playlist_festa',
+                'baixar_cartao_match',
             },
         )
         app = gr.mount_gradio_app(FastAPI(), demo, path='/')

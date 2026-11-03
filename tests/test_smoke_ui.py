@@ -31,7 +31,10 @@ def test_criar_interface_monta_arvore_sem_erros() -> None:
             'gerar_wrapped',
             'baixar_wrapped',
             'encontrar_matches',
+            'playlist_festa',
+            'baixar_cartao_match',
         }
+        assert 'fonts.googleapis.com' not in str(demo.theme._stylesheets)  # fonte local (OFL)
         assert demo.theme is not None
         css = Path(__file__).resolve().parents[1] / 'styles.css'
         assert css.is_file()

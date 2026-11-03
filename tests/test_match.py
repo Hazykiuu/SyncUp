@@ -13,6 +13,7 @@ from urllib.parse import parse_qs, urlparse
 import httpx
 import pandas as pd
 import pytest
+from PIL import Image
 
 import spotify_api
 from conciliacao import comparar_perfis, conciliar, emparelhamento_otimo, nivel
@@ -297,7 +298,7 @@ def test_match_na_interface_mistura_zip_e_spotify(tmp_path: Path, monkeypatch) -
     salvar_perfil(_perfil('Caio', ['Y', 'Z']), pasta)
     monkeypatch.setattr(ui, 'PASTA_PERFIS', pasta)
     assert ui.perfis_salvos() == ['Caio']
-    html, figura, ranking, _ = ui.executar_match(
+    html, figura, ranking, _, revelacao, estado, dupla = ui.executar_match(
         zips,
         'Ana\nBia',
         ['Caio'],
@@ -312,6 +313,16 @@ def test_match_na_interface_mistura_zip_e_spotify(tmp_path: Path, monkeypatch) -
     assert 'trio' in html and 'Ranking individual' in html
     assert len(figura.data[0].z) == 3 and list(ranking['Pessoa']) == ['Ana', 'Bia', 'Caio']
     assert ranking.loc[2, 'Fonte'].startswith('Spotify')
+    assert 'data-stories' in revelacao and 'O TRIO' in revelacao
+    assert len(dupla.choices) == 3  # os três pares internos do trio
+    pastas: list[str] = []
+    lista, arquivos, pastas = ui.baixar_festa(estado, pastas)
+    assert {Path(a).suffix for a in arquivos} == {'.csv', '.xspf'} and 'para' in lista
+    _, png, pastas = ui.baixar_cartao_match(estado, dupla.value, pastas)
+    with Image.open(png) as imagem:
+        assert imagem.size == (1080, 1350)
+    ui._limpar_exportacoes(pastas)
+    assert not any(Path(p).exists() for p in pastas)
 
 
 def test_match_repetido_reusa_perfil_do_zip(tmp_path: Path, monkeypatch) -> None:

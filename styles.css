@@ -548,6 +548,11 @@ footer { opacity: .55; }
 .su-best-list em { font-style: normal; font-weight: 700; padding: 3px 10px; border-radius: 99px; background: rgba(255, 255, 255, .08); }
 .su-best-list em:first-of-type { background: rgba(30, 215, 96, .2); color: #b8f5cf; }
 .su-best-list small { color: var(--su-sub); font-weight: 500; }
+.su-festa { margin: 8px 0 0; padding-left: 28px; display: grid; gap: 6px; }
+.su-festa li { padding: 8px 12px; border-radius: 10px; background: var(--su-card); }
+.su-festa a { color: var(--su-text); text-decoration: none; }
+.su-festa a:hover b, .su-festa a:focus-visible b { color: var(--su-green, #1ed760); }
+.su-festa small { display: block; color: var(--su-sub); font-size: 13px; }
 .su-steps { margin: 6px 0 0; padding-left: 20px; color: #e6e6e6; line-height: 1.7; }
 .su-steps code { background: #2a2a2a; padding: 2px 6px; border-radius: 6px; }
 

@@ -15,6 +15,7 @@ from perfis import LIMIAR_FAVORITOS, QUANTIDADE_FAVORITOS
 
 if TYPE_CHECKING:
     from analise import ResultadoComparacao
+    from conciliacao import Compatibilidade
     from wrapped import Wrapped
 
 LARGURA_CARTAO = 1080
@@ -244,6 +245,55 @@ def gerar_cartao_wrapped(
     texto(
         64, 1770, 'Hábitos de escuta do histórico enviado. Não mede personalidade.', 28, SECUNDARIO
     )
+    caminho = Path(destino)
+    caminho.parent.mkdir(parents=True, exist_ok=True)
+    imagem.save(caminho, format='PNG', optimize=True)
+    return caminho
+
+
+def gerar_cartao_match(
+    compatibilidade: Compatibilidade, destino: str | Path, fonte: str | Path | None = None
+) -> Path:
+    """PNG 1080×1350 de uma dupla do Match: pontuação, nível, artistas e estilo em comum."""
+    c = compatibilidade
+    imagem = Image.new('RGB', (LARGURA_CARTAO, ALTURA_CARTAO), FUNDO)
+    d = ImageDraw.Draw(imagem)
+    fundo = (18, 18, 18)
+    for y in range(620):
+        t = (1 - y / 620) ** 1.4 * 0.6
+        cor = tuple(round(f + (g - f) * t) for f, g in zip(fundo, (91, 42, 214)))
+        d.line((0, y, LARGURA_CARTAO, y), fill=cor)
+
+    def texto(x, y, valor, tamanho=30, cor=TEXTO, forte=False, largura=952):
+        f = carregar_fonte(tamanho, forte, fonte)
+        d.text((x, y), _ajustar_texto(valor, largura, d, f), fill=cor, font=f)
+
+    d.ellipse((64, 60, 144, 140), fill='#000000')
+    for i, altura in enumerate((34, 50, 26, 42)):
+        x = 82 + i * 12
+        d.rounded_rectangle((x, 122 - altura, x + 7, 122), radius=3, fill=VERDE)
+    texto(168, 74, 'SyncUp Match', 48, TEXTO, True)
+    texto(64, 200, c.a, 64, VERDE, True)
+    texto(64, 285, '×  ' + c.b, 64, ROXO, True)
+    d.rounded_rectangle((64, 410, 1016, 650), radius=30, fill=PAINEL)
+    texto(100, 435, 'COMPATIBILIDADE DOS RANKINGS', 26, SECUNDARIO)
+    texto(96, 475, f'{c.pontuacao:.1f}%'.replace('.', ','), 104, VERDE, True, 690)
+    texto(100, 600, c.nivel, 30, TEXTO, True, 690)
+    proporcao = max(0.0, min(1.0, c.pontuacao / 100))
+    caixa = (812, 445, 984, 617)
+    d.arc(caixa, 0, 360, fill='#3e3e3e', width=16)
+    if proporcao > 0:
+        d.arc(caixa, -90, -90 + 360 * proporcao, fill=VERDE, width=16)
+    texto(64, 700, 'ARTISTAS QUE VOCÊS DIVIDEM', 26, VERDE, True)
+    for i, artista in enumerate(c.artistas_comuns[:5] or ['Nenhum artista em comum nos rankings']):
+        texto(64, 750 + i * 48, artista, 32)
+    if c.pontuacao_generos is not None:
+        estilo = ', '.join(c.generos_comuns[:4]) or 'estilos diferentes'
+        texto(64, 1010, f'NO ESTILO · {c.pontuacao_generos:.1f}%'.replace('.', ','), 26, ROXO, True)
+        texto(64, 1056, estilo, 32)
+    d.line((64, 1195, 1016, 1195), fill='#3e3e3e', width=2)
+    texto(64, 1220, 'Compara os rankings musicais enviados. Não mede', 25, SECUNDARIO)
+    texto(64, 1260, 'personalidade nem afinidade pessoal.', 25, SECUNDARIO)
     caminho = Path(destino)
     caminho.parent.mkdir(parents=True, exist_ok=True)
     imagem.save(caminho, format='PNG', optimize=True)

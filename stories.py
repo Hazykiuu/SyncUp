@@ -8,10 +8,14 @@ sequência. Todo texto vindo do histórico passa por ``escape_html``.
 from __future__ import annotations
 
 from math import cos, pi, sin
+from typing import TYPE_CHECKING
 
 from arquetipos import AVISO_ARQUETIPOS, formatar_valor
 from formatacao import escape_html, fmt_num, fmt_pct
 from wrapped import Wrapped, data_br, mes_ano
+
+if TYPE_CHECKING:
+    from conciliacao import ResultadoConciliacao
 
 FUNDOS = {
     'intro': ('#1ed760', '#0b3d20'),
@@ -28,6 +32,9 @@ FUNDOS = {
     'habitos': ('#8d67ab', '#251633'),
     'arquetipo': ('#1ed760', '#5b2ad6'),
     'resumo': ('#121212', '#121212'),
+    'match_intro': ('#5b2ad6', '#120a33'),
+    'match_par': ('#1ed760', '#0b3d20'),
+    'match_trio': ('#ff6437', '#4a0f1f'),
 }
 
 
@@ -414,4 +421,77 @@ def arquetipos_detalhe_html(w: Wrapped) -> str:
         '<p class="su-note">A barra é o seu valor; o traço branco é o limiar da regra. '
         'Em verde, as regras atingidas.</p>'
         f'<ol>{"".join(linhas)}</ol><p class="su-note">{_e(AVISO_ARQUETIPOS)}</p></div>'
+    )
+
+
+def stories_match_html(r: ResultadoConciliacao) -> str:
+    """Revelação animada das duplas do Match, no mesmo player do Wrapped."""
+    comparacoes = len(r.nomes) * (len(r.nomes) - 1) // 2
+    slides = [
+        _slide(
+            'match_intro',
+            _a('<span class="su-kicker">SYNCUP MATCH</span>', 0)
+            + _a(f'<div class="su-mega">{_n(len(r.nomes))}<span>pessoas</span></div>', 1)
+            + _a(f'<p>{_n(comparacoes)} comparações depois, chegou a hora.</p>', 2)
+            + _a('<h3>Quem combina com quem?</h3>', 3),
+        )
+    ]
+    for grupo in r.pares:
+        internos = [r.par(x, y) for i, x in enumerate(grupo) for y in grupo[i + 1 :]]
+        principal = max(internos, key=lambda c: c.pontuacao)
+        media = sum(c.pontuacao for c in internos) / len(internos)
+        comuns = ''.join(
+            f'<span class="su-chip">{_e(a)}</span>' for a in principal.artistas_comuns[:4]
+        )
+        estilo = (
+            _a(f'<p class="su-sub">No estilo: {fmt_num(principal.pontuacao_generos, 1)}%</p>', 6)
+            if principal.pontuacao_generos is not None
+            else ''
+        )
+        slides.append(
+            _slide(
+                'match_trio' if len(grupo) == 3 else 'match_par',
+                _a(
+                    '<span class="su-kicker">'
+                    + ('O TRIO' if len(grupo) == 3 else 'A DUPLA')
+                    + '</span>',
+                    0,
+                )
+                + ''.join(
+                    _a(f'<div class="su-big-name">{_e(nome)}</div>', 1 + i)
+                    for i, nome in enumerate(grupo)
+                )
+                + _a(
+                    f'<div class="su-mega">{_n(media, 1, "%")}<span>{_e(principal.nivel)}</span></div>',
+                    4,
+                )
+                + (_a(f'<div class="su-badges">{comuns}</div>', 5) if comuns else '')
+                + estilo,
+            )
+        )
+    linhas = ''.join(f'<li>{" + ".join(_e(n) for n in g)}</li>' for g in r.pares)
+    slides.append(
+        _slide(
+            'resumo',
+            _a('<span class="su-kicker">RESUMO DO MATCH</span>', 0)
+            + _a(
+                f'<div class="su-final-grid"><div><span>Grupos</span><ol>{linhas}</ol></div></div>',
+                1,
+            )
+            + _a(
+                f'<div class="su-final-stats"><div><span>Média dos grupos</span>'
+                f'<b>{fmt_num(r.pontuacao_media_pares, 1)}%</b></div></div>',
+                2,
+            )
+            + _a(
+                '<p class="su-foot">Compara os rankings musicais enviados. '
+                'Não mede personalidade nem afinidade pessoal.</p>',
+                3,
+            )
+            + _a('<button type="button" class="su-replay">↺ Ver de novo</button>', 4),
+        )
+    )
+    return (
+        '<div class="su-stories" data-stories tabindex="0" aria-label="Revelação do Match">'
+        f'<div class="su-stories-frame">{"".join(slides)}</div></div>'
     )

@@ -26,6 +26,7 @@ SECUNDARIO = '#b3b3b3'
 VERDE = '#1ed760'
 ROXO = '#c4b7ff'
 TOPO_GRADIENTE = (30, 215, 96)
+FIGTREE = Path(__file__).resolve().parent / 'fontes' / 'Figtree.ttf'
 
 
 def carregar_fonte(
@@ -43,6 +44,14 @@ def _carregar_fonte(
     tamanho: int, negrito: bool, fonte: str | None
 ) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
     """Implementação com cache de ``carregar_fonte``."""
+    if fonte is None:
+        try:
+            # Figtree (OFL) do projeto: o PNG fica igual em qualquer sistema.
+            figtree = ImageFont.truetype(str(FIGTREE), tamanho)
+            figtree.set_variation_by_name('Bold' if negrito else 'Regular')
+            return figtree
+        except (OSError, ValueError):
+            pass
     variante = 'DejaVuSans-Bold.ttf' if negrito else 'DejaVuSans.ttf'
     windows = Path(os.environ.get('WINDIR', 'C:/Windows')) / 'Fonts'
     candidatas = ([str(fonte)] if fonte else []) + [

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import os
 import shutil
 from functools import lru_cache
@@ -51,7 +52,14 @@ from spotify_api import PASTA_PERFIS, REDIRECT_PADRAO
 from wrapped import Wrapped, wrapped_de_arquivos
 
 PASTA = Path(__file__).resolve().parent
-CSS = (PASTA / 'styles.css').read_text(encoding='utf-8')
+# Figtree (OFL) embutida no CSS: nenhuma requisição ao Google Fonts, funciona offline.
+FONTE_CSS = (
+    "@font-face{font-family:'Figtree';font-weight:300 900;font-display:swap;"
+    "src:url(data:font/ttf;base64,"
+    + base64.b64encode((PASTA / 'fontes' / 'Figtree.ttf').read_bytes()).decode('ascii')
+    + ") format('truetype');}\n"
+)
+CSS = FONTE_CSS + (PASTA / 'styles.css').read_text(encoding='utf-8')
 JS = (PASTA / 'syncup.js').read_text(encoding='utf-8')
 OPCOES_PONDERACAO = [
     ('Bruta (x)', 'bruta'),
@@ -684,7 +692,7 @@ def carregar_demo() -> tuple[list[str], list[str], str, str]:
 
 def _tema() -> gr.themes.Base:
     """Tema nativo do Gradio com a paleta escura do Spotify."""
-    fonte = [gr.themes.GoogleFont('Figtree'), 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif']
+    fonte = [gr.themes.Font('Figtree'), 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif']
     cores = dict(
         body_background_fill='#121212',
         body_text_color='#ffffff',

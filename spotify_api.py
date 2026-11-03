@@ -88,7 +88,7 @@ def _get(cliente: httpx.Client, caminho: str, token: str, **params) -> dict:
         try:
             motivo = str(resposta.json().get('error', {}).get('message', ''))[:200]
         except (ValueError, AttributeError):
-            motivo = ''
+            motivo = resposta.text.strip()[:200]  # às vezes o Spotify responde em texto puro
         raise PermissionError(
             'O Spotify recusou o acesso (403). Confira se esta conta está na lista de usuários '
             '(User Management) do seu app, com o e-mail exato da conta Spotify, e se o dono do '

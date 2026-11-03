@@ -403,3 +403,13 @@ def test_403_mostra_chamada_e_motivo_do_spotify() -> None:
     cliente = httpx.Client(transport=httpx.MockTransport(lambda p: httpx.Response(403, json=corpo)))
     with pytest.raises(PermissionError, match='/me/top/artists.*may not be registered'):
         spotify_api.coletar_perfil('t', 'Nicollas', cliente)
+
+
+def test_403_em_texto_puro_tambem_mostra_o_motivo() -> None:
+    cliente = httpx.Client(
+        transport=httpx.MockTransport(
+            lambda p: httpx.Response(403, text='user may not be registered')
+        )
+    )
+    with pytest.raises(PermissionError, match='user may not be registered'):
+        spotify_api.coletar_perfil('t', 'Nicollas', cliente)

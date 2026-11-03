@@ -842,10 +842,10 @@ def _secao(titulo: str, texto: str = '') -> gr.HTML:
 HERO = """<header class="su-hero">
   <div class="su-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <div class="su-hero-text">
-    <small>COMPARADOR DE HISTÓRICOS · v0.8</small>
+    <small>COMPARADOR DE HISTÓRICOS · v0.9 · CÓDIGO ABERTO</small>
     <h1>SyncUp</h1>
     <p>Seus históricos do Spotify, lado a lado — tudo processado localmente.</p>
-    <div class="su-chips"><span>Match entre amigos</span><span>Login com Spotify</span><span>Wrapped da vida toda</span><span>Arquétipos</span><span>Blend de similaridade</span><span>Corrida de artistas</span><span>Momentos sincronizados</span><span>Modo grupo</span></div>
+    <div class="su-chips"><span>Match entre amigos</span><span>Playlist da festa</span><span>Estilo musical</span><span>Login com Spotify</span><span>Wrapped da vida toda</span><span>Arquétipos</span><span>Blend de similaridade</span><span>Corrida de artistas</span><span>Momentos sincronizados</span><span>Modo grupo</span></div>
   </div>
 </header>"""
 

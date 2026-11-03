@@ -1,6 +1,6 @@
-# SyncUp v0.8
+# SyncUp v0.9
 
-Comparador local do **Histórico Estendido do Spotify**: duas pessoas ou grupos de 3–6 perfis, com rankings, similaridades, arquétipos explicáveis, gráficos interativos, playlist CSV e cartão PNG. Projeto acadêmico organizado pelo CRISP-DM.
+Comparador local do **Histórico Estendido do Spotify**: duas pessoas ou grupos de 3–6 perfis, com rankings, similaridades, arquétipos explicáveis, gráficos interativos, playlist CSV e cartão PNG. Projeto acadêmico organizado pelo CRISP-DM e **open source** ([licença MIT](LICENSE)).
 
 **Aviso metodológico:** métricas e traços descrevem o recorte de escuta. Não medem personalidade ou afinidade amorosa. Uma similaridade de 100% não identifica o dono do histórico.
 
@@ -36,6 +36,7 @@ python -m pip install -r requirements-parquet.txt
 | `wrapped.py`, `arquetipos.py`, `stories.py` | Wrapped da vida toda, regras de arquétipos e slides em stories |
 | `componentes.py`, `syncup.js` | Blocos HTML animados (Blend, Wrapped, listas tipo playlist, corrida de artistas) e o script de animações |
 | `exportacoes.py`, `cartao.py` | CSV protegido para planilhas e PNG local em Pillow |
+| `generos.py`, `festa.py` | Estilo musical (Spotify/MusicBrainz) e playlist da festa em CSV/XSPF |
 | `formatacao.py`, `app.py` | Formatação/sanitização pt-BR, entrada local e reexportações compatíveis |
 
 ```python
@@ -49,6 +50,13 @@ print(r.diagnostico)
 ```
 
 Os imports `carregar`, `comparar`, `metricas`, `criar_interface` e `limpar_cache` permanecem em `app.py`. **Mudança de contrato:** `comparar()` devolve `ResultadoComparacao`, com campos nomeados; não devolve a tupla de 12 saídas da v0.4. `metricas()` mantém a tupla `(cosseno, jaccard)`.
+
+## Estilo, playlist da festa e stories do Match (v0.9)
+
+- **Estilo musical** (`generos.py`): além dos artistas, cada dupla ganha uma compatibilidade de **gêneros**. Ela ajuda quando os artistas não batem mas o estilo bate. O peso de cada artista é dividido entre os gêneros dele, e gêneros compostos ("brazilian rock") também contam, com meio peso, para as palavras que os formam. Assim as tags do Spotify e do MusicBrainz se aproximam. É uma aproximação: o emparelhamento continua só pelos artistas.
+- **Gêneros para quem envia ZIP**: o ZIP não traz gêneros. Marque *Comparar também o estilo* para buscá-los no [MusicBrainz](https://musicbrainz.org) (base aberta, dados CC0). Só nomes de artistas são enviados, 1 por segundo, e as respostas ficam em `.syncup_cache/generos_musicbrainz.json`. Na primeira vez leva até ~25 s por pessoa. Perfis do Spotify já trazem gêneros.
+- **Playlist da festa** (`festa.py`): até 30 músicas que cobrem o gosto de todo o grupo. A escolha maximiza Σ √cobertura, o que dá prioridade a quem ainda tem pouco. Cada faixa diz para quem foi escolhida. Baixe em CSV ou em **XSPF**, o formato aberto de playlist da Xiph, que abre no VLC e em outros players livres.
+- **Stories do Match** revelam as duplas e o trio, e o **cartão PNG** (1080×1350) de uma dupla é gerado localmente.
 
 ## Match entre amigos e login com Spotify (v0.8)
 
@@ -115,7 +123,7 @@ Tema escuro inspirado no Spotify, com animações em todos os pontos onde fazem 
 - **Rankings** como listas de playlist: ao passar o mouse, o número vira ▶ e o link abre a busca no Spotify.
 - Botão **Testar com dados fictícios** para ver tudo sem enviar históricos reais.
 
-Todas as animações são desligadas quando o sistema pede movimento reduzido (`prefers-reduced-motion`). Sem JavaScript, os valores finais continuam visíveis. A fonte Figtree vem do Google Fonts quando há internet; offline, usa Helvetica/Arial.
+Todas as animações são desligadas quando o sistema pede movimento reduzido (`prefers-reduced-motion`). Sem JavaScript, os valores finais continuam visíveis. A fonte Figtree (OFL) vem embutida no projeto, em `fontes/`: funciona offline e não faz requisições ao Google Fonts.
 
 **Leitura paralela:** pela interface, arquivos grandes de pessoas diferentes são lidos em processos paralelos (até 4). `SYNCUP_PROCESSOS=0` desativa; a API Python continua sequencial, a menos que chame `dados.habilitar_leitura_paralela()` dentro de `if __name__ == '__main__':`.
 
@@ -131,7 +139,7 @@ python tests/test_golden_master.py --escala-grande -v
 
 No Windows, substitua `python` por `.\.venv312\Scripts\python.exe` nos comandos desta seção. Execute um comando por vez e prossiga somente se o anterior terminar sem erro. Um bloqueio Ruff com `WinError 4551` é uma política do Windows: não impede por si só o aplicativo ou pytest, mas exige uma liberação autorizada para executar o Ruff.
 
-Novos testes pytest: `test_metricas.py`, `test_dados.py`, `test_analise.py`, `test_smoke_ui.py`, `test_notebook.py` `test_v06.py` (correções e recursos da v0.6) `test_wrapped.py` (Wrapped e arquétipos da v0.7) e `test_match.py` (conciliação e login com a API simulada). Fixtures usam somente dados fictícios e isolam o cache. A suíte também descobre os testes de regressão/recursos anteriores em unittest, incluindo o fluxo HTTP real do Gradio. Parquet é testado quando instalado; sem a dependência, seus testes específicos são pulados.
+Novos testes pytest: `test_metricas.py`, `test_dados.py`, `test_analise.py`, `test_smoke_ui.py`, `test_notebook.py` `test_v06.py` (correções e recursos da v0.6) `test_wrapped.py` (Wrapped e arquétipos da v0.7) `test_match.py` (conciliação e login com a API simulada), `test_generos.py` (estilo e MusicBrainz simulado), `test_festa.py` (playlist da festa, stories e cartão do Match) e `test_licencas.py` (licenças abertas). Fixtures usam somente dados fictícios e isolam o cache. A suíte também descobre os testes de regressão/recursos anteriores em unittest, incluindo o fluxo HTTP real do Gradio. Parquet é testado quando instalado; sem a dependência, seus testes específicos são pulados.
 
 Ruff usa Python 3.10 como alvo, 100 colunas, imports ordenados e formatação uniforme. `tests/fixtures/` fica excluído: seu código congelado e seus hashes devem permanecer intactos. Golden masters existentes são lidos pelos testes, nunca atualizados automaticamente. Rankings são ordenados por contagem decrescente e nome crescente (música, depois artista, para faixas). A regressão preserva contagens e todos os itens acima do empate na última posição; valida o desempate e o corte contra contagens independentes dos eventos. Assim, não depende da ordem indefinida do quicksort antigo. Use `python -m ruff format .` para formatar alterações futuras.
 
@@ -158,6 +166,38 @@ python medir_desempenho.py perfil_a.zip perfil_b.zip --repeticoes 3 --parquet --
 Gera cerca de 300 mil eventos por perfil e relatórios JSON/CSV/Markdown com tempos brutos e medianas. A referência padrão é o Passo 1 congelado; `--antes outra/pasta` seleciona outra referência. Mede cache frio do aplicativo, memória quente e Parquet preparado. Imports, upload, rede, escrita inicial do Parquet e renderização no navegador ficam fora da medição. Não esvazia o cache do sistema operacional.
 
 A v0.5 calcula recursos adicionais: a diferença de tempo para a referência também reflete esse trabalho novo. Sem `--somente-nucleo`, a apresentação medida é a adaptação antiga `ui.apresentar()`, e não todos os gráficos da tela atual. `benchmark/300k.*` e `docs/PASSO_2.md` são registros históricos; não são medições da entrega final.
+
+## Código aberto
+
+O SyncUp é distribuído sob a [licença MIT](LICENSE) e só usa código e recursos abertos:
+
+| Dependência | Licença |
+|---|---|
+| Gradio | Apache-2.0 |
+| FastAPI | MIT |
+| httpx | BSD-3-Clause |
+| pandas | BSD-3-Clause |
+| Plotly | MIT |
+| Pillow | MIT-CMU |
+| seaborn | BSD-3-Clause |
+| matplotlib | PSF |
+| orjson | Apache-2.0 / MIT |
+| pytest, Ruff | MIT |
+| Fonte Figtree (`fontes/`) | SIL OFL 1.1 ([`fontes/OFL.txt`](fontes/OFL.txt)) |
+| MusicBrainz (gêneros, opcional) | dados CC0, servidor open source |
+
+`tests/test_licencas.py` confere a licença declarada de cada pacote em `requirements*.txt`. Uma dependência nova sem licença aberta faz a suíte falhar.
+
+**Contribuir:** abra uma *issue* ou um *pull request*. Antes, rode `python -m pytest -q`, `python -m ruff check .` e `python -m ruff format --check .`. O `.gitattributes` mantém tudo em LF, também no Windows. Nunca envie históricos reais nem perfis de `perfis_spotify/`: são dados pessoais, e o `.gitignore` já os exclui.
+
+## Rumo à 2.0
+
+Ideia para uma versão futura: **descobrir pessoas com gosto parecido** e conversar com elas dentro do app. Isso muda a natureza do projeto, de local para conectado, e exige:
+
+- um servidor que guarde perfis, com **consentimento explícito**, opção de apagar e cuidado com a **LGPD** (hábitos de escuta são dados pessoais);
+- descoberta por perfil resumido (rankings e gêneros), nunca pelo histórico bruto;
+- moderação e bloqueio entre usuários;
+- para o chat, um protocolo aberto como o **[Matrix](https://matrix.org)**, em vez de um chat próprio. Ele já resolve criptografia, federação e clientes livres, e mantém o projeto 100% aberto.
 
 ## Limitações e interpretação
 

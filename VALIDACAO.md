@@ -71,3 +71,12 @@ O notebook distribuído está sem saídas e sem arquivos de dados/exports reais.
 - `tests/test_match.py`: conversão ZIP → rankings nas janelas da API, pesos por posição, nomes normalizados entre fontes, emparelhamento comparado com busca exaustiva (6 pessoas) e trio com número ímpar, JSON sem token, PKCE (desafio S256 conferido), coleta completa e rotas do servidor com a API do Spotify **simulada**.
 - O login real não pôde ser testado aqui (exige um app no Developer Dashboard e contas cadastradas); o redirecionamento para `accounts.spotify.com/authorize` com PKCE foi conferido no servidor local.
 - Match com 4 históricos reais conferido no Chromium: matriz, duplas ótimas, trocas sugeridas e ranking, sem erros de JavaScript.
+
+## v0.9 — estilo, playlist da festa, stories do Match e código aberto (2026-11-03)
+
+- `pytest`: 180 testes aprovados e 3 pulados (PyArrow não instalado), em Python 3.12.10 no Windows; `ruff check` e `ruff format --check` sem pendências.
+- Testes que falham na versão anterior e passam nesta: trio comparado com busca exaustiva (5 e 7 pessoas) e duas leituras simultâneas de históricos (antes ficavam em fila na trava global).
+- `tests/test_generos.py`: MusicBrainz **simulado**, com intervalo de 1 s (relógio injetado), score mínimo, cache em disco, falha de rede fora do cache e gêneros do Spotify preservados. A API real do MusicBrainz não foi chamada.
+- `tests/test_festa.py`: cobertura de todo o grupo, determinismo, CSV protegido, XSPF válido e escapado, stories com nomes escapados, cartão com e sem gêneros.
+- App real (`python app.py`) com 5 ZIPs fictícios de 20 mil eventos, pela API HTTP do Gradio: Match com trio em 1,63 s e repetido em 0,16 s (cache do perfil), playlist da festa com 30 faixas (CSV e XSPF) e cartão PNG da dupla.
+- No Chromium: a fonte Figtree carregada localmente, nenhuma requisição a `fonts.googleapis.com`/`gstatic` e nenhum erro de JavaScript. Os stories do Match não foram conferidos visualmente no navegador (só a estrutura do HTML, por teste).

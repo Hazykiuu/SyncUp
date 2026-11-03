@@ -1,5 +1,25 @@
 # Changelog — SyncUp
 
+## [0.9] — 2026-11-03
+
+### Novo
+- **Código aberto**: licença MIT (`LICENSE`) e teste que exige licença aberta em toda dependência declarada. A fonte Figtree (OFL) agora vem no projeto (`fontes/`): a interface não chama mais o Google Fonts e os cartões PNG ficam iguais em qualquer sistema.
+- **Estilo musical no Match** (`generos.py`): segundo eixo de compatibilidade por gêneros, para quando os artistas não batem mas o estilo bate. Perfis do Spotify já trazem gêneros; para ZIPs, uma caixa opcional (desligada por padrão) busca no **MusicBrainz** (base aberta), 1 consulta por segundo e com cache local. O emparelhamento continua só por artistas.
+- **Playlist da festa** (`festa.py`): até 30 músicas que cobrem o gosto de todo o grupo, equilibrando quem ainda tem pouco. Exporta CSV e **XSPF** (formato aberto de playlist, abre no VLC).
+- **Stories do Match** (revelação animada das duplas e do trio) e **cartão PNG da dupla** (1080×1350).
+
+### Desempenho
+- A leitura de um histórico não segura mais a trava global: arquivos e sessões diferentes são lidos ao mesmo tempo.
+- O perfil de um ZIP fica em cache pelo SHA-256: repetir um Match não relê os históricos.
+
+### Correções
+- A lista de perfis do Spotify é recarregada ao abrir a página, então um perfil salvo depois que o servidor subiu já aparece numa aba nova.
+
+### Contrato
+- `Compatibilidade` ganha `pontuacao_generos` (ou `None`) e `generos_comuns`, com valores padrão.
+- `encontrar_matches` recebe uma entrada a mais no fim (buscar gêneros) e devolve 7 saídas (+ stories, estado e duplas).
+- Novos endpoints `playlist_festa` e `baixar_cartao_match`.
+
 ## [0.8] — 2026-11-03
 
 ### Novo

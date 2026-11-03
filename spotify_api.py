@@ -85,9 +85,15 @@ def _get(cliente: httpx.Client, caminho: str, token: str, **params) -> dict:
         f'{URL_API}{caminho}', params=params, headers={'Authorization': f'Bearer {token}'}
     )
     if resposta.status_code == 403:
+        try:
+            motivo = str(resposta.json().get('error', {}).get('message', ''))[:200]
+        except (ValueError, AttributeError):
+            motivo = ''
         raise PermissionError(
             'O Spotify recusou o acesso (403). Confira se esta conta está na lista de usuários '
-            '(User Management) do seu app e se o dono do app tem Premium.'
+            '(User Management) do seu app, com o e-mail exato da conta Spotify, e se o dono do '
+            f'app tem Premium. Chamada: {caminho}.'
+            + (f' Resposta do Spotify: "{motivo}"' if motivo else '')
         )
     resposta.raise_for_status()
     return resposta.json()

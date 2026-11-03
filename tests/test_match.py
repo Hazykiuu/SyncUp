@@ -396,3 +396,10 @@ def test_match_repetido_nao_precarrega_zips_com_perfil_em_cache(
     chamadas.clear()
     ui.executar_match(*args, progress=lambda *a, **k: None)
     assert chamadas == []
+
+
+def test_403_mostra_chamada_e_motivo_do_spotify() -> None:
+    corpo = {'error': {'status': 403, 'message': 'the user may not be registered'}}
+    cliente = httpx.Client(transport=httpx.MockTransport(lambda p: httpx.Response(403, json=corpo)))
+    with pytest.raises(PermissionError, match='/me/top/artists.*may not be registered'):
+        spotify_api.coletar_perfil('t', 'Nicollas', cliente)

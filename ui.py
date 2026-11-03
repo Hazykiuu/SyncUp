@@ -31,7 +31,6 @@ from conciliacao import conciliar
 from configuracao import MUSICAS_IGNORADAS_PADRAO, ConfiguracaoCarga
 from dados import (
     MAXIMO_HISTORICOS_CACHE,
-    carregar_historicos,
     habilitar_leitura_paralela,
     precarregar,
 )
@@ -46,7 +45,7 @@ from graficos import (
     radar_tracos,
     slope_chart,
 )
-from perfil_gosto import carregar_perfil, listar_perfis, perfil_de_historico
+from perfil_gosto import carregar_perfil, listar_perfis, perfil_de_arquivos
 from perfis import AVISO_TRACOS, LIMIAR_FAVORITOS, LIMIAR_MADRUGADA, LIMIAR_REPEAT
 from spotify_api import PASTA_PERFIS, REDIRECT_PADRAO
 from wrapped import Wrapped, wrapped_de_arquivos
@@ -55,7 +54,7 @@ PASTA = Path(__file__).resolve().parent
 # Figtree (OFL) embutida no CSS: nenhuma requisição ao Google Fonts, funciona offline.
 FONTE_CSS = (
     "@font-face{font-family:'Figtree';font-weight:300 900;font-display:swap;"
-    "src:url(data:font/ttf;base64,"
+    'src:url(data:font/ttf;base64,'
     + base64.b64encode((PASTA / 'fontes' / 'Figtree.ttf').read_bytes()).decode('ascii')
     + ") format('truetype');}\n"
 )
@@ -594,8 +593,7 @@ def executar_match(
                 # Lê o bloco em paralelo; blocos do tamanho do cache não descartam trabalho.
                 precarregar(arquivos[i : i + MAXIMO_HISTORICOS_CACHE], config)
             progress(0.05 + 0.6 * i / max(len(arquivos), 1), desc=f'Lendo o histórico de {nome}')
-            historico = carregar_historicos(arquivo, configuracao=config)
-            perfis.append(perfil_de_historico(historico.dados, nome))
+            perfis.append(perfil_de_arquivos(arquivo, nome, config))
             fontes[nome] = 'Histórico ZIP'
         for nome in selecionados or []:
             perfil = carregar_perfil(PASTA_PERFIS / f'{nome}.json')
@@ -1129,6 +1127,8 @@ def criar_interface() -> gr.Blocks:
                     api_name=False,
                 )
                 recarregar.click(atualizar_perfis, salvos, salvos, api_name=False)
+                # Cada aba nova do navegador vê os perfis salvos depois que o servidor subiu.
+                demo.load(atualizar_perfis, salvos, salvos, api_name=False)
                 buscar.click(
                     executar_match,
                     [fm, nm, salvos, *opcoes],

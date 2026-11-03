@@ -574,32 +574,32 @@ def carregar_historico(
         if chave in _memoria:
             _memoria.move_to_end(chave)
             original = replace(_memoria[chave], origem_cache='Memória da sessão')
-        else:
-            original, corrompido = (
-                _ler_cache(sha, config) if config.usar_cache_disco else (None, False)
-            )
-            if original is None:
-                dados, contadores, antes_dedup = _limpar(_extrair_registros(caminho), config)
-                original = Historico(
-                    dados,
-                    sha,
-                    '',
-                    antes_dedup,
-                    contadores.duplicados,
-                    contadores,
-                    config.fuso_horario,
-                    'Arquivo original',
-                )
-                if config.usar_cache_disco:
-                    status = _gravar_cache(original, config)
-                    prefixo = 'cache inválido reconstruído; ' if corrompido else ''
-                    original = replace(
-                        original, origem_cache=f'Arquivo original; {prefixo}{status}'
-                    )
-            _memoria[chave] = original
-            while len(_memoria) > MAXIMO_HISTORICOS_CACHE:
-                _memoria.popitem(last=False)
-        return replace(original, dados=original.dados.copy(), arquivo=caminho.name)
+            return replace(original, dados=original.dados.copy(), arquivo=caminho.name)
+    # Leitura fora da trava: sessões e arquivos diferentes não esperam uns pelos outros.
+    original, corrompido = _ler_cache(sha, config) if config.usar_cache_disco else (None, False)
+    if original is None:
+        dados, contadores, antes_dedup = _limpar(_extrair_registros(caminho), config)
+        original = Historico(
+            dados,
+            sha,
+            '',
+            antes_dedup,
+            contadores.duplicados,
+            contadores,
+            config.fuso_horario,
+            'Arquivo original',
+        )
+        if config.usar_cache_disco:
+            status = _gravar_cache(original, config)
+            prefixo = 'cache inválido reconstruído; ' if corrompido else ''
+            original = replace(original, origem_cache=f'Arquivo original; {prefixo}{status}')
+    with _trava:
+        # Se outra thread leu o mesmo arquivo antes, todos usam a versão já guardada.
+        original = _memoria.setdefault(chave, original)
+        _memoria.move_to_end(chave)
+        while len(_memoria) > MAXIMO_HISTORICOS_CACHE:
+            _memoria.popitem(last=False)
+    return replace(original, dados=original.dados.copy(), arquivo=caminho.name)
 
 
 def carregar(

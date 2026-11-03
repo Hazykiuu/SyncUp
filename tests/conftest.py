@@ -15,6 +15,7 @@ import pytest
 # Desativa telemetria nos testes antes de importar a interface.
 os.environ['GRADIO_ANALYTICS_ENABLED'] = 'False'
 from dados import limpar_cache
+from perfil_gosto import limpar_cache_perfis
 from tools.gerar_dados_falsos import Configuracao, gerar_zip
 
 Evento = dict[str, Any]
@@ -25,8 +26,10 @@ FabricaEvento = Callable[..., Evento]
 def cache_isolado() -> Iterator[None]:
     """Garante que cada teste começa e termina sem históricos no cache global."""
     limpar_cache()
+    limpar_cache_perfis()
     yield
     limpar_cache()
+    limpar_cache_perfis()
 
 
 @pytest.fixture

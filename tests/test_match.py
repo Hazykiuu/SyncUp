@@ -312,3 +312,54 @@ def test_match_na_interface_mistura_zip_e_spotify(tmp_path: Path, monkeypatch) -
     assert 'trio' in html and 'Ranking individual' in html
     assert len(figura.data[0].z) == 3 and list(ranking['Pessoa']) == ['Ana', 'Bia', 'Caio']
     assert ranking.loc[2, 'Fonte'].startswith('Spotify')
+
+
+def test_match_repetido_reusa_perfil_do_zip(tmp_path: Path, monkeypatch) -> None:
+    import perfil_gosto
+
+    caminho = tmp_path / 'Ana.json'
+    caminho.write_text(json.dumps([_evento('2026-10-01T10:00:00Z', 'X')]), encoding='utf-8')
+    chamadas = []
+    original = perfil_gosto.carregar_historicos
+    monkeypatch.setattr(
+        perfil_gosto, 'carregar_historicos', lambda *a, **k: chamadas.append(1) or original(*a, **k)
+    )
+    primeiro = perfil_gosto.perfil_de_arquivos(caminho, 'Ana')
+    segundo = perfil_gosto.perfil_de_arquivos(str(caminho), 'Outra')
+    assert len(chamadas) == 1
+    assert segundo.nome == 'Outra' and segundo.top_artistas == primeiro.top_artistas
+
+
+def test_perfil_novo_aparece_depois_de_atualizar_lista(tmp_path: Path, monkeypatch) -> None:
+    """Um amigo loga com o app aberto: Atualizar lista libera o perfil para o Match."""
+    import asyncio
+
+    from gradio.exceptions import Error
+    from gradio.state_holder import SessionState
+
+    import ui
+
+    monkeypatch.setattr(ui, 'PASTA_PERFIS', tmp_path)
+    demo = ui.criar_interface()  # sem perfis salvos ainda
+    funcoes = {f.fn.__name__: f for f in demo.fns.values() if f.fn}
+    salvar_perfil(_perfil('Caio', ['Y']), tmp_path)
+    salvar_perfil(_perfil('Dani', ['Y', 'Z']), tmp_path)
+    entradas = [None, '', ['Caio', 'Dani'], 'America/Sao_Paulo', '', '', 'manter', False, False]
+
+    async def fluxo() -> None:
+        sessao = SessionState(demo)
+        await demo.process_api(block_fn=funcoes['atualizar_perfis'], inputs=[[]], state=sessao)
+        saida = await demo.process_api(
+            block_fn=funcoes['executar_match'], inputs=entradas, state=sessao
+        )
+        assert 'Caio' in saida['data'][0]
+        with pytest.raises(Error, match='not in the list of choices'):
+            await demo.process_api(
+                block_fn=funcoes['executar_match'], inputs=entradas, state=SessionState(demo)
+            )
+
+    asyncio.run(fluxo())
+    assert any(
+        d.fn is ui.atualizar_perfis and d.targets and d.targets[0][1] == 'load'
+        for d in demo.fns.values()
+    )

@@ -1178,8 +1178,9 @@ def criar_interface() -> gr.Blocks:
                     label='Comparar também o estilo: buscar gêneros no MusicBrainz',
                     info=(
                         'Base aberta (CC0). Envia só nomes de artistas pela internet, 1 por '
-                        'segundo; na primeira vez leva até ~25 s por pessoa. Perfis do Spotify '
-                        'já trazem gêneros. As tags são colaborativas: o estilo é aproximado.'
+                        'segundo; na primeira vez leva até ~25 s por pessoa. Vale para ZIPs e '
+                        'para logins do Spotify (em modo de desenvolvimento, o Spotify não envia '
+                        'gêneros). As tags são colaborativas: o estilo é aproximado.'
                     ),
                 )
                 with gr.Accordion(

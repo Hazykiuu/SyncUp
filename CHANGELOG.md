@@ -4,7 +4,7 @@
 
 ### Novo
 - **Código aberto**: licença MIT (`LICENSE`) e teste que exige licença aberta em toda dependência declarada. A fonte Figtree (OFL) agora vem no projeto (`fontes/`): a interface não chama mais o Google Fonts e os cartões PNG ficam iguais em qualquer sistema.
-- **Estilo musical no Match** (`generos.py`): segundo eixo de compatibilidade por gêneros, para quando os artistas não batem mas o estilo bate. Perfis do Spotify já trazem gêneros; para ZIPs, uma caixa opcional (desligada por padrão) busca no **MusicBrainz** (base aberta), 1 consulta por segundo e com cache local. O emparelhamento continua só por artistas.
+- **Estilo musical no Match** (`generos.py`): segundo eixo de compatibilidade por gêneros, para quando os artistas não batem mas o estilo bate. Uma caixa opcional (desligada por padrão) busca os gêneros no **MusicBrainz**, para ZIPs e também para logins do Spotify, que em modo de desenvolvimento não enviam gêneros (base aberta), 1 consulta por segundo e com cache local. O emparelhamento continua só por artistas.
 - **Playlist da festa** (`festa.py`): até 30 músicas que cobrem o gosto de todo o grupo, equilibrando quem ainda tem pouco. Exporta CSV e **XSPF** (formato aberto de playlist, abre no VLC).
 - **Stories do Match** (revelação animada das duplas e do trio) e **cartão PNG da dupla** (1080×1350).
 

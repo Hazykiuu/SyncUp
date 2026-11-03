@@ -1,8 +1,10 @@
 """Gêneros musicais: vetor de estilo por pessoa e consulta opcional ao MusicBrainz.
 
-O login do Spotify já traz gêneros por artista. O histórico ZIP não traz; para
-ele, se a pessoa ativar, os gêneros vêm do MusicBrainz (base aberta, dados CC0),
-respeitando 1 consulta por segundo e guardando as respostas num cache local.
+A API do Spotify só envia gêneros por artista quando o app tem acesso estendido
+(em modo de desenvolvimento a lista vem vazia), e o histórico ZIP não traz
+gêneros. Por isso, se a pessoa ativar, os artistas sem gênero de qualquer perfil
+são buscados no MusicBrainz (base aberta, dados CC0), respeitando 1 consulta por
+segundo e guardando as respostas num cache local.
 Só nomes de artistas são enviados.
 
 As tags do MusicBrainz são colaborativas e não usam o mesmo vocabulário do

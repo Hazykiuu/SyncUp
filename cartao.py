@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from PIL import Image, ImageDraw, ImageFont
 
-from formatacao import fmt_pct
+from formatacao import fmt_num, fmt_pct
 from perfis import LIMIAR_FAVORITOS, QUANTIDADE_FAVORITOS
 
 if TYPE_CHECKING:
@@ -45,17 +45,11 @@ def _carregar_fonte(
     tamanho: int, negrito: bool, fonte: str | None
 ) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
     """Implementação com cache de ``carregar_fonte``."""
-    if fonte is None:
-        try:
-            # Figtree (OFL) do projeto: o PNG fica igual em qualquer sistema.
-            figtree = ImageFont.truetype(str(FIGTREE), tamanho)
-            figtree.set_variation_by_name('Bold' if negrito else 'Regular')
-            return figtree
-        except (OSError, ValueError):
-            pass
     variante = 'DejaVuSans-Bold.ttf' if negrito else 'DejaVuSans.ttf'
     windows = Path(os.environ.get('WINDIR', 'C:/Windows')) / 'Fonts'
+    # Figtree (OFL) do projeto logo após a fonte pedida: o PNG fica igual em qualquer sistema.
     candidatas = ([str(fonte)] if fonte else []) + [
+        str(FIGTREE),
         f'/usr/share/fonts/truetype/dejavu/{variante}',
         str(windows / ('segoeuib.ttf' if negrito else 'segoeui.ttf')),
         '/System/Library/Fonts/Supplemental/Arial.ttf',
@@ -63,7 +57,10 @@ def _carregar_fonte(
     ]
     for candidata in candidatas:
         try:
-            return ImageFont.truetype(candidata, tamanho)
+            carregada = ImageFont.truetype(candidata, tamanho)
+            if candidata == str(FIGTREE):
+                carregada.set_variation_by_name('Bold' if negrito else 'Regular')
+            return carregada
         except (OSError, ValueError):
             continue
     try:
@@ -99,6 +96,22 @@ def _ajustar_texto(
     return texto[:baixo].rstrip() + sufixo
 
 
+def _logo(d: ImageDraw.ImageDraw) -> None:
+    """Disco preto com as quatro barras verdes, no canto superior esquerdo."""
+    d.ellipse((64, 60, 144, 140), fill='#000000')
+    for i, altura in enumerate((34, 50, 26, 42)):
+        x = 82 + i * 12
+        d.rounded_rectangle((x, 122 - altura, x + 7, 122), radius=3, fill=VERDE)
+
+
+def _anel(d: ImageDraw.ImageDraw, caixa: tuple[int, int, int, int], proporcao: float) -> None:
+    """Anel cinza preenchido em verde na proporção dada (limitada a 0–1)."""
+    proporcao = max(0.0, min(1.0, proporcao))
+    d.arc(caixa, 0, 360, fill='#3e3e3e', width=16)
+    if proporcao > 0:
+        d.arc(caixa, -90, -90 + 360 * proporcao, fill=VERDE, width=16)
+
+
 def gerar_cartao(
     resultado: ResultadoComparacao, destino: str | Path, fonte: str | Path | None = None
 ) -> Path:
@@ -129,10 +142,7 @@ def gerar_cartao(
         f = carregar_fonte(tamanho, forte, fonte)
         d.text((x, y), _ajustar_texto(valor, largura, d, f), fill=cor, font=f)
 
-    d.ellipse((64, 60, 144, 140), fill='#000000')
-    for i, altura in enumerate((34, 50, 26, 42)):
-        x = 82 + i * 12
-        d.rounded_rectangle((x, 122 - altura, x + 7, 122), radius=3, fill=VERDE)
+    _logo(d)
     texto(168, 74, 'SyncUp', 48, TEXTO, True)
     texto(64, 175, 'O encontro dos seus históricos musicais', 30, SECUNDARIO)
     texto(64, 245, resultado.perfil_a.nome, 42, VERDE, True)
@@ -140,12 +150,7 @@ def gerar_cartao(
     d.rounded_rectangle((64, 392, 1016, 620), radius=30, fill=PAINEL)
     texto(100, 415, 'SIMILARIDADE DE ESCUTA · COSSENO', 26, SECUNDARIO)
     texto(96, 455, fmt_pct(resultado.metricas.cosseno), 104, VERDE, True, 690)
-    # Anel de similaridade à direita do painel.
-    proporcao = max(0.0, min(1.0, resultado.metricas.cosseno))
-    caixa = (812, 420, 984, 592)
-    d.arc(caixa, 0, 360, fill='#3e3e3e', width=16)
-    if proporcao > 0:
-        d.arc(caixa, -90, -90 + 360 * proporcao, fill=VERDE, width=16)
+    _anel(d, (812, 420, 984, 592), resultado.metricas.cosseno)  # à direita do painel
     texto(100, 580, f'Ponderação: {resultado.ponderacao} · plays ≥30 segundos', 24, SECUNDARIO)
     texto(64, 665, f'Artistas em comum · Jaccard: {fmt_pct(resultado.metricas.jaccard)}', 30)
     texto(
@@ -268,28 +273,21 @@ def gerar_cartao_match(
         f = carregar_fonte(tamanho, forte, fonte)
         d.text((x, y), _ajustar_texto(valor, largura, d, f), fill=cor, font=f)
 
-    d.ellipse((64, 60, 144, 140), fill='#000000')
-    for i, altura in enumerate((34, 50, 26, 42)):
-        x = 82 + i * 12
-        d.rounded_rectangle((x, 122 - altura, x + 7, 122), radius=3, fill=VERDE)
+    _logo(d)
     texto(168, 74, 'SyncUp Match', 48, TEXTO, True)
     texto(64, 200, c.a, 64, VERDE, True)
     texto(64, 285, '×  ' + c.b, 64, ROXO, True)
     d.rounded_rectangle((64, 410, 1016, 650), radius=30, fill=PAINEL)
     texto(100, 435, 'COMPATIBILIDADE DOS RANKINGS', 26, SECUNDARIO)
-    texto(96, 475, f'{c.pontuacao:.1f}%'.replace('.', ','), 104, VERDE, True, 690)
+    texto(96, 475, f'{fmt_num(c.pontuacao, 1)}%', 104, VERDE, True, 690)
     texto(100, 600, c.nivel, 30, TEXTO, True, 690)
-    proporcao = max(0.0, min(1.0, c.pontuacao / 100))
-    caixa = (812, 445, 984, 617)
-    d.arc(caixa, 0, 360, fill='#3e3e3e', width=16)
-    if proporcao > 0:
-        d.arc(caixa, -90, -90 + 360 * proporcao, fill=VERDE, width=16)
+    _anel(d, (812, 445, 984, 617), c.pontuacao / 100)
     texto(64, 700, 'ARTISTAS QUE VOCÊS DIVIDEM', 26, VERDE, True)
     for i, artista in enumerate(c.artistas_comuns[:5] or ['Nenhum artista em comum nos rankings']):
         texto(64, 750 + i * 48, artista, 32)
     if c.pontuacao_generos is not None:
         estilo = ', '.join(c.generos_comuns[:4]) or 'estilos diferentes'
-        texto(64, 1010, f'NO ESTILO · {c.pontuacao_generos:.1f}%'.replace('.', ','), 26, ROXO, True)
+        texto(64, 1010, f'NO ESTILO · {fmt_num(c.pontuacao_generos, 1)}%', 26, ROXO, True)
         texto(64, 1056, estilo, 32)
     d.line((64, 1195, 1016, 1195), fill='#3e3e3e', width=2)
     texto(64, 1220, 'Compara os rankings musicais enviados. Não mede', 25, SECUNDARIO)

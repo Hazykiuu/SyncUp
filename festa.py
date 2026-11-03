@@ -2,7 +2,7 @@
 
 Cada música tem um valor para cada pessoa: o peso dela no top da pessoa
 (posição × período, como em ``perfil_gosto.vetor_artistas``) ou, se só o artista
-estiver nos rankings da pessoa, metade disso. A escolha é gulosa e maximiza
+estiver no top de artistas da pessoa, metade do peso do artista nesse top. A escolha é gulosa e maximiza
 Σ √cobertura: a raiz faz cada nova música valer mais para quem ainda tem pouco,
 então ninguém fica de fora enquanto houver música para essa pessoa.
 
@@ -26,7 +26,6 @@ from perfil_gosto import (
     TAMANHO_RANKING,
     PerfilGosto,
     peso_posicao,
-    vetor_artistas,
 )
 from recursos import link_spotify
 
@@ -58,14 +57,24 @@ def _valores(perfis: list[PerfilGosto]) -> dict[tuple[str, str], tuple[str, str,
                 _, _, valores = faixas.setdefault(chave, (musica, artista, {}))
                 peso = PESO_PERIODO[periodo] * peso_posicao(i)
                 valores[perfil.nome] = valores.get(perfil.nome, 0.0) + peso
-    # Quem não tem a faixa, mas tem o artista, também curte um pouco.
+    # Quem não tem a faixa, mas tem o artista no top, vale metade, na mesma escala da faixa.
     for perfil in perfis:
-        artistas = vetor_artistas(perfil)
-        maximo = max(artistas.values(), default=0.0) or 1.0
+        artistas = _pesos_ranking_artistas(perfil)
         for (_, artista_chave), (_, _, valores) in faixas.items():
             if perfil.nome not in valores and artista_chave in artistas:
-                valores[perfil.nome] = FRACAO_SO_ARTISTA * artistas[artista_chave] / maximo
+                valores[perfil.nome] = FRACAO_SO_ARTISTA * artistas[artista_chave]
     return faixas
+
+
+def _pesos_ranking_artistas(perfil: PerfilGosto) -> dict[str, float]:
+    """Σ peso_período × peso_posição do artista nos tops: a mesma escala de uma faixa."""
+    pesos: dict[str, float] = {}
+    for periodo in PERIODOS:
+        for i, artista in enumerate(perfil.top_artistas.get(periodo, [])[:TAMANHO_RANKING], 1):
+            chave = normalizar_nome(artista)
+            if chave:
+                pesos[chave] = pesos.get(chave, 0.0) + PESO_PERIODO[periodo] * peso_posicao(i)
+    return pesos
 
 
 def playlist_festa(perfis: list[PerfilGosto], n: int = TAMANHO_PADRAO) -> list[FaixaFesta]:

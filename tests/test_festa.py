@@ -10,7 +10,7 @@ from PIL import Image
 
 from cartao import gerar_cartao_match
 from conciliacao import comparar_perfis, conciliar
-from festa import exportar_csv, exportar_xspf, playlist_festa
+from festa import _valores, exportar_csv, exportar_xspf, playlist_festa
 from perfil_gosto import PerfilGosto
 from stories import stories_match_html
 
@@ -45,6 +45,9 @@ def test_artista_em_comum_vale_meio_ponto() -> None:
     b = _perfil('Bia', [('Faixa B', 'Banda')])
     primeira = playlist_festa([a, b], n=1)[0]
     assert set(primeira.para) == {'Ana', 'Bia'}  # a outra pessoa conhece o artista
+    # 1º lugar nos três períodos: a faixa vale 2,4 para quem a tem e 1,2 (metade) para a outra.
+    valores = _valores([a, b])[('faixaa', 'banda')][2]
+    assert valores == {'Ana': pytest.approx(2.4), 'Bia': pytest.approx(1.2)}
 
 
 def test_exportacoes_abertas_sao_validas_e_escapadas(tmp_path: Path) -> None:
@@ -77,3 +80,9 @@ def test_cartao_do_match_com_e_sem_generos(tmp_path: Path) -> None:
     for i, c in enumerate((com, sem)):
         with Image.open(gerar_cartao_match(c, tmp_path / f'{i}.png')) as imagem:
             assert imagem.size == (1080, 1350)
+
+
+def test_fonte_invalida_cai_na_figtree() -> None:
+    from cartao import carregar_fonte
+
+    assert carregar_fonte(30, True, '/inexistente').getname() == ('Figtree', 'Bold')

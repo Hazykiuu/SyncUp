@@ -19,7 +19,7 @@ from threading import Lock
 import pandas as pd
 
 from configuracao import ConfiguracaoCarga, normalizar_nome
-from dados import Caminho, _chave_arquivo, _hash_cache, carregar_historicos
+from dados import Caminho, carregar_historicos, sha_em_cache
 
 PERIODOS = ('short_term', 'medium_term', 'long_term')
 NOMES_PERIODOS = {
@@ -166,6 +166,19 @@ _trava_perfis = Lock()
 MAXIMO_PERFIS_CACHE = 64  # Perfis têm poucos KB; repetir um Match não relê os ZIPs.
 
 
+def _chave_perfil(partes: list[Caminho], config: ConfiguracaoCarga) -> tuple:
+    return tuple(sorted(sha_em_cache(p) for p in partes)), config, VERSAO_PERFIL
+
+
+def tem_perfil_em_cache(
+    arquivos: Caminho | list[Caminho] | tuple[Caminho, ...], configuracao: ConfiguracaoCarga
+) -> bool:
+    """Se ``perfil_de_arquivos`` devolveria o perfil sem ler os arquivos."""
+    partes = list(arquivos) if isinstance(arquivos, (list, tuple)) else [arquivos]
+    with _trava_perfis:
+        return _chave_perfil(partes, configuracao) in _perfis_zip
+
+
 def perfil_de_arquivos(
     arquivos: Caminho | list[Caminho] | tuple[Caminho, ...],
     nome: str,
@@ -174,8 +187,7 @@ def perfil_de_arquivos(
     """``perfil_de_historico`` dos arquivos, com cache em memória pelo conteúdo (SHA-256)."""
     config = configuracao or ConfiguracaoCarga()
     partes = list(arquivos) if isinstance(arquivos, (list, tuple)) else [arquivos]
-    shas = tuple(sorted(_hash_cache(_chave_arquivo(p)) for p in partes))
-    chave = (shas, config, VERSAO_PERFIL)
+    chave = _chave_perfil(partes, config)
     with _trava_perfis:
         perfil = _perfis_zip.get(chave)
         if perfil is not None:

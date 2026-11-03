@@ -129,6 +129,11 @@ def _hash_cache(chave: ChaveArquivo) -> str:
     return sha256_arquivo(chave[0])
 
 
+def sha_em_cache(arquivo: Caminho) -> str:
+    """SHA-256 do arquivo, reaproveitado enquanto tamanho e datas não mudam."""
+    return _hash_cache(_chave_arquivo(arquivo))
+
+
 Colunas = dict[str, list[Any]]
 _SEM_CAMPOS: dict[str, Any] = {}
 

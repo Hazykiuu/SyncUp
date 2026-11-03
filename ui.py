@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import os
 import shutil
+from collections.abc import Callable
 from functools import lru_cache
 from itertools import combinations
 from numbers import Real
@@ -38,6 +39,7 @@ from dados import (
 from exportacoes import exportar_playlist
 from festa import exportar_csv, exportar_xspf, playlist_festa
 from formatacao import escape_html, escape_markdown, fmt_horas, fmt_num, fmt_pct, listar_markdown
+from generos import ARQUIVO_CACHE as ARQUIVO_CACHE_GENEROS
 from generos import ConsultaMusicBrainz, preencher_generos
 from graficos import (
     butterfly,
@@ -48,7 +50,7 @@ from graficos import (
     radar_tracos,
     slope_chart,
 )
-from perfil_gosto import carregar_perfil, listar_perfis, perfil_de_arquivos
+from perfil_gosto import carregar_perfil, listar_perfis, perfil_de_arquivos, tem_perfil_em_cache
 from perfis import AVISO_TRACOS, LIMIAR_FAVORITOS, LIMIAR_MADRUGADA, LIMIAR_REPEAT
 from spotify_api import PASTA_PERFIS, REDIRECT_PADRAO
 from wrapped import Wrapped, wrapped_de_arquivos
@@ -544,13 +546,10 @@ def baixar_wrapped(w: Wrapped | None, pastas: list[str] | None) -> tuple[str, st
     """Story PNG 1080×1920 com o resumo do Wrapped, em pasta temporária da sessão."""
     if w is None:
         raise gr.Error('Gere o Wrapped antes de baixar a imagem.')
-    pasta = mkdtemp(prefix='syncup-wrapped-')
-    try:
-        arquivo = gerar_cartao_wrapped(w, Path(pasta) / 'SyncUp_Wrapped.png')
-    except OSError as erro:
-        shutil.rmtree(pasta, ignore_errors=True)
-        raise gr.Error('Não foi possível gravar a imagem no diretório temporário.') from erro
-    return str(arquivo), str(arquivo), [*(pastas or []), pasta]
+    arquivo, pasta = _em_pasta_temporaria(
+        'wrapped', lambda p: str(gerar_cartao_wrapped(w, p / 'SyncUp_Wrapped.png')), 'a imagem'
+    )
+    return arquivo, arquivo, [*(pastas or []), pasta]
 
 
 def carregar_demo_wrapped() -> tuple[list[str], str]:
@@ -592,11 +591,17 @@ def executar_match(
             raise ValueError('Informe um nome por arquivo ZIP, na mesma ordem dos arquivos.')
         config = _configuracao(fuso, musicas, artistas, varios, disco, deduplicar)
         perfis, fontes = [], {}
-        for i, (arquivo, nome) in enumerate(zip(arquivos, nomes_zip)):
-            if i % MAXIMO_HISTORICOS_CACHE == 0:
-                # Lê o bloco em paralelo; blocos do tamanho do cache não descartam trabalho.
-                precarregar(arquivos[i : i + MAXIMO_HISTORICOS_CACHE], config)
-            progress(0.05 + 0.6 * i / max(len(arquivos), 1), desc=f'Lendo o histórico de {nome}')
+        entradas = list(zip(arquivos, nomes_zip))
+        # Só lê o que ainda não virou perfil em cache, em blocos paralelos do tamanho do
+        # cache de históricos (assim um bloco não descarta o anterior antes de ser usado).
+        pendentes = [(a, n) for a, n in entradas if not tem_perfil_em_cache(a, config)]
+        for j in range(0, len(pendentes), MAXIMO_HISTORICOS_CACHE):
+            bloco = pendentes[j : j + MAXIMO_HISTORICOS_CACHE]
+            precarregar([a for a, _ in bloco], config)
+            for k, (arquivo, nome) in enumerate(bloco, j):
+                progress(0.05 + 0.6 * k / len(pendentes), desc=f'Lendo o histórico de {nome}')
+                perfil_de_arquivos(arquivo, nome, config)
+        for arquivo, nome in entradas:
             perfis.append(perfil_de_arquivos(arquivo, nome, config))
             fontes[nome] = 'Histórico ZIP'
         for nome in selecionados or []:
@@ -604,13 +609,20 @@ def executar_match(
             perfis.append(perfil)
             fontes[perfil.nome] = f'Spotify · {perfil.coletado_em[:10]}'
         if buscar_generos:
-            consulta = ConsultaMusicBrainz()
+            consulta = ConsultaMusicBrainz(
+                cache=Path(config.diretorio_cache) / ARQUIVO_CACHE_GENEROS
+            )
             try:
                 for i, perfil in enumerate(perfis):
                     progress(0.65 + 0.1 * i / len(perfis), desc=f'Gêneros de {perfil.nome}')
                     perfis[i] = preencher_generos(perfil, consulta)
             finally:
                 consulta.fechar()
+            if consulta.falhas:
+                gr.Warning(
+                    'O MusicBrainz não respondeu (sem internet ou serviço ocupado). '
+                    'O estilo foi calculado só com os gêneros já conhecidos.'
+                )
         progress(0.75, desc='Comparando todos com todos')
         r = conciliar(perfis)
         ranking = pd.DataFrame(
@@ -629,15 +641,17 @@ def executar_match(
             ]
         )
         progress(1, desc='Matches prontos')
-        duplas = [f'{x} × {y}' for g in r.pares for x, y in combinations(g, 2)]
+        duplas = [par for g in r.pares for par in combinations(g, 2)]
+        # Valor = índice: nomes são texto livre e não precisam ser separados de volta.
+        opcoes_duplas = [(f'{x} × {y}', i) for i, (x, y) in enumerate(duplas)]
         return [
             componentes.match_html(r, fontes),
             matriz_conciliacao(r),
             ranking,
             gr.Column(visible=True),
             stories.stories_match_html(r),
-            {'resultado': r, 'perfis': perfis},
-            gr.Dropdown(choices=duplas, value=duplas[0] if duplas else None),
+            {'resultado': r, 'perfis': perfis, 'duplas': duplas},
+            gr.Dropdown(choices=opcoes_duplas, value=0 if duplas else None),
         ]
     except ValueError as erro:
         raise gr.Error(str(erro)) from erro
@@ -650,19 +664,14 @@ def baixar_festa(match: dict | None, pastas: list[str] | None) -> tuple[str, lis
     faixas = playlist_festa(match['perfis'])
     if not faixas:
         raise gr.Error('Os perfis não têm músicas favoritas suficientes para a playlist.')
-    pasta = mkdtemp(prefix='syncup-festa-')
-    try:
-        arquivos = [
-            str(exportar_csv(faixas, Path(pasta) / 'SyncUp_festa.csv')),
-            str(
-                exportar_xspf(
-                    faixas, Path(pasta) / 'SyncUp_festa.xspf', 'SyncUp · Playlist da festa'
-                )
-            ),
-        ]
-    except OSError as erro:
-        shutil.rmtree(pasta, ignore_errors=True)
-        raise gr.Error('Não foi possível gravar a playlist no diretório temporário.') from erro
+    arquivos, pasta = _em_pasta_temporaria(
+        'festa',
+        lambda p: [
+            str(exportar_csv(faixas, p / 'SyncUp_festa.csv')),
+            str(exportar_xspf(faixas, p / 'SyncUp_festa.xspf', 'SyncUp · Playlist da festa')),
+        ],
+        'a playlist',
+    )
     linhas = ''.join(
         f'<li><a href="{escape_html(f.link)}" target="_blank" rel="noopener">'
         f'<b>{escape_html(f.musica)}</b> · {escape_html(f.artista)}</a>'
@@ -674,23 +683,32 @@ def baixar_festa(match: dict | None, pastas: list[str] | None) -> tuple[str, lis
 
 
 def baixar_cartao_match(
-    match: dict | None, dupla: str | None, pastas: list[str] | None
+    match: dict | None, dupla: int | None, pastas: list[str] | None
 ) -> tuple[str, str, list[str]]:
-    """Cartão PNG de uma dupla do último Match."""
-    if not match or not dupla:
+    """Cartão PNG de uma dupla do último Match (``dupla`` é o índice em ``match['duplas']``)."""
+    if not match or dupla is None:
         raise gr.Error('Encontre os matches e escolha uma dupla antes de gerar o cartão.')
-    a, _, b = dupla.partition(' × ')
     try:
-        compatibilidade = match['resultado'].par(a, b)
-    except KeyError as erro:
+        a, b = match['duplas'][int(dupla)]
+    except (IndexError, ValueError, TypeError) as erro:
         raise gr.Error('Essa dupla não faz parte do último Match.') from erro
-    pasta = mkdtemp(prefix='syncup-match-')
+    compatibilidade = match['resultado'].par(a, b)
+    arquivo, pasta = _em_pasta_temporaria(
+        'match',
+        lambda p: str(gerar_cartao_match(compatibilidade, p / 'SyncUp_match.png')),
+        'o cartão',
+    )
+    return arquivo, arquivo, [*(pastas or []), pasta]
+
+
+def _em_pasta_temporaria(prefixo: str, gerar: Callable[[Path], Any], o_que: str) -> tuple[Any, str]:
+    """Gera exportações numa pasta própria do clique; apaga a pasta se a gravação falhar."""
+    pasta = mkdtemp(prefix=f'syncup-{prefixo}-')
     try:
-        arquivo = gerar_cartao_match(compatibilidade, Path(pasta) / 'SyncUp_match.png')
+        return gerar(Path(pasta)), pasta
     except OSError as erro:
         shutil.rmtree(pasta, ignore_errors=True)
-        raise gr.Error('Não foi possível gravar o cartão no diretório temporário.') from erro
-    return str(arquivo), str(arquivo), [*(pastas or []), pasta]
+        raise gr.Error(f'Não foi possível gravar {o_que} no diretório temporário.') from erro
 
 
 def _limpar_exportacoes(pastas: list[str]) -> None:
@@ -705,13 +723,12 @@ def baixar_playlist(
     """Cria um CSV isolado por clique, sem sobrescrever exportações de outras sessões."""
     if resultado is None:
         raise gr.Error('Faça uma comparação antes de exportar a playlist.')
-    pasta = mkdtemp(prefix='syncup-playlist-')
-    try:
-        arquivo = exportar_playlist(resultado, Path(pasta) / 'SyncUp_playlist_comum.csv')
-    except OSError as erro:
-        shutil.rmtree(pasta, ignore_errors=True)
-        raise gr.Error('Não foi possível gravar a playlist no diretório temporário.') from erro
-    return str(arquivo), [*(pastas or []), pasta]
+    arquivo, pasta = _em_pasta_temporaria(
+        'playlist',
+        lambda p: str(exportar_playlist(resultado, p / 'SyncUp_playlist_comum.csv')),
+        'a playlist',
+    )
+    return arquivo, [*(pastas or []), pasta]
 
 
 def baixar_cartao(
@@ -720,13 +737,10 @@ def baixar_cartao(
     """Cria cartão e download isolados, usando somente Pillow e fontes locais."""
     if resultado is None:
         raise gr.Error('Faça uma comparação antes de gerar o cartão.')
-    pasta = mkdtemp(prefix='syncup-cartao-')
-    try:
-        arquivo = gerar_cartao(resultado, Path(pasta) / 'SyncUp_cartao.png')
-    except OSError as erro:
-        shutil.rmtree(pasta, ignore_errors=True)
-        raise gr.Error('Não foi possível gravar o cartão no diretório temporário.') from erro
-    return str(arquivo), str(arquivo), [*(pastas or []), pasta]
+    arquivo, pasta = _em_pasta_temporaria(
+        'cartao', lambda p: str(gerar_cartao(resultado, p / 'SyncUp_cartao.png')), 'o cartão'
+    )
+    return arquivo, arquivo, [*(pastas or []), pasta]
 
 
 @lru_cache(maxsize=1)

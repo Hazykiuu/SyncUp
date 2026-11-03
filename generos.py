@@ -18,10 +18,11 @@ import time
 from collections.abc import Callable
 from dataclasses import replace
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 import httpx
 
-from configuracao import normalizar_nome
+from configuracao import ConfiguracaoCarga, normalizar_nome
 from perfil_gosto import PERIODOS, PerfilGosto, vetor_artistas
 
 URL_MUSICBRAINZ = 'https://musicbrainz.org/ws/2/artist'
@@ -31,7 +32,10 @@ SCORE_MINIMO = 90
 MAXIMO_TAGS = 5
 ARTISTAS_POR_PERFIL = 25
 PESO_PALAVRA = 0.5
-CACHE_PADRAO = Path(__file__).resolve().with_name('.syncup_cache') / 'generos_musicbrainz.json'
+MAXIMO_FALHAS = 3
+ARQUIVO_CACHE = 'generos_musicbrainz.json'
+# Mesma pasta do cache Parquet (ConfiguracaoCarga.diretorio_cache); a UI passa a configurada.
+CACHE_PADRAO = Path(ConfiguracaoCarga().diretorio_cache) / ARQUIVO_CACHE
 
 
 def _limpar(genero: str) -> str:
@@ -53,10 +57,15 @@ class ConsultaMusicBrainz:
         self.caminho = Path(cache)
         self._relogio, self._dormir = relogio, dormir
         self._ultima: float | None = None
+        self.falhas = 0
+        self._cache = self._ler_disco()
+
+    def _ler_disco(self) -> dict[str, list[str]]:
         try:
-            self._cache: dict[str, list[str]] = json.loads(self.caminho.read_text('utf-8'))
+            dados = json.loads(self.caminho.read_text('utf-8'))
         except (OSError, ValueError):
-            self._cache = {}
+            return {}
+        return dados if isinstance(dados, dict) else {}
 
     def generos(self, artista: str) -> list[str]:
         """Tags do artista; lista vazia se não houver correspondência confiável."""
@@ -65,6 +74,8 @@ class ConsultaMusicBrainz:
             return []
         if chave in self._cache:
             return self._cache[chave]
+        if self.falhas >= MAXIMO_FALHAS:
+            return []  # Sem internet ou serviço fora: não espera o timeout de cada artista.
         if self._ultima is not None:
             espera = INTERVALO_S - (self._relogio() - self._ultima)
             if espera > 0:
@@ -80,6 +91,7 @@ class ConsultaMusicBrainz:
             resposta.raise_for_status()
             artistas = resposta.json().get('artists') or []
         except (httpx.HTTPError, ValueError):
+            self.falhas += 1
             return []  # Falha de rede não entra no cache: tenta de novo na próxima vez.
         tags: list[str] = []
         if artistas and int(artistas[0].get('score', 0)) >= SCORE_MINIMO:
@@ -92,14 +104,24 @@ class ConsultaMusicBrainz:
         return tags
 
     def salvar(self) -> None:
-        """Grava o cache; falhas de disco não interrompem a análise."""
+        """Grava o cache; falhas de disco não interrompem a análise.
+
+        Mescla com o que outra sessão gravou enquanto esta consultava, e usa um
+        temporário com nome único, para que duas abas não apaguem uma à outra.
+        """
+        temporario: Path | None = None
         try:
             self.caminho.parent.mkdir(parents=True, exist_ok=True)
-            temporario = self.caminho.with_suffix('.tmp')
-            temporario.write_text(json.dumps(self._cache, ensure_ascii=False), encoding='utf-8')
+            mesclado = {**self._ler_disco(), **self._cache}
+            with NamedTemporaryFile(
+                'w', dir=self.caminho.parent, suffix='.tmp', encoding='utf-8', delete=False
+            ) as arquivo:
+                temporario = Path(arquivo.name)
+                json.dump(mesclado, arquivo, ensure_ascii=False)
             temporario.replace(self.caminho)
         except OSError:
-            pass
+            if temporario is not None:
+                temporario.unlink(missing_ok=True)
 
     def fechar(self) -> None:
         self.salvar()

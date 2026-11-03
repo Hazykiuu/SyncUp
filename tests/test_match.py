@@ -375,3 +375,24 @@ def test_perfil_novo_aparece_depois_de_atualizar_lista(tmp_path: Path, monkeypat
         d.fn is ui.atualizar_perfis and d.targets and d.targets[0][1] == 'load'
         for d in demo.fns.values()
     )
+
+
+def test_match_repetido_nao_precarrega_zips_com_perfil_em_cache(
+    tmp_path: Path, monkeypatch
+) -> None:
+    import ui
+
+    chamadas: list[list] = []
+    monkeypatch.setattr(ui, 'precarregar', lambda arquivos, config: chamadas.append(list(arquivos)))
+    zips = []
+    for i in range(8):  # mais que MAXIMO_HISTORICOS_CACHE (6): dois blocos
+        p = tmp_path / f'p{i}.json'
+        p.write_text(json.dumps([_evento('2026-10-01T10:00:00Z', f'A{i}')]), encoding='utf-8')
+        zips.append(str(p))
+    nomes = '\n'.join(f'P{i}' for i in range(8))
+    args = (zips, nomes, [], 'America/Sao_Paulo', '', '', 'manter', False, False)
+    ui.executar_match(*args, progress=lambda *a, **k: None)
+    assert [len(c) for c in chamadas] == [6, 2]
+    chamadas.clear()
+    ui.executar_match(*args, progress=lambda *a, **k: None)
+    assert chamadas == []

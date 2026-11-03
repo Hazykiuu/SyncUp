@@ -68,13 +68,32 @@ class PerfilGosto:
 
 
 def salvar_perfil(perfil: PerfilGosto, pasta: str | Path) -> Path:
-    """Grava o perfil em ``pasta/<nome>.json`` (sem tokens, só rankings)."""
+    """Grava o perfil em ``pasta/<nome>.json`` (sem tokens, só rankings).
+
+    Um novo login da mesma pessoa substitui o arquivo dela. Se o nome seguro
+    coincidir com o de outra pessoa ("Ana Clara" e "Ana_Clara", ou "ana" e "Ana"
+    no Windows), o arquivo ganha um sufixo ``-2``, ``-3``… em vez de apagá-la.
+    """
     pasta = Path(pasta)
     pasta.mkdir(parents=True, exist_ok=True)
     seguro = ''.join(c if c.isalnum() or c in '-_' else '_' for c in perfil.nome.strip())[:60]
-    caminho = pasta / f'{seguro or "perfil"}.json'
+    base = seguro or 'perfil'
+    caminho = pasta / f'{base}.json'
+    sufixo = 1
+    while caminho.exists() and _dono(caminho) != perfil.nome.strip().casefold():
+        sufixo += 1
+        caminho = pasta / f'{base}-{sufixo}.json'
     caminho.write_text(perfil.para_json(), encoding='utf-8')
     return caminho
+
+
+def _dono(caminho: Path) -> str | None:
+    """Nome (casefold) gravado num perfil existente; None se ilegível."""
+    try:
+        dados = json.loads(caminho.read_text(encoding='utf-8'))
+        return str(dados.get('nome', '')).strip().casefold()
+    except (OSError, ValueError, AttributeError):
+        return None
 
 
 def carregar_perfil(caminho: str | Path) -> PerfilGosto:

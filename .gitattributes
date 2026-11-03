@@ -1,0 +1,4 @@
+# LF em todo sistema: o Ruff exige LF e os testes conferem hashes das fontes congeladas.
+* text=auto eol=lf
+# CSV de benchmark gravado com CRLF de propósito (padrão do módulo csv).
+*.csv -text

@@ -28,7 +28,12 @@ from analise import (
 from cartao import gerar_cartao, gerar_cartao_wrapped
 from conciliacao import conciliar
 from configuracao import MUSICAS_IGNORADAS_PADRAO, ConfiguracaoCarga
-from dados import carregar_historicos, habilitar_leitura_paralela
+from dados import (
+    MAXIMO_HISTORICOS_CACHE,
+    carregar_historicos,
+    habilitar_leitura_paralela,
+    precarregar,
+)
 from exportacoes import exportar_playlist
 from formatacao import escape_html, escape_markdown, fmt_horas, fmt_num, fmt_pct, listar_markdown
 from graficos import (
@@ -577,6 +582,9 @@ def executar_match(
         config = _configuracao(fuso, musicas, artistas, varios, disco, deduplicar)
         perfis, fontes = [], {}
         for i, (arquivo, nome) in enumerate(zip(arquivos, nomes_zip)):
+            if i % MAXIMO_HISTORICOS_CACHE == 0:
+                # Lê o bloco em paralelo; blocos do tamanho do cache não descartam trabalho.
+                precarregar(arquivos[i : i + MAXIMO_HISTORICOS_CACHE], config)
             progress(0.05 + 0.6 * i / max(len(arquivos), 1), desc=f'Lendo o histórico de {nome}')
             historico = carregar_historicos(arquivo, configuracao=config)
             perfis.append(perfil_de_historico(historico.dados, nome))

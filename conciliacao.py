@@ -114,10 +114,11 @@ def comparar_perfis(a: PerfilGosto, b: PerfilGosto, n_exemplos: int = 8) -> Comp
 
 
 def emparelhamento_otimo(matriz: pd.DataFrame) -> list[tuple[str, ...]]:
-    """Pares que maximizam a soma das compatibilidades (exato, até 16 pessoas).
+    """Grupos que maximizam a soma das compatibilidades (exato, até 16 pessoas).
 
-    Com número ímpar, a pessoa sem par entra no par em que tem a maior média de
-    compatibilidade com os dois membros, formando um trio.
+    Cada dupla vale a sua compatibilidade. Com número ímpar, um trio vale a média
+    dos seus três pares, e todos os trios possíveis são testados junto com o
+    melhor emparelhamento do restante.
     """
     nomes = list(matriz.index)
     n = len(nomes)
@@ -125,36 +126,37 @@ def emparelhamento_otimo(matriz: pd.DataFrame) -> list[tuple[str, ...]]:
         return [tuple(nomes)] if nomes else []
     valores = matriz.values.tolist()
 
+    def desempate(opcao: tuple[float, tuple[tuple[int, ...], ...]]) -> tuple:
+        return opcao[0], [-k for grupo in opcao[1] for k in grupo]
+
     @cache
-    def melhor(restantes: int) -> tuple[float, tuple[tuple[int, int], ...]]:
+    def melhor(restantes: int) -> tuple[float, tuple[tuple[int, ...], ...]]:
+        """Melhor emparelhamento de um conjunto com número par de pessoas."""
         if restantes == 0:
             return 0.0, ()
         i = (restantes & -restantes).bit_length() - 1  # primeiro índice livre
         sem_i = restantes & ~(1 << i)
         opcoes = []
-        if bin(restantes).count('1') % 2 == 1:
-            # i fica sozinho (só acontece uma vez quando n é ímpar).
-            total, pares = melhor(sem_i)
-            opcoes.append((total, pares))
         j_bits = sem_i
         while j_bits:
             j = (j_bits & -j_bits).bit_length() - 1
             j_bits &= j_bits - 1
             total, pares = melhor(sem_i & ~(1 << j))
             opcoes.append((total + valores[i][j], ((i, j), *pares)))
-        return max(opcoes, key=lambda x: (x[0], [-k for par in x[1] for k in par]))
+        return max(opcoes, key=desempate)
 
-    _, pares_idx = melhor((1 << n) - 1)
-    usados = {k for par in pares_idx for k in par}
-    grupos = [list(par) for par in pares_idx]
-    sobra = [k for k in range(n) if k not in usados]
-    if sobra and grupos:
-        s = sobra[0]
-        melhor_grupo = max(grupos, key=lambda g: (sum(valores[s][k] for k in g) / len(g), -g[0]))
-        melhor_grupo.append(s)
-    elif sobra:
-        grupos.append(sobra)
-    return [tuple(nomes[k] for k in g) for g in grupos]
+    todos = (1 << n) - 1
+    if n % 2 == 0:
+        _, grupos = melhor(todos)
+    else:
+        opcoes = []
+        for trio in combinations(range(n), 3):
+            i, j, k = trio
+            total, pares = melhor(todos & ~((1 << i) | (1 << j) | (1 << k)))
+            media = (valores[i][j] + valores[i][k] + valores[j][k]) / 3
+            opcoes.append((total + media, (*pares, trio)))
+        _, grupos = max(opcoes, key=desempate)
+    return [tuple(nomes[k] for k in g) for g in sorted(grupos, key=min)]
 
 
 def conciliar(perfis: list[PerfilGosto]) -> ResultadoConciliacao:

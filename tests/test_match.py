@@ -5,7 +5,8 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
-from itertools import permutations
+import random
+from itertools import combinations, permutations
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -95,6 +96,48 @@ def test_emparelhamento_e_otimo_e_trio_quando_impar() -> None:
     assert sorted(len(g) for g in impar) == [2, 3]
 
 
+def _valor_grupos(matriz: pd.DataFrame, grupos: list[tuple[str, ...]]) -> float:
+    """Dupla vale o seu par; trio vale a média dos seus três pares."""
+    total = 0.0
+    for g in grupos:
+        links = [matriz.loc[x, y] for x, y in combinations(g, 2)]
+        total += sum(links) / len(links)
+    return total
+
+
+def _duplas(pessoas: list[str]):
+    """Todas as divisões de um número par de pessoas em duplas."""
+    if not pessoas:
+        yield []
+        return
+    primeira, resto = pessoas[0], pessoas[1:]
+    for outra in resto:
+        for p in _duplas([x for x in resto if x != outra]):
+            yield [(primeira, outra), *p]
+
+
+def _particoes(pessoas: list[str]):
+    """Um trio qualquer mais todas as divisões do restante em duplas."""
+    for trio in combinations(pessoas, 3):
+        for p in _duplas([x for x in pessoas if x not in trio]):
+            yield [trio, *p]
+
+
+@pytest.mark.parametrize('n', [5, 7])
+def test_emparelhamento_impar_e_otimo_contra_busca_exaustiva(n: int) -> None:
+    """O trio é escolhido junto com as duplas, não encaixado depois."""
+    rng = random.Random(n)
+    nomes = [chr(65 + i) for i in range(n)]
+    for _ in range(40):
+        matriz = pd.DataFrame(100.0, index=nomes, columns=nomes)
+        for x, y in combinations(nomes, 2):
+            matriz.loc[x, y] = matriz.loc[y, x] = round(rng.uniform(0, 30), 1)
+        grupos = emparelhamento_otimo(matriz)
+        assert sorted(len(g) for g in grupos) == [2] * (n // 2 - 1) + [3]
+        melhor = max(_valor_grupos(matriz, p) for p in _particoes(nomes))
+        assert _valor_grupos(matriz, grupos) == pytest.approx(melhor)
+
+
 def test_conciliar_valida_e_monta_ranking() -> None:
     perfis = [
         _perfil('Ana', ['X', 'Y', 'Z']),
@@ -123,6 +166,17 @@ def test_perfil_json_ida_e_volta(tmp_path: Path) -> None:
     (tmp_path / 'ruim.json').write_text('{"nome": "Sem"}', encoding='utf-8')
     with pytest.raises(ValueError):
         carregar_perfil(tmp_path / 'ruim.json')
+
+
+def test_salvar_perfil_nao_apaga_outra_pessoa_com_mesmo_nome_seguro(tmp_path: Path) -> None:
+    ana_clara = salvar_perfil(_perfil('Ana Clara', ['A']), tmp_path)
+    outra = salvar_perfil(_perfil('Ana_Clara', ['B']), tmp_path)
+    assert ana_clara != outra and outra.name == 'Ana_Clara-2.json'
+    assert carregar_perfil(ana_clara).top_artistas['long_term'] == ['A']
+    # Novo login da mesma pessoa substitui o arquivo dela.
+    assert salvar_perfil(_perfil('Ana Clara', ['C']), tmp_path) == ana_clara
+    assert carregar_perfil(ana_clara).top_artistas['long_term'] == ['C']
+    assert len(list(tmp_path.glob('*.json'))) == 2
 
 
 def _api_simulada(chamadas: list[str]) -> httpx.MockTransport:

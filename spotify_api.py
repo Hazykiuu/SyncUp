@@ -61,7 +61,8 @@ def iniciar_login(nome: str, client_id: str, redirect_uri: str = REDIRECT_PADRAO
     if not client_id:
         raise ValueError('Informe o Client ID do seu app no Spotify Developer Dashboard.')
     agora = time.time()
-    for estado in [e for e, p in _pendentes.items() if agora - p.criado > VALIDADE_LOGIN_S]:
+    # list(): outra requisição pode alterar o dicionário durante a varredura.
+    for estado in [e for e, p in list(_pendentes.items()) if agora - p.criado > VALIDADE_LOGIN_S]:
         _pendentes.pop(estado, None)
     verificador = secrets.token_urlsafe(64)[:96]
     estado = secrets.token_urlsafe(24)

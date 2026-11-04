@@ -1,4 +1,4 @@
-# SyncUp v0.95
+# SyncUp v0.96
 
 Comparador local do **Histórico Estendido do Spotify**: duas pessoas ou grupos de 3–6 perfis, com rankings, similaridades, arquétipos explicáveis, gráficos interativos, playlist CSV e cartão PNG. Projeto acadêmico organizado pelo CRISP-DM e **open source** ([licença MIT](LICENSE)).
 
@@ -51,6 +51,12 @@ print(r.diagnostico)
 ```
 
 Os imports `carregar`, `comparar`, `metricas`, `criar_interface` e `limpar_cache` permanecem em `app.py`. **Mudança de contrato:** `comparar()` devolve `ResultadoComparacao`, com campos nomeados; não devolve a tupla de 12 saídas da v0.4. `metricas()` mantém a tupla `(cosseno, jaccard)`.
+
+## Sintonia no Match (v0.96)
+
+- O Match cruza a escuta de **todos com todos**: quem ouviu a mesma música no mesmo instante, pelo menos 30 s juntos. A **Dupla mais sincronizada** aparece na Revelação e nos stories; cada pôster e o story PNG mostram os minutos em sintonia.
+- **Fontes**: o ZIP traz o histórico completo. O ListenBrainz entrega os **5.000 listens mais recentes** de cada pessoa (início do play e duração da faixa; supõe o play inteiro, porque o ListenBrainz não guarda pulos). O login do Spotify só tem as 50 músicas recentes, então quem entra por ele fica sem sintonia.
+- Os nomes são normalizados (caixa, espaços e pontuação), para que o ZIP de uma pessoa e o ListenBrainz da outra se encontrem.
 
 ## Estilo, playlist da festa e stories do Match (v0.9)
 

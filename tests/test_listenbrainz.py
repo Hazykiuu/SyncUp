@@ -99,3 +99,39 @@ def test_perfil_que_acabou_de_logar_entra_marcado(tmp_path: Path, monkeypatch) -
     assert lista.value == ['Bia'] and conhecidos == ['Bia', 'Carlos']
     lista, _ = ui.atualizar_perfis(['Carlos'], ['Bia', 'Carlos'])
     assert lista.value == ['Carlos']  # desmarcar continua valendo
+
+
+def test_usuario_com_problema_fica_de_fora_com_aviso(monkeypatch) -> None:
+    def falso(usuario: str) -> PerfilGosto:
+        if usuario == 'errado':
+            raise ValueError('Usuário não encontrado no ListenBrainz.')
+        if usuario == 'caiu':
+            raise httpx.ConnectError('sem rede')
+        tops = {p: ['X', usuario] for p in ('short_term', 'medium_term', 'long_term')}
+        return PerfilGosto(usuario, 'listenbrainz', '', tops)
+
+    avisos: list[str] = []
+    monkeypatch.setattr(ui, 'coletar_perfil_listenbrainz', falso)
+    monkeypatch.setattr(ui.gr, 'Warning', avisos.append)
+    html, *_ = ui.executar_match(
+        [],
+        '',
+        [],
+        'America/Sao_Paulo',
+        '',
+        '',
+        'manter',
+        False,
+        False,
+        False,
+        'nick\nerrado\nbia\ncaio',
+        progress=lambda *a, **k: None,
+    )
+    assert 'nick' in html and 'bia' in html and 'errado' not in html
+    assert len(avisos) == 1 and 'errado: Usuário não encontrado' in avisos[0]
+
+
+def test_429_vira_mensagem_de_servico_ocupado() -> None:
+    ocupado = httpx.MockTransport(lambda p: httpx.Response(429))
+    with pytest.raises(ValueError, match='ocupado'):
+        coletar_perfil_listenbrainz('nick', cliente=httpx.Client(transport=ocupado))

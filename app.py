@@ -1,4 +1,4 @@
-"""Entrada do SyncUp (v0.9) e reexportações compatíveis com imports da v0.4."""
+"""Entrada do SyncUp (v0.95) e reexportações compatíveis com imports da v0.4."""
 
 from __future__ import annotations
 

@@ -72,6 +72,12 @@ O notebook distribuído está sem saídas e sem arquivos de dados/exports reais.
 - O login real não pôde ser testado aqui (exige um app no Developer Dashboard e contas cadastradas); o redirecionamento para `accounts.spotify.com/authorize` com PKCE foi conferido no servidor local.
 - Match com 4 históricos reais conferido no Chromium: matriz, duplas ótimas, trocas sugeridas e ranking, sem erros de JavaScript.
 
+## v0.95 — repaginação e revisão de QA (2026-11-04)
+
+- Medição com dois históricos fictícios de 285 mil eventos cada (`tools/gerar_dados_falsos.py`, seeds 41 e 97): **Em sintonia de 19,06 s para 0,55 s**, com o mesmo resultado (118 momentos, 283 min). A análise "Quase juntos" leva 0,29 s.
+- Testes novos que falham na versão anterior: um play repetido e dois aparelhos sobrepostos não dobram os minutos; um usuário do ListenBrainz com 404 ou sem rede fica de fora com aviso e o Match segue com os demais; o cartão "Em sintonia" abre a sub-aba certa.
+- No Chromium: Início e Dupla em 1280 px, navegação fixa ao rolar, botões "Abrir…" levando às abas; em 375 px, sem rolagem horizontal.
+
 ## v0.9 — estilo, playlist da festa, stories do Match e código aberto (2026-11-03)
 
 - `pytest`: 180 testes aprovados e 3 pulados (PyArrow não instalado), em Python 3.12.10 no Windows; `ruff check` e `ruff format --check` sem pendências.

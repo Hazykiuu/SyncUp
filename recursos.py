@@ -188,6 +188,8 @@ class MomentoJuntos:
 class Sintonia:
     """Escuta simultânea de verdade: intervalos [fim − duração, fim] que se cruzam."""
 
+    # shortcut: guarda todos os momentos (poucos KB cada) no State da sessão por 1 h;
+    # limitar a uma amostra se o app passar a atender muitos usuários num servidor.
     momentos: list[MomentoJuntos]  # em ordem cronológica
     minutos: float
     top_musicas: list[tuple[str, str, int, float]]  # música, artista, vezes, minutos
@@ -208,47 +210,68 @@ class Sintonia:
         return max(self.momentos, key=lambda m: (m.minutos, -m.inicio_utc.value), default=None)
 
 
+def _intervalos_unidos(
+    dados: pd.DataFrame, chave: pd.Series, comuns: pd.Index
+) -> tuple[list[int], list[int], list[int], list[int]]:
+    """Intervalos [início, fim] em ns por faixa comum, ordenados e já unidos por pessoa.
+
+    Devolve listas paralelas (faixa, início, fim, posição da 1ª linha no DataFrame).
+    """
+    fim = dados.data_utc.astype('int64').to_numpy()
+    tabela = pd.DataFrame(
+        {
+            'chave': chave.to_numpy(),
+            'inicio': fim - dados.ms_played.to_numpy() * 1_000_000,
+            'fim': fim,
+            'posicao': range(len(dados)),
+        }
+    )
+    tabela = tabela[tabela.chave.isin(comuns) & (tabela.fim > tabela.inicio)]
+    tabela = tabela.sort_values(['chave', 'inicio'], kind='stable')
+    chaves, inicios, fins, posicoes = [], [], [], []
+    for k, s, e, p in zip(
+        tabela.chave.tolist(), tabela.inicio.tolist(), tabela.fim.tolist(), tabela.posicao.tolist()
+    ):
+        if chaves and chaves[-1] == k and s <= fins[-1]:
+            fins[-1] = max(fins[-1], e)  # sobreposto ao anterior da mesma faixa: une
+        else:
+            chaves.append(k)
+            inicios.append(s)
+            fins.append(e)
+            posicoes.append(p)
+    return chaves, inicios, fins, posicoes
+
+
 def sintonia(a: pd.DataFrame, b: pd.DataFrame) -> Sintonia:
     """Momentos em que A e B tocavam a mesma faixa ao mesmo tempo.
 
     O Spotify registra o fim de cada reprodução (``ts``) e quanto tocou
-    (``ms_played``); o início é ``fim − duração``. Por faixa, os intervalos dos
-    dois são cruzados por varredura em O(n log n); cada sobreposição de pelo
-    menos ``MINIMO_JUNTOS_S`` segundos é um momento juntos.
+    (``ms_played``); o início é ``fim − duração``. Plays sobrepostos da mesma
+    pessoa na mesma faixa (eventos repetidos, dois aparelhos) viram um só
+    intervalo, para não contar o mesmo trecho duas vezes. Depois, uma única
+    fusão das duas sequências ordenadas por (faixa, início) cruza os
+    intervalos: ordenação O(n log n) e varredura O(n), como em
+    ``momentos_sincronizados``. Cada sobreposição de pelo menos
+    ``MINIMO_JUNTOS_S`` segundos é um momento juntos.
     """
     chave_a, chave_b = _chaves_comuns(a, b, 'musica')
     comuns = pd.Index(chave_a).intersection(pd.Index(chave_b))
-
-    def intervalos(dados: pd.DataFrame, chave: pd.Series) -> pd.DataFrame:
-        fim = dados.data_utc.astype('int64').to_numpy()
-        tabela = pd.DataFrame(
-            {
-                'chave': chave.to_numpy(),
-                'fim': fim,
-                'inicio': fim - dados.ms_played.to_numpy() * 1_000_000,
-                'posicao': range(len(dados)),
-            }
-        )
-        tabela = tabela[tabela.chave.isin(comuns) & (tabela.fim > tabela.inicio)]
-        return tabela.sort_values(['chave', 'inicio'], kind='stable')
-
-    ia, ib = intervalos(a, chave_a), intervalos(b, chave_b)
+    ka, sa, ea, pa = _intervalos_unidos(a, chave_a, comuns)
+    kb, sb, eb, _ = _intervalos_unidos(b, chave_b, comuns)
     minimo = MINIMO_JUNTOS_S * 1_000_000_000
     achados: list[tuple[int, int, int]] = []  # posição em A, início comum (ns), duração (ns)
-    grupos_b = dict(tuple(ib.groupby('chave', sort=False, observed=True)))
-    for chave, grupo_a in ia.groupby('chave', sort=False, observed=True):
-        grupo_b = grupos_b.get(chave)
-        if grupo_b is None:
-            continue
-        xa = list(zip(grupo_a.inicio, grupo_a.fim, grupo_a.posicao))
-        xb = list(zip(grupo_b.inicio, grupo_b.fim))
-        i = j = 0
-        while i < len(xa) and j < len(xb):
-            inicio = max(xa[i][0], xb[j][0])
-            duracao = min(xa[i][1], xb[j][1]) - inicio
+    i = j = 0
+    while i < len(ka) and j < len(kb):
+        if ka[i] < kb[j]:
+            i += 1
+        elif ka[i] > kb[j]:
+            j += 1
+        else:
+            inicio = max(sa[i], sb[j])
+            duracao = min(ea[i], eb[j]) - inicio
             if duracao >= minimo:
-                achados.append((xa[i][2], inicio, duracao))
-            if xa[i][1] <= xb[j][1]:  # avança quem termina primeiro
+                achados.append((pa[i], inicio, duracao))
+            if ea[i] <= eb[j]:  # avança quem termina primeiro
                 i += 1
             else:
                 j += 1

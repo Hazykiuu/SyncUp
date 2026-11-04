@@ -103,3 +103,19 @@ def test_stories_e_cartao_com_momentos(tmp_path: Path) -> None:
     assert 'A MÚSICA DE VOCÊS' in html and 'su-sync-timeline' in html
     with Image.open(gerar_cartao_sintonia(r, tmp_path / 's.png')) as imagem:
         assert imagem.size == (1080, 1920)
+
+
+def test_play_repetido_ou_em_dois_aparelhos_nao_conta_em_dobro(tmp_path: Path) -> None:
+    a = _historico(
+        tmp_path,
+        'a',
+        [
+            ('2026-03-06T13:05:00Z', 300, 'X'),  # 13:00–13:05
+            ('2026-03-06T13:05:00Z', 300, 'X'),  # o mesmo evento repetido
+            ('2026-03-06T13:06:00Z', 300, 'X'),  # outro aparelho, 13:01–13:06
+        ],
+    )
+    b = _historico(tmp_path, 'b', [('2026-03-06T13:07:00Z', 300, 'X')])  # 13:02–13:07
+    s = sintonia(a, b)
+    # A tocou X de 13:00 a 13:06 (intervalos unidos); com B, 13:02–13:06 = 4 min, uma vez.
+    assert len(s.momentos) == 1 and s.minutos == pytest.approx(4.0)

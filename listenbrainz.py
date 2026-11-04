@@ -35,6 +35,8 @@ def _get(cliente: httpx.Client, caminho: str, **params) -> dict:
         )
     if resposta.status_code == 204:
         return {}
+    if resposta.status_code == 429:
+        raise ValueError('O ListenBrainz está ocupado agora. Tente de novo em instantes.')
     resposta.raise_for_status()
     return resposta.json().get('payload') or {}
 
@@ -48,7 +50,8 @@ def coletar_perfil_listenbrainz(
         raise ValueError(f'Nome de usuário do ListenBrainz inválido: {usuario[:64]!r}.')
     base = f'/user/{quote(usuario, safe="")}'
     proprio = cliente is None
-    cliente = cliente or httpx.Client(timeout=20, headers={'User-Agent': USER_AGENT})
+    # 7 chamadas por pessoa: 10 s cada limita a espera num serviço lento.
+    cliente = cliente or httpx.Client(timeout=10, headers={'User-Agent': USER_AGENT})
     try:
         top_artistas, top_musicas = {}, {}
         for periodo, faixa in PERIODOS_API.items():

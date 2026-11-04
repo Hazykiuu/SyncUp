@@ -23,8 +23,14 @@ def test_cartoes_do_inicio_abrem_as_abas() -> None:
         ids = [t.id for t in abas.children if isinstance(t, gr.Tab)]
         assert ids == ['inicio', 'dupla', 'match', 'wrapped', 'grupo']
         atalhos = [f for f in demo.fns.values() if abas in f.outputs and f.api_name is False]
-        destinos = [f.fn().selected for f in atalhos]
-        assert destinos == [r[0] for r in ui.RECURSOS]
+        destinos = []
+        for f in atalhos:
+            saida = f.fn()
+            abas_e_sub = saida if isinstance(saida, tuple) else (saida,)
+            destinos.append(tuple(t.selected for t in abas_e_sub))
+        # O cartão "Em sintonia" abre a Dupla já na sub-aba da sintonia.
+        assert destinos == [(r[0],) if r[1] is None else (r[0], r[1]) for r in ui.RECURSOS]
+        assert ('dupla', 'sintonia') in destinos
         # Opções de dados ficam na gaveta lateral, fechada por padrão.
         lateral = next(b for b in demo.blocks.values() if isinstance(b, gr.Sidebar))
         assert lateral.open is False

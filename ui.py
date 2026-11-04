@@ -15,6 +15,7 @@ from typing import Any
 from zoneinfo import available_timezones
 
 import gradio as gr
+import httpx
 import pandas as pd
 import plotly.express as px
 from plotly.graph_objects import Figure
@@ -50,6 +51,7 @@ from graficos import (
     radar_tracos,
     slope_chart,
 )
+from listenbrainz import coletar_perfil_listenbrainz
 from perfil_gosto import carregar_perfil, listar_perfis, perfil_de_arquivos, tem_perfil_em_cache
 from perfis import AVISO_TRACOS, LIMIAR_FAVORITOS, LIMIAR_MADRUGADA, LIMIAR_REPEAT
 from spotify_api import PASTA_PERFIS, REDIRECT_PADRAO
@@ -563,11 +565,14 @@ def perfis_salvos() -> list[str]:
     return [p.stem for p in listar_perfis(PASTA_PERFIS)]
 
 
-def atualizar_perfis(selecionados: list[str] | None) -> Any:
-    """Recarrega a lista de perfis salvos, mantendo a seleção atual."""
+def atualizar_perfis(
+    selecionados: list[str] | None, conhecidos: list[str] | None = None
+) -> tuple[Any, list[str]]:
+    """Recarrega a lista mantendo a seleção; quem acabou de logar já entra marcado."""
     opcoes = perfis_salvos()
-    marcados = [s for s in (selecionados or []) if s in opcoes] or opcoes
-    return gr.CheckboxGroup(choices=opcoes, value=marcados)
+    novos = [s for s in opcoes if s not in (conhecidos or [])]
+    marcados = [s for s in opcoes if s in (selecionados or []) or s in novos] or opcoes
+    return gr.CheckboxGroup(choices=opcoes, value=marcados), opcoes
 
 
 def executar_match(
@@ -581,9 +586,10 @@ def executar_match(
     disco: bool,
     deduplicar: bool,
     buscar_generos: bool = False,
+    usuarios_listenbrainz: str = '',
     progress: gr.Progress = gr.Progress(),
 ) -> list[Any]:
-    """Junta perfis de ZIP e do Spotify, concilia todos e mostra os melhores pares."""
+    """Junta perfis de ZIP, ListenBrainz e Spotify, concilia todos e mostra os melhores pares."""
     try:
         arquivos = arquivos or []
         nomes_zip = list(_linhas(nomes))
@@ -608,6 +614,16 @@ def executar_match(
             perfil = carregar_perfil(PASTA_PERFIS / f'{nome}.json')
             perfis.append(perfil)
             fontes[perfil.nome] = f'Spotify · {perfil.coletado_em[:10]}'
+        for usuario in _linhas(usuarios_listenbrainz):
+            progress(0.65, desc=f'Lendo o ListenBrainz de {usuario}')
+            try:
+                perfil = coletar_perfil_listenbrainz(usuario)
+            except httpx.HTTPError as erro:
+                raise ValueError(
+                    f'Não foi possível falar com o ListenBrainz para {usuario}. Confira a internet.'
+                ) from erro
+            perfis.append(perfil)
+            fontes[perfil.nome] = 'ListenBrainz'
         if buscar_generos:
             consulta = ConsultaMusicBrainz(
                 cache=Path(config.diretorio_cache) / ARQUIVO_CACHE_GENEROS
@@ -1139,13 +1155,14 @@ def criar_interface() -> gr.Blocks:
             with gr.Tab('Match'):
                 gr.HTML(
                     '<div class="su-section"><h3>Quem combina com quem?</h3>'
-                    '<p>Junte amigos por histórico ZIP ou login no Spotify. O SyncUp compara todos com '
-                    'todos, forma as duplas mais compatíveis e diz o que cada um pode apresentar ao outro.</p></div>'
+                    '<p>Junte a galera por qualquer fonte. O SyncUp compara todos com todos, '
+                    'forma as duplas que mais combinam e gera pôsteres prontos para postar.</p></div>'
                 )
-                with gr.Row(equal_height=True):
+                with gr.Row(equal_height=True, elem_classes='su-sources'):
                     with gr.Column(elem_classes=['su-panel', 'a']):
                         gr.HTML(
-                            '<div class="su-panel-title"><span class="su-avatar a">Z</span>Históricos ZIP</div>'
+                            '<div class="su-panel-title"><span class="su-avatar a">Z</span>'
+                            'Histórico ZIP<small>sem limite</small></div>'
                         )
                         fm = gr.File(
                             file_count='multiple',
@@ -1153,51 +1170,59 @@ def criar_interface() -> gr.Blocks:
                             type='filepath',
                             label='Um ZIP do Histórico Estendido por pessoa',
                         )
-                        nm = gr.Textbox(lines=4, label='Nomes, um por linha, na ordem dos arquivos')
+                        nm = gr.Textbox(lines=3, label='Nomes, um por linha, na ordem dos arquivos')
+                    with gr.Column(elem_classes=['su-panel', 'c']):
+                        gr.HTML(
+                            '<div class="su-panel-title"><span class="su-avatar c">L</span>'
+                            'ListenBrainz<small>sem limite · só o usuário</small></div>'
+                            '<p class="su-note">Código aberto. Crie uma conta grátis em '
+                            '<a href="https://listenbrainz.org" target="_blank" rel="noopener">'
+                            'listenbrainz.org</a> e conecte o Spotify uma vez em '
+                            '<i>Settings → Music services</i>. Ninguém precisa de Client ID.</p>'
+                        )
+                        lb = gr.Textbox(
+                            lines=3,
+                            label='Usuários do ListenBrainz, um por linha',
+                            placeholder='nicollas\nbia_musica',
+                        )
                     with gr.Column(elem_classes=['su-panel', 'b']):
                         gr.HTML(
-                            '<div class="su-panel-title"><span class="su-avatar b">S</span>Login com Spotify · até 5 amigos</div>'
-                        )
-                        cid = gr.Textbox(
-                            value=os.environ.get('SPOTIFY_CLIENT_ID', ''),
-                            label='Client ID do seu app no Spotify',
-                            placeholder='Cole aqui o Client ID do Developer Dashboard',
+                            '<div class="su-panel-title"><span class="su-avatar b">S</span>'
+                            'Login com Spotify<small>até 5 · cadastrados</small></div>'
                         )
                         nome_sp = gr.Textbox(
                             label='Nome de quem vai entrar', placeholder='Ex.: Bia'
                         )
                         conectar = gr.Button('Conectar com Spotify', elem_classes='su-secondary')
+                        conhecidos = gr.State(value=perfis_salvos())
                         salvos = gr.CheckboxGroup(
                             choices=perfis_salvos(),
                             value=perfis_salvos(),
                             label='Perfis coletados pelo Spotify',
                         )
                         recarregar = gr.Button('Atualizar lista', elem_classes='su-secondary')
+                        with gr.Accordion('Configurar (só quem criou o app)', open=False):
+                            cid = gr.Textbox(
+                                value=os.environ.get('SPOTIFY_CLIENT_ID', ''),
+                                label='Client ID do app no Spotify',
+                                placeholder='Cole o Client ID do Developer Dashboard',
+                            )
+                            gr.HTML(
+                                '<ol class="su-steps">'
+                                '<li>Em <b>developer.spotify.com/dashboard</b>, com conta '
+                                '<b>Premium</b>, crie um app e marque só <b>Web API</b>.</li>'
+                                f'<li>Redirect URI: <code>{escape_html(REDIRECT_PADRAO)}</code></li>'
+                                '<li>Em <b>User Management</b>, cadastre o e-mail da conta '
+                                'Spotify de cada amigo (máx. 5).</li>'
+                                '<li>Cole o Client ID acima ou defina <code>SPOTIFY_CLIENT_ID</code>.'
+                                '</li></ol><p class="su-note">Regra do Spotify para apps pessoais. '
+                                'Sem cadastro, use o ListenBrainz ou o ZIP. O token nunca é salvo.</p>'
+                            )
                 generos_mb = gr.Checkbox(
                     value=False,
-                    label='Comparar também o estilo: buscar gêneros no MusicBrainz',
-                    info=(
-                        'Base aberta (CC0). Envia só nomes de artistas pela internet, 1 por '
-                        'segundo; na primeira vez leva até ~25 s por pessoa. Vale para ZIPs e '
-                        'para logins do Spotify (em modo de desenvolvimento, o Spotify não envia '
-                        'gêneros). As tags são colaborativas: o estilo é aproximado.'
-                    ),
+                    label='Comparar também o estilo (gêneros do MusicBrainz)',
+                    info='Envia só nomes de artistas, 1 por segundo. Na 1ª vez, ~25 s por pessoa.',
                 )
-                with gr.Accordion(
-                    'Como configurar o login do Spotify (uma vez, ~5 min)', open=False
-                ):
-                    gr.HTML(
-                        '<ol class="su-steps">'
-                        '<li>Entre em <b>developer.spotify.com/dashboard</b> com uma conta <b>Premium</b> e crie um app (Web API).</li>'
-                        f'<li>Em <b>Redirect URIs</b>, cadastre exatamente <code>{escape_html(REDIRECT_PADRAO)}</code>.</li>'
-                        '<li>Em <b>User Management</b>, adicione o nome e o e-mail do Spotify de cada amigo (máximo 5).</li>'
-                        '<li>Copie o <b>Client ID</b> para o campo acima (ou defina a variável <code>SPOTIFY_CLIENT_ID</code>).</li>'
-                        '<li>Abra o SyncUp com <code>python app.py</code>. Cada amigo digita o nome, clica em <b>Conectar</b> e autoriza.</li>'
-                        '</ol><p class="su-note">O login só funciona com o app aberto por <code>python app.py</code> neste '
-                        'computador. Guardamos apenas os rankings num JSON local; o token não é salvo. '
-                        'A API mostra favoritos (top 50 de ~4 semanas, ~6 meses e ~1 ano), não o histórico completo; '
-                        'por isso os ZIPs são convertidos para os mesmos rankings antes de comparar.</p>'
-                    )
                 buscar = gr.Button(
                     'Encontrar os matches', variant='primary', elem_classes='su-play'
                 )
@@ -1206,13 +1231,16 @@ def criar_interface() -> gr.Blocks:
                     value=[], time_to_live=3600, delete_callback=_limpar_exportacoes
                 )
                 with gr.Column(visible=False, elem_classes='su-results') as match_resultados:
-                    match_stories = gr.HTML()
-                    match_cartoes = gr.HTML()
-                    match_plot = gr.Plot(show_label=False, elem_classes='su-chart')
-                    match_ranking = gr.Dataframe(
-                        interactive=False, wrap=True, label='Ranking de compatibilidade'
-                    )
                     with gr.Tabs():
+                        with gr.Tab('Revelação'):
+                            match_stories = gr.HTML()
+                        with gr.Tab('Duplas'):
+                            match_cartoes = gr.HTML()
+                        with gr.Tab('Todos com todos'):
+                            match_plot = gr.Plot(show_label=False, elem_classes='su-chart')
+                            match_ranking = gr.Dataframe(
+                                interactive=False, wrap=True, label='Com quem cada um mais combina'
+                            )
                         with gr.Tab('Playlist da festa'):
                             gr.Markdown(
                                 'Até 30 músicas que cobrem o gosto de todo o grupo, equilibrando '
@@ -1227,10 +1255,14 @@ def criar_interface() -> gr.Blocks:
                             festa_arquivos = gr.File(
                                 label='Baixar CSV e XSPF', file_count='multiple', interactive=False
                             )
-                        with gr.Tab('Cartão da dupla'):
+                        with gr.Tab('Para postar'):
+                            gr.Markdown(
+                                'Story 1080×1920 para o Instagram, gerado neste computador.',
+                                elem_classes='su-note',
+                            )
                             dupla_m = gr.Dropdown(label='Escolha a dupla', choices=[])
                             cartao_m_btn = gr.Button(
-                                'Gerar cartão PNG', elem_classes='su-secondary'
+                                'Gerar story da dupla', elem_classes='su-secondary'
                             )
                             cartao_m_img = gr.Image(show_label=False, interactive=False)
                             cartao_m_arquivo = gr.File(label='Baixar cartão PNG', interactive=False)
@@ -1243,12 +1275,16 @@ def criar_interface() -> gr.Blocks:
                     "'_blank'); }",
                     api_name=False,
                 )
-                recarregar.click(atualizar_perfis, salvos, salvos, api_name=False)
+                recarregar.click(
+                    atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False
+                )
                 # Cada aba nova do navegador vê os perfis salvos depois que o servidor subiu.
-                demo.load(atualizar_perfis, salvos, salvos, api_name=False)
+                demo.load(
+                    atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False
+                )
                 buscar.click(
                     executar_match,
-                    [fm, nm, salvos, *opcoes, generos_mb],
+                    [fm, nm, salvos, *opcoes, generos_mb, lb],
                     [
                         match_cartoes,
                         match_plot,

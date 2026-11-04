@@ -8,7 +8,7 @@ from itertools import islice
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from formatacao import fmt_num, fmt_pct
 from perfis import LIMIAR_FAVORITOS, QUANTIDADE_FAVORITOS
@@ -259,40 +259,101 @@ def gerar_cartao_wrapped(
 def gerar_cartao_match(
     compatibilidade: Compatibilidade, destino: str | Path, fonte: str | Path | None = None
 ) -> Path:
-    """PNG 1080×1350 de uma dupla do Match: pontuação, nível, artistas e estilo em comum."""
+    """Story 1080×1920 de uma dupla do Match: pontuação, nível, artistas e estilo em comum."""
     c = compatibilidade
-    imagem = Image.new('RGB', (LARGURA_CARTAO, ALTURA_CARTAO), FUNDO)
-    d = ImageDraw.Draw(imagem)
-    fundo = (18, 18, 18)
-    for y in range(620):
-        t = (1 - y / 620) ** 1.4 * 0.6
-        cor = tuple(round(f + (g - f) * t) for f, g in zip(fundo, (91, 42, 214)))
-        d.line((0, y, LARGURA_CARTAO, y), fill=cor)
-
-    def texto(x, y, valor, tamanho=30, cor=TEXTO, forte=False, largura=952):
-        f = carregar_fonte(tamanho, forte, fonte)
-        d.text((x, y), _ajustar_texto(valor, largura, d, f), fill=cor, font=f)
-
-    _logo(d)
-    texto(168, 74, 'SyncUp Match', 48, TEXTO, True)
-    texto(64, 200, c.a, 64, VERDE, True)
-    texto(64, 285, '×  ' + c.b, 64, ROXO, True)
-    d.rounded_rectangle((64, 410, 1016, 650), radius=30, fill=PAINEL)
-    texto(100, 435, 'COMPATIBILIDADE DOS RANKINGS', 26, SECUNDARIO)
-    texto(96, 475, f'{fmt_num(c.pontuacao, 1)}%', 104, VERDE, True, 690)
-    texto(100, 600, c.nivel, 30, TEXTO, True, 690)
-    _anel(d, (812, 445, 984, 617), c.pontuacao / 100)
-    texto(64, 700, 'ARTISTAS QUE VOCÊS DIVIDEM', 26, VERDE, True)
-    for i, artista in enumerate(c.artistas_comuns[:5] or ['Nenhum artista em comum nos rankings']):
-        texto(64, 750 + i * 48, artista, 32)
+    story = _Story(VERDE, ROXO, fonte)
+    story.cabecalho('SYNCUP MATCH')
+    story.avatares([c.a, c.b], 470)
+    story.centro(f'{c.a}  +  {c.b}', 700, 60, forte=True)
+    story.centro(f'{fmt_num(c.pontuacao, 1)}%', 790, 230, forte=True)
+    story.pilula(c.nivel.upper(), 1060)
+    y = story.lista('VOCÊS DIVIDEM', c.artistas_comuns[:4] or ['Nenhum artista em comum'], 1180)
     if c.pontuacao_generos is not None:
-        estilo = ', '.join(c.generos_comuns[:4]) or 'estilos diferentes'
-        texto(64, 1010, f'NO ESTILO · {fmt_num(c.pontuacao_generos, 1)}%', 26, ROXO, True)
-        texto(64, 1056, estilo, 32)
-    d.line((64, 1195, 1016, 1195), fill='#3e3e3e', width=2)
-    texto(64, 1220, 'Compara os rankings musicais enviados. Não mede', 25, SECUNDARIO)
-    texto(64, 1260, 'personalidade nem afinidade pessoal.', 25, SECUNDARIO)
-    caminho = Path(destino)
-    caminho.parent.mkdir(parents=True, exist_ok=True)
-    imagem.save(caminho, format='PNG', optimize=True)
-    return caminho
+        estilo = ', '.join(c.generos_comuns[:3]) or 'estilos diferentes'
+        story.lista(f'NO ESTILO · {fmt_num(c.pontuacao_generos, 1)}%', [estilo], y)
+    story.rodape('Compara os rankings musicais enviados. Não mede afinidade pessoal.')
+    return story.salvar(destino)
+
+
+class _Story:
+    """Pôster 9:16 com fundo em degradê de duas cores, no estilo dos cartões da tela."""
+
+    LARGURA, ALTURA = 1080, 1920
+
+    def __init__(self, cor1: str, cor2: str, fonte: str | Path | None = None) -> None:
+        self.fonte = fonte
+        tamanho = (self.LARGURA, self.ALTURA)
+        self.imagem = Image.new('RGB', tamanho, '#0c0c0c')
+        # Duas manchas de luz: elipses desfocadas do tamanho da imagem, sem bordas duras.
+        for cor, caixa, forca in (
+            (cor1, (-420, -380, 900, 900), 215),
+            (cor2, (180, 1050, 1500, 2300), 190),
+        ):
+            mascara = Image.new('L', tamanho, 0)
+            ImageDraw.Draw(mascara).ellipse(caixa, fill=forca)
+            mascara = mascara.filter(ImageFilter.GaussianBlur(220))
+            self.imagem.paste(cor, (0, 0), mascara)
+        escurecer = Image.linear_gradient('L').resize(tamanho)
+        self.imagem.paste((0, 0, 0), (0, 0), escurecer.point(lambda v: round(v * 0.45)))
+        self.d = ImageDraw.Draw(self.imagem)
+        self.cores = (cor1, cor2)
+
+    def _fonte(self, tamanho: int, forte: bool):
+        return carregar_fonte(tamanho, forte, self.fonte)
+
+    def centro(self, valor: str, y: int, tamanho: int, cor: str = TEXTO, forte=False) -> None:
+        f = self._fonte(tamanho, forte)
+        linha = _ajustar_texto(valor, self.LARGURA - 128, self.d, f)
+        x = (self.LARGURA - self.d.textlength(linha, font=f)) / 2
+        self.d.text((x, y), linha, fill=cor, font=f)
+
+    def cabecalho(self, titulo: str) -> None:
+        _logo(self.d)
+        f = self._fonte(40, True)
+        self.d.text((168, 80), titulo, fill=TEXTO, font=f, spacing=0)
+
+    def avatares(self, nomes: list[str], y: int, raio: int = 120) -> None:
+        passo = raio * 1.7
+        inicio = self.LARGURA / 2 - passo * (len(nomes) - 1) / 2
+        centros = [inicio + i * passo for i in range(len(nomes))]
+        for i, cx in enumerate(centros):
+            caixa = (cx - raio, y - raio, cx + raio, y + raio)
+            self.d.ellipse(caixa, fill=self.cores[i % 2], outline='#0c0c0c', width=12)
+        f = self._fonte(round(raio * 0.72), True)
+        for nome, cx in zip(nomes, centros):  # letras depois dos círculos: nada fica coberto
+            letras = ''.join(p[0] for p in nome.split()[:2] if p[:1].isalnum()).upper() or '?'
+            w = self.d.textlength(letras, font=f)
+            self.d.text((cx - w / 2, y - raio * 0.46), letras, fill='#000000', font=f)
+
+    def pilula(self, valor: str, y: int) -> None:
+        f = self._fonte(34, True)
+        w = self.d.textlength(valor, font=f)
+        x = (self.LARGURA - w) / 2
+        self.d.rounded_rectangle((x - 34, y - 16, x + w + 34, y + 58), radius=40, fill='#000000')
+        self.d.text((x, y), valor, fill=TEXTO, font=f)
+
+    def lista(self, titulo: str, itens: list[str], y: int) -> int:
+        """Painel com título e itens; devolve onde o próximo bloco pode começar."""
+        # Painel translúcido: desenhado numa camada RGBA e combinado com o fundo.
+        camada = Image.new('RGBA', self.imagem.size, (0, 0, 0, 0))
+        caixa = (64, y, 1016, y + 90 + 64 * len(itens))
+        ImageDraw.Draw(camada).rounded_rectangle(caixa, radius=36, fill=(0, 0, 0, 120))
+        self.imagem = Image.alpha_composite(self.imagem.convert('RGBA'), camada).convert('RGB')
+        self.d = ImageDraw.Draw(self.imagem)
+        f = self._fonte(28, True)
+        self.d.text((104, y + 32), titulo, fill=SECUNDARIO, font=f)
+        for i, item in enumerate(itens):
+            fi = self._fonte(44, i == 0)
+            linha = _ajustar_texto(item, 870, self.d, fi)
+            self.d.text((104, y + 82 + i * 64), linha, fill=TEXTO, font=fi)
+        return caixa[3] + 28
+
+    def rodape(self, aviso: str) -> None:
+        self.centro(aviso, 1790, 26, SECUNDARIO)
+        self.centro('SyncUp · código aberto', 1836, 28, TEXTO, forte=True)
+
+    def salvar(self, destino: str | Path) -> Path:
+        caminho = Path(destino)
+        caminho.parent.mkdir(parents=True, exist_ok=True)
+        self.imagem.save(caminho, format='PNG', optimize=True)
+        return caminho

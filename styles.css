@@ -161,6 +161,12 @@ footer { opacity: .55; }
 }
 .su-avatar.a { background: var(--su-green); }
 .su-avatar.b { background: var(--su-violet); }
+.su-avatar.c { background: #ffa42b; }
+.su-panel.c:hover { border-color: rgba(255, 164, 43, .45) !important; }
+.su-panel.c { animation-delay: .04s; }
+.su-panel-title small { margin-left: auto; padding: 4px 10px; border-radius: 99px; background: rgba(255, 255, 255, .08); color: var(--su-sub); font-size: 12px; font-weight: 700; }
+.su-panel .su-note a { color: var(--su-green); }
+.su-sources { gap: 16px !important; }
 .su-avatars .su-avatar.a { animation: su-slide-l .8s cubic-bezier(.2, .8, .2, 1) both; }
 .su-avatars .su-avatar.b { margin-left: -22px; animation: su-slide-r .8s cubic-bezier(.2, .8, .2, 1) both; }
 .su-eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .18em; color: var(--su-sub); }
@@ -519,25 +525,45 @@ footer { opacity: .55; }
 .su-arch-detail em small { font-weight: 500; color: var(--su-sub); font-size: 12px; }
 
 /* ---------- Match (conciliação) ---------- */
-.su-match-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 18px; margin-top: 16px; }
-.su-match-card { position: relative; overflow: hidden; padding: 22px; border-radius: 20px; background: linear-gradient(160deg, rgba(30, 215, 96, .16), var(--su-card) 55%);
+.su-match-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 20px; margin-top: 16px; }
+/* Pôster 4:5 (formato do feed do Instagram): um print da tela já vira post. */
+/* Sem overflow:hidden: com as trocas abertas o cartão cresce em vez de cortar o texto. */
+.su-match-card { position: relative; display: flex; flex-direction: column; gap: 10px; aspect-ratio: 4 / 5;
+  padding: 26px; border-radius: 28px; isolation: isolate;
+  background: radial-gradient(120% 70% at 0% 0%, color-mix(in srgb, var(--c1) 75%, transparent), transparent 60%),
+    radial-gradient(110% 70% at 100% 100%, color-mix(in srgb, var(--c2) 65%, transparent), transparent 60%), #0c0c0c;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .55);
   animation: su-rise .7s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 120ms + 100ms);
   transition: transform .25s cubic-bezier(.2, .8, .2, 1), box-shadow .25s; }
-.su-match-card:hover { transform: translateY(-4px); box-shadow: 0 20px 44px rgba(0, 0, 0, .55); }
-.su-match-card h3 { margin: 12px 0 4px; font-size: 24px; font-weight: 900; letter-spacing: -.02em; }
-.su-match-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.su-match-card .su-avatar { width: 64px; height: 64px; font-size: 24px; }
-.su-match-card .su-avatars .su-avatar + .su-avatar { margin-left: -16px; }
-.su-match-score { text-align: right; }
-.su-match-score b { display: block; font-size: 40px; font-weight: 900; color: var(--su-green); line-height: 1; }
-.su-match-score span { font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--su-sub); }
+.su-match-card::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: linear-gradient(180deg, transparent 35%, rgba(0, 0, 0, .55)); }
+.su-match-card:hover { transform: translateY(-4px) rotate(-.4deg); box-shadow: 0 30px 70px rgba(0, 0, 0, .65); }
+.su-poster-kicker { display: flex; justify-content: space-between; font-size: 12px; font-weight: 900; letter-spacing: .2em; color: rgba(255, 255, 255, .85); }
+.su-match-card .su-avatars { display: flex; justify-content: center; margin-top: 6px; }
+.su-match-card .su-avatar { width: 84px; height: 84px; font-size: 30px; color: #000; border: 4px solid #0c0c0c; box-shadow: 0 10px 30px rgba(0, 0, 0, .45); }
+.su-match-card .su-avatars .su-avatar + .su-avatar { margin-left: -22px; }
+.su-poster-names { margin: 4px 0 0; text-align: center; font-size: clamp(22px, 2.4vw, 28px); font-weight: 900; letter-spacing: -.02em; line-height: 1.1; }
+.su-poster-names i { font-style: normal; color: rgba(255, 255, 255, .6); margin: 0 .3em; }
+.su-poster-score { text-align: center; }
+.su-poster-score b { display: block; font-size: clamp(64px, 7vw, 88px); font-weight: 900; line-height: .95; letter-spacing: -.04em;
+  background: linear-gradient(90deg, #fff, color-mix(in srgb, var(--c1) 40%, #fff)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.su-poster-score span { display: inline-block; margin-top: 8px; padding: 5px 12px; border-radius: 99px; background: rgba(0, 0, 0, .45);
+  font-size: 12px; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.su-poster-sub { margin: 0; text-align: center; color: rgba(255, 255, 255, .8); font-size: 14px; line-height: 1.45; }
+.su-poster-line { margin-top: auto; }
+.su-poster-line + .su-poster-line { margin-top: 0; }
+.su-poster-line > span { font-size: 11px; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; color: rgba(255, 255, 255, .7); }
+.su-poster-line > b { margin-left: 8px; font-size: 14px; }
+.su-poster-line .su-chips { margin: 6px 0 0; }
+.su-match-card .su-chip { background: rgba(0, 0, 0, .4); backdrop-filter: blur(6px); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.su-swaps { font-size: 14px; }
+.su-swaps summary { cursor: pointer; color: rgba(255, 255, 255, .85); font-weight: 700; min-height: 44px; display: flex; align-items: center; }
+.su-swaps p { margin: 8px 0 0; }
+.su-match-card .su-src { opacity: .7; }
 .su-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; align-items: center; }
 .su-chip-label { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--su-sub); margin-right: 4px; }
 .su-chip { padding: 5px 11px; border-radius: 99px; background: rgba(255, 255, 255, .1); font-size: 14px; font-weight: 600;
   animation: su-rise .5s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 60ms + 400ms); }
 .su-chip.rec { background: rgba(30, 215, 96, .16); color: #b8f5cf; }
-.su-swap { margin-top: 12px; }
-.su-swap b { font-size: 14px; color: #e6e6e6; }
 .su-srcs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
 .su-src { color: var(--su-sub); font-size: 12px; }
 .su-match-h { margin: 28px 0 10px; font-size: 22px; font-weight: 900; }

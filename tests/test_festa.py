@@ -79,7 +79,7 @@ def test_cartao_do_match_com_e_sem_generos(tmp_path: Path) -> None:
     sem = comparar_perfis(*GRUPO[:2])
     for i, c in enumerate((com, sem)):
         with Image.open(gerar_cartao_match(c, tmp_path / f'{i}.png')) as imagem:
-            assert imagem.size == (1080, 1350)
+            assert imagem.size == (1080, 1920)  # story do Instagram
 
 
 def test_fonte_invalida_cai_na_figtree() -> None:

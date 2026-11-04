@@ -310,7 +310,7 @@ def test_match_na_interface_mistura_zip_e_spotify(tmp_path: Path, monkeypatch) -
         False,
         progress=lambda *a, **k: None,
     )
-    assert 'trio' in html and 'Ranking individual' in html
+    assert 'O TRIO' in html and 'su-match-card' in html
     assert len(figura.data[0].z) == 3 and list(ranking['Pessoa']) == ['Ana', 'Bia', 'Caio']
     assert ranking.loc[2, 'Fonte'].startswith('Spotify')
     assert 'data-stories' in revelacao and 'O TRIO' in revelacao
@@ -320,7 +320,7 @@ def test_match_na_interface_mistura_zip_e_spotify(tmp_path: Path, monkeypatch) -
     assert {Path(a).suffix for a in arquivos} == {'.csv', '.xspf'} and 'para' in lista
     _, png, pastas = ui.baixar_cartao_match(estado, dupla.value, pastas)
     with Image.open(png) as imagem:
-        assert imagem.size == (1080, 1350)
+        assert imagem.size == (1080, 1920)
     ui._limpar_exportacoes(pastas)
     assert not any(Path(p).exists() for p in pastas)
 
@@ -356,11 +356,11 @@ def test_perfil_novo_aparece_depois_de_atualizar_lista(tmp_path: Path, monkeypat
     salvar_perfil(_perfil('Caio', ['Y']), tmp_path)
     salvar_perfil(_perfil('Dani', ['Y', 'Z']), tmp_path)
     entradas = [None, '', ['Caio', 'Dani'], 'America/Sao_Paulo', '', '', 'manter', False, False]
-    entradas.append(False)  # sem MusicBrainz
+    entradas += [False, '']  # sem MusicBrainz e sem ListenBrainz
 
     async def fluxo() -> None:
         sessao = SessionState(demo)
-        await demo.process_api(block_fn=funcoes['atualizar_perfis'], inputs=[[]], state=sessao)
+        await demo.process_api(block_fn=funcoes['atualizar_perfis'], inputs=[[], []], state=sessao)
         saida = await demo.process_api(
             block_fn=funcoes['executar_match'], inputs=entradas, state=sessao
         )

@@ -59,6 +59,7 @@ class InterfaceTest(unittest.TestCase):
                 'encontrar_matches',
                 'playlist_festa',
                 'baixar_cartao_match',
+                'baixar_sintonia',
             },
         )
         app = gr.mount_gradio_app(FastAPI(), demo, path='/')

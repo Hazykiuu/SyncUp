@@ -357,3 +357,30 @@ class _Story:
         caminho.parent.mkdir(parents=True, exist_ok=True)
         self.imagem.save(caminho, format='PNG', optimize=True)
         return caminho
+
+
+def gerar_cartao_sintonia(
+    resultado: ResultadoComparacao, destino: str | Path, fonte: str | Path | None = None
+) -> Path:
+    """Story 1080×1920 da escuta simultânea da dupla."""
+    s = resultado.sintonia
+    a, b = resultado.perfil_a.nome, resultado.perfil_b.nome
+    story = _Story('#f573a0', ROXO, fonte)
+    story.cabecalho('EM SINTONIA')
+    story.avatares([a, b], 430)
+    story.centro(f'{a}  +  {b}', 660, 60, forte=True)
+    if s is None or not s.momentos:
+        story.centro('0', 760, 230, forte=True)
+        story.pilula('MINUTOS AO MESMO TEMPO', 1030)
+        story.lista('AINDA NÃO SE CRUZARAM', ['Mandem uma música um pro outro agora'], 1160)
+    else:
+        story.centro(fmt_num(s.minutos, 0), 760, 230, forte=True)
+        story.pilula('MINUTOS AO MESMO TEMPO', 1030)
+        musica, artista, vezes, _ = s.top_musicas[0]
+        y = story.lista('A MÚSICA DE VOCÊS', [musica, f'{artista} · {vezes}x juntos'], 1160)
+        y = story.lista(
+            'A PRIMEIRA VEZ', [f'{s.primeira.musica} · {s.primeira.inicio_local:%d/%m/%Y}'], y
+        )
+        story.lista('QUANDO VOCÊS SE ENCONTRAM', [f'{s.dia_favorito}, às {s.hora_favorita}h'], y)
+    story.rodape('A mesma música tocando para os dois, no mesmo instante.')
+    return story.salvar(destino)

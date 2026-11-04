@@ -29,7 +29,7 @@ from analise import (
     comparar,
     comparar_grupo,
 )
-from cartao import gerar_cartao, gerar_cartao_match, gerar_cartao_wrapped
+from cartao import gerar_cartao, gerar_cartao_match, gerar_cartao_sintonia, gerar_cartao_wrapped
 from conciliacao import conciliar
 from configuracao import MUSICAS_IGNORADAS_PADRAO, ConfiguracaoCarga
 from dados import (
@@ -365,13 +365,11 @@ def executar_dupla(
         contribuicoes['Contribuição ao cosseno'] = [
             fmt_num(float(x) * 100, 4) + ' p.p.' for x in contribuicoes['Contribuição ao cosseno']
         ]
-        momentos = (
-            f'**Mesmo artista:** {fmt_num(r.momentos_artistas.total_pares)} pares. '
-            f'**Mesma música e artista:** {fmt_num(r.momentos_musicas.total_pares)} pares. '
-            'Janela inclusiva de 1h em UTC. Eventos não se repetem dentro de cada análise; '
-            'os totais são alternativas e não devem ser somados. '
-            'Tabelas mostram até 200 exemplos, por artista/música e instante. '
-            'Coincidências não comprovam influência ou escuta simultânea durante a faixa.'
+        momentos = componentes.sintonia_html(r) + (
+            '<p class="su-note">Quase juntos (até 1 h de distância): '
+            f'<b>{fmt_num(r.momentos_artistas.total_pares)}</b> pares com o mesmo artista e '
+            f'<b>{fmt_num(r.momentos_musicas.total_pares)}</b> com a mesma música. '
+            'Os exemplos estão em "Quase juntos", abaixo.</p>'
         )
         a, b = r.perfil_a, r.perfil_b
         progress(0.85, desc='Montando o Wrapped da vida toda')
@@ -717,6 +715,20 @@ def baixar_cartao_match(
     return arquivo, arquivo, [*(pastas or []), pasta]
 
 
+def baixar_cartao_sintonia(
+    resultado: ResultadoComparacao | None, pastas: list[str] | None
+) -> tuple[str, str, list[str]]:
+    """Story PNG da escuta simultânea da dupla comparada."""
+    if resultado is None:
+        raise gr.Error('Faça uma comparação antes de gerar o story da sintonia.')
+    arquivo, pasta = _em_pasta_temporaria(
+        'sintonia',
+        lambda p: str(gerar_cartao_sintonia(resultado, p / 'SyncUp_sintonia.png')),
+        'o story',
+    )
+    return arquivo, arquivo, [*(pastas or []), pasta]
+
+
 def _em_pasta_temporaria(prefixo: str, gerar: Callable[[Path], Any], o_que: str) -> tuple[Any, str]:
     """Gera exportações numa pasta própria do clique; apaga a pasta se a gravação falhar."""
     pasta = mkdtemp(prefix=f'syncup-{prefixo}-')
@@ -1048,18 +1060,31 @@ def criar_interface() -> gr.Blocks:
                             diversidade = gr.Dataframe(
                                 interactive=False, label='Diversidade e desigualdade observadas'
                             )
-                        with gr.Tab('Momentos sincronizados'):
-                            momentos = gr.Markdown()
-                            momentos_a = gr.Dataframe(
-                                interactive=False,
-                                wrap=True,
-                                label='Pares de mesmo artista · exemplos',
-                            )
-                            momentos_m = gr.Dataframe(
-                                interactive=False,
-                                wrap=True,
-                                label='Pares de mesma música e artista · exemplos',
-                            )
+                        with gr.Tab('Em sintonia'):
+                            momentos = gr.HTML()
+                            with gr.Row():
+                                sintonia_btn = gr.Button(
+                                    'Gerar story da sintonia', elem_classes='su-secondary'
+                                )
+                            sintonia_img = gr.Image(show_label=False, interactive=False)
+                            sintonia_arquivo = gr.File(label='Baixar story PNG', interactive=False)
+                            with gr.Accordion('Quase juntos: até 1 h de distância', open=False):
+                                gr.Markdown(
+                                    'Pares de plays com até 1 h entre os horários de fim (UTC), '
+                                    'sem repetir eventos. Os totais de artista e de música são '
+                                    'alternativos, não somáveis. Até 200 exemplos por tabela.',
+                                    elem_classes='su-note',
+                                )
+                                momentos_a = gr.Dataframe(
+                                    interactive=False,
+                                    wrap=True,
+                                    label='Pares de mesmo artista · exemplos',
+                                )
+                                momentos_m = gr.Dataframe(
+                                    interactive=False,
+                                    wrap=True,
+                                    label='Pares de mesma música e artista · exemplos',
+                                )
                         with gr.Tab('Ponte Musical e playlist'):
                             ponte = gr.Markdown()
                             gr.Markdown(
@@ -1151,6 +1176,12 @@ def criar_interface() -> gr.Blocks:
                     [estado, pastas],
                     [imagem, png_download, pastas],
                     api_name='gerar_cartao',
+                )
+                sintonia_btn.click(
+                    baixar_cartao_sintonia,
+                    [estado, pastas],
+                    [sintonia_img, sintonia_arquivo, pastas],
+                    api_name='baixar_sintonia',
                 )
             with gr.Tab('Match'):
                 gr.HTML(

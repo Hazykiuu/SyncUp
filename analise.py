@@ -28,7 +28,14 @@ from perfis import (
     ArquetiposMusicais,
     classificar_proporcoes,
 )
-from recursos import MomentosSincronizados, momentos_sincronizados, playlist_comum, ponte_musical
+from recursos import (
+    MomentosSincronizados,
+    Sintonia,
+    momentos_sincronizados,
+    playlist_comum,
+    ponte_musical,
+    sintonia,
+)
 
 TEMPO_MINIMO_PLAY_MS = 30_000
 QUANTIDADE_TOP_ARTISTAS = 20
@@ -104,6 +111,7 @@ class ResultadoComparacao:
     contribuicoes: pd.DataFrame = field(default_factory=pd.DataFrame)
     momentos_artistas: MomentosSincronizados | None = None
     momentos_musicas: MomentosSincronizados | None = None
+    sintonia: Sintonia | None = None  # mesma faixa tocando ao mesmo tempo (v0.9)
     ponte: pd.DataFrame = field(default_factory=pd.DataFrame)
     playlist: pd.DataFrame = field(default_factory=pd.DataFrame)
 
@@ -361,6 +369,7 @@ def comparar(
         .reset_index(drop=True),
         momentos_artistas=momentos_sincronizados(va, vb, 'artista'),
         momentos_musicas=momentos_sincronizados(va, vb, 'musica'),
+        sintonia=sintonia(va, vb),
         ponte=ponte_musical(ra, rb, nome_a, nome_b),
         playlist=playlist_comum(fa, fb),
     )

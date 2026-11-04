@@ -16,6 +16,7 @@ from wrapped import Wrapped, data_br, mes_ano
 
 if TYPE_CHECKING:
     from conciliacao import ResultadoConciliacao
+    from recursos import Sintonia
 
 FUNDOS = {
     'intro': ('#1ed760', '#0b3d20'),
@@ -35,6 +36,7 @@ FUNDOS = {
     'match_intro': ('#5b2ad6', '#120a33'),
     'match_par': ('#1ed760', '#0b3d20'),
     'match_trio': ('#ff6437', '#4a0f1f'),
+    'sintonia': ('#f573a0', '#3b0b2c'),
 }
 
 
@@ -493,5 +495,103 @@ def stories_match_html(r: ResultadoConciliacao) -> str:
     )
     return (
         '<div class="su-stories" data-stories tabindex="0" aria-label="Revelação do Match">'
+        f'<div class="su-stories-frame">{"".join(slides)}</div></div>'
+    )
+
+
+def stories_sintonia_html(nome_a: str, nome_b: str, s: Sintonia, quase: int) -> str:
+    """Stories da escuta simultânea: a mesma faixa tocando ao mesmo tempo para os dois."""
+    a, b = _e(nome_a), _e(nome_b)
+    if not s.momentos:
+        slides = [
+            _slide(
+                'sintonia',
+                _a('<span class="su-kicker">EM SINTONIA</span>', 0)
+                + _a(f'<h2>{a} e {b}</h2>', 1)
+                + _a('<p>Ainda não ouviram a mesma música ao mesmo tempo neste recorte.</p>', 2)
+                + _a(
+                    f'<div class="su-mega">{_n(quase)}<span>vezes quase juntos (até 1 h)</span></div>',
+                    3,
+                ),
+            )
+        ]
+    else:
+        primeira, longo = s.primeira, s.mais_longo
+        musica, artista, vezes, minutos = s.top_musicas[0]
+        slides = [
+            _slide(
+                'sintonia',
+                _a('<span class="su-kicker">EM SINTONIA</span>', 0)
+                + _a(f'<h2>{a} e {b}<br>ouviram juntos</h2>', 1)
+                + _a(
+                    f'<div class="su-mega">{_n(s.minutos, 0)}<span>minutos ao mesmo tempo</span></div>',
+                    2,
+                )
+                + _a(
+                    f'<p>Foram <strong>{fmt_num(len(s.momentos))} momentos</strong> com a mesma '
+                    'música tocando para os dois, no mesmo instante.</p>',
+                    3,
+                ),
+            ),
+            _slide(
+                'primeira',
+                _a('<span class="su-kicker">A PRIMEIRA VEZ</span>', 0)
+                + _a(f'<div class="su-big-name">{_e(primeira.musica)}</div>', 1)
+                + _a(f'<p class="su-sub">{_e(primeira.artista)}</p>', 2)
+                + _a(
+                    f'<p>em {_e(data_br(primeira.inicio_local))}, às '
+                    f'{primeira.inicio_local:%H:%M}.</p>',
+                    3,
+                ),
+            ),
+            _slide(
+                'top_musicas',
+                _a('<span class="su-kicker">A MÚSICA DE VOCÊS</span>', 0)
+                + _a(f'<div class="su-big-name">{_e(musica)}</div>', 1)
+                + _a(f'<p class="su-sub">{_e(artista)}</p>', 2)
+                + _a(
+                    f'<div class="su-pair"><div>{_n(vezes)}<span>vezes juntos</span></div>'
+                    f'<div>{_n(minutos, 0)}<span>minutos</span></div></div>',
+                    3,
+                ),
+            ),
+            _slide(
+                'relogio',
+                _a('<span class="su-kicker">QUANDO VOCÊS SE ENCONTRAM</span>', 0)
+                + _a(
+                    f'<div class="su-mega">{s.hora_favorita}h<span>a hora favorita</span></div>', 1
+                )
+                + _a(
+                    f'<p>e o dia que mais junta vocês é <strong>{_e(s.dia_favorito)}</strong>.</p>',
+                    2,
+                )
+                + _a(
+                    f'<p class="su-sub">Momento mais longo: {_e(longo.musica)}, '
+                    f'{fmt_num(longo.minutos, 1)} min, em {_e(data_br(longo.inicio_local))}.</p>',
+                    3,
+                ),
+            ),
+        ]
+    slides.append(
+        _slide(
+            'resumo',
+            _a('<span class="su-kicker">SYNCUP · EM SINTONIA</span>', 0)
+            + _a(
+                f'<div class="su-final-stats"><div><span>Minutos juntos</span>'
+                f'<b>{fmt_num(s.minutos, 0)}</b></div><div><span>Momentos</span>'
+                f'<b>{fmt_num(len(s.momentos))}</b></div><div><span>Quase juntos</span>'
+                f'<b>{fmt_num(quase)}</b></div></div>',
+                1,
+            )
+            + _a(
+                '<p class="su-foot">Ao mesmo tempo = a mesma faixa tocando para os dois, com pelo '
+                'menos 30 s em comum, pelo horário de fim e a duração de cada play.</p>',
+                2,
+            )
+            + _a('<button type="button" class="su-replay">↺ Ver de novo</button>', 3),
+        )
+    )
+    return (
+        f'<div class="su-stories" data-stories tabindex="0" aria-label="Sintonia de {a} e {b}">'
         f'<div class="su-stories-frame">{"".join(slides)}</div></div>'
     )

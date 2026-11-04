@@ -33,6 +33,7 @@ def test_criar_interface_monta_arvore_sem_erros() -> None:
             'encontrar_matches',
             'playlist_festa',
             'baixar_cartao_match',
+            'baixar_sintonia',
         }
         assert 'fonts.googleapis.com' not in str(demo.theme._stylesheets)  # fonte local (OFL)
         assert demo.theme is not None

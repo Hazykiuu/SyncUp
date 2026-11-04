@@ -334,3 +334,26 @@ def match_html(resultado: ResultadoConciliacao, fontes: dict[str, str] | None = 
         f'<div class="su-match-grid">{"".join(cartoes)}</div>'
         '</section>'
     )
+
+
+def sintonia_html(resultado: ResultadoComparacao) -> str:
+    """Stories da sintonia e a linha do tempo mês a mês dos minutos ouvidos juntos."""
+    import stories
+
+    s = resultado.sintonia
+    quase = resultado.momentos_musicas.total_pares if resultado.momentos_musicas else 0
+    a, b = resultado.perfil_a.nome, resultado.perfil_b.nome
+    linha = ''
+    if s is not None and not s.por_mes.empty:
+        maximo = float(s.por_mes.max()) or 1.0
+        barras = ''.join(
+            f'<li style="--h:{valor / maximo:.3f};--i:{i}" title="{escape_html(mes)}: '
+            f'{fmt_num(valor, 0)} min"><span>{escape_html(mes[5:])}/{escape_html(mes[2:4])}</span></li>'
+            for i, (mes, valor) in enumerate(s.por_mes.items())
+        )
+        linha = (
+            '<div class="su-sync-timeline"><h4>Quando a sintonia aconteceu</h4>'
+            f'<ol aria-label="Minutos juntos por mês">{barras}</ol></div>'
+        )
+    corpo = stories.stories_sintonia_html(a, b, s, quase) if s is not None else ''
+    return f'<section class="su-sync"><div class="su-sync-story">{corpo}</div>{linha}</section>'

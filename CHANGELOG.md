@@ -6,7 +6,10 @@
 - **Código aberto**: licença MIT (`LICENSE`) e teste que exige licença aberta em toda dependência declarada. A fonte Figtree (OFL) agora vem no projeto (`fontes/`): a interface não chama mais o Google Fonts e os cartões PNG ficam iguais em qualquer sistema.
 - **Estilo musical no Match** (`generos.py`): segundo eixo de compatibilidade por gêneros, para quando os artistas não batem mas o estilo bate. Uma caixa opcional (desligada por padrão) busca os gêneros no **MusicBrainz**, para ZIPs e também para logins do Spotify, que em modo de desenvolvimento não enviam gêneros (base aberta), 1 consulta por segundo e com cache local. O emparelhamento continua só por artistas.
 - **Playlist da festa** (`festa.py`): até 30 músicas que cobrem o gosto de todo o grupo, equilibrando quem ainda tem pouco. Exporta CSV e **XSPF** (formato aberto de playlist, abre no VLC).
-- **Stories do Match** (revelação animada das duplas e do trio) e **cartão PNG da dupla** (1080×1350).
+- **Stories do Match** (revelação animada das duplas e do trio) e **story PNG da dupla** (1080×1920, pronto para o Instagram).
+- **ListenBrainz** (`listenbrainz.py`): terceira fonte do Match, aberta e sem limite de pessoas. Basta o nome de usuário público: sem Client ID e sem a lista de usuários do Spotify.
+- **Em sintonia** (aba Dupla): a mesma música tocando para os dois **no mesmo instante**. O intervalo de cada play é reconstruído (fim − duração) e os intervalos dos dois são cruzados. Mostra minutos juntos, a primeira vez, a música de vocês, o momento mais longo, a hora e o dia favoritos e a linha do tempo mês a mês, com stories e um story PNG para postar. A janela antiga de 1 h virou "Quase juntos".
+- **Aba Match redesenhada**: três fontes lado a lado; a configuração do app do Spotify fica num acordeão só para quem criou o app; o resultado foi dividido em abas (Revelação, Duplas, Todos com todos, Playlist da festa, Para postar); as duplas aparecem como pôsteres 4:5 em degradê.
 
 ### Desempenho
 - A leitura de um histórico não segura mais a trava global: arquivos e sessões diferentes são lidos ao mesmo tempo.
@@ -18,7 +21,14 @@
 ### Contrato
 - `Compatibilidade` ganha `pontuacao_generos` (ou `None`) e `generos_comuns`, com valores padrão.
 - `encontrar_matches` recebe uma entrada a mais no fim (buscar gêneros) e devolve 7 saídas (+ stories, estado e duplas).
-- Novos endpoints `playlist_festa` e `baixar_cartao_match`.
+- `encontrar_matches` ganha mais uma entrada no fim: os usuários do ListenBrainz.
+- Novos endpoints `playlist_festa`, `baixar_cartao_match` e `baixar_sintonia`. O PNG de `baixar_cartao_match` passou a ser 1080×1920.
+- `ResultadoComparacao.sintonia` (novo, padrão `None`). Na saída 15 de `comparar_dupla`, o Markdown dos momentos virou o HTML "Em sintonia".
+- A lista "Ranking individual" saiu dos cartões do Match; o mesmo conteúdo continua na tabela da aba "Todos com todos".
+
+### Correções
+- Depois de "Atualizar lista", quem acabou de logar no Spotify já aparece marcado. Antes vinha desmarcado e o Match falhava com "pelo menos duas pessoas".
+- As sugestões de troca não saem mais da borda do cartão.
 
 ## [0.8] — 2026-11-03
 

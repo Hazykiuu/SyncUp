@@ -37,6 +37,7 @@ python -m pip install -r requirements-parquet.txt
 | `componentes.py`, `syncup.js` | Blocos HTML animados (Blend, Wrapped, listas tipo playlist, corrida de artistas) e o script de animações |
 | `exportacoes.py`, `cartao.py` | CSV protegido para planilhas e PNG local em Pillow |
 | `generos.py`, `festa.py` | Estilo musical (Spotify/MusicBrainz) e playlist da festa em CSV/XSPF |
+| `listenbrainz.py` | Perfil pelo ListenBrainz (fonte aberta, sem login) |
 | `formatacao.py`, `app.py` | Formatação/sanitização pt-BR, entrada local e reexportações compatíveis |
 
 ```python
@@ -56,7 +57,9 @@ Os imports `carregar`, `comparar`, `metricas`, `criar_interface` e `limpar_cache
 - **Estilo musical** (`generos.py`): além dos artistas, cada dupla ganha uma compatibilidade de **gêneros**. Ela ajuda quando os artistas não batem mas o estilo bate. O peso de cada artista é dividido entre os gêneros dele, e gêneros compostos ("brazilian rock") também contam, com meio peso, para as palavras que os formam. Assim as tags do Spotify e do MusicBrainz se aproximam. É uma aproximação: o emparelhamento continua só pelos artistas.
 - **De onde vêm os gêneros**: o ZIP não traz gêneros, e a API do Spotify também não os envia para apps em modo de desenvolvimento (a lista vem vazia; foi conferido com um login real). Marque *Comparar também o estilo* para buscá-los no [MusicBrainz](https://musicbrainz.org) (base aberta, dados CC0). Só nomes de artistas são enviados, 1 por segundo, e as respostas ficam em `.syncup_cache/generos_musicbrainz.json`. Na primeira vez leva até ~25 s por pessoa. A busca vale para todos os perfis, de ZIP ou de login. Se o Spotify enviar gêneros (apps com acesso estendido), eles são usados e não são buscados de novo.
 - **Playlist da festa** (`festa.py`): até 30 músicas que cobrem o gosto de todo o grupo. A escolha maximiza Σ √cobertura, o que dá prioridade a quem ainda tem pouco. Cada faixa diz para quem foi escolhida. Baixe em CSV ou em **XSPF**, o formato aberto de playlist da Xiph, que abre no VLC e em outros players livres.
-- **Stories do Match** revelam as duplas e o trio, e o **cartão PNG** (1080×1350) de uma dupla é gerado localmente.
+- **Stories do Match** revelam as duplas e o trio. A aba *Para postar* gera o **story PNG** (1080×1920) de uma dupla, localmente. As duplas aparecem como pôsteres 4:5: um print da tela já serve de post.
+- **ListenBrainz, sem limite de pessoas** (`listenbrainz.py`): o [ListenBrainz](https://listenbrainz.org) é um projeto aberto da MetaBrainz. Cada amigo cria uma conta grátis, conecta o Spotify uma vez em *Settings → Music services* e informa só o **nome de usuário** no Match. Não precisa de Client ID nem da lista de usuários do Spotify. As estatísticas (top artistas e músicas do mês, do semestre e do ano) são públicas e recalculadas uma vez por dia; uma conta nova leva até um dia para ter rankings.
+- **Em sintonia** (aba Dupla): mostra quando os dois ouviam **a mesma música ao mesmo tempo**. O Spotify registra o fim de cada play (`ts`) e quanto tocou (`ms_played`), então o intervalo é `[fim − duração, fim]`. Os intervalos dos dois são cruzados por faixa, e uma sobreposição de pelo menos 30 s conta como um momento juntos. A aba traz minutos juntos, a primeira vez, a música de vocês, o momento mais longo, a hora e o dia favoritos, a linha do tempo mês a mês, stories e o story PNG. A comparação antiga, com até 1 h de distância, ficou em "Quase juntos".
 
 ## Match entre amigos e login com Spotify (v0.8)
 
@@ -185,6 +188,7 @@ O SyncUp é distribuído sob a [licença MIT](LICENSE) e só usa código e recur
 | pytest, Ruff | MIT |
 | Fonte Figtree (`fontes/`) | SIL OFL 1.1 ([`fontes/OFL.txt`](fontes/OFL.txt)) |
 | MusicBrainz (gêneros, opcional) | dados CC0, servidor open source |
+| ListenBrainz (perfis, opcional) | servidor open source (MetaBrainz) |
 
 `tests/test_licencas.py` confere a licença declarada de cada pacote em `requirements*.txt`. Uma dependência nova sem licença aberta faz a suíte falhar.
 

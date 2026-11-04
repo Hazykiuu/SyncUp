@@ -345,11 +345,20 @@ def sintonia_html(resultado: ResultadoComparacao) -> str:
     a, b = resultado.perfil_a.nome, resultado.perfil_b.nome
     linha = ''
     if s is not None and not s.por_mes.empty:
-        maximo = float(s.por_mes.max()) or 1.0
+        # Meses sem sintonia também aparecem (barra vazia): o intervalo entre encontros é visível.
+        meses = pd.period_range(s.por_mes.index[0], s.por_mes.index[-1], freq='M').strftime('%Y-%m')
+        por_mes = s.por_mes.reindex(meses, fill_value=0.0)
+        maximo = float(por_mes.max()) or 1.0
         barras = ''.join(
             f'<li style="--h:{valor / maximo:.3f};--i:{i}" title="{escape_html(mes)}: '
-            f'{fmt_num(valor, 0)} min"><span>{escape_html(mes[5:])}/{escape_html(mes[2:4])}</span></li>'
-            for i, (mes, valor) in enumerate(s.por_mes.items())
+            f'{fmt_num(valor, 0)} min">'
+            + (
+                f'<span>{escape_html(mes[5:])}/{escape_html(mes[2:4])}</span>'
+                if i == 0 or mes.endswith('-01')
+                else ''
+            )
+            + '</li>'
+            for i, (mes, valor) in enumerate(por_mes.items())
         )
         linha = (
             '<div class="su-sync-timeline"><h4>Quando a sintonia aconteceu</h4>'

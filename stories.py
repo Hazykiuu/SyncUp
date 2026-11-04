@@ -37,6 +37,7 @@ FUNDOS = {
     'match_par': ('#1ed760', '#0b3d20'),
     'match_trio': ('#ff6437', '#4a0f1f'),
     'sintonia': ('#f573a0', '#3b0b2c'),
+    'fim': ('#1ed760', '#0b1f14'),  # resumos do Match e da sintonia, sem a faixa do Wrapped
 }
 
 
@@ -474,7 +475,7 @@ def stories_match_html(r: ResultadoConciliacao) -> str:
     linhas = ''.join(f'<li>{" + ".join(_e(n) for n in g)}</li>' for g in r.pares)
     slides.append(
         _slide(
-            'resumo',
+            'fim',
             _a('<span class="su-kicker">RESUMO DO MATCH</span>', 0)
             + _a(
                 f'<div class="su-final-grid"><div><span>Grupos</span><ol>{linhas}</ol></div></div>',
@@ -574,7 +575,7 @@ def stories_sintonia_html(nome_a: str, nome_b: str, s: Sintonia, quase: int) -> 
         ]
     slides.append(
         _slide(
-            'resumo',
+            'fim',
             _a('<span class="su-kicker">SYNCUP · EM SINTONIA</span>', 0)
             + _a(
                 f'<div class="su-final-stats"><div><span>Minutos juntos</span>'

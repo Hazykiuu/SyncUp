@@ -881,15 +881,60 @@ def _secao(titulo: str, texto: str = '') -> gr.HTML:
     return gr.HTML(f'<div class="su-section"><h3>{escape_html(titulo)}</h3>{corpo}</div>')
 
 
-HERO = """<header class="su-hero">
+TOPO = """<header class="su-topbar">
+  <div class="su-logo sm" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <b>SyncUp</b><span class="su-topbar-tag">v0.95 · código aberto</span>
+</header>"""
+
+INICIO_TOPO = """<section class="su-hero">
   <div class="su-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <div class="su-hero-text">
-    <small>COMPARADOR DE HISTÓRICOS · v0.9 · CÓDIGO ABERTO</small>
-    <h1>SyncUp</h1>
-    <p>Seus históricos do Spotify, lado a lado — tudo processado localmente.</p>
-    <div class="su-chips"><span>Match entre amigos</span><span>Playlist da festa</span><span>Estilo musical</span><span>Login com Spotify</span><span>Wrapped da vida toda</span><span>Arquétipos</span><span>Blend de similaridade</span><span>Corrida de artistas</span><span>Momentos sincronizados</span><span>Modo grupo</span></div>
+    <small>SEUS HISTÓRICOS DO SPOTIFY, LADO A LADO</small>
+    <h1>Descubra com quem<br>você está em sintonia.</h1>
+    <p>Compare, encontre o seu match e poste o resultado. Tudo roda neste computador.</p>
   </div>
-</header>"""
+</section>
+<h3 class="su-home-h">O que dá para fazer</h3>"""
+
+INICIO_RODAPE = """<section class="su-steps-home">
+  <h3 class="su-home-h">Como funciona</h3>
+  <ol>
+    <li><b>1</b><span><strong>Pegue seus dados</strong>O Histórico Estendido do Spotify (ZIP), um login ou o usuário do ListenBrainz.</span></li>
+    <li><b>2</b><span><strong>Envie e aperte o play</strong>O SyncUp compara rankings, horários e hábitos.</span></li>
+    <li><b>3</b><span><strong>Compartilhe</strong>Baixe o story 1080×1920 e poste.</span></li>
+  </ol>
+</section>
+<section class="su-open">
+  <span>🔒 100% local</span><span>MIT · código aberto</span><span>ListenBrainz e MusicBrainz</span>
+  <a href="https://github.com/Hazykiuu/SyncUp" target="_blank" rel="noopener">Ver no GitHub →</a>
+</section>"""
+
+# Aba de destino, ícone, título, texto e cor de cada cartão do Início.
+RECURSOS = [
+    ('dupla', '🎧', 'Dupla', 'Blend, identidades e rankings de duas pessoas.', '#1ed760'),
+    (
+        'dupla',
+        '💞',
+        'Em sintonia',
+        'Quando vocês ouviram a mesma música ao mesmo tempo.',
+        '#f573a0',
+    ),
+    ('match', '✨', 'Match', 'Junte a galera e descubra as melhores duplas.', '#c4b7ff'),
+    ('match', '🎉', 'Playlist da festa', 'Músicas que agradam o grupo inteiro.', '#ffa42b'),
+    ('wrapped', '📼', 'Wrapped', 'A sua vida inteira no Spotify, em stories.', '#4cc9f0'),
+    ('grupo', '👥', 'Grupo', 'Até 6 perfis comparados numa matriz.', '#e8db5a'),
+]
+
+
+def _cartao_recurso(icone: str, titulo: str, texto: str, cor: str) -> gr.Button:
+    """Cartão de recurso do Início; devolve o botão que leva à aba."""
+    with gr.Column(elem_classes='su-feature', min_width=240):
+        gr.HTML(
+            f'<div class="su-feature-in" style="--c:{cor}"><span class="su-feature-ico">{icone}</span>'
+            f'<h4>{escape_html(titulo)}</h4><p>{escape_html(texto)}</p></div>'
+        )
+        return gr.Button('Abrir', elem_classes='su-secondary', size='sm')
+
 
 VAZIO = """<div class="su-blend"><div class="su-blend-hero" style="grid-template-columns:auto 1fr">
 <div class="su-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -910,22 +955,25 @@ def criar_interface() -> gr.Blocks:
         analytics_enabled=False,
         delete_cache=(3600, 3600),
     ) as demo:
-        gr.HTML(HERO)
-        gr.Markdown(AVISO_TRACOS, elem_classes='su-note')
-        with gr.Accordion('Opções de dados · valem para todas as abas', open=False):
+        gr.HTML(TOPO)
+        # Opções avançadas numa gaveta lateral fechada: a página mostra só o que encanta.
+        with gr.Sidebar(label='Opções de dados', open=False, elem_classes='su-sidebar'):
+            gr.HTML(
+                '<div class="su-side-head"><b>Opções de dados</b>'
+                '<span>Valem para todas as abas.</span></div>'
+            )
             fuso = gr.Dropdown(
                 sorted(available_timezones()), value='America/Sao_Paulo', label='Fuso horário IANA'
             )
-            with gr.Row():
-                ignorar_musicas = gr.Textbox(
-                    value='',
-                    placeholder='\n'.join(MUSICAS_IGNORADAS_PADRAO),
-                    lines=3,
-                    label='Músicas ignoradas · um nome por linha',
-                )
-                ignorar_artistas = gr.Textbox(
-                    value='', lines=3, label='Artistas ignorados · um nome por linha'
-                )
+            ignorar_musicas = gr.Textbox(
+                value='',
+                placeholder='\n'.join(MUSICAS_IGNORADAS_PADRAO),
+                lines=3,
+                label='Músicas ignoradas · um nome por linha',
+            )
+            ignorar_artistas = gr.Textbox(
+                value='', lines=3, label='Artistas ignorados · um nome por linha'
+            )
             varios = gr.Dropdown(
                 choices=[
                     ('Manter como artista agregado', 'manter'),
@@ -939,11 +987,24 @@ def criar_interface() -> gr.Blocks:
                 value=False, label='Remover eventos idênticos · UTC, duração, artista e música'
             )
             gr.Markdown(
-                'Various Artists não identifica o intérprete real. Arquivos inteiros repetidos são rejeitados dentro do mesmo perfil.'
+                'Various Artists não identifica o intérprete real. Arquivos inteiros repetidos '
+                'são rejeitados dentro do mesmo perfil.',
+                elem_classes='su-note',
             )
+            gr.Markdown(AVISO_TRACOS, elem_classes='su-note')
         opcoes = [fuso, ignorar_musicas, ignorar_artistas, varios, disco, deduplicar]
-        with gr.Tabs():
-            with gr.Tab('Dupla'):
+        with gr.Tabs(elem_classes='su-nav') as abas:
+            with gr.Tab('Início', id='inicio'):
+                gr.HTML(INICIO_TOPO)
+                atalhos = []
+                with gr.Row(elem_classes='su-features'):
+                    for aba, icone, titulo, texto, cor in RECURSOS[:3]:
+                        atalhos.append((aba, _cartao_recurso(icone, titulo, texto, cor)))
+                with gr.Row(elem_classes='su-features'):
+                    for aba, icone, titulo, texto, cor in RECURSOS[3:]:
+                        atalhos.append((aba, _cartao_recurso(icone, titulo, texto, cor)))
+                gr.HTML(INICIO_RODAPE)
+            with gr.Tab('Dupla', id='dupla'):
                 estado = gr.State(value=None, time_to_live=3600)
                 pastas = gr.State(value=[], time_to_live=3600, delete_callback=_limpar_exportacoes)
                 with gr.Row(equal_height=True):
@@ -991,75 +1052,12 @@ def criar_interface() -> gr.Blocks:
                     gr.HTML(VAZIO)
                 with gr.Column(visible=False, elem_classes='su-results') as resultados:
                     resumo = gr.HTML()
-                    _secao(
-                        'Quem ouve quem',
-                        'Participação dos artistas líderes nos plays de cada perfil.',
-                    )
-                    plot = gr.Plot(show_label=False, elem_classes='su-chart')
-                    _secao('Identidades musicais')
                     with gr.Row(equal_height=True):
                         aa = gr.HTML()
                         ab = gr.HTML()
-                    _secao(
-                        'Corrida dos artistas',
-                        'Plays acumulados mês a mês. Use o player para pausar ou arrastar a linha do tempo.',
-                    )
-                    corrida = gr.HTML()
-                    _secao('Explorar')
-                    with gr.Tabs():
-                        with gr.Tab('Wrapped da vida toda'):
+                    with gr.Tabs(elem_classes='su-subnav'):
+                        with gr.Tab('Wrapped'):
                             wrapped_dupla = gr.HTML()
-                        with gr.Tab('Rankings'):
-                            with gr.Row(equal_height=True):
-                                lista_aa = gr.HTML()
-                                lista_ab = gr.HTML()
-                            with gr.Row(equal_height=True):
-                                lista_ma = gr.HTML()
-                                lista_mb = gr.HTML()
-                            conexoes = gr.Markdown()
-                            with gr.Accordion('Tabelas completas · top 20', open=False):
-                                with gr.Row():
-                                    ta = gr.Dataframe(
-                                        interactive=False, wrap=True, label='Artistas A · top 20'
-                                    )
-                                    tb = gr.Dataframe(
-                                        interactive=False, wrap=True, label='Artistas B · top 20'
-                                    )
-                                with gr.Row():
-                                    ma = gr.Dataframe(
-                                        interactive=False, wrap=True, label='Músicas A · top 20'
-                                    )
-                                    mb = gr.Dataframe(
-                                        interactive=False, wrap=True, label='Músicas B · top 20'
-                                    )
-                        with gr.Tab('Horários e traços'):
-                            gr.Markdown(AVISO_TRACOS, elem_classes='su-note')
-                            gr.Markdown(
-                                f'Favoritos: top 2 ≥{fmt_pct(LIMIAR_FAVORITOS)}. Repeat: top 10 faixas ≥{fmt_pct(LIMIAR_REPEAT)}. '
-                                f'Madrugada: 00h–05h59 ≥{fmt_pct(LIMIAR_MADRUGADA)}. Em amostras pequenas, top 10 tende a ser alto.',
-                                elem_classes='su-note',
-                            )
-                            heatmap = gr.Plot(show_label=False, elem_classes='su-chart')
-                            radar = gr.Plot(show_label=False, elem_classes='su-chart')
-                        with gr.Tab('Diferenças e contribuição'):
-                            slope = gr.Plot(show_label=False, elem_classes='su-chart')
-                            gr.Markdown(
-                                'Contribuição por artista = aᵢ·bᵢ/(|a|·|b|). A soma de todos os artistas é o cosseno. '
-                                'Valores em pontos percentuais, com a ponderação selecionada. Tabela: 100 líderes; artistas exclusivos contribuem zero.',
-                                elem_classes='su-note',
-                            )
-                            contrib = gr.Dataframe(
-                                interactive=False, wrap=True, label='Contribuições ao cosseno'
-                            )
-                            gr.Markdown(
-                                'Entropia = −Σp·ln(p)/ln(k); uma categoria vale 0. '
-                                'Gini = Σ(2i−k−1)xᵢ/(kΣx). Ambos usam contagens brutas positivas dos artistas observados. '
-                                'Uniformidade: entropia 1 para k>1, Gini 0; Gini máximo (k−1)/k. Não medem diversidade de gêneros.',
-                                elem_classes='su-note',
-                            )
-                            diversidade = gr.Dataframe(
-                                interactive=False, label='Diversidade e desigualdade observadas'
-                            )
                         with gr.Tab('Em sintonia'):
                             momentos = gr.HTML()
                             with gr.Row():
@@ -1085,12 +1083,60 @@ def criar_interface() -> gr.Blocks:
                                     wrap=True,
                                     label='Pares de mesma música e artista · exemplos',
                                 )
-                        with gr.Tab('Ponte Musical e playlist'):
-                            ponte = gr.Markdown()
+                        with gr.Tab('Rankings'):
+                            corrida = gr.HTML()
+                            with gr.Row(equal_height=True):
+                                lista_aa = gr.HTML()
+                                lista_ab = gr.HTML()
+                            with gr.Row(equal_height=True):
+                                lista_ma = gr.HTML()
+                                lista_mb = gr.HTML()
+                            conexoes = gr.Markdown()
+                            with gr.Accordion('Tabelas completas · top 20', open=False):
+                                with gr.Row():
+                                    ta = gr.Dataframe(
+                                        interactive=False, wrap=True, label='Artistas A · top 20'
+                                    )
+                                    tb = gr.Dataframe(
+                                        interactive=False, wrap=True, label='Artistas B · top 20'
+                                    )
+                                with gr.Row():
+                                    ma = gr.Dataframe(
+                                        interactive=False, wrap=True, label='Músicas A · top 20'
+                                    )
+                                    mb = gr.Dataframe(
+                                        interactive=False, wrap=True, label='Músicas B · top 20'
+                                    )
+                        with gr.Tab('Gráficos'):
+                            _secao(
+                                'Quem ouve quem',
+                                'Participação dos artistas líderes nos plays de cada perfil.',
+                            )
+                            plot = gr.Plot(show_label=False, elem_classes='su-chart')
+                            _secao('Horários e traços')
+                            heatmap = gr.Plot(show_label=False, elem_classes='su-chart')
+                            radar = gr.Plot(show_label=False, elem_classes='su-chart')
                             gr.Markdown(
-                                'Playlist = faixas presentes em ambos os recortes, identificadas por artista e título. '
-                                'Prévia: até 500 faixas. O CSV contém todas; os links abrem buscas no Spotify. Não cria playlist na sua conta.',
+                                f'Favoritos: top 2 ≥{fmt_pct(LIMIAR_FAVORITOS)}. Repeat: top 10 faixas ≥{fmt_pct(LIMIAR_REPEAT)}. '
+                                f'Madrugada: 00h–05h59 ≥{fmt_pct(LIMIAR_MADRUGADA)}. Em amostras pequenas, top 10 tende a ser alto.',
                                 elem_classes='su-note',
+                            )
+                            _secao('Onde vocês se diferenciam')
+                            slope = gr.Plot(show_label=False, elem_classes='su-chart')
+                            _secao('Mês a mês')
+                            mensal = gr.Plot(show_label=False, elem_classes='su-chart')
+                        with gr.Tab('Compartilhar'):
+                            _secao('Cartão da dupla', 'PNG 1080×1350 gerado neste computador.')
+                            criar_cartao = gr.Button('Gerar cartão PNG', elem_classes='su-play')
+                            imagem = gr.Image(
+                                type='filepath', interactive=False, label='Prévia do cartão'
+                            )
+                            png_download = gr.File(label='Baixar cartão PNG', interactive=False)
+                            _secao('Ponte musical')
+                            ponte = gr.Markdown()
+                            _secao(
+                                'Playlist em comum',
+                                'Faixas que os dois ouviram. Os links abrem buscas no Spotify.',
                             )
                             playlist = gr.Dataframe(
                                 interactive=False, wrap=True, label='Playlist comum · prévia'
@@ -1099,28 +1145,33 @@ def criar_interface() -> gr.Blocks:
                                 'Exportar playlist comum · CSV', elem_classes='su-secondary'
                             )
                             csv_download = gr.File(label='Baixar playlist CSV', interactive=False)
-                        with gr.Tab('Cartão para compartilhar'):
-                            gr.Markdown(
-                                'PNG 1080×1350 gerado localmente. Inclui os nomes informados e métricas do recorte.',
-                                elem_classes='su-note',
-                            )
-                            criar_cartao = gr.Button('Gerar cartão PNG', elem_classes='su-play')
-                            imagem = gr.Image(
-                                type='filepath', interactive=False, label='Prévia do cartão'
-                            )
-                            png_download = gr.File(label='Baixar cartão PNG', interactive=False)
-                        with gr.Tab('Evolução e EDA'):
-                            mensal = gr.Plot(show_label=False, elem_classes='su-chart')
-                            stats = gr.Dataframe(
-                                interactive=False, label='describe() · minutos por execução'
-                            )
-                        with gr.Tab('Diagnóstico'):
-                            gr.Markdown(
-                                'Descartes exclusivos: podcast → duração → data → identificação → Various Artists → filtros → duplicados. '
-                                'SHA-256 identifica conteúdo, não o dono. Similaridade 100% não prova arquivos idênticos.',
-                                elem_classes='su-note',
-                            )
-                            diag = gr.Dataframe(interactive=False, wrap=True)
+                    with gr.Accordion('Detalhes técnicos', open=False, elem_classes='su-tech'):
+                        gr.Markdown(
+                            'Contribuição por artista = aᵢ·bᵢ/(|a|·|b|); a soma é o cosseno, em '
+                            'pontos percentuais e com a ponderação escolhida (100 líderes).',
+                            elem_classes='su-note',
+                        )
+                        contrib = gr.Dataframe(
+                            interactive=False, wrap=True, label='Contribuições ao cosseno'
+                        )
+                        gr.Markdown(
+                            'Entropia = −Σp·ln(p)/ln(k); Gini = Σ(2i−k−1)xᵢ/(kΣx), com contagens '
+                            'brutas dos artistas observados. Não medem diversidade de gêneros.',
+                            elem_classes='su-note',
+                        )
+                        diversidade = gr.Dataframe(
+                            interactive=False, label='Diversidade e desigualdade observadas'
+                        )
+                        stats = gr.Dataframe(
+                            interactive=False, label='describe() · minutos por execução'
+                        )
+                        gr.Markdown(
+                            'Descartes exclusivos: podcast → duração → data → identificação → '
+                            'Various Artists → filtros → duplicados. SHA-256 identifica conteúdo, '
+                            'não o dono.',
+                            elem_classes='su-note',
+                        )
+                        diag = gr.Dataframe(interactive=False, wrap=True, label='Diagnóstico')
                 saidas = [
                     estado,
                     resumo,
@@ -1183,7 +1234,7 @@ def criar_interface() -> gr.Blocks:
                     [sintonia_img, sintonia_arquivo, pastas],
                     api_name='baixar_sintonia',
                 )
-            with gr.Tab('Match'):
+            with gr.Tab('Match', id='match'):
                 gr.HTML(
                     '<div class="su-section"><h3>Quem combina com quem?</h3>'
                     '<p>Junte a galera por qualquer fonte. O SyncUp compara todos com todos, '
@@ -1340,7 +1391,7 @@ def criar_interface() -> gr.Blocks:
                     [cartao_m_img, cartao_m_arquivo, pastas_m],
                     api_name='baixar_cartao_match',
                 )
-            with gr.Tab('Wrapped'):
+            with gr.Tab('Wrapped', id='wrapped'):
                 gr.HTML(
                     '<div class="su-section"><h3>Seu Wrapped da vida toda</h3>'
                     '<p>Envie o Histórico Estendido de uma pessoa (todas as partes) e veja a vida '
@@ -1399,7 +1450,7 @@ def criar_interface() -> gr.Blocks:
                     [imagem_w, arquivo_w, pastas_w],
                     api_name='baixar_wrapped',
                 )
-            with gr.Tab('Grupo'):
+            with gr.Tab('Grupo', id='grupo'):
                 gr.Markdown(
                     f'Regras: top 2 artistas ≥{fmt_pct(LIMIAR_FAVORITOS)}; top 10 faixas ≥{fmt_pct(LIMIAR_REPEAT)}; '
                     f'madrugada 00h–05h59 ≥{fmt_pct(LIMIAR_MADRUGADA)}. As proporções aparecem na tabela. '
@@ -1459,9 +1510,11 @@ def criar_interface() -> gr.Blocks:
                     api_name='comparar_grupo',
                     scroll_to_output=True,
                 )
+        for aba, atalho in atalhos:
+            atalho.click(lambda a=aba: gr.Tabs(selected=a), None, abas, api_name=False)
         gr.Markdown(
             'Plays: ≥30 segundos. Horas e describe(): todas as execuções válidas. '
             'O Ruzicka usa pesos absolutos e é sensível ao volume de escuta. ' + AVISO_TRACOS,
-            elem_classes='su-note',
+            elem_classes=['su-note', 'su-footer'],
         )
     return demo.queue(default_concurrency_limit=1)

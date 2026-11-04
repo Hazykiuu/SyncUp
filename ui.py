@@ -612,16 +612,23 @@ def executar_match(
             perfil = carregar_perfil(PASTA_PERFIS / f'{nome}.json')
             perfis.append(perfil)
             fontes[perfil.nome] = f'Spotify · {perfil.coletado_em[:10]}'
-        for usuario in _linhas(usuarios_listenbrainz):
-            progress(0.65, desc=f'Lendo o ListenBrainz de {usuario}')
+        usuarios = _linhas(usuarios_listenbrainz)
+        fora: list[str] = []
+        for i, usuario in enumerate(usuarios):
+            progress(0.6 + 0.05 * i / len(usuarios), desc=f'Lendo o ListenBrainz de {usuario}')
             try:
                 perfil = coletar_perfil_listenbrainz(usuario)
-            except httpx.HTTPError as erro:
-                raise ValueError(
-                    f'Não foi possível falar com o ListenBrainz para {usuario}. Confira a internet.'
-                ) from erro
+            except ValueError as erro:  # usuário inexistente, sem estatísticas ou serviço ocupado
+                fora.append(f'{usuario}: {erro}')
+                continue
+            except httpx.HTTPError:
+                fora.append(f'{usuario}: o ListenBrainz não respondeu. Confira a internet.')
+                continue
             perfis.append(perfil)
             fontes[perfil.nome] = 'ListenBrainz'
+        if fora:
+            # Um nome errado não derruba o Match: quem falhou fica de fora, com o motivo.
+            gr.Warning('Ficaram de fora do Match · ' + ' · '.join(fora))
         if buscar_generos:
             consulta = ConsultaMusicBrainz(
                 cache=Path(config.diretorio_cache) / ARQUIVO_CACHE_GENEROS
@@ -909,20 +916,21 @@ INICIO_RODAPE = """<section class="su-steps-home">
   <a href="https://github.com/Hazykiuu/SyncUp" target="_blank" rel="noopener">Ver no GitHub →</a>
 </section>"""
 
-# Aba de destino, ícone, título, texto e cor de cada cartão do Início.
+# Aba de destino, sub-aba da Dupla (ou None), ícone, título, texto e cor de cada cartão.
 RECURSOS = [
-    ('dupla', '🎧', 'Dupla', 'Blend, identidades e rankings de duas pessoas.', '#1ed760'),
+    ('dupla', None, '🎧', 'Dupla', 'Blend, identidades e rankings de duas pessoas.', '#1ed760'),
     (
         'dupla',
+        'sintonia',
         '💞',
         'Em sintonia',
         'Quando vocês ouviram a mesma música ao mesmo tempo.',
         '#f573a0',
     ),
-    ('match', '✨', 'Match', 'Junte a galera e descubra as melhores duplas.', '#c4b7ff'),
-    ('match', '🎉', 'Playlist da festa', 'Músicas que agradam o grupo inteiro.', '#ffa42b'),
-    ('wrapped', '📼', 'Wrapped', 'A sua vida inteira no Spotify, em stories.', '#4cc9f0'),
-    ('grupo', '👥', 'Grupo', 'Até 6 perfis comparados numa matriz.', '#e8db5a'),
+    ('match', None, '✨', 'Match', 'Junte a galera e descubra as melhores duplas.', '#c4b7ff'),
+    ('match', None, '🎉', 'Playlist da festa', 'Músicas que agradam o grupo inteiro.', '#ffa42b'),
+    ('wrapped', None, '📼', 'Wrapped', 'A sua vida inteira no Spotify, em stories.', '#4cc9f0'),
+    ('grupo', None, '👥', 'Grupo', 'Até 6 perfis comparados numa matriz.', '#e8db5a'),
 ]
 
 
@@ -930,10 +938,12 @@ def _cartao_recurso(icone: str, titulo: str, texto: str, cor: str) -> gr.Button:
     """Cartão de recurso do Início; devolve o botão que leva à aba."""
     with gr.Column(elem_classes='su-feature', min_width=240):
         gr.HTML(
-            f'<div class="su-feature-in" style="--c:{cor}"><span class="su-feature-ico">{icone}</span>'
+            f'<div class="su-feature-in" style="--c:{cor}">'
+            f'<span class="su-feature-ico" aria-hidden="true">{icone}</span>'
             f'<h4>{escape_html(titulo)}</h4><p>{escape_html(texto)}</p></div>'
         )
-        return gr.Button('Abrir', elem_classes='su-secondary', size='sm')
+        # Texto próprio por botão: leitores de tela não ouvem seis "Abrir" iguais.
+        return gr.Button(f'Abrir {titulo} →', elem_classes='su-secondary', size='sm')
 
 
 VAZIO = """<div class="su-blend"><div class="su-blend-hero" style="grid-template-columns:auto 1fr">
@@ -997,12 +1007,10 @@ def criar_interface() -> gr.Blocks:
             with gr.Tab('Início', id='inicio'):
                 gr.HTML(INICIO_TOPO)
                 atalhos = []
-                with gr.Row(elem_classes='su-features'):
-                    for aba, icone, titulo, texto, cor in RECURSOS[:3]:
-                        atalhos.append((aba, _cartao_recurso(icone, titulo, texto, cor)))
-                with gr.Row(elem_classes='su-features'):
-                    for aba, icone, titulo, texto, cor in RECURSOS[3:]:
-                        atalhos.append((aba, _cartao_recurso(icone, titulo, texto, cor)))
+                for linha in (RECURSOS[:3], RECURSOS[3:]):
+                    with gr.Row(elem_classes='su-features'):
+                        for aba, sub, icone, titulo, texto, cor in linha:
+                            atalhos.append((aba, sub, _cartao_recurso(icone, titulo, texto, cor)))
                 gr.HTML(INICIO_RODAPE)
             with gr.Tab('Dupla', id='dupla'):
                 estado = gr.State(value=None, time_to_live=3600)
@@ -1055,10 +1063,10 @@ def criar_interface() -> gr.Blocks:
                     with gr.Row(equal_height=True):
                         aa = gr.HTML()
                         ab = gr.HTML()
-                    with gr.Tabs(elem_classes='su-subnav'):
-                        with gr.Tab('Wrapped'):
+                    with gr.Tabs(elem_classes='su-subnav') as sub_dupla:
+                        with gr.Tab('Wrapped', id='wrapped_dupla'):
                             wrapped_dupla = gr.HTML()
-                        with gr.Tab('Em sintonia'):
+                        with gr.Tab('Em sintonia', id='sintonia'):
                             momentos = gr.HTML()
                             with gr.Row():
                                 sintonia_btn = gr.Button(
@@ -1114,6 +1122,7 @@ def criar_interface() -> gr.Blocks:
                             )
                             plot = gr.Plot(show_label=False, elem_classes='su-chart')
                             _secao('Horários e traços')
+                            gr.Markdown(AVISO_TRACOS, elem_classes='su-note')
                             heatmap = gr.Plot(show_label=False, elem_classes='su-chart')
                             radar = gr.Plot(show_label=False, elem_classes='su-chart')
                             gr.Markdown(
@@ -1510,8 +1519,16 @@ def criar_interface() -> gr.Blocks:
                     api_name='comparar_grupo',
                     scroll_to_output=True,
                 )
-        for aba, atalho in atalhos:
-            atalho.click(lambda a=aba: gr.Tabs(selected=a), None, abas, api_name=False)
+        for aba, sub, atalho in atalhos:
+            if sub is None:
+                atalho.click(lambda a=aba: gr.Tabs(selected=a), None, abas, api_name=False)
+            else:
+                atalho.click(
+                    lambda a=aba, s=sub: (gr.Tabs(selected=a), gr.Tabs(selected=s)),
+                    None,
+                    [abas, sub_dupla],
+                    api_name=False,
+                )
         gr.Markdown(
             'Plays: ≥30 segundos. Horas e describe(): todas as execuções válidas. '
             'O Ruzicka usa pesos absolutos e é sensível ao volume de escuta. ' + AVISO_TRACOS,

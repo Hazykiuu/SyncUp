@@ -1,5 +1,24 @@
 # Changelog — SyncUp
 
+## [0.95] — 2026-11-04
+
+### Novo
+- **Site repaginado**: aba **Início** de apresentação (hero, cartões de recurso que abrem a aba certa, "Como funciona" e faixa de código aberto); barra superior compacta; abas principais fixas no topo com fundo de vidro; "Opções de dados" numa gaveta lateral fechada; Dupla com 5 sub-abas (Wrapped, Em sintonia, Rankings, Gráficos, Compartilhar) e "Detalhes técnicos" num acordeão.
+
+### Desempenho
+- **Em sintonia 35× mais rápido**: com 285 mil eventos por pessoa, de 19,06 s para 0,55 s. Os intervalos passaram a ser cruzados numa única fusão de listas ordenadas, no lugar de uma tabela por faixa.
+
+### Correções
+- Plays repetidos ou tocados em dois aparelhos ao mesmo tempo não contam mais em dobro na sintonia: os intervalos sobrepostos da mesma pessoa são unidos antes.
+- O cartão "Em sintonia" do Início abre a Dupla direto na sub-aba da sintonia.
+- No Match, um usuário do ListenBrainz inexistente, sem estatísticas ou com o serviço ocupado (429) fica de fora, com um aviso; os demais continuam. O timeout por chamada caiu de 20 s para 10 s e a barra de progresso avança a cada usuário.
+- Acessibilidade: os botões do Início têm texto próprio ("Abrir Dupla →"…) e os ícones são ignorados por leitores de tela.
+- O aviso "não medem personalidade" voltou para junto do gráfico de traços.
+- O slide final dos stories do Match e da Sintonia não fica mais cortado entre o verde e o preto.
+
+### Contrato
+- Sem mudanças nos endpoints. Os componentes da Dupla mudaram de lugar, mas não de ordem nem de quantidade (34 saídas).
+
 ## [0.9] — 2026-11-03
 
 ### Novo

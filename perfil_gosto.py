@@ -20,6 +20,7 @@ import pandas as pd
 
 from configuracao import ConfiguracaoCarga, normalizar_nome
 from dados import Caminho, carregar_historicos, sha_em_cache
+from recursos import Escutas, escutas
 
 PERIODOS = ('short_term', 'medium_term', 'long_term')
 NOMES_PERIODOS = {
@@ -165,6 +166,17 @@ def perfil_de_historico(dados: pd.DataFrame, nome: str) -> PerfilGosto:
 _perfis_zip: OrderedDict[tuple, PerfilGosto] = OrderedDict()
 _trava_perfis = Lock()
 MAXIMO_PERFIS_CACHE = 64  # Perfis têm poucos KB; repetir um Match não relê os ZIPs.
+_escutas_zip: OrderedDict[tuple, Escutas] = OrderedDict()
+# shortcut: as escutas de um histórico real ocupam alguns MB; 16 cobre um Match cheio.
+# Guardar em disco (Parquet) se o app passar a atender vários grupos ao mesmo tempo.
+MAXIMO_ESCUTAS_CACHE = 16
+
+
+def _guardar(cache: OrderedDict, chave: tuple, valor, maximo: int) -> None:
+    with _trava_perfis:
+        cache[chave] = valor
+        while len(cache) > maximo:
+            cache.popitem(last=False)
 
 
 def _chave_perfil(partes: list[Caminho], config: ConfiguracaoCarga) -> tuple:
@@ -194,18 +206,37 @@ def perfil_de_arquivos(
         if perfil is not None:
             _perfis_zip.move_to_end(chave)
     if perfil is None:
-        perfil = perfil_de_historico(carregar_historicos(partes, configuracao=config).dados, nome)
-        with _trava_perfis:
-            _perfis_zip[chave] = perfil
-            while len(_perfis_zip) > MAXIMO_PERFIS_CACHE:
-                _perfis_zip.popitem(last=False)
+        dados = carregar_historicos(partes, configuracao=config).dados
+        perfil = perfil_de_historico(dados, nome)
+        _guardar(_perfis_zip, chave, perfil, MAXIMO_PERFIS_CACHE)
+        # Já com o histórico em mãos: a sintonia do Match não precisa reler o ZIP.
+        _guardar(_escutas_zip, chave, escutas(dados), MAXIMO_ESCUTAS_CACHE)
     # O nome não faz parte da chave: o mesmo ZIP pode ser enviado com outro nome.
     return replace(perfil, nome=(nome or '').strip() or 'Sem nome')
+
+
+def escutas_de_arquivos(
+    arquivos: Caminho | list[Caminho] | tuple[Caminho, ...],
+    configuracao: ConfiguracaoCarga | None = None,
+) -> Escutas:
+    """Intervalos de escuta dos arquivos (``recursos.escutas``), com o cache do perfil."""
+    config = configuracao or ConfiguracaoCarga()
+    partes = list(arquivos) if isinstance(arquivos, (list, tuple)) else [arquivos]
+    chave = _chave_perfil(partes, config)
+    with _trava_perfis:
+        valor = _escutas_zip.get(chave)
+        if valor is not None:
+            _escutas_zip.move_to_end(chave)
+            return valor
+    valor = escutas(carregar_historicos(partes, configuracao=config).dados)
+    _guardar(_escutas_zip, chave, valor, MAXIMO_ESCUTAS_CACHE)
+    return valor
 
 
 def limpar_cache_perfis() -> None:
     with _trava_perfis:
         _perfis_zip.clear()
+        _escutas_zip.clear()
 
 
 def peso_posicao(posicao: int, tamanho: int = TAMANHO_RANKING) -> float:

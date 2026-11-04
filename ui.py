@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import base64
 import os
 import shutil
+from collections.abc import Callable
 from functools import lru_cache
+from itertools import combinations
 from numbers import Real
 from pathlib import Path
 from tempfile import gettempdir, mkdtemp
@@ -12,6 +15,7 @@ from typing import Any
 from zoneinfo import available_timezones
 
 import gradio as gr
+import httpx
 import pandas as pd
 import plotly.express as px
 from plotly.graph_objects import Figure
@@ -25,17 +29,19 @@ from analise import (
     comparar,
     comparar_grupo,
 )
-from cartao import gerar_cartao, gerar_cartao_wrapped
+from cartao import gerar_cartao, gerar_cartao_match, gerar_cartao_sintonia, gerar_cartao_wrapped
 from conciliacao import conciliar
 from configuracao import MUSICAS_IGNORADAS_PADRAO, ConfiguracaoCarga
 from dados import (
     MAXIMO_HISTORICOS_CACHE,
-    carregar_historicos,
     habilitar_leitura_paralela,
     precarregar,
 )
 from exportacoes import exportar_playlist
+from festa import exportar_csv, exportar_xspf, playlist_festa
 from formatacao import escape_html, escape_markdown, fmt_horas, fmt_num, fmt_pct, listar_markdown
+from generos import ARQUIVO_CACHE as ARQUIVO_CACHE_GENEROS
+from generos import ConsultaMusicBrainz, preencher_generos
 from graficos import (
     butterfly,
     evolucao_mensal,
@@ -45,13 +51,21 @@ from graficos import (
     radar_tracos,
     slope_chart,
 )
-from perfil_gosto import carregar_perfil, listar_perfis, perfil_de_historico
+from listenbrainz import coletar_perfil_listenbrainz
+from perfil_gosto import carregar_perfil, listar_perfis, perfil_de_arquivos, tem_perfil_em_cache
 from perfis import AVISO_TRACOS, LIMIAR_FAVORITOS, LIMIAR_MADRUGADA, LIMIAR_REPEAT
 from spotify_api import PASTA_PERFIS, REDIRECT_PADRAO
 from wrapped import Wrapped, wrapped_de_arquivos
 
 PASTA = Path(__file__).resolve().parent
-CSS = (PASTA / 'styles.css').read_text(encoding='utf-8')
+# Figtree (OFL) embutida no CSS: nenhuma requisição ao Google Fonts, funciona offline.
+FONTE_CSS = (
+    "@font-face{font-family:'Figtree';font-weight:300 900;font-display:swap;"
+    'src:url(data:font/ttf;base64,'
+    + base64.b64encode((PASTA / 'fontes' / 'Figtree.ttf').read_bytes()).decode('ascii')
+    + ") format('truetype');}\n"
+)
+CSS = FONTE_CSS + (PASTA / 'styles.css').read_text(encoding='utf-8')
 JS = (PASTA / 'syncup.js').read_text(encoding='utf-8')
 OPCOES_PONDERACAO = [
     ('Bruta (x)', 'bruta'),
@@ -351,13 +365,11 @@ def executar_dupla(
         contribuicoes['Contribuição ao cosseno'] = [
             fmt_num(float(x) * 100, 4) + ' p.p.' for x in contribuicoes['Contribuição ao cosseno']
         ]
-        momentos = (
-            f'**Mesmo artista:** {fmt_num(r.momentos_artistas.total_pares)} pares. '
-            f'**Mesma música e artista:** {fmt_num(r.momentos_musicas.total_pares)} pares. '
-            'Janela inclusiva de 1h em UTC. Eventos não se repetem dentro de cada análise; '
-            'os totais são alternativas e não devem ser somados. '
-            'Tabelas mostram até 200 exemplos, por artista/música e instante. '
-            'Coincidências não comprovam influência ou escuta simultânea durante a faixa.'
+        momentos = componentes.sintonia_html(r) + (
+            '<p class="su-note">Quase juntos (até 1 h de distância): '
+            f'<b>{fmt_num(r.momentos_artistas.total_pares)}</b> pares com o mesmo artista e '
+            f'<b>{fmt_num(r.momentos_musicas.total_pares)}</b> com a mesma música. '
+            'Os exemplos estão em "Quase juntos", abaixo.</p>'
         )
         a, b = r.perfil_a, r.perfil_b
         progress(0.85, desc='Montando o Wrapped da vida toda')
@@ -534,13 +546,10 @@ def baixar_wrapped(w: Wrapped | None, pastas: list[str] | None) -> tuple[str, st
     """Story PNG 1080×1920 com o resumo do Wrapped, em pasta temporária da sessão."""
     if w is None:
         raise gr.Error('Gere o Wrapped antes de baixar a imagem.')
-    pasta = mkdtemp(prefix='syncup-wrapped-')
-    try:
-        arquivo = gerar_cartao_wrapped(w, Path(pasta) / 'SyncUp_Wrapped.png')
-    except OSError as erro:
-        shutil.rmtree(pasta, ignore_errors=True)
-        raise gr.Error('Não foi possível gravar a imagem no diretório temporário.') from erro
-    return str(arquivo), str(arquivo), [*(pastas or []), pasta]
+    arquivo, pasta = _em_pasta_temporaria(
+        'wrapped', lambda p: str(gerar_cartao_wrapped(w, p / 'SyncUp_Wrapped.png')), 'a imagem'
+    )
+    return arquivo, arquivo, [*(pastas or []), pasta]
 
 
 def carregar_demo_wrapped() -> tuple[list[str], str]:
@@ -554,11 +563,14 @@ def perfis_salvos() -> list[str]:
     return [p.stem for p in listar_perfis(PASTA_PERFIS)]
 
 
-def atualizar_perfis(selecionados: list[str] | None) -> Any:
-    """Recarrega a lista de perfis salvos, mantendo a seleção atual."""
+def atualizar_perfis(
+    selecionados: list[str] | None, conhecidos: list[str] | None = None
+) -> tuple[Any, list[str]]:
+    """Recarrega a lista mantendo a seleção; quem acabou de logar já entra marcado."""
     opcoes = perfis_salvos()
-    marcados = [s for s in (selecionados or []) if s in opcoes] or opcoes
-    return gr.CheckboxGroup(choices=opcoes, value=marcados)
+    novos = [s for s in opcoes if s not in (conhecidos or [])]
+    marcados = [s for s in opcoes if s in (selecionados or []) or s in novos] or opcoes
+    return gr.CheckboxGroup(choices=opcoes, value=marcados), opcoes
 
 
 def executar_match(
@@ -571,9 +583,11 @@ def executar_match(
     varios: str,
     disco: bool,
     deduplicar: bool,
+    buscar_generos: bool = False,
+    usuarios_listenbrainz: str = '',
     progress: gr.Progress = gr.Progress(),
 ) -> list[Any]:
-    """Junta perfis de ZIP e do Spotify, concilia todos e mostra os melhores pares."""
+    """Junta perfis de ZIP, ListenBrainz e Spotify, concilia todos e mostra os melhores pares."""
     try:
         arquivos = arquivos or []
         nomes_zip = list(_linhas(nomes))
@@ -581,18 +595,48 @@ def executar_match(
             raise ValueError('Informe um nome por arquivo ZIP, na mesma ordem dos arquivos.')
         config = _configuracao(fuso, musicas, artistas, varios, disco, deduplicar)
         perfis, fontes = [], {}
-        for i, (arquivo, nome) in enumerate(zip(arquivos, nomes_zip)):
-            if i % MAXIMO_HISTORICOS_CACHE == 0:
-                # Lê o bloco em paralelo; blocos do tamanho do cache não descartam trabalho.
-                precarregar(arquivos[i : i + MAXIMO_HISTORICOS_CACHE], config)
-            progress(0.05 + 0.6 * i / max(len(arquivos), 1), desc=f'Lendo o histórico de {nome}')
-            historico = carregar_historicos(arquivo, configuracao=config)
-            perfis.append(perfil_de_historico(historico.dados, nome))
+        entradas = list(zip(arquivos, nomes_zip))
+        # Só lê o que ainda não virou perfil em cache, em blocos paralelos do tamanho do
+        # cache de históricos (assim um bloco não descarta o anterior antes de ser usado).
+        pendentes = [(a, n) for a, n in entradas if not tem_perfil_em_cache(a, config)]
+        for j in range(0, len(pendentes), MAXIMO_HISTORICOS_CACHE):
+            bloco = pendentes[j : j + MAXIMO_HISTORICOS_CACHE]
+            precarregar([a for a, _ in bloco], config)
+            for k, (arquivo, nome) in enumerate(bloco, j):
+                progress(0.05 + 0.6 * k / len(pendentes), desc=f'Lendo o histórico de {nome}')
+                perfil_de_arquivos(arquivo, nome, config)
+        for arquivo, nome in entradas:
+            perfis.append(perfil_de_arquivos(arquivo, nome, config))
             fontes[nome] = 'Histórico ZIP'
         for nome in selecionados or []:
             perfil = carregar_perfil(PASTA_PERFIS / f'{nome}.json')
             perfis.append(perfil)
             fontes[perfil.nome] = f'Spotify · {perfil.coletado_em[:10]}'
+        for usuario in _linhas(usuarios_listenbrainz):
+            progress(0.65, desc=f'Lendo o ListenBrainz de {usuario}')
+            try:
+                perfil = coletar_perfil_listenbrainz(usuario)
+            except httpx.HTTPError as erro:
+                raise ValueError(
+                    f'Não foi possível falar com o ListenBrainz para {usuario}. Confira a internet.'
+                ) from erro
+            perfis.append(perfil)
+            fontes[perfil.nome] = 'ListenBrainz'
+        if buscar_generos:
+            consulta = ConsultaMusicBrainz(
+                cache=Path(config.diretorio_cache) / ARQUIVO_CACHE_GENEROS
+            )
+            try:
+                for i, perfil in enumerate(perfis):
+                    progress(0.65 + 0.1 * i / len(perfis), desc=f'Gêneros de {perfil.nome}')
+                    perfis[i] = preencher_generos(perfil, consulta)
+            finally:
+                consulta.fechar()
+            if consulta.falhas:
+                gr.Warning(
+                    'O MusicBrainz não respondeu (sem internet ou serviço ocupado). '
+                    'O estilo foi calculado só com os gêneros já conhecidos.'
+                )
         progress(0.75, desc='Comparando todos com todos')
         r = conciliar(perfis)
         ranking = pd.DataFrame(
@@ -611,14 +655,88 @@ def executar_match(
             ]
         )
         progress(1, desc='Matches prontos')
+        duplas = [par for g in r.pares for par in combinations(g, 2)]
+        # Valor = índice: nomes são texto livre e não precisam ser separados de volta.
+        opcoes_duplas = [(f'{x} × {y}', i) for i, (x, y) in enumerate(duplas)]
         return [
             componentes.match_html(r, fontes),
             matriz_conciliacao(r),
             ranking,
             gr.Column(visible=True),
+            stories.stories_match_html(r),
+            {'resultado': r, 'perfis': perfis, 'duplas': duplas},
+            gr.Dropdown(choices=opcoes_duplas, value=0 if duplas else None),
         ]
     except ValueError as erro:
         raise gr.Error(str(erro)) from erro
+
+
+def baixar_festa(match: dict | None, pastas: list[str] | None) -> tuple[str, list[str], list[str]]:
+    """Playlist que cobre o gosto do grupo do último Match, em CSV e XSPF."""
+    if not match:
+        raise gr.Error('Encontre os matches antes de montar a playlist da festa.')
+    faixas = playlist_festa(match['perfis'])
+    if not faixas:
+        raise gr.Error('Os perfis não têm músicas favoritas suficientes para a playlist.')
+    arquivos, pasta = _em_pasta_temporaria(
+        'festa',
+        lambda p: [
+            str(exportar_csv(faixas, p / 'SyncUp_festa.csv')),
+            str(exportar_xspf(faixas, p / 'SyncUp_festa.xspf', 'SyncUp · Playlist da festa')),
+        ],
+        'a playlist',
+    )
+    linhas = ''.join(
+        f'<li><a href="{escape_html(f.link)}" target="_blank" rel="noopener">'
+        f'<b>{escape_html(f.musica)}</b> · {escape_html(f.artista)}</a>'
+        f'<small>para {escape_html(", ".join(f.para))}</small></li>'
+        for f in faixas
+    )
+    html = f'<ol class="su-festa">{linhas}</ol>'
+    return html, arquivos, [*(pastas or []), pasta]
+
+
+def baixar_cartao_match(
+    match: dict | None, dupla: int | None, pastas: list[str] | None
+) -> tuple[str, str, list[str]]:
+    """Cartão PNG de uma dupla do último Match (``dupla`` é o índice em ``match['duplas']``)."""
+    if not match or dupla is None:
+        raise gr.Error('Encontre os matches e escolha uma dupla antes de gerar o cartão.')
+    try:
+        a, b = match['duplas'][int(dupla)]
+    except (IndexError, ValueError, TypeError) as erro:
+        raise gr.Error('Essa dupla não faz parte do último Match.') from erro
+    compatibilidade = match['resultado'].par(a, b)
+    arquivo, pasta = _em_pasta_temporaria(
+        'match',
+        lambda p: str(gerar_cartao_match(compatibilidade, p / 'SyncUp_match.png')),
+        'o cartão',
+    )
+    return arquivo, arquivo, [*(pastas or []), pasta]
+
+
+def baixar_cartao_sintonia(
+    resultado: ResultadoComparacao | None, pastas: list[str] | None
+) -> tuple[str, str, list[str]]:
+    """Story PNG da escuta simultânea da dupla comparada."""
+    if resultado is None:
+        raise gr.Error('Faça uma comparação antes de gerar o story da sintonia.')
+    arquivo, pasta = _em_pasta_temporaria(
+        'sintonia',
+        lambda p: str(gerar_cartao_sintonia(resultado, p / 'SyncUp_sintonia.png')),
+        'o story',
+    )
+    return arquivo, arquivo, [*(pastas or []), pasta]
+
+
+def _em_pasta_temporaria(prefixo: str, gerar: Callable[[Path], Any], o_que: str) -> tuple[Any, str]:
+    """Gera exportações numa pasta própria do clique; apaga a pasta se a gravação falhar."""
+    pasta = mkdtemp(prefix=f'syncup-{prefixo}-')
+    try:
+        return gerar(Path(pasta)), pasta
+    except OSError as erro:
+        shutil.rmtree(pasta, ignore_errors=True)
+        raise gr.Error(f'Não foi possível gravar {o_que} no diretório temporário.') from erro
 
 
 def _limpar_exportacoes(pastas: list[str]) -> None:
@@ -633,13 +751,12 @@ def baixar_playlist(
     """Cria um CSV isolado por clique, sem sobrescrever exportações de outras sessões."""
     if resultado is None:
         raise gr.Error('Faça uma comparação antes de exportar a playlist.')
-    pasta = mkdtemp(prefix='syncup-playlist-')
-    try:
-        arquivo = exportar_playlist(resultado, Path(pasta) / 'SyncUp_playlist_comum.csv')
-    except OSError as erro:
-        shutil.rmtree(pasta, ignore_errors=True)
-        raise gr.Error('Não foi possível gravar a playlist no diretório temporário.') from erro
-    return str(arquivo), [*(pastas or []), pasta]
+    arquivo, pasta = _em_pasta_temporaria(
+        'playlist',
+        lambda p: str(exportar_playlist(resultado, p / 'SyncUp_playlist_comum.csv')),
+        'a playlist',
+    )
+    return arquivo, [*(pastas or []), pasta]
 
 
 def baixar_cartao(
@@ -648,13 +765,10 @@ def baixar_cartao(
     """Cria cartão e download isolados, usando somente Pillow e fontes locais."""
     if resultado is None:
         raise gr.Error('Faça uma comparação antes de gerar o cartão.')
-    pasta = mkdtemp(prefix='syncup-cartao-')
-    try:
-        arquivo = gerar_cartao(resultado, Path(pasta) / 'SyncUp_cartao.png')
-    except OSError as erro:
-        shutil.rmtree(pasta, ignore_errors=True)
-        raise gr.Error('Não foi possível gravar o cartão no diretório temporário.') from erro
-    return str(arquivo), str(arquivo), [*(pastas or []), pasta]
+    arquivo, pasta = _em_pasta_temporaria(
+        'cartao', lambda p: str(gerar_cartao(resultado, p / 'SyncUp_cartao.png')), 'o cartão'
+    )
+    return arquivo, arquivo, [*(pastas or []), pasta]
 
 
 @lru_cache(maxsize=1)
@@ -684,7 +798,7 @@ def carregar_demo() -> tuple[list[str], list[str], str, str]:
 
 def _tema() -> gr.themes.Base:
     """Tema nativo do Gradio com a paleta escura do Spotify."""
-    fonte = [gr.themes.GoogleFont('Figtree'), 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif']
+    fonte = [gr.themes.Font('Figtree'), 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif']
     cores = dict(
         body_background_fill='#121212',
         body_text_color='#ffffff',
@@ -770,10 +884,10 @@ def _secao(titulo: str, texto: str = '') -> gr.HTML:
 HERO = """<header class="su-hero">
   <div class="su-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <div class="su-hero-text">
-    <small>COMPARADOR DE HISTÓRICOS · v0.8</small>
+    <small>COMPARADOR DE HISTÓRICOS · v0.9 · CÓDIGO ABERTO</small>
     <h1>SyncUp</h1>
     <p>Seus históricos do Spotify, lado a lado — tudo processado localmente.</p>
-    <div class="su-chips"><span>Match entre amigos</span><span>Login com Spotify</span><span>Wrapped da vida toda</span><span>Arquétipos</span><span>Blend de similaridade</span><span>Corrida de artistas</span><span>Momentos sincronizados</span><span>Modo grupo</span></div>
+    <div class="su-chips"><span>Match entre amigos</span><span>Playlist da festa</span><span>Estilo musical</span><span>Login com Spotify</span><span>Wrapped da vida toda</span><span>Arquétipos</span><span>Blend de similaridade</span><span>Corrida de artistas</span><span>Momentos sincronizados</span><span>Modo grupo</span></div>
   </div>
 </header>"""
 
@@ -946,18 +1060,31 @@ def criar_interface() -> gr.Blocks:
                             diversidade = gr.Dataframe(
                                 interactive=False, label='Diversidade e desigualdade observadas'
                             )
-                        with gr.Tab('Momentos sincronizados'):
-                            momentos = gr.Markdown()
-                            momentos_a = gr.Dataframe(
-                                interactive=False,
-                                wrap=True,
-                                label='Pares de mesmo artista · exemplos',
-                            )
-                            momentos_m = gr.Dataframe(
-                                interactive=False,
-                                wrap=True,
-                                label='Pares de mesma música e artista · exemplos',
-                            )
+                        with gr.Tab('Em sintonia'):
+                            momentos = gr.HTML()
+                            with gr.Row():
+                                sintonia_btn = gr.Button(
+                                    'Gerar story da sintonia', elem_classes='su-secondary'
+                                )
+                            sintonia_img = gr.Image(show_label=False, interactive=False)
+                            sintonia_arquivo = gr.File(label='Baixar story PNG', interactive=False)
+                            with gr.Accordion('Quase juntos: até 1 h de distância', open=False):
+                                gr.Markdown(
+                                    'Pares de plays com até 1 h entre os horários de fim (UTC), '
+                                    'sem repetir eventos. Os totais de artista e de música são '
+                                    'alternativos, não somáveis. Até 200 exemplos por tabela.',
+                                    elem_classes='su-note',
+                                )
+                                momentos_a = gr.Dataframe(
+                                    interactive=False,
+                                    wrap=True,
+                                    label='Pares de mesmo artista · exemplos',
+                                )
+                                momentos_m = gr.Dataframe(
+                                    interactive=False,
+                                    wrap=True,
+                                    label='Pares de mesma música e artista · exemplos',
+                                )
                         with gr.Tab('Ponte Musical e playlist'):
                             ponte = gr.Markdown()
                             gr.Markdown(
@@ -1050,16 +1177,23 @@ def criar_interface() -> gr.Blocks:
                     [imagem, png_download, pastas],
                     api_name='gerar_cartao',
                 )
+                sintonia_btn.click(
+                    baixar_cartao_sintonia,
+                    [estado, pastas],
+                    [sintonia_img, sintonia_arquivo, pastas],
+                    api_name='baixar_sintonia',
+                )
             with gr.Tab('Match'):
                 gr.HTML(
                     '<div class="su-section"><h3>Quem combina com quem?</h3>'
-                    '<p>Junte amigos por histórico ZIP ou login no Spotify. O SyncUp compara todos com '
-                    'todos, forma as duplas mais compatíveis e diz o que cada um pode apresentar ao outro.</p></div>'
+                    '<p>Junte a galera por qualquer fonte. O SyncUp compara todos com todos, '
+                    'forma as duplas que mais combinam e gera pôsteres prontos para postar.</p></div>'
                 )
-                with gr.Row(equal_height=True):
+                with gr.Row(equal_height=True, elem_classes='su-sources'):
                     with gr.Column(elem_classes=['su-panel', 'a']):
                         gr.HTML(
-                            '<div class="su-panel-title"><span class="su-avatar a">Z</span>Históricos ZIP</div>'
+                            '<div class="su-panel-title"><span class="su-avatar a">Z</span>'
+                            'Histórico ZIP<small>sem limite</small></div>'
                         )
                         fm = gr.File(
                             file_count='multiple',
@@ -1067,50 +1201,102 @@ def criar_interface() -> gr.Blocks:
                             type='filepath',
                             label='Um ZIP do Histórico Estendido por pessoa',
                         )
-                        nm = gr.Textbox(lines=4, label='Nomes, um por linha, na ordem dos arquivos')
+                        nm = gr.Textbox(lines=3, label='Nomes, um por linha, na ordem dos arquivos')
+                    with gr.Column(elem_classes=['su-panel', 'c']):
+                        gr.HTML(
+                            '<div class="su-panel-title"><span class="su-avatar c">L</span>'
+                            'ListenBrainz<small>sem limite · só o usuário</small></div>'
+                            '<p class="su-note">Código aberto. Crie uma conta grátis em '
+                            '<a href="https://listenbrainz.org" target="_blank" rel="noopener">'
+                            'listenbrainz.org</a> e conecte o Spotify uma vez em '
+                            '<i>Settings → Music services</i>. Ninguém precisa de Client ID.</p>'
+                        )
+                        lb = gr.Textbox(
+                            lines=3,
+                            label='Usuários do ListenBrainz, um por linha',
+                            placeholder='nicollas\nbia_musica',
+                        )
                     with gr.Column(elem_classes=['su-panel', 'b']):
                         gr.HTML(
-                            '<div class="su-panel-title"><span class="su-avatar b">S</span>Login com Spotify · até 5 amigos</div>'
-                        )
-                        cid = gr.Textbox(
-                            value=os.environ.get('SPOTIFY_CLIENT_ID', ''),
-                            label='Client ID do seu app no Spotify',
-                            placeholder='Cole aqui o Client ID do Developer Dashboard',
+                            '<div class="su-panel-title"><span class="su-avatar b">S</span>'
+                            'Login com Spotify<small>até 5 · cadastrados</small></div>'
                         )
                         nome_sp = gr.Textbox(
                             label='Nome de quem vai entrar', placeholder='Ex.: Bia'
                         )
                         conectar = gr.Button('Conectar com Spotify', elem_classes='su-secondary')
+                        conhecidos = gr.State(value=perfis_salvos())
                         salvos = gr.CheckboxGroup(
                             choices=perfis_salvos(),
                             value=perfis_salvos(),
                             label='Perfis coletados pelo Spotify',
                         )
                         recarregar = gr.Button('Atualizar lista', elem_classes='su-secondary')
-                with gr.Accordion(
-                    'Como configurar o login do Spotify (uma vez, ~5 min)', open=False
-                ):
-                    gr.HTML(
-                        '<ol class="su-steps">'
-                        '<li>Entre em <b>developer.spotify.com/dashboard</b> com uma conta <b>Premium</b> e crie um app (Web API).</li>'
-                        f'<li>Em <b>Redirect URIs</b>, cadastre exatamente <code>{escape_html(REDIRECT_PADRAO)}</code>.</li>'
-                        '<li>Em <b>User Management</b>, adicione o nome e o e-mail do Spotify de cada amigo (máximo 5).</li>'
-                        '<li>Copie o <b>Client ID</b> para o campo acima (ou defina a variável <code>SPOTIFY_CLIENT_ID</code>).</li>'
-                        '<li>Abra o SyncUp com <code>python app.py</code>. Cada amigo digita o nome, clica em <b>Conectar</b> e autoriza.</li>'
-                        '</ol><p class="su-note">O login só funciona com o app aberto por <code>python app.py</code> neste '
-                        'computador. Guardamos apenas os rankings num JSON local; o token não é salvo. '
-                        'A API mostra favoritos (top 50 de ~4 semanas, ~6 meses e ~1 ano), não o histórico completo; '
-                        'por isso os ZIPs são convertidos para os mesmos rankings antes de comparar.</p>'
-                    )
+                        with gr.Accordion('Configurar (só quem criou o app)', open=False):
+                            cid = gr.Textbox(
+                                value=os.environ.get('SPOTIFY_CLIENT_ID', ''),
+                                label='Client ID do app no Spotify',
+                                placeholder='Cole o Client ID do Developer Dashboard',
+                            )
+                            gr.HTML(
+                                '<ol class="su-steps">'
+                                '<li>Em <b>developer.spotify.com/dashboard</b>, com conta '
+                                '<b>Premium</b>, crie um app e marque só <b>Web API</b>.</li>'
+                                f'<li>Redirect URI: <code>{escape_html(REDIRECT_PADRAO)}</code></li>'
+                                '<li>Em <b>User Management</b>, cadastre o e-mail da conta '
+                                'Spotify de cada amigo (máx. 5).</li>'
+                                '<li>Cole o Client ID acima ou defina <code>SPOTIFY_CLIENT_ID</code>.'
+                                '</li></ol><p class="su-note">Regra do Spotify para apps pessoais. '
+                                'Sem cadastro, use o ListenBrainz ou o ZIP. O token nunca é salvo.</p>'
+                            )
+                generos_mb = gr.Checkbox(
+                    value=False,
+                    label='Comparar também o estilo (gêneros do MusicBrainz)',
+                    info='Envia só nomes de artistas, 1 por segundo. Na 1ª vez, ~25 s por pessoa.',
+                )
                 buscar = gr.Button(
                     'Encontrar os matches', variant='primary', elem_classes='su-play'
                 )
+                estado_m = gr.State(value=None, time_to_live=3600)
+                pastas_m = gr.State(
+                    value=[], time_to_live=3600, delete_callback=_limpar_exportacoes
+                )
                 with gr.Column(visible=False, elem_classes='su-results') as match_resultados:
-                    match_cartoes = gr.HTML()
-                    match_plot = gr.Plot(show_label=False, elem_classes='su-chart')
-                    match_ranking = gr.Dataframe(
-                        interactive=False, wrap=True, label='Ranking de compatibilidade'
-                    )
+                    with gr.Tabs():
+                        with gr.Tab('Revelação'):
+                            match_stories = gr.HTML()
+                        with gr.Tab('Duplas'):
+                            match_cartoes = gr.HTML()
+                        with gr.Tab('Todos com todos'):
+                            match_plot = gr.Plot(show_label=False, elem_classes='su-chart')
+                            match_ranking = gr.Dataframe(
+                                interactive=False, wrap=True, label='Com quem cada um mais combina'
+                            )
+                        with gr.Tab('Playlist da festa'):
+                            gr.Markdown(
+                                'Até 30 músicas que cobrem o gosto de todo o grupo, equilibrando '
+                                'quem ainda tem pouco. Baixe em CSV ou XSPF (formato aberto, abre '
+                                'no VLC). Os links são buscas no Spotify.',
+                                elem_classes='su-note',
+                            )
+                            festa_btn = gr.Button(
+                                'Montar playlist da festa', elem_classes='su-secondary'
+                            )
+                            festa_lista = gr.HTML()
+                            festa_arquivos = gr.File(
+                                label='Baixar CSV e XSPF', file_count='multiple', interactive=False
+                            )
+                        with gr.Tab('Para postar'):
+                            gr.Markdown(
+                                'Story 1080×1920 para o Instagram, gerado neste computador.',
+                                elem_classes='su-note',
+                            )
+                            dupla_m = gr.Dropdown(label='Escolha a dupla', choices=[])
+                            cartao_m_btn = gr.Button(
+                                'Gerar story da dupla', elem_classes='su-secondary'
+                            )
+                            cartao_m_img = gr.Image(show_label=False, interactive=False)
+                            cartao_m_arquivo = gr.File(label='Baixar cartão PNG', interactive=False)
                 conectar.click(
                     None,
                     [cid, nome_sp],
@@ -1120,13 +1306,39 @@ def criar_interface() -> gr.Blocks:
                     "'_blank'); }",
                     api_name=False,
                 )
-                recarregar.click(atualizar_perfis, salvos, salvos, api_name=False)
+                recarregar.click(
+                    atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False
+                )
+                # Cada aba nova do navegador vê os perfis salvos depois que o servidor subiu.
+                demo.load(
+                    atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False
+                )
                 buscar.click(
                     executar_match,
-                    [fm, nm, salvos, *opcoes],
-                    [match_cartoes, match_plot, match_ranking, match_resultados],
+                    [fm, nm, salvos, *opcoes, generos_mb, lb],
+                    [
+                        match_cartoes,
+                        match_plot,
+                        match_ranking,
+                        match_resultados,
+                        match_stories,
+                        estado_m,
+                        dupla_m,
+                    ],
                     api_name='encontrar_matches',
                     scroll_to_output=True,
+                )
+                festa_btn.click(
+                    baixar_festa,
+                    [estado_m, pastas_m],
+                    [festa_lista, festa_arquivos, pastas_m],
+                    api_name='playlist_festa',
+                )
+                cartao_m_btn.click(
+                    baixar_cartao_match,
+                    [estado_m, dupla_m, pastas_m],
+                    [cartao_m_img, cartao_m_arquivo, pastas_m],
+                    api_name='baixar_cartao_match',
                 )
             with gr.Tab('Wrapped'):
                 gr.HTML(

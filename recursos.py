@@ -169,6 +169,132 @@ def momentos_sincronizados(
     )
 
 
+MINIMO_JUNTOS_S = 30  # Sobreposição mínima para contar como "ao mesmo tempo".
+DIAS_SEMANA = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo']
+
+
+@dataclass(frozen=True)
+class MomentoJuntos:
+    """Um trecho em que os dois ouviam a mesma faixa no mesmo instante."""
+
+    artista: str
+    musica: str
+    inicio_utc: pd.Timestamp
+    inicio_local: pd.Timestamp  # no fuso de quem enviou o histórico A
+    minutos: float
+
+
+@dataclass(frozen=True)
+class Sintonia:
+    """Escuta simultânea de verdade: intervalos [fim − duração, fim] que se cruzam."""
+
+    momentos: list[MomentoJuntos]  # em ordem cronológica
+    minutos: float
+    top_musicas: list[tuple[str, str, int, float]]  # música, artista, vezes, minutos
+    por_mes: pd.Series  # 'AAAA-MM' → minutos juntos
+    hora_favorita: int | None
+    dia_favorito: str | None
+
+    @property
+    def primeira(self) -> MomentoJuntos | None:
+        return self.momentos[0] if self.momentos else None
+
+    @property
+    def mais_recente(self) -> MomentoJuntos | None:
+        return self.momentos[-1] if self.momentos else None
+
+    @property
+    def mais_longo(self) -> MomentoJuntos | None:
+        return max(self.momentos, key=lambda m: (m.minutos, -m.inicio_utc.value), default=None)
+
+
+def sintonia(a: pd.DataFrame, b: pd.DataFrame) -> Sintonia:
+    """Momentos em que A e B tocavam a mesma faixa ao mesmo tempo.
+
+    O Spotify registra o fim de cada reprodução (``ts``) e quanto tocou
+    (``ms_played``); o início é ``fim − duração``. Por faixa, os intervalos dos
+    dois são cruzados por varredura em O(n log n); cada sobreposição de pelo
+    menos ``MINIMO_JUNTOS_S`` segundos é um momento juntos.
+    """
+    chave_a, chave_b = _chaves_comuns(a, b, 'musica')
+    comuns = pd.Index(chave_a).intersection(pd.Index(chave_b))
+
+    def intervalos(dados: pd.DataFrame, chave: pd.Series) -> pd.DataFrame:
+        fim = dados.data_utc.astype('int64').to_numpy()
+        tabela = pd.DataFrame(
+            {
+                'chave': chave.to_numpy(),
+                'fim': fim,
+                'inicio': fim - dados.ms_played.to_numpy() * 1_000_000,
+                'posicao': range(len(dados)),
+            }
+        )
+        tabela = tabela[tabela.chave.isin(comuns) & (tabela.fim > tabela.inicio)]
+        return tabela.sort_values(['chave', 'inicio'], kind='stable')
+
+    ia, ib = intervalos(a, chave_a), intervalos(b, chave_b)
+    minimo = MINIMO_JUNTOS_S * 1_000_000_000
+    achados: list[tuple[int, int, int]] = []  # posição em A, início comum (ns), duração (ns)
+    grupos_b = dict(tuple(ib.groupby('chave', sort=False, observed=True)))
+    for chave, grupo_a in ia.groupby('chave', sort=False, observed=True):
+        grupo_b = grupos_b.get(chave)
+        if grupo_b is None:
+            continue
+        xa = list(zip(grupo_a.inicio, grupo_a.fim, grupo_a.posicao))
+        xb = list(zip(grupo_b.inicio, grupo_b.fim))
+        i = j = 0
+        while i < len(xa) and j < len(xb):
+            inicio = max(xa[i][0], xb[j][0])
+            duracao = min(xa[i][1], xb[j][1]) - inicio
+            if duracao >= minimo:
+                achados.append((xa[i][2], inicio, duracao))
+            if xa[i][1] <= xb[j][1]:  # avança quem termina primeiro
+                i += 1
+            else:
+                j += 1
+    achados.sort(key=lambda x: x[1])
+    deslocamento = (a.data - a.data_utc.dt.tz_localize(None)).to_numpy()  # fuso local de A
+    momentos = [
+        MomentoJuntos(
+            str(a.artista.iloc[p]),
+            str(a.musica.iloc[p]),
+            pd.Timestamp(inicio, tz='UTC'),
+            pd.Timestamp(inicio) + pd.Timedelta(deslocamento[p]),
+            duracao / 60_000_000_000,
+        )
+        for p, inicio, duracao in achados
+    ]
+    if not momentos:
+        return Sintonia([], 0.0, [], pd.Series(dtype=float), None, None)
+    tabela = pd.DataFrame(
+        {
+            'musica': [m.musica for m in momentos],
+            'artista': [m.artista for m in momentos],
+            'minutos': [m.minutos for m in momentos],
+            'mes': [m.inicio_local.strftime('%Y-%m') for m in momentos],
+            'hora': [m.inicio_local.hour for m in momentos],
+            'dia': [m.inicio_local.dayofweek for m in momentos],
+        }
+    )
+    top = (
+        tabela.groupby(['musica', 'artista'], observed=True)
+        .agg(vezes=('minutos', 'size'), minutos=('minutos', 'sum'))
+        .reset_index()
+        .sort_values(['minutos', 'musica'], ascending=[False, True], kind='stable')
+        .head(5)
+    )
+    por_hora = tabela.groupby('hora', observed=True).minutos.sum()
+    por_dia = tabela.groupby('dia', observed=True).minutos.sum()
+    return Sintonia(
+        momentos=momentos,
+        minutos=float(tabela.minutos.sum()),
+        top_musicas=[(m, art, int(v), float(mi)) for m, art, v, mi in top.itertuples(index=False)],
+        por_mes=tabela.groupby('mes', observed=True).minutos.sum().sort_index(),
+        hora_favorita=int(por_hora.idxmax()),
+        dia_favorito=DIAS_SEMANA[int(por_dia.idxmax())],
+    )
+
+
 def ponte_musical(a: pd.Series, b: pd.Series, nome_a: str, nome_b: str) -> pd.DataFrame:
     """Sugere líderes exclusivos de cada origem para o outro perfil.
 

@@ -13,6 +13,7 @@ from urllib.parse import parse_qs, urlparse
 import httpx
 import pandas as pd
 import pytest
+from PIL import Image
 
 import spotify_api
 from conciliacao import comparar_perfis, conciliar, emparelhamento_otimo, nivel
@@ -297,7 +298,7 @@ def test_match_na_interface_mistura_zip_e_spotify(tmp_path: Path, monkeypatch) -
     salvar_perfil(_perfil('Caio', ['Y', 'Z']), pasta)
     monkeypatch.setattr(ui, 'PASTA_PERFIS', pasta)
     assert ui.perfis_salvos() == ['Caio']
-    html, figura, ranking, _ = ui.executar_match(
+    html, figura, ranking, _, revelacao, estado, dupla = ui.executar_match(
         zips,
         'Ana\nBia',
         ['Caio'],
@@ -309,6 +310,106 @@ def test_match_na_interface_mistura_zip_e_spotify(tmp_path: Path, monkeypatch) -
         False,
         progress=lambda *a, **k: None,
     )
-    assert 'trio' in html and 'Ranking individual' in html
+    assert 'O TRIO' in html and 'su-match-card' in html
     assert len(figura.data[0].z) == 3 and list(ranking['Pessoa']) == ['Ana', 'Bia', 'Caio']
     assert ranking.loc[2, 'Fonte'].startswith('Spotify')
+    assert 'data-stories' in revelacao and 'O TRIO' in revelacao
+    assert len(dupla.choices) == 3  # os três pares internos do trio
+    pastas: list[str] = []
+    lista, arquivos, pastas = ui.baixar_festa(estado, pastas)
+    assert {Path(a).suffix for a in arquivos} == {'.csv', '.xspf'} and 'para' in lista
+    _, png, pastas = ui.baixar_cartao_match(estado, dupla.value, pastas)
+    with Image.open(png) as imagem:
+        assert imagem.size == (1080, 1920)
+    ui._limpar_exportacoes(pastas)
+    assert not any(Path(p).exists() for p in pastas)
+
+
+def test_match_repetido_reusa_perfil_do_zip(tmp_path: Path, monkeypatch) -> None:
+    import perfil_gosto
+
+    caminho = tmp_path / 'Ana.json'
+    caminho.write_text(json.dumps([_evento('2026-10-01T10:00:00Z', 'X')]), encoding='utf-8')
+    chamadas = []
+    original = perfil_gosto.carregar_historicos
+    monkeypatch.setattr(
+        perfil_gosto, 'carregar_historicos', lambda *a, **k: chamadas.append(1) or original(*a, **k)
+    )
+    primeiro = perfil_gosto.perfil_de_arquivos(caminho, 'Ana')
+    segundo = perfil_gosto.perfil_de_arquivos(str(caminho), 'Outra')
+    assert len(chamadas) == 1
+    assert segundo.nome == 'Outra' and segundo.top_artistas == primeiro.top_artistas
+
+
+def test_perfil_novo_aparece_depois_de_atualizar_lista(tmp_path: Path, monkeypatch) -> None:
+    """Um amigo loga com o app aberto: Atualizar lista libera o perfil para o Match."""
+    import asyncio
+
+    from gradio.exceptions import Error
+    from gradio.state_holder import SessionState
+
+    import ui
+
+    monkeypatch.setattr(ui, 'PASTA_PERFIS', tmp_path)
+    demo = ui.criar_interface()  # sem perfis salvos ainda
+    funcoes = {f.fn.__name__: f for f in demo.fns.values() if f.fn}
+    salvar_perfil(_perfil('Caio', ['Y']), tmp_path)
+    salvar_perfil(_perfil('Dani', ['Y', 'Z']), tmp_path)
+    entradas = [None, '', ['Caio', 'Dani'], 'America/Sao_Paulo', '', '', 'manter', False, False]
+    entradas += [False, '']  # sem MusicBrainz e sem ListenBrainz
+
+    async def fluxo() -> None:
+        sessao = SessionState(demo)
+        await demo.process_api(block_fn=funcoes['atualizar_perfis'], inputs=[[], []], state=sessao)
+        saida = await demo.process_api(
+            block_fn=funcoes['executar_match'], inputs=entradas, state=sessao
+        )
+        assert 'Caio' in saida['data'][0]
+        with pytest.raises(Error, match='not in the list of choices'):
+            await demo.process_api(
+                block_fn=funcoes['executar_match'], inputs=entradas, state=SessionState(demo)
+            )
+
+    asyncio.run(fluxo())
+    assert any(
+        d.fn is ui.atualizar_perfis and d.targets and d.targets[0][1] == 'load'
+        for d in demo.fns.values()
+    )
+
+
+def test_match_repetido_nao_precarrega_zips_com_perfil_em_cache(
+    tmp_path: Path, monkeypatch
+) -> None:
+    import ui
+
+    chamadas: list[list] = []
+    monkeypatch.setattr(ui, 'precarregar', lambda arquivos, config: chamadas.append(list(arquivos)))
+    zips = []
+    for i in range(8):  # mais que MAXIMO_HISTORICOS_CACHE (6): dois blocos
+        p = tmp_path / f'p{i}.json'
+        p.write_text(json.dumps([_evento('2026-10-01T10:00:00Z', f'A{i}')]), encoding='utf-8')
+        zips.append(str(p))
+    nomes = '\n'.join(f'P{i}' for i in range(8))
+    args = (zips, nomes, [], 'America/Sao_Paulo', '', '', 'manter', False, False)
+    ui.executar_match(*args, progress=lambda *a, **k: None)
+    assert [len(c) for c in chamadas] == [6, 2]
+    chamadas.clear()
+    ui.executar_match(*args, progress=lambda *a, **k: None)
+    assert chamadas == []
+
+
+def test_403_mostra_chamada_e_motivo_do_spotify() -> None:
+    corpo = {'error': {'status': 403, 'message': 'the user may not be registered'}}
+    cliente = httpx.Client(transport=httpx.MockTransport(lambda p: httpx.Response(403, json=corpo)))
+    with pytest.raises(PermissionError, match='/me/top/artists.*may not be registered'):
+        spotify_api.coletar_perfil('t', 'Nicollas', cliente)
+
+
+def test_403_em_texto_puro_tambem_mostra_o_motivo() -> None:
+    cliente = httpx.Client(
+        transport=httpx.MockTransport(
+            lambda p: httpx.Response(403, text='user may not be registered')
+        )
+    )
+    with pytest.raises(PermissionError, match='user may not be registered'):
+        spotify_api.coletar_perfil('t', 'Nicollas', cliente)

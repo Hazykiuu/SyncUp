@@ -265,67 +265,104 @@ def _chips(nomes: list[str], limite: int, classe: str = '') -> str:
 
 
 def match_html(resultado: ResultadoConciliacao, fontes: dict[str, str] | None = None) -> str:
-    """Pares escolhidos pela conciliação, no estilo Blend, com motivos e trocas sugeridas."""
+    """Pares escolhidos pela conciliação como pôsteres 4:5, prontos para print e post."""
     fontes = fontes or {}
     cartoes = []
     for k, grupo in enumerate(resultado.pares):
         pares_internos = [resultado.par(x, y) for i, x in enumerate(grupo) for y in grupo[i + 1 :]]
         principal = max(pares_internos, key=lambda c: c.pontuacao)
         pontuacao = sum(c.pontuacao for c in pares_internos) / len(pares_internos)
+        cores = [CORES_GRUPO[(k * 3 + i) % len(CORES_GRUPO)] for i in range(len(grupo))]
         avatares = ''.join(
-            f'<span class="su-avatar" style="background:{CORES_GRUPO[(k * 3 + i) % len(CORES_GRUPO)]}" '
-            f'title="{escape_html(n)}">{_inicial(n)}</span>'
-            for i, n in enumerate(grupo)
+            f'<span class="su-avatar" style="background:{cor}" title="{escape_html(n)}">'
+            f'{_inicial(n)}</span>'
+            for n, cor in zip(grupo, cores)
         )
-        nomes = ' + '.join(escape_html(n) for n in grupo)
-        selos = ''.join(
-            f'<small class="su-src">{escape_html(n)} · {escape_html(fontes.get(n, ""))}</small>'
-            for n in grupo
-            if fontes.get(n)
+        nomes = '<i>+</i>'.join(f'<span>{escape_html(n)}</span>' for n in grupo)
+        selos = ' · '.join(
+            f'{escape_html(n)}: {escape_html(fontes[n])}' for n in grupo if fontes.get(n)
         )
         trocas = ''
         if len(grupo) == 2:
             a, b = principal.a, principal.b
             trocas = (
-                f'<div class="su-swap"><b>{escape_html(a)} pode apresentar a {escape_html(b)}</b>'
-                f'<div>{_chips(principal.recomendacoes_para_b, 4, "rec")}</div></div>'
-                f'<div class="su-swap"><b>{escape_html(b)} pode apresentar a {escape_html(a)}</b>'
-                f'<div>{_chips(principal.recomendacoes_para_a, 4, "rec")}</div></div>'
+                '<details class="su-swaps"><summary>O que um pode mostrar ao outro</summary>'
+                f'<p><b>{escape_html(a)} → {escape_html(b)}</b></p>'
+                f'<div class="su-chips">{_chips(principal.recomendacoes_para_b, 4, "rec")}</div>'
+                f'<p><b>{escape_html(b)} → {escape_html(a)}</b></p>'
+                f'<div class="su-chips">{_chips(principal.recomendacoes_para_a, 4, "rec")}</div>'
+                '</details>'
             )
         comuns = principal.artistas_comuns
-        cartoes.append(
-            f'<article class="su-match-card" style="--i:{k}">'
-            f'<div class="su-match-top"><div class="su-avatars">{avatares}</div>'
-            f'<div class="su-match-score">{_contador(pontuacao, 1, "%")}<span>{escape_html(principal.nivel)}</span></div></div>'
-            f'<h3>{nomes}{" · trio" if len(grupo) == 3 else ""}</h3>'
-            f'<p class="su-note">{escape_html(principal.descricao)} '
-            f'{len(comuns)} artista{"s" if len(comuns) != 1 else ""} e {principal.musicas_comuns} '
-            f'música{"s" if principal.musicas_comuns != 1 else ""} em comum nos rankings.</p>'
-            + (
-                f'<div class="su-chips"><span class="su-chip-label">Vocês dividem</span>{_chips(comuns, 6)}</div>'
-                if comuns
-                else ''
+        estilo = ''
+        if principal.pontuacao_generos is not None:
+            estilo = (
+                f'<div class="su-poster-line"><span>No estilo</span>'
+                f'<b>{fmt_num(principal.pontuacao_generos, 1)}%</b>'
+                f'<div class="su-chips">{_chips(principal.generos_comuns, 3)}</div></div>'
             )
+        dividem = (
+            f'<div class="su-poster-line"><span>Vocês dividem</span>'
+            f'<div class="su-chips">{_chips(comuns, 4)}</div></div>'
+            if comuns
+            else '<p class="su-poster-sub">Nenhum artista em comum: ótimo para sair da bolha.</p>'
+        )
+        rotulo = 'O TRIO' if len(grupo) == 3 else f'DUPLA {k + 1}'
+        cartoes.append(
+            f'<article class="su-match-card" style="--i:{k};--c1:{cores[0]};--c2:{cores[1]}">'
+            f'<div class="su-poster-kicker"><span>SYNCUP MATCH</span><span>{rotulo}</span></div>'
+            f'<div class="su-avatars">{avatares}</div>'
+            f'<h3 class="su-poster-names">{nomes}</h3>'
+            f'<div class="su-poster-score">{_contador(pontuacao, 1, "%")}'
+            f'<span>{escape_html(principal.nivel)}</span></div>'
+            f'<p class="su-poster-sub">{escape_html(principal.descricao)}</p>'
+            + dividem
+            + estilo
             + trocas
-            + (f'<div class="su-srcs">{selos}</div>' if selos else '')
+            + (f'<small class="su-src">{selos}</small>' if selos else '')
             + '</article>'
         )
-    linhas = ''.join(
-        f'<li style="--i:{i}"><b>{escape_html(nome)}</b><span>combina mais com</span>'
-        + ''.join(
-            f'<em>{escape_html(outro)} <small>{fmt_num(valor, 1)}%</small></em>'
-            for outro, valor in resultado.melhores[nome][:3]
-        )
-        + '</li>'
-        for i, nome in enumerate(resultado.nomes)
-    )
     media = resultado.pontuacao_media_pares
+    divisao = 'duplas' if all(len(g) == 2 for g in resultado.pares) else 'duplas e um trio'
     return (
         '<section class="su-match">'
-        f'<div class="su-group-best"><span>Melhor divisão do grupo em {"duplas" if all(len(g) == 2 for g in resultado.pares) else "duplas e um trio"}</span>'
-        f'<b>{len(resultado.nomes)} pessoas · {len(resultado.pares)} grupo{"s" if len(resultado.pares) != 1 else ""}</b>'
-        f'{_contador(media, 1, "%")}<small class="su-note">compatibilidade média dos grupos formados</small></div>'
+        f'<div class="su-group-best"><span>Melhor divisão do grupo em {divisao}</span>'
+        f'<b>{len(resultado.nomes)} pessoas · {len(resultado.pares)} grupo'
+        f'{"s" if len(resultado.pares) != 1 else ""}</b>'
+        f'{_contador(media, 1, "%")}<small class="su-note">compatibilidade média dos grupos</small>'
+        '</div>'
         f'<div class="su-match-grid">{"".join(cartoes)}</div>'
-        f'<h3 class="su-match-h">Ranking individual</h3><ol class="su-best-list">{linhas}</ol>'
         '</section>'
     )
+
+
+def sintonia_html(resultado: ResultadoComparacao) -> str:
+    """Stories da sintonia e a linha do tempo mês a mês dos minutos ouvidos juntos."""
+    import stories
+
+    s = resultado.sintonia
+    quase = resultado.momentos_musicas.total_pares if resultado.momentos_musicas else 0
+    a, b = resultado.perfil_a.nome, resultado.perfil_b.nome
+    linha = ''
+    if s is not None and not s.por_mes.empty:
+        # Meses sem sintonia também aparecem (barra vazia): o intervalo entre encontros é visível.
+        meses = pd.period_range(s.por_mes.index[0], s.por_mes.index[-1], freq='M').strftime('%Y-%m')
+        por_mes = s.por_mes.reindex(meses, fill_value=0.0)
+        maximo = float(por_mes.max()) or 1.0
+        barras = ''.join(
+            f'<li style="--h:{valor / maximo:.3f};--i:{i}" title="{escape_html(mes)}: '
+            f'{fmt_num(valor, 0)} min">'
+            + (
+                f'<span>{escape_html(mes[5:])}/{escape_html(mes[2:4])}</span>'
+                if i == 0 or mes.endswith('-01')
+                else ''
+            )
+            + '</li>'
+            for i, (mes, valor) in enumerate(por_mes.items())
+        )
+        linha = (
+            '<div class="su-sync-timeline"><h4>Quando a sintonia aconteceu</h4>'
+            f'<ol aria-label="Minutos juntos por mês">{barras}</ol></div>'
+        )
+    corpo = stories.stories_sintonia_html(a, b, s, quase) if s is not None else ''
+    return f'<section class="su-sync"><div class="su-sync-story">{corpo}</div>{linha}</section>'

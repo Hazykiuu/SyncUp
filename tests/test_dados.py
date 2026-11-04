@@ -184,3 +184,39 @@ def test_cache_nao_expoe_dataframe_mutavel(
     dados = carregar(caminho)
     dados.loc[0, 'ms_played'] = 999
     assert carregar(caminho).loc[0, 'ms_played'] == 60_000
+
+
+def test_leituras_simultaneas_nao_dependem_da_trava(
+    historicos: HistoricosFicticios, evento: FabricaEvento, monkeypatch
+) -> None:
+    """Dois arquivos são lidos ao mesmo tempo; o cache continua limitado e coerente."""
+    import threading
+
+    import dados
+
+    caminhos = [
+        historicos.json([evento(artista=f'Artista {i}')] * (i + 1), f'h{i}.json') for i in range(2)
+    ]
+    esperados = [carregar_historico(c).dados for c in caminhos]
+    dados.limpar_cache()
+    barreira = threading.Barrier(2, timeout=10)
+    extrair = dados._extrair_registros
+
+    def extrair_junto(caminho):
+        barreira.wait()  # só passa se as duas leituras estiverem em andamento juntas
+        return extrair(caminho)
+
+    monkeypatch.setattr(dados, '_extrair_registros', extrair_junto)
+    resultados: dict[int, object] = {}
+    threads = [
+        threading.Thread(target=lambda i=i, c=c: resultados.__setitem__(i, carregar_historico(c)))
+        for i, c in enumerate(caminhos)
+    ]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(15)
+    assert sorted(resultados) == [0, 1]
+    for i, esperado in enumerate(esperados):
+        assert resultados[i].dados.equals(esperado)
+    assert len(dados._memoria) <= dados.MAXIMO_HISTORICOS_CACHE

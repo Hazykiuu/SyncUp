@@ -71,3 +71,19 @@ O notebook distribuído está sem saídas e sem arquivos de dados/exports reais.
 - `tests/test_match.py`: conversão ZIP → rankings nas janelas da API, pesos por posição, nomes normalizados entre fontes, emparelhamento comparado com busca exaustiva (6 pessoas) e trio com número ímpar, JSON sem token, PKCE (desafio S256 conferido), coleta completa e rotas do servidor com a API do Spotify **simulada**.
 - O login real não pôde ser testado aqui (exige um app no Developer Dashboard e contas cadastradas); o redirecionamento para `accounts.spotify.com/authorize` com PKCE foi conferido no servidor local.
 - Match com 4 históricos reais conferido no Chromium: matriz, duplas ótimas, trocas sugeridas e ranking, sem erros de JavaScript.
+
+## v0.9 — estilo, playlist da festa, stories do Match e código aberto (2026-11-03)
+
+- `pytest`: 180 testes aprovados e 3 pulados (PyArrow não instalado), em Python 3.12.10 no Windows; `ruff check` e `ruff format --check` sem pendências.
+- Testes que falham na versão anterior e passam nesta: trio comparado com busca exaustiva (5 e 7 pessoas) e duas leituras simultâneas de históricos (antes ficavam em fila na trava global).
+- `tests/test_generos.py`: MusicBrainz **simulado**, com intervalo de 1 s (relógio injetado), score mínimo, cache em disco, falha de rede fora do cache e gêneros do Spotify preservados. A API real do MusicBrainz não foi chamada.
+- `tests/test_festa.py`: cobertura de todo o grupo, determinismo, CSV protegido, XSPF válido e escapado, stories com nomes escapados, cartão com e sem gêneros.
+- App real (`python app.py`) com 5 ZIPs fictícios de 20 mil eventos, pela API HTTP do Gradio: Match com trio em 1,63 s e repetido em 0,16 s (cache do perfil), playlist da festa com 30 faixas (CSV e XSPF) e cartão PNG da dupla.
+- No Chromium: a fonte Figtree carregada localmente, nenhuma requisição a `fonts.googleapis.com`/`gstatic` e nenhum erro de JavaScript.
+- Revisão de código (correção, segurança e qualidade): 10 achados corrigidos, entre eles o pré-carregamento de ZIPs já em cache, a escala do "meio peso" da festa e a falha silenciosa do MusicBrainz. Nenhuma vulnerabilidade encontrada. Suíte: 186 testes aprovados.
+- **MusicBrainz real**: Legião Urbana, Pitty, Radiohead e Anitta com gêneros corretos e score 100, intervalo de ~1 s entre consultas e banda inexistente sem gênero, depois lida do cache sem rede. A primeira consulta de uma sessão falhou uma vez de forma passageira; agora há uma nova tentativa.
+- **Login real no Spotify** (dono do app): perfil salvo com 3 rankings de 50 artistas, 50 recentes e 61 seguidos, sem token. O Spotify não enviou gêneros em modo de desenvolvimento. Uma segunda conta recebeu 403 em `/me/top/artists` mesmo depois de autorizar: é a regra da lista de usuários do modo de desenvolvimento. Por isso entrou o ListenBrainz.
+- **ListenBrainz real** (usuário público `rob`): rankings de semestre e ano e 50 listens; o mês sem estatística (204) vira ranking vazio; usuário inexistente dá 404 com mensagem clara.
+- **Em sintonia**: teste conferido à mão (3 min de sobreposição contados; outra faixa no mesmo horário e sobreposição de 20 s ignoradas; hora local no fuso de A). Com dados fictícios de 20 mil eventos: 11 momentos e 25 min em 0,6 s. Pela interface real (botão de dados fictícios da Dupla): 5 stories montados, linha do tempo com os meses vazios preenchidos.
+- Suíte: 198 testes aprovados e 3 pulados.
+- **Stories do Match no Chromium**, com o HTML devolvido pelo endpoint real `encontrar_matches` (5 ZIPs fictícios): o player montou 4 slides (abertura, trio, dupla, resumo) com barras de progresso, as setas avançam e voltam, as contagens animadas mostram os valores finais e o nome com `<b>` aparece como texto.

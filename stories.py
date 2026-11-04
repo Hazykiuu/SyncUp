@@ -8,10 +8,15 @@ sequência. Todo texto vindo do histórico passa por ``escape_html``.
 from __future__ import annotations
 
 from math import cos, pi, sin
+from typing import TYPE_CHECKING
 
 from arquetipos import AVISO_ARQUETIPOS, formatar_valor
 from formatacao import escape_html, fmt_num, fmt_pct
 from wrapped import Wrapped, data_br, mes_ano
+
+if TYPE_CHECKING:
+    from conciliacao import ResultadoConciliacao
+    from recursos import Sintonia
 
 FUNDOS = {
     'intro': ('#1ed760', '#0b3d20'),
@@ -28,6 +33,10 @@ FUNDOS = {
     'habitos': ('#8d67ab', '#251633'),
     'arquetipo': ('#1ed760', '#5b2ad6'),
     'resumo': ('#121212', '#121212'),
+    'match_intro': ('#5b2ad6', '#120a33'),
+    'match_par': ('#1ed760', '#0b3d20'),
+    'match_trio': ('#ff6437', '#4a0f1f'),
+    'sintonia': ('#f573a0', '#3b0b2c'),
 }
 
 
@@ -414,4 +423,175 @@ def arquetipos_detalhe_html(w: Wrapped) -> str:
         '<p class="su-note">A barra é o seu valor; o traço branco é o limiar da regra. '
         'Em verde, as regras atingidas.</p>'
         f'<ol>{"".join(linhas)}</ol><p class="su-note">{_e(AVISO_ARQUETIPOS)}</p></div>'
+    )
+
+
+def stories_match_html(r: ResultadoConciliacao) -> str:
+    """Revelação animada das duplas do Match, no mesmo player do Wrapped."""
+    comparacoes = len(r.nomes) * (len(r.nomes) - 1) // 2
+    slides = [
+        _slide(
+            'match_intro',
+            _a('<span class="su-kicker">SYNCUP MATCH</span>', 0)
+            + _a(f'<div class="su-mega">{_n(len(r.nomes))}<span>pessoas</span></div>', 1)
+            + _a(f'<p>{_n(comparacoes)} comparações depois, chegou a hora.</p>', 2)
+            + _a('<h3>Quem combina com quem?</h3>', 3),
+        )
+    ]
+    for grupo in r.pares:
+        internos = [r.par(x, y) for i, x in enumerate(grupo) for y in grupo[i + 1 :]]
+        principal = max(internos, key=lambda c: c.pontuacao)
+        media = sum(c.pontuacao for c in internos) / len(internos)
+        comuns = ''.join(
+            f'<span class="su-chip">{_e(a)}</span>' for a in principal.artistas_comuns[:4]
+        )
+        estilo = (
+            _a(f'<p class="su-sub">No estilo: {fmt_num(principal.pontuacao_generos, 1)}%</p>', 6)
+            if principal.pontuacao_generos is not None
+            else ''
+        )
+        slides.append(
+            _slide(
+                'match_trio' if len(grupo) == 3 else 'match_par',
+                _a(
+                    '<span class="su-kicker">'
+                    + ('O TRIO' if len(grupo) == 3 else 'A DUPLA')
+                    + '</span>',
+                    0,
+                )
+                + ''.join(
+                    _a(f'<div class="su-big-name">{_e(nome)}</div>', 1 + i)
+                    for i, nome in enumerate(grupo)
+                )
+                + _a(
+                    f'<div class="su-mega">{_n(media, 1, "%")}<span>{_e(principal.nivel)}</span></div>',
+                    4,
+                )
+                + (_a(f'<div class="su-badges">{comuns}</div>', 5) if comuns else '')
+                + estilo,
+            )
+        )
+    linhas = ''.join(f'<li>{" + ".join(_e(n) for n in g)}</li>' for g in r.pares)
+    slides.append(
+        _slide(
+            'resumo',
+            _a('<span class="su-kicker">RESUMO DO MATCH</span>', 0)
+            + _a(
+                f'<div class="su-final-grid"><div><span>Grupos</span><ol>{linhas}</ol></div></div>',
+                1,
+            )
+            + _a(
+                f'<div class="su-final-stats"><div><span>Média dos grupos</span>'
+                f'<b>{fmt_num(r.pontuacao_media_pares, 1)}%</b></div></div>',
+                2,
+            )
+            + _a(
+                '<p class="su-foot">Compara os rankings musicais enviados. '
+                'Não mede personalidade nem afinidade pessoal.</p>',
+                3,
+            )
+            + _a('<button type="button" class="su-replay">↺ Ver de novo</button>', 4),
+        )
+    )
+    return (
+        '<div class="su-stories" data-stories tabindex="0" aria-label="Revelação do Match">'
+        f'<div class="su-stories-frame">{"".join(slides)}</div></div>'
+    )
+
+
+def stories_sintonia_html(nome_a: str, nome_b: str, s: Sintonia, quase: int) -> str:
+    """Stories da escuta simultânea: a mesma faixa tocando ao mesmo tempo para os dois."""
+    a, b = _e(nome_a), _e(nome_b)
+    if not s.momentos:
+        slides = [
+            _slide(
+                'sintonia',
+                _a('<span class="su-kicker">EM SINTONIA</span>', 0)
+                + _a(f'<h2>{a} e {b}</h2>', 1)
+                + _a('<p>Ainda não ouviram a mesma música ao mesmo tempo neste recorte.</p>', 2)
+                + _a(
+                    f'<div class="su-mega">{_n(quase)}<span>vezes quase juntos (até 1 h)</span></div>',
+                    3,
+                ),
+            )
+        ]
+    else:
+        primeira, longo = s.primeira, s.mais_longo
+        musica, artista, vezes, minutos = s.top_musicas[0]
+        slides = [
+            _slide(
+                'sintonia',
+                _a('<span class="su-kicker">EM SINTONIA</span>', 0)
+                + _a(f'<h2>{a} e {b}<br>ouviram juntos</h2>', 1)
+                + _a(
+                    f'<div class="su-mega">{_n(s.minutos, 0)}<span>minutos ao mesmo tempo</span></div>',
+                    2,
+                )
+                + _a(
+                    f'<p>Foram <strong>{fmt_num(len(s.momentos))} momentos</strong> com a mesma '
+                    'música tocando para os dois, no mesmo instante.</p>',
+                    3,
+                ),
+            ),
+            _slide(
+                'primeira',
+                _a('<span class="su-kicker">A PRIMEIRA VEZ</span>', 0)
+                + _a(f'<div class="su-big-name">{_e(primeira.musica)}</div>', 1)
+                + _a(f'<p class="su-sub">{_e(primeira.artista)}</p>', 2)
+                + _a(
+                    f'<p>em {_e(data_br(primeira.inicio_local))}, às '
+                    f'{primeira.inicio_local:%H:%M}.</p>',
+                    3,
+                ),
+            ),
+            _slide(
+                'top_musicas',
+                _a('<span class="su-kicker">A MÚSICA DE VOCÊS</span>', 0)
+                + _a(f'<div class="su-big-name">{_e(musica)}</div>', 1)
+                + _a(f'<p class="su-sub">{_e(artista)}</p>', 2)
+                + _a(
+                    f'<div class="su-pair"><div>{_n(vezes)}<span>vezes juntos</span></div>'
+                    f'<div>{_n(minutos, 0)}<span>minutos</span></div></div>',
+                    3,
+                ),
+            ),
+            _slide(
+                'relogio',
+                _a('<span class="su-kicker">QUANDO VOCÊS SE ENCONTRAM</span>', 0)
+                + _a(
+                    f'<div class="su-mega">{s.hora_favorita}h<span>a hora favorita</span></div>', 1
+                )
+                + _a(
+                    f'<p>e o dia que mais junta vocês é <strong>{_e(s.dia_favorito)}</strong>.</p>',
+                    2,
+                )
+                + _a(
+                    f'<p class="su-sub">Momento mais longo: {_e(longo.musica)}, '
+                    f'{fmt_num(longo.minutos, 1)} min, em {_e(data_br(longo.inicio_local))}.</p>',
+                    3,
+                ),
+            ),
+        ]
+    slides.append(
+        _slide(
+            'resumo',
+            _a('<span class="su-kicker">SYNCUP · EM SINTONIA</span>', 0)
+            + _a(
+                f'<div class="su-final-stats"><div><span>Minutos juntos</span>'
+                f'<b>{fmt_num(s.minutos, 0)}</b></div><div><span>Momentos</span>'
+                f'<b>{fmt_num(len(s.momentos))}</b></div><div><span>Quase juntos</span>'
+                f'<b>{fmt_num(quase)}</b></div></div>',
+                1,
+            )
+            + _a(
+                '<p class="su-foot">Ao mesmo tempo = a mesma faixa tocando para os dois, com pelo '
+                'menos 30 s em comum, pelo horário de fim e a duração de cada play.</p>',
+                2,
+            )
+            + _a('<button type="button" class="su-replay">↺ Ver de novo</button>', 3),
+        )
+    )
+    return (
+        f'<div class="su-stories" data-stories tabindex="0" aria-label="Sintonia de {a} e {b}">'
+        f'<div class="su-stories-frame">{"".join(slides)}</div></div>'
     )

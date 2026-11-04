@@ -8,13 +8,14 @@ from itertools import islice
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
-from formatacao import fmt_pct
+from formatacao import fmt_num, fmt_pct
 from perfis import LIMIAR_FAVORITOS, QUANTIDADE_FAVORITOS
 
 if TYPE_CHECKING:
     from analise import ResultadoComparacao
+    from conciliacao import Compatibilidade
     from wrapped import Wrapped
 
 LARGURA_CARTAO = 1080
@@ -26,6 +27,7 @@ SECUNDARIO = '#b3b3b3'
 VERDE = '#1ed760'
 ROXO = '#c4b7ff'
 TOPO_GRADIENTE = (30, 215, 96)
+FIGTREE = Path(__file__).resolve().parent / 'fontes' / 'Figtree.ttf'
 
 
 def carregar_fonte(
@@ -45,7 +47,9 @@ def _carregar_fonte(
     """Implementação com cache de ``carregar_fonte``."""
     variante = 'DejaVuSans-Bold.ttf' if negrito else 'DejaVuSans.ttf'
     windows = Path(os.environ.get('WINDIR', 'C:/Windows')) / 'Fonts'
+    # Figtree (OFL) do projeto logo após a fonte pedida: o PNG fica igual em qualquer sistema.
     candidatas = ([str(fonte)] if fonte else []) + [
+        str(FIGTREE),
         f'/usr/share/fonts/truetype/dejavu/{variante}',
         str(windows / ('segoeuib.ttf' if negrito else 'segoeui.ttf')),
         '/System/Library/Fonts/Supplemental/Arial.ttf',
@@ -53,7 +57,10 @@ def _carregar_fonte(
     ]
     for candidata in candidatas:
         try:
-            return ImageFont.truetype(candidata, tamanho)
+            carregada = ImageFont.truetype(candidata, tamanho)
+            if candidata == str(FIGTREE):
+                carregada.set_variation_by_name('Bold' if negrito else 'Regular')
+            return carregada
         except (OSError, ValueError):
             continue
     try:
@@ -89,6 +96,22 @@ def _ajustar_texto(
     return texto[:baixo].rstrip() + sufixo
 
 
+def _logo(d: ImageDraw.ImageDraw) -> None:
+    """Disco preto com as quatro barras verdes, no canto superior esquerdo."""
+    d.ellipse((64, 60, 144, 140), fill='#000000')
+    for i, altura in enumerate((34, 50, 26, 42)):
+        x = 82 + i * 12
+        d.rounded_rectangle((x, 122 - altura, x + 7, 122), radius=3, fill=VERDE)
+
+
+def _anel(d: ImageDraw.ImageDraw, caixa: tuple[int, int, int, int], proporcao: float) -> None:
+    """Anel cinza preenchido em verde na proporção dada (limitada a 0–1)."""
+    proporcao = max(0.0, min(1.0, proporcao))
+    d.arc(caixa, 0, 360, fill='#3e3e3e', width=16)
+    if proporcao > 0:
+        d.arc(caixa, -90, -90 + 360 * proporcao, fill=VERDE, width=16)
+
+
 def gerar_cartao(
     resultado: ResultadoComparacao, destino: str | Path, fonte: str | Path | None = None
 ) -> Path:
@@ -119,10 +142,7 @@ def gerar_cartao(
         f = carregar_fonte(tamanho, forte, fonte)
         d.text((x, y), _ajustar_texto(valor, largura, d, f), fill=cor, font=f)
 
-    d.ellipse((64, 60, 144, 140), fill='#000000')
-    for i, altura in enumerate((34, 50, 26, 42)):
-        x = 82 + i * 12
-        d.rounded_rectangle((x, 122 - altura, x + 7, 122), radius=3, fill=VERDE)
+    _logo(d)
     texto(168, 74, 'SyncUp', 48, TEXTO, True)
     texto(64, 175, 'O encontro dos seus históricos musicais', 30, SECUNDARIO)
     texto(64, 245, resultado.perfil_a.nome, 42, VERDE, True)
@@ -130,12 +150,7 @@ def gerar_cartao(
     d.rounded_rectangle((64, 392, 1016, 620), radius=30, fill=PAINEL)
     texto(100, 415, 'SIMILARIDADE DE ESCUTA · COSSENO', 26, SECUNDARIO)
     texto(96, 455, fmt_pct(resultado.metricas.cosseno), 104, VERDE, True, 690)
-    # Anel de similaridade à direita do painel.
-    proporcao = max(0.0, min(1.0, resultado.metricas.cosseno))
-    caixa = (812, 420, 984, 592)
-    d.arc(caixa, 0, 360, fill='#3e3e3e', width=16)
-    if proporcao > 0:
-        d.arc(caixa, -90, -90 + 360 * proporcao, fill=VERDE, width=16)
+    _anel(d, (812, 420, 984, 592), resultado.metricas.cosseno)  # à direita do painel
     texto(100, 580, f'Ponderação: {resultado.ponderacao} · plays ≥30 segundos', 24, SECUNDARIO)
     texto(64, 665, f'Artistas em comum · Jaccard: {fmt_pct(resultado.metricas.jaccard)}', 30)
     texto(
@@ -239,3 +254,133 @@ def gerar_cartao_wrapped(
     caminho.parent.mkdir(parents=True, exist_ok=True)
     imagem.save(caminho, format='PNG', optimize=True)
     return caminho
+
+
+def gerar_cartao_match(
+    compatibilidade: Compatibilidade, destino: str | Path, fonte: str | Path | None = None
+) -> Path:
+    """Story 1080×1920 de uma dupla do Match: pontuação, nível, artistas e estilo em comum."""
+    c = compatibilidade
+    story = _Story(VERDE, ROXO, fonte)
+    story.cabecalho('SYNCUP MATCH')
+    story.avatares([c.a, c.b], 470)
+    story.centro(f'{c.a}  +  {c.b}', 700, 60, forte=True)
+    story.centro(f'{fmt_num(c.pontuacao, 1)}%', 790, 230, forte=True)
+    story.pilula(c.nivel.upper(), 1060)
+    y = story.lista('VOCÊS DIVIDEM', c.artistas_comuns[:4] or ['Nenhum artista em comum'], 1180)
+    if c.pontuacao_generos is not None:
+        estilo = ', '.join(c.generos_comuns[:3]) or 'estilos diferentes'
+        story.lista(f'NO ESTILO · {fmt_num(c.pontuacao_generos, 1)}%', [estilo], y)
+    story.rodape('Compara os rankings musicais enviados. Não mede afinidade pessoal.')
+    return story.salvar(destino)
+
+
+class _Story:
+    """Pôster 9:16 com fundo em degradê de duas cores, no estilo dos cartões da tela."""
+
+    LARGURA, ALTURA = 1080, 1920
+
+    def __init__(self, cor1: str, cor2: str, fonte: str | Path | None = None) -> None:
+        self.fonte = fonte
+        tamanho = (self.LARGURA, self.ALTURA)
+        self.imagem = Image.new('RGB', tamanho, '#0c0c0c')
+        # Duas manchas de luz: elipses desfocadas do tamanho da imagem, sem bordas duras.
+        for cor, caixa, forca in (
+            (cor1, (-420, -380, 900, 900), 215),
+            (cor2, (180, 1050, 1500, 2300), 190),
+        ):
+            mascara = Image.new('L', tamanho, 0)
+            ImageDraw.Draw(mascara).ellipse(caixa, fill=forca)
+            mascara = mascara.filter(ImageFilter.GaussianBlur(220))
+            self.imagem.paste(cor, (0, 0), mascara)
+        escurecer = Image.linear_gradient('L').resize(tamanho)
+        self.imagem.paste((0, 0, 0), (0, 0), escurecer.point(lambda v: round(v * 0.45)))
+        self.d = ImageDraw.Draw(self.imagem)
+        self.cores = (cor1, cor2)
+
+    def _fonte(self, tamanho: int, forte: bool):
+        return carregar_fonte(tamanho, forte, self.fonte)
+
+    def centro(self, valor: str, y: int, tamanho: int, cor: str = TEXTO, forte=False) -> None:
+        f = self._fonte(tamanho, forte)
+        linha = _ajustar_texto(valor, self.LARGURA - 128, self.d, f)
+        x = (self.LARGURA - self.d.textlength(linha, font=f)) / 2
+        self.d.text((x, y), linha, fill=cor, font=f)
+
+    def cabecalho(self, titulo: str) -> None:
+        _logo(self.d)
+        f = self._fonte(40, True)
+        self.d.text((168, 80), titulo, fill=TEXTO, font=f, spacing=0)
+
+    def avatares(self, nomes: list[str], y: int, raio: int = 120) -> None:
+        passo = raio * 1.7
+        inicio = self.LARGURA / 2 - passo * (len(nomes) - 1) / 2
+        centros = [inicio + i * passo for i in range(len(nomes))]
+        for i, cx in enumerate(centros):
+            caixa = (cx - raio, y - raio, cx + raio, y + raio)
+            self.d.ellipse(caixa, fill=self.cores[i % 2], outline='#0c0c0c', width=12)
+        f = self._fonte(round(raio * 0.72), True)
+        for nome, cx in zip(nomes, centros):  # letras depois dos círculos: nada fica coberto
+            letras = ''.join(p[0] for p in nome.split()[:2] if p[:1].isalnum()).upper() or '?'
+            w = self.d.textlength(letras, font=f)
+            self.d.text((cx - w / 2, y - raio * 0.46), letras, fill='#000000', font=f)
+
+    def pilula(self, valor: str, y: int) -> None:
+        f = self._fonte(34, True)
+        w = self.d.textlength(valor, font=f)
+        x = (self.LARGURA - w) / 2
+        self.d.rounded_rectangle((x - 34, y - 16, x + w + 34, y + 58), radius=40, fill='#000000')
+        self.d.text((x, y), valor, fill=TEXTO, font=f)
+
+    def lista(self, titulo: str, itens: list[str], y: int) -> int:
+        """Painel com título e itens; devolve onde o próximo bloco pode começar."""
+        # Painel translúcido: desenhado numa camada RGBA e combinado com o fundo.
+        camada = Image.new('RGBA', self.imagem.size, (0, 0, 0, 0))
+        caixa = (64, y, 1016, y + 90 + 64 * len(itens))
+        ImageDraw.Draw(camada).rounded_rectangle(caixa, radius=36, fill=(0, 0, 0, 120))
+        self.imagem = Image.alpha_composite(self.imagem.convert('RGBA'), camada).convert('RGB')
+        self.d = ImageDraw.Draw(self.imagem)
+        f = self._fonte(28, True)
+        self.d.text((104, y + 32), titulo, fill=SECUNDARIO, font=f)
+        for i, item in enumerate(itens):
+            fi = self._fonte(44, i == 0)
+            linha = _ajustar_texto(item, 870, self.d, fi)
+            self.d.text((104, y + 82 + i * 64), linha, fill=TEXTO, font=fi)
+        return caixa[3] + 28
+
+    def rodape(self, aviso: str) -> None:
+        self.centro(aviso, 1790, 26, SECUNDARIO)
+        self.centro('SyncUp · código aberto', 1836, 28, TEXTO, forte=True)
+
+    def salvar(self, destino: str | Path) -> Path:
+        caminho = Path(destino)
+        caminho.parent.mkdir(parents=True, exist_ok=True)
+        self.imagem.save(caminho, format='PNG', optimize=True)
+        return caminho
+
+
+def gerar_cartao_sintonia(
+    resultado: ResultadoComparacao, destino: str | Path, fonte: str | Path | None = None
+) -> Path:
+    """Story 1080×1920 da escuta simultânea da dupla."""
+    s = resultado.sintonia
+    a, b = resultado.perfil_a.nome, resultado.perfil_b.nome
+    story = _Story('#f573a0', ROXO, fonte)
+    story.cabecalho('EM SINTONIA')
+    story.avatares([a, b], 430)
+    story.centro(f'{a}  +  {b}', 660, 60, forte=True)
+    if s is None or not s.momentos:
+        story.centro('0', 760, 230, forte=True)
+        story.pilula('MINUTOS AO MESMO TEMPO', 1030)
+        story.lista('AINDA NÃO SE CRUZARAM', ['Mandem uma música um pro outro agora'], 1160)
+    else:
+        story.centro(fmt_num(s.minutos, 0), 760, 230, forte=True)
+        story.pilula('MINUTOS AO MESMO TEMPO', 1030)
+        musica, artista, vezes, _ = s.top_musicas[0]
+        y = story.lista('A MÚSICA DE VOCÊS', [musica, f'{artista} · {vezes}x juntos'], 1160)
+        y = story.lista(
+            'A PRIMEIRA VEZ', [f'{s.primeira.musica} · {s.primeira.inicio_local:%d/%m/%Y}'], y
+        )
+        story.lista('QUANDO VOCÊS SE ENCONTRAM', [f'{s.dia_favorito}, às {s.hora_favorita}h'], y)
+    story.rodape('A mesma música tocando para os dois, no mesmo instante.')
+    return story.salvar(destino)

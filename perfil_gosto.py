@@ -10,13 +10,16 @@ A compatibilidade usa apenas o que as duas fontes têm em comum (rankings).
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass, field
+from collections import OrderedDict
+from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
+from threading import Lock
 
 import pandas as pd
 
-from configuracao import normalizar_nome
+from configuracao import ConfiguracaoCarga, normalizar_nome
+from dados import Caminho, carregar_historicos, sha_em_cache
 
 PERIODOS = ('short_term', 'medium_term', 'long_term')
 NOMES_PERIODOS = {
@@ -38,7 +41,7 @@ class PerfilGosto:
     """Rankings de uma pessoa, em qualquer fonte. Listas em ordem de preferência."""
 
     nome: str
-    fonte: str  # 'historico_zip' ou 'spotify_api'
+    fonte: str  # 'historico_zip', 'spotify_api' ou 'listenbrainz'
     coletado_em: str
     top_artistas: dict[str, list[str]] = field(default_factory=dict)
     top_musicas: dict[str, list[dict[str, str]]] = field(default_factory=dict)
@@ -49,7 +52,8 @@ class PerfilGosto:
 
     @property
     def rotulo_fonte(self) -> str:
-        return 'Spotify (login)' if self.fonte == 'spotify_api' else 'Histórico ZIP'
+        rotulos = {'spotify_api': 'Spotify (login)', 'listenbrainz': 'ListenBrainz'}
+        return rotulos.get(self.fonte, 'Histórico ZIP')
 
     def para_json(self) -> str:
         return json.dumps(asdict(self), ensure_ascii=False, indent=2)
@@ -156,6 +160,52 @@ def perfil_de_historico(dados: pd.DataFrame, nome: str) -> PerfilGosto:
         top_musicas=top_musicas,
         recentes=recentes,
     )
+
+
+_perfis_zip: OrderedDict[tuple, PerfilGosto] = OrderedDict()
+_trava_perfis = Lock()
+MAXIMO_PERFIS_CACHE = 64  # Perfis têm poucos KB; repetir um Match não relê os ZIPs.
+
+
+def _chave_perfil(partes: list[Caminho], config: ConfiguracaoCarga) -> tuple:
+    return tuple(sorted(sha_em_cache(p) for p in partes)), config, VERSAO_PERFIL
+
+
+def tem_perfil_em_cache(
+    arquivos: Caminho | list[Caminho] | tuple[Caminho, ...], configuracao: ConfiguracaoCarga
+) -> bool:
+    """Se ``perfil_de_arquivos`` devolveria o perfil sem ler os arquivos."""
+    partes = list(arquivos) if isinstance(arquivos, (list, tuple)) else [arquivos]
+    with _trava_perfis:
+        return _chave_perfil(partes, configuracao) in _perfis_zip
+
+
+def perfil_de_arquivos(
+    arquivos: Caminho | list[Caminho] | tuple[Caminho, ...],
+    nome: str,
+    configuracao: ConfiguracaoCarga | None = None,
+) -> PerfilGosto:
+    """``perfil_de_historico`` dos arquivos, com cache em memória pelo conteúdo (SHA-256)."""
+    config = configuracao or ConfiguracaoCarga()
+    partes = list(arquivos) if isinstance(arquivos, (list, tuple)) else [arquivos]
+    chave = _chave_perfil(partes, config)
+    with _trava_perfis:
+        perfil = _perfis_zip.get(chave)
+        if perfil is not None:
+            _perfis_zip.move_to_end(chave)
+    if perfil is None:
+        perfil = perfil_de_historico(carregar_historicos(partes, configuracao=config).dados, nome)
+        with _trava_perfis:
+            _perfis_zip[chave] = perfil
+            while len(_perfis_zip) > MAXIMO_PERFIS_CACHE:
+                _perfis_zip.popitem(last=False)
+    # O nome não faz parte da chave: o mesmo ZIP pode ser enviado com outro nome.
+    return replace(perfil, nome=(nome or '').strip() or 'Sem nome')
+
+
+def limpar_cache_perfis() -> None:
+    with _trava_perfis:
+        _perfis_zip.clear()
 
 
 def peso_posicao(posicao: int, tamanho: int = TAMANHO_RANKING) -> float:

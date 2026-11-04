@@ -51,9 +51,16 @@ from graficos import (
     radar_tracos,
     slope_chart,
 )
-from listenbrainz import coletar_perfil_listenbrainz
-from perfil_gosto import carregar_perfil, listar_perfis, perfil_de_arquivos, tem_perfil_em_cache
+from listenbrainz import coletar_escutas_listenbrainz, coletar_perfil_listenbrainz
+from perfil_gosto import (
+    carregar_perfil,
+    escutas_de_arquivos,
+    listar_perfis,
+    perfil_de_arquivos,
+    tem_perfil_em_cache,
+)
 from perfis import AVISO_TRACOS, LIMIAR_FAVORITOS, LIMIAR_MADRUGADA, LIMIAR_REPEAT
+from recursos import Escutas, Sintonia, escutas, sintonia_do_par, sintonia_entre
 from spotify_api import PASTA_PERFIS, REDIRECT_PADRAO
 from wrapped import Wrapped, wrapped_de_arquivos
 
@@ -573,6 +580,15 @@ def atualizar_perfis(
     return gr.CheckboxGroup(choices=opcoes, value=marcados), opcoes
 
 
+def _mais_em_sintonia(sintonias: dict[tuple[str, str], Sintonia], nome: str) -> str:
+    """Com quem a pessoa mais ouviu junto, para a tabela do Match."""
+    juntos = [
+        (s.minutos, y if x == nome else x) for (x, y), s in sintonias.items() if nome in (x, y)
+    ]
+    minutos, outro = max(juntos, default=(0.0, ''))
+    return f'{outro} ({fmt_num(minutos, 0)} min)' if minutos > 0 else '—'
+
+
 def executar_match(
     arquivos: list[str] | None,
     nomes: str,
@@ -605,15 +621,19 @@ def executar_match(
             for k, (arquivo, nome) in enumerate(bloco, j):
                 progress(0.05 + 0.6 * k / len(pendentes), desc=f'Lendo o histórico de {nome}')
                 perfil_de_arquivos(arquivo, nome, config)
+        escutas_por_nome: dict[str, Escutas] = {}  # só quem tem histórico de escuta
         for arquivo, nome in entradas:
-            perfis.append(perfil_de_arquivos(arquivo, nome, config))
-            fontes[nome] = 'Histórico ZIP'
+            perfil = perfil_de_arquivos(arquivo, nome, config)
+            perfis.append(perfil)
+            fontes[perfil.nome] = 'Histórico ZIP'
+            escutas_por_nome[perfil.nome] = escutas_de_arquivos(arquivo, config)
         for nome in selecionados or []:
             perfil = carregar_perfil(PASTA_PERFIS / f'{nome}.json')
             perfis.append(perfil)
             fontes[perfil.nome] = f'Spotify · {perfil.coletado_em[:10]}'
         usuarios = _linhas(usuarios_listenbrainz)
         fora: list[str] = []
+        sem_sintonia: list[str] = []
         for i, usuario in enumerate(usuarios):
             progress(0.6 + 0.05 * i / len(usuarios), desc=f'Lendo o ListenBrainz de {usuario}')
             try:
@@ -626,9 +646,20 @@ def executar_match(
                 continue
             perfis.append(perfil)
             fontes[perfil.nome] = 'ListenBrainz'
+            try:
+                escutas_por_nome[perfil.nome] = escutas(
+                    coletar_escutas_listenbrainz(usuario, config.fuso_horario)
+                )
+            except (ValueError, httpx.HTTPError):  # sem listens: entra no Match, sem sintonia
+                sem_sintonia.append(perfil.nome)
         if fora:
             # Um nome errado não derruba o Match: quem falhou fica de fora, com o motivo.
             gr.Warning('Ficaram de fora do Match · ' + ' · '.join(fora))
+        if sem_sintonia:
+            gr.Warning(
+                'Os listens não vieram do ListenBrainz, então ficaram sem sintonia: '
+                + ', '.join(sem_sintonia)
+            )
         if buscar_generos:
             consulta = ConsultaMusicBrainz(
                 cache=Path(config.diretorio_cache) / ARQUIVO_CACHE_GENEROS
@@ -646,6 +677,12 @@ def executar_match(
                 )
         progress(0.75, desc='Comparando todos com todos')
         r = conciliar(perfis)
+        nomes_escuta = [n for n in r.nomes if n in escutas_por_nome]
+        pares_escuta = list(combinations(nomes_escuta, 2))
+        sintonias = {}
+        for k, (x, y) in enumerate(pares_escuta):
+            progress(0.8 + 0.19 * k / len(pares_escuta), desc=f'Sintonia de {x} e {y}')
+            sintonias[(x, y)] = sintonia_entre(escutas_por_nome[x], escutas_por_nome[y])
         ranking = pd.DataFrame(
             [
                 {
@@ -657,6 +694,7 @@ def executar_match(
                         if len(r.melhores[nome]) > 1
                         else '—'
                     ),
+                    'Mais em sintonia': _mais_em_sintonia(sintonias, nome),
                 }
                 for nome in r.nomes
             ]
@@ -666,12 +704,12 @@ def executar_match(
         # Valor = índice: nomes são texto livre e não precisam ser separados de volta.
         opcoes_duplas = [(f'{x} × {y}', i) for i, (x, y) in enumerate(duplas)]
         return [
-            componentes.match_html(r, fontes),
+            componentes.match_html(r, fontes, sintonias),
             matriz_conciliacao(r),
             ranking,
             gr.Column(visible=True),
-            stories.stories_match_html(r),
-            {'resultado': r, 'perfis': perfis, 'duplas': duplas},
+            stories.stories_match_html(r, sintonias),
+            {'resultado': r, 'perfis': perfis, 'duplas': duplas, 'sintonias': sintonias},
             gr.Dropdown(choices=opcoes_duplas, value=0 if duplas else None),
         ]
     except ValueError as erro:
@@ -714,9 +752,10 @@ def baixar_cartao_match(
     except (IndexError, ValueError, TypeError) as erro:
         raise gr.Error('Essa dupla não faz parte do último Match.') from erro
     compatibilidade = match['resultado'].par(a, b)
+    s = sintonia_do_par(match.get('sintonias', {}), a, b)
     arquivo, pasta = _em_pasta_temporaria(
         'match',
-        lambda p: str(gerar_cartao_match(compatibilidade, p / 'SyncUp_match.png')),
+        lambda p: str(gerar_cartao_match(compatibilidade, p / 'SyncUp_match.png', sintonia=s)),
         'o cartão',
     )
     return arquivo, arquivo, [*(pastas or []), pasta]
@@ -890,7 +929,7 @@ def _secao(titulo: str, texto: str = '') -> gr.HTML:
 
 TOPO = """<header class="su-topbar">
   <div class="su-logo sm" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-  <b>SyncUp</b><span class="su-topbar-tag">v0.95 · código aberto</span>
+  <b>SyncUp</b><span class="su-topbar-tag">v0.96 · código aberto</span>
 </header>"""
 
 INICIO_TOPO = """<section class="su-hero">

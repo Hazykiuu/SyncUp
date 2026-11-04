@@ -621,6 +621,10 @@ footer { opacity: .55; }
 .su-poster-line > span { font-size: 11px; font-weight: 900; letter-spacing: .18em; text-transform: uppercase; color: rgba(255, 255, 255, .7); }
 .su-poster-line > b { margin-left: 8px; font-size: 14px; }
 .su-poster-line .su-chips { margin: 6px 0 0; }
+.su-poster-sync > b { font-size: 20px; font-weight: 900; }
+.su-poster-sync > small { display: block; margin-top: 2px; font-size: 13px; color: rgba(255, 255, 255, .85); }
+.su-sync-award { background: linear-gradient(120deg, rgba(245, 115, 160, .32), rgba(196, 183, 255, .16), var(--su-card)); }
+.su-sync-award b[data-countup] { color: #f9a8c7; }
 .su-match-card .su-chip { background: rgba(0, 0, 0, .4); backdrop-filter: blur(6px); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .su-swaps { font-size: 14px; }
 .su-swaps summary { cursor: pointer; color: rgba(255, 255, 255, .85); font-weight: 700; min-height: 44px; display: flex; align-items: center; }

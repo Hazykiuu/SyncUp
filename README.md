@@ -165,7 +165,7 @@ Ruff usa Python 3.10 como alvo, 100 colunas, imports ordenados e formatação un
 
 ## Notebook CRISP-DM
 
-Abra `SyncUp.ipynb` num editor de notebooks, com o kernel do ambiente acima, na pasta do projeto. Ele contém as seis fases: entendimento do negócio/dados, preparação, modelagem, avaliação e implantação. Usa Pandas/Seaborn no EDA e importa os cálculos dos módulos da aplicação.
+Instale as dependências de desenvolvimento (`python -m pip install -r requirements-dev.txt`, que trazem seaborn e matplotlib) e abra `SyncUp.ipynb` num editor de notebooks, com o kernel desse ambiente, na pasta do projeto. Ele contém as seis fases: entendimento do negócio/dados, preparação, modelagem, avaliação e implantação. Usa Pandas/Seaborn no EDA e importa os cálculos dos módulos da aplicação.
 
 O padrão gera **dados fictícios** e mantém a interface desligada durante a execução automática. Para analisar dados próprios, edite a primeira célula e os caminhos da segunda célula de código. Para verificar todas as células sem servidor Jupyter:
 

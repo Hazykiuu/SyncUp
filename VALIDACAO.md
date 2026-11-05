@@ -109,3 +109,10 @@ O notebook distribuído está sem saídas e sem arquivos de dados/exports reais.
 - `test_cache_e_hash` falhou 1 vez em 4 rodadas antes da correção (arquivo regravado com o mesmo tamanho no mesmo instante).
 - O CI roda no GitHub em Python 3.10 e 3.12; localmente só o 3.12 foi executado.
 
+## v0.98 — privacidade e organização (2026-11-05)
+
+- `pytest`: 227 testes aprovados e 3 pulados (PyArrow não instalado); `ruff check` e `ruff format --check` sem pendências.
+- Divisão do `ui.py`: os 221 testes anteriores passaram sem mudar nenhuma asserção (só o alvo das trocas de funções de rede, agora `ui.match`).
+- `tests/test_privacidade.py`: lista com tamanho e data; `../app` não apaga nada fora da pasta; limpar o cache apaga só `.parquet`, `.json` e `.tmp` de topo (arquivo alheio e subpasta ficam); cancelar o `confirm()` não apaga nada; nome com `<b>` aparece como texto.
+- No navegador do app: o Início mostra os três cartões de privacidade, inclusive em largura de celular, e o painel lista o perfil real salvo. Os botões de apagar não foram clicados no app real (o perfil é verdadeiro); o fluxo foi coberto nos testes.
+

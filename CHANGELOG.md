@@ -1,5 +1,20 @@
 # Changelog — SyncUp
 
+## [0.98] — 2026-11-05
+
+Segunda etapa rumo à 1.0: privacidade e organização.
+
+### Novo
+- **Meus dados** (gaveta *Opções de dados*): mostra o que o SyncUp guardou no computador (perfis do Spotify, gêneros do MusicBrainz e cache de históricos), com tamanho e data, e permite **apagar um perfil** ou **limpar todo o cache**. As duas ações pedem confirmação. Ao apagar um perfil, a lista do Match é atualizada.
+- **Privacidade no Início**: três cartões dizem o que fica no computador, o que vai para a internet (só se você pedir) e o que nunca é guardado.
+- `privacidade.py`: listar e apagar dados locais, sem Gradio. Só arquivos criados pelo SyncUp são apagados; o nome do perfil é conferido na lista e nunca vira caminho.
+
+### Interno
+- **`ui.py` dividido** no pacote `ui/`, um módulo por tela: `comum`, `dupla`, `meu_wrapped`, `match`, `meus_dados` e `layout`. O código das funções não mudou e os nomes de antes continuam importáveis de `ui`. O teste de regras (groupby com `observed=True`, sem NumPy) passa a olhar também `ui/*.py`.
+
+### Contrato
+- Sem mudanças nos endpoints. Testes que trocam funções de rede do Match agora apontam para `ui.match`.
+
 ## [0.97] — 2026-11-05
 
 Primeira etapa rumo à 1.0: confiança.

@@ -1,4 +1,4 @@
-# SyncUp v0.97
+# SyncUp v0.98
 
 Comparador local do **Histórico Estendido do Spotify**: duas pessoas ou grupos de 3–6 perfis, com rankings, similaridades, arquétipos explicáveis, gráficos interativos, playlist CSV e cartão PNG. Projeto acadêmico organizado pelo CRISP-DM e **open source** ([licença MIT](LICENSE)).
 
@@ -33,13 +33,14 @@ python -m pip install -r requirements-parquet.txt
 | `dados.py`, `configuracao.py` | ZIP/JSON, validação, descartes, fuso, categorias, múltiplas partes e cache SHA-256 |
 | `metricas.py`, `perfis.py` | Cosseno/Jaccards, contribuições, diversidade e regras nomeadas de arquétipos |
 | `analise.py`, `recursos.py` | Resultados em dataclasses, recorte UTC, dupla/grupo, coincidências e descobertas sugeridas |
-| `graficos.py`, `ui.py`, `styles.css` | Plotly e Gradio 5 no tema Spotify, apresentação responsiva com contraste/foco |
+| `graficos.py`, `ui/`, `styles.css` | Plotly e Gradio 5 no tema Spotify, apresentação responsiva com contraste/foco |
 | `perfil_gosto.py`, `conciliacao.py`, `spotify_api.py` | Perfil unificado (ZIP e API), conciliação em pares ótimos e login OAuth/PKCE |
 | `wrapped.py`, `arquetipos.py`, `stories.py` | Wrapped da vida toda, regras de arquétipos e slides em stories |
 | `componentes.py`, `syncup.js` | Blocos HTML animados (Blend, Wrapped, listas tipo playlist, corrida de artistas) e o script de animações |
 | `exportacoes.py`, `cartao.py` | CSV protegido para planilhas e PNG local em Pillow |
 | `generos.py`, `festa.py` | Estilo musical (Spotify/MusicBrainz) e playlist da festa em CSV/XSPF |
 | `listenbrainz.py` | Perfil pelo ListenBrainz (fonte aberta, sem login) |
+| `privacidade.py` | Lista e apaga os dados locais (painel Meus dados) |
 | `formatacao.py`, `app.py` | Formatação/sanitização pt-BR, entrada local e reexportações compatíveis |
 
 ```python
@@ -53,6 +54,14 @@ print(r.diagnostico)
 ```
 
 Os imports `carregar`, `comparar`, `metricas`, `criar_interface` e `limpar_cache` permanecem em `app.py`. **Mudança de contrato:** `comparar()` devolve `ResultadoComparacao`, com campos nomeados; não devolve a tupla de 12 saídas da v0.4. `metricas()` mantém a tupla `(cosseno, jaccard)`.
+
+## Privacidade
+
+O SyncUp roda no seu computador: não há conta, servidor nem anúncios.
+
+- **Fica no computador**: os históricos enviados (lidos na sessão e apagados em até 1 hora), os perfis do Spotify (só rankings) e o cache. Para ver e apagar, abra *Opções de dados → Meus dados*.
+- **Vai para a internet só se você pedir**: o Spotify (ao conectar a conta), o ListenBrainz (o nome de usuário que você digitar) e o MusicBrainz (nomes de artistas, só com a caixa de estilo marcada).
+- **Nunca é guardado**: o token do Spotify, o IP e o modelo do aparelho.
 
 ## Sintonia no Match (v0.96)
 

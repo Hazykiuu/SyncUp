@@ -48,7 +48,7 @@ class InterfaceTest(unittest.TestCase):
             )
         )
         self.assertEqual(
-            {f.api_name for f in demo.fns.values() if f.api_name},
+            {f.api_name for f in demo.fns.values() if f.api_visibility == 'public'},
             {
                 'comparar_dupla',
                 'comparar_grupo',

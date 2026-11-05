@@ -22,7 +22,9 @@ def test_cartoes_do_inicio_abrem_as_abas() -> None:
         )
         ids = [t.id for t in abas.children if isinstance(t, gr.Tab)]
         assert ids == ['inicio', 'dupla', 'match', 'wrapped', 'grupo']
-        atalhos = [f for f in demo.fns.values() if abas in f.outputs and f.api_name is False]
+        atalhos = [
+            f for f in demo.fns.values() if abas in f.outputs and f.api_visibility == 'private'
+        ]
         destinos = []
         for f in atalhos:
             saida = f.fn()

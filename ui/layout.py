@@ -17,9 +17,6 @@ from perfis import AVISO_TRACOS, LIMIAR_FAVORITOS, LIMIAR_MADRUGADA, LIMIAR_REPE
 from spotify_api import PASTA_PERFIS, REDIRECT_PADRAO
 from ui.comum import (
     CONCORRENCIA,
-    CSS,
-    HEAD,
-    JS,
     OPCOES_PONDERACAO,
     _limpar_exportacoes,
 )
@@ -133,7 +130,7 @@ def _mais_arquivos(elem_id: str) -> None:
     gr.Button('+ Adicionar mais arquivos', size='sm', elem_classes='su-add-files').click(
         None,
         js=f"() => document.querySelector('#{elem_id} input[type=file]')?.click()",
-        api_name=False,
+        api_visibility='private',
     )
 
 
@@ -216,10 +213,6 @@ def criar_interface() -> gr.Blocks:
     """Constrói Gradio 5 com tema Spotify, CSS/JS externos e comparação de dupla/grupo."""
     habilitar_leitura_paralela()
     with gr.Blocks(
-        theme=_tema(),
-        css=CSS,
-        js=JS,
-        head=HEAD,
         title='SyncUp',
         analytics_enabled=False,
         delete_cache=(3600, 3600),
@@ -503,7 +496,7 @@ def criar_interface() -> gr.Blocks:
                     api_name='comparar_dupla',
                     scroll_to_output=True,
                 )
-                demo_btn.click(carregar_demo, None, [fa, fb, na, nb], api_name=False)
+                demo_btn.click(carregar_demo, None, [fa, fb, na, nb], api_visibility='private')
                 exportar.click(
                     baixar_playlist,
                     [estado, pastas],
@@ -628,7 +621,7 @@ def criar_interface() -> gr.Blocks:
                         codigo_convite = gr.Textbox(
                             label='O seu código: copie e mande',
                             interactive=False,
-                            show_copy_button=True,
+                            buttons=['copy'],
                             lines=2,
                             max_lines=4,
                         )
@@ -687,7 +680,7 @@ def criar_interface() -> gr.Blocks:
                     js="(cid, nome) => { window.open('/spotify/login?client_id=' + "
                     "encodeURIComponent(cid || '') + '&nome=' + encodeURIComponent(nome || ''), "
                     "'_blank'); }",
-                    api_name=False,
+                    api_visibility='private',
                 )
 
                 # A lista do convite acompanha a do Match (login novo, perfil apagado).
@@ -695,12 +688,18 @@ def criar_interface() -> gr.Blocks:
                     return gr.Dropdown(choices=perfis_salvos(), value=None)
 
                 recarregar.click(
-                    atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False
-                ).then(lista_convite, None, perfil_convite, api_name=False)
+                    atualizar_perfis,
+                    [salvos, conhecidos],
+                    [salvos, conhecidos],
+                    api_visibility='private',
+                ).then(lista_convite, None, perfil_convite, api_visibility='private')
                 # Cada aba nova do navegador vê os perfis salvos depois que o servidor subiu.
                 demo.load(
-                    atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False
-                ).then(lista_convite, None, perfil_convite, api_name=False)
+                    atualizar_perfis,
+                    [salvos, conhecidos],
+                    [salvos, conhecidos],
+                    api_visibility='private',
+                ).then(lista_convite, None, perfil_convite, api_visibility='private')
                 buscar.click(
                     executar_match,
                     [fm, nm, salvos, *opcoes, generos_mb, lb, convites],
@@ -790,7 +789,7 @@ def criar_interface() -> gr.Blocks:
                     api_name='gerar_wrapped',
                     scroll_to_output=True,
                 )
-                demo_w.click(carregar_demo_wrapped, None, [fw, nw], api_name=False)
+                demo_w.click(carregar_demo_wrapped, None, [fw, nw], api_visibility='private')
                 baixar_w.click(
                     baixar_wrapped,
                     [estado_w, pastas_w],
@@ -861,13 +860,15 @@ def criar_interface() -> gr.Blocks:
                 )
         for aba, sub, atalho in atalhos:
             if sub is None:
-                atalho.click(lambda a=aba: gr.Tabs(selected=a), None, abas, api_name=False)
+                atalho.click(
+                    lambda a=aba: gr.Tabs(selected=a), None, abas, api_visibility='private'
+                )
             else:
                 atalho.click(
                     lambda a=aba, s=sub: (gr.Tabs(selected=a), gr.Tabs(selected=s)),
                     None,
                     [abas, sub_dupla],
-                    api_name=False,
+                    api_visibility='private',
                 )
         apagar_btn.click(
             apagar_perfil_salvo,
@@ -875,18 +876,20 @@ def criar_interface() -> gr.Blocks:
             [meus_dados_html, perfil_apagar],
             js="(nome) => nome && confirm('Apagar o perfil de ' + nome + '? Não dá para desfazer.')"
             " ? nome : ''",
-            api_name=False,
-        ).then(atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False).then(
-            lista_convite, None, perfil_convite, api_name=False
-        )
+            api_visibility='private',
+        ).then(
+            atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_visibility='private'
+        ).then(lista_convite, None, perfil_convite, api_visibility='private')
         limpar_btn.click(
             limpar_cache,
             confirmado,
             [meus_dados_html, perfil_apagar],
             js="() => confirm('Limpar todo o cache? Os históricos serão lidos de novo na próxima vez.')",
-            api_name=False,
+            api_visibility='private',
         )
-        demo.load(atualizar_meus_dados, None, [meus_dados_html, perfil_apagar], api_name=False)
+        demo.load(
+            atualizar_meus_dados, None, [meus_dados_html, perfil_apagar], api_visibility='private'
+        )
         gr.Markdown(
             'Plays: ≥30 segundos. Horas e describe(): todas as execuções válidas. '
             'O Ruzicka usa pesos absolutos e é sensível ao volume de escuta. ' + AVISO_TRACOS,

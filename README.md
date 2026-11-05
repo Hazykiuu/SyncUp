@@ -16,7 +16,7 @@ py -3.12 -m venv .venv312
 .\.venv312\Scripts\python.exe app.py
 ```
 
-Em Linux/macOS: `python3.12 -m venv .venv`, `source .venv/bin/activate`, e os comandos `python -m pip install -r requirements.txt` e `python app.py`. No Windows, os comandos acima usam diretamente o interpretador do ambiente e não precisam ativar scripts do PowerShell. As dependências diretas têm versões fixadas, incluindo Gradio 5.50.0 e pandas 2.2.3; as transitivas são resolvidas pelo pip conforme o Python/plataforma. Não há import direto de NumPy nas métricas.
+Em Linux/macOS: `python3.12 -m venv .venv`, `source .venv/bin/activate`, e os comandos `python -m pip install -r requirements.txt` e `python app.py`. No Windows, os comandos acima usam diretamente o interpretador do ambiente e não precisam ativar scripts do PowerShell. As dependências diretas têm versões fixadas, incluindo Gradio 6.31.0 e pandas 2.2.3; as transitivas são resolvidas pelo pip conforme o Python/plataforma. Não há import direto de NumPy nas métricas.
 
 **Dupla:** cada painel representa uma pessoa; seus vários ZIPs/JSONs são unidos. **Grupo:** a tela recebe um arquivo por pessoa e um nome por linha, na ordem dos arquivos. Várias partes por pessoa no grupo estão disponíveis na API `EntradaPerfil`. Fuso padrão: `America/Sao_Paulo`. Filtros, deduplicação e ponderação são configuráveis. Campos como IP/dispositivo não são retidos.
 
@@ -33,7 +33,7 @@ python -m pip install -r requirements-parquet.txt
 | `dados.py`, `configuracao.py` | ZIP/JSON, validação, descartes, fuso, categorias, múltiplas partes e cache SHA-256 |
 | `metricas.py`, `perfis.py` | Cosseno/Jaccards, contribuições, diversidade e regras nomeadas de arquétipos |
 | `analise.py`, `recursos.py` | Resultados em dataclasses, recorte UTC, dupla/grupo, coincidências e descobertas sugeridas |
-| `graficos.py`, `ui/`, `styles.css` | Plotly e Gradio 5 no tema Spotify, apresentação responsiva com contraste/foco |
+| `graficos.py`, `ui/`, `styles.css` | Plotly e Gradio 6 no tema Spotify, apresentação responsiva com contraste/foco |
 | `perfil_gosto.py`, `conciliacao.py`, `spotify_api.py` | Perfil unificado (ZIP e API), conciliação em pares ótimos e login OAuth/PKCE |
 | `wrapped.py`, `arquetipos.py`, `stories.py` | Wrapped da vida toda, regras de arquétipos e slides em stories |
 | `componentes.py`, `syncup.js` | Blocos HTML animados (Blend, Wrapped, listas tipo playlist, corrida de artistas) e o script de animações |

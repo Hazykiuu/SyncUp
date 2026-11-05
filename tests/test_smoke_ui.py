@@ -1,4 +1,4 @@
-"""Teste de fumaça da árvore Gradio 5, sem iniciar servidor ou abrir navegador."""
+"""Teste de fumaça da árvore Gradio 6, sem iniciar servidor ou abrir navegador."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ import gradio as gr
 import pytest
 
 from app import criar_interface
+from ui.layout import _tema
 
 
 @pytest.mark.ui
@@ -23,7 +24,7 @@ def test_criar_interface_monta_arvore_sem_erros() -> None:
         assert all(c.file_count == 'multiple' for c in arquivos)
         assert any(isinstance(c, gr.Tab) and 'Grupo' in c.label for c in componentes)
         assert len([c for c in componentes if isinstance(c, gr.Plot)]) >= 6
-        assert {f.api_name for f in demo.fns.values() if f.api_name} == {
+        assert {f.api_name for f in demo.fns.values() if f.api_visibility == 'public'} == {
             'comparar_dupla',
             'comparar_grupo',
             'exportar_playlist',
@@ -36,8 +37,8 @@ def test_criar_interface_monta_arvore_sem_erros() -> None:
             'baixar_sintonia',
             'gerar_convite',
         }
-        assert 'fonts.googleapis.com' not in str(demo.theme._stylesheets)  # fonte local (OFL)
-        assert demo.theme is not None
+        # Gradio 6: o tema vai no mount_gradio_app (app.py), não no Blocks.
+        assert 'fonts.googleapis.com' not in str(_tema()._stylesheets)  # fonte local (OFL)
         css = Path(__file__).resolve().parents[1] / 'styles.css'
         assert css.is_file()
         assert 'prefers-reduced-motion' in css.read_text(encoding='utf-8')

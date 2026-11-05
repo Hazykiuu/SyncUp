@@ -20,10 +20,6 @@ markers = [
     "golden: regressão contra referências numéricas previamente salvas",
     "ui: criação de componentes ou fluxo HTTP local do Gradio",
 ]
-filterwarnings = [
-    # Avisos de migração para Gradio 6 não se aplicam à dependência fixada em 5.
-    "ignore:.*Gradio 6\\.0.*:DeprecationWarning",
-]
 
 [tool.ruff]
 target-version = "py310"

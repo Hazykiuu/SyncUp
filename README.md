@@ -1,4 +1,4 @@
-# SyncUp v0.98
+# SyncUp v0.99
 
 Comparador local do **Histórico Estendido do Spotify**: duas pessoas ou grupos de 3–6 perfis, com rankings, similaridades, arquétipos explicáveis, gráficos interativos, playlist CSV e cartão PNG. Projeto acadêmico organizado pelo CRISP-DM e **open source** ([licença MIT](LICENSE)).
 

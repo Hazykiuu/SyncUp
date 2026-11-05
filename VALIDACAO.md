@@ -117,8 +117,11 @@ O notebook distribuído está sem saídas e sem arquivos de dados/exports reais.
 - No navegador do app: o Início mostra os três cartões de privacidade, inclusive em largura de celular, e o painel lista o perfil real salvo. Os botões de apagar não foram clicados no app real (o perfil é verdadeiro); o fluxo foi coberto nos testes.
 - Envio aos poucos (relatado pelo Carlos): reproduzido no navegador do app. O 2º arquivo já era somado pelo ícone pequeno do Gradio, mas ele ficava escondido sobre o título. O botão novo abre o seletor do próprio campo (`#su-envio-match`) e a lista mostra os dois arquivos. `tests/test_envio.py` garante o botão nos 5 campos. Suíte: 228 testes aprovados.
 
-## v0.99 — Gradio 6 (2026-11-05)
+## v0.99 — visual, convite e Gradio 6 (2026-11-05)
 
 - Spike num ambiente separado com o Gradio 6.31.0: 235 de 242 testes passaram sem mudança; as 7 falhas tinham 3 causas mecânicas (botão de copiar, `api_name=False`, tema no `Blocks`).
 - Depois da migração: 242 testes aprovados e 3 pulados no `.venv` do projeto; `ruff` sem pendências. Resolução das dependências conferida também para o Python 3.10 (Starlette 1.7 lá; 1.10 no 3.12).
 - No navegador do app: tema, Figtree, abas fixas, gaveta lateral (o conteúdo monta ao abrir), "Meus dados", cartões do convite e nenhum erro de JS. Match real pela API: os mesmos 11 endpoints públicos.
+- Repaginação (Match em grade 2×2, convite em acordeão, Grupo com "Detalhes técnicos"): mesmos componentes e mesma ordem de saídas; `tests/test_ui.py` e `tests/test_smoke_ui.py` passaram sem mudança. Grupo conferido com 3 ZIPs fictícios no navegador.
+- Acessibilidade conferida no navegador do app em 390 px (as cinco abas; Dupla, Wrapped e Grupo com resultado), 768 px (Match) e 1280 px: nenhuma rolagem lateral. Pelo teclado: Tab chega nos acordeões e no botão de pausar dos stories com o contorno verde, e Enter/Espaço funcionam. Corrigidos: rolagem lateral de todos os acordeões (Gradio 6), botão de pausar e links de download abaixo de 44 px, abas no celular.
+- Final: 242 testes aprovados e 3 pulados; `ruff check` e `ruff format --check` sem pendências. Leitor de tela não foi testado; o menu de abas extras do Gradio se anuncia em inglês ("More tabs").

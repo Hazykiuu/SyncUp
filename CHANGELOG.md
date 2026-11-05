@@ -1,6 +1,6 @@
 # Changelog — SyncUp
 
-## [0.99] — em andamento
+## [0.99] — 2026-11-05
 
 Terceira etapa rumo à 1.0: visual e convite.
 

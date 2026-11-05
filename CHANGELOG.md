@@ -19,6 +19,7 @@ Terceira etapa rumo à 1.0: visual e convite.
 - **Celular (390 px)**: o selo dos painéis do Match ("sem limite · só o usuário") quebrava em várias linhas; agora desce inteiro para baixo do título. As abas principais usam o espaçamento menor de celular (cabem 3, antes 2), e o botão do menu das outras abas tem 44 px.
 - **Alvos de 44 px**: o botão de pausar dos stories (Dupla e Wrapped) media 32 px em qualquer largura; o link de download nas listas de arquivos tinha 17 px de altura.
 - **Início no celular**: o título não força mais a quebra depois de "quem", que ficava sozinho numa linha.
+- **Leitor de tela**: os títulos do Início seguem a ordem H1 → H2 → H3 (pulavam do H1 para o H3), e o botão do menu de abas extras se anuncia como "Mais abas" (o Gradio escreve "More tabs", sem tradução).
 
 ### Dependências
 - **Gradio 5.50 → 6.31** (e FastAPI 0.143 → 0.162). Três mudanças do Gradio 6: o botão de copiar do convite virou `buttons=['copy']`; os eventos internos usam `api_visibility='private'` (`api_name=False` passou a criar endpoints chamados "false"); tema, CSS, JS e head saíram do `gr.Blocks` e agora vão no `mount_gradio_app` (`app.py`). O visual e os endpoints públicos ficaram iguais. O filtro de avisos "Gradio 6" do pytest saiu.

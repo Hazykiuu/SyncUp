@@ -154,11 +154,11 @@ INICIO_TOPO = """<section class="su-hero">
     <p>Compare, encontre o seu match e poste o resultado. Tudo roda neste computador.</p>
   </div>
 </section>
-<h3 class="su-home-h">O que dá para fazer</h3>"""
+<h2 class="su-home-h">O que dá para fazer</h2>"""
 
 
 INICIO_RODAPE = """<section class="su-steps-home">
-  <h3 class="su-home-h">Como funciona</h3>
+  <h2 class="su-home-h">Como funciona</h2>
   <ol>
     <li><b>1</b><span><strong>Pegue seus dados</strong>O Histórico Estendido do Spotify (ZIP), um login ou o usuário do ListenBrainz.</span></li>
     <li><b>2</b><span><strong>Envie e aperte o play</strong>O SyncUp compara rankings, horários e hábitos.</span></li>
@@ -196,7 +196,7 @@ def _cartao_recurso(icone: str, titulo: str, texto: str, cor: str) -> gr.Button:
         gr.HTML(
             f'<div class="su-feature-in" style="--c:{cor}">'
             f'<span class="su-feature-ico" aria-hidden="true">{icone}</span>'
-            f'<h4>{escape_html(titulo)}</h4><p>{escape_html(texto)}</p></div>'
+            f'<h3>{escape_html(titulo)}</h3><p>{escape_html(texto)}</p></div>'
         )
         # Texto próprio por botão: leitores de tela não ouvem seis "Abrir" iguais.
         return gr.Button(f'Abrir {titulo} →', elem_classes='su-secondary', size='sm')

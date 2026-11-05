@@ -35,6 +35,9 @@ CAMPOS_SPOTIFY = (
     'master_metadata_album_artist_name',
 )
 CHAVE_DEDUPLICACAO = ['data_utc', 'ms_played', 'musica', 'artista']
+# Um histórico estendido real tem dezenas de MB; 1 GB barra ZIPs malformados ou maliciosos
+# (zip bomb) antes de descompactar. O mesmo teto vale para o upload (app.py).
+LIMITE_BYTES = 1024**3
 MAXIMO_HISTORICOS_CACHE = 6  # Comporta o Modo Grupo completo sem reler arquivos.
 VERSAO_CACHE = 'v07-wrapped-1'
 COLUNAS_PREPARADAS = [
@@ -194,6 +197,14 @@ def familia_plataforma(texto: object) -> str | None:
     return 'Outro'
 
 
+def _conferir_tamanho(total: int) -> None:
+    if total > LIMITE_BYTES:
+        raise ValueError(
+            f'O histórico passa de {LIMITE_BYTES // 1024**3} GB descompactado. Use o histórico '
+            'estendido de áudio do Spotify (ZIP ou JSON).'
+        )
+
+
 def _extrair_registros_impl(caminho: Path) -> Colunas:
     """Seleciona os quatro campos musicais e um indicador explícito de podcast.
 
@@ -249,10 +260,13 @@ def _extrair_registros_impl(caminho: Path) -> Colunas:
     sufixo = caminho.suffix.lower()
     if sufixo == '.zip':
         with zipfile.ZipFile(caminho) as pacote:
-            for info in pacote.infolist():
-                if not _entrada_ignorada(info.filename):
-                    selecionar(_ler_json(pacote.read(info)))
+            entradas = [i for i in pacote.infolist() if not _entrada_ignorada(i.filename)]
+            # O zipfile para de ler no tamanho declarado: conferir o total basta.
+            _conferir_tamanho(sum(i.file_size for i in entradas))
+            for info in entradas:
+                selecionar(_ler_json(pacote.read(info)))
     elif sufixo == '.json':
+        _conferir_tamanho(caminho.stat().st_size)
         selecionar(_ler_json(caminho.read_bytes()))
     else:
         raise ValueError('Selecione um arquivo ZIP ou JSON do histórico estendido.')

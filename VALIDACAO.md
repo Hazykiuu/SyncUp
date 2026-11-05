@@ -102,3 +102,10 @@ O notebook distribuído está sem saídas e sem arquivos de dados/exports reais.
 - **ListenBrainz real** (usuário público `rob`): 2.000 listens em 2 chamadas, em 3,7 s, com início e duração. Não foi possível conferir uma conta que importa do Spotify (a do `rob` usa o Navidrome).
 - App real numa porta de teste (7861), pela API HTTP do Gradio: Match com 5 ZIPs fictícios de 20 mil eventos em 3,7 s, com o prêmio e a linha de sintonia nos pôsteres. Pôsteres conferidos no navegador do app e story PNG conferido em imagem.
 
+## v0.97 — confiança (2026-11-05)
+
+- `pytest`: 221 testes aprovados e 3 pulados (PyArrow não instalado), em 3 rodadas seguidas; `ruff check` e `ruff format --check` sem pendências.
+- `tests/test_v097.py`: versão igual no pyproject, no README e na barra; Match com limite 1 e o resto com limite 4; upload com o teto de 1 GB; ZIP e JSON acima do teto recusados (teto reduzido no teste); login aceito sem cabeçalho, `none` e `same-origin`, e recusado em `cross-site` e `same-site`.
+- `test_cache_e_hash` falhou 1 vez em 4 rodadas antes da correção (arquivo regravado com o mesmo tamanho no mesmo instante).
+- O CI roda no GitHub em Python 3.10 e 3.12; localmente só o 3.12 foi executado.
+

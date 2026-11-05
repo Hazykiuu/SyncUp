@@ -1,5 +1,26 @@
 # Changelog — SyncUp
 
+## [0.97] — 2026-11-05
+
+Primeira etapa rumo à 1.0: confiança.
+
+### Novo
+- **CI no GitHub Actions** (`.github/workflows/ci.yml`): `ruff check`, `ruff format --check` e `pytest` em Python 3.10 e 3.12, a cada push na `main` e em toda PR.
+- **Versão única**: `configuracao.VERSAO` alimenta a barra do app; o `pyproject.toml` ganhou a seção `[project]` (nome, versão, licença MIT, Python ≥ 3.10). Um teste garante que pyproject, README e barra digam a mesma versão.
+
+### Desempenho
+- **Fim da fila única**: até 4 ações rodam ao mesmo tempo (Dupla, Wrapped, Grupo, downloads), então uma pessoa não espera a outra. Só o Match continua um por vez, porque o MusicBrainz aceita 1 consulta por segundo para o app todo.
+
+### Segurança
+- **Limite de 1 GB** para o histórico descompactado (ZIP ou JSON) e para o upload. Um ZIP malformado ou malicioso (zip bomb) é recusado antes de descompactar, com mensagem em português.
+- **Login do Spotify só pelo próprio app**: `/spotify/login` recusa pedidos vindos de outros sites (cabeçalho `Sec-Fetch-Site`). Antes, qualquer página aberta no navegador podia disparar um cadastro.
+
+### Correções
+- `test_cache_e_hash` não falha mais de vez em quando: o arquivo regravado com o mesmo tamanho no mesmo instante agora avança a data, como acontece na vida real.
+
+### Contrato
+- Sem mudanças nos endpoints. `app.criar_servidor` passa `max_file_size` ao Gradio.
+
 ## [0.96] — 2026-11-04
 
 ### Novo

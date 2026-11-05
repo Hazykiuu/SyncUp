@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+VERSAO = '0.97'  # Fonte única: pyproject, README e barra do app conferidos em teste.
 MUSICAS_IGNORADAS_PADRAO = ('(Falsa) Esperança',)  # Preferência anterior, editável ou removível.
 PoliticaVarious = Literal['manter', 'ignorar']
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import hashlib
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -130,6 +131,9 @@ class ModulosTest(unittest.TestCase):
         self.assertEqual(carregar(arquivo).iloc[0].artista, 'Artista')
         hash_anterior = sha256_arquivo(arquivo)
         self.salvar('a.json', [evento('2026-01-01T04:00:00Z', 70_000)])
+        # Mesmo tamanho regravado no mesmo instante teria a mesma data: avança 1 s, como na vida real.
+        estado = arquivo.stat()
+        os.utime(arquivo, ns=(estado.st_atime_ns, estado.st_mtime_ns + 1_000_000_000))
         h = carregar_historico(arquivo)
         self.assertEqual(h.dados.iloc[0].ms_played, 70_000)
         self.assertNotEqual(h.sha256, hash_anterior)

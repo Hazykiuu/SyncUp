@@ -1,3 +1,15 @@
+[project]
+name = "syncup"
+version = "0.97.0"
+description = "Comparador local de históricos do Spotify: Dupla, Match, Wrapped e Grupo."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Carlos (Hazykiuu)" }]
+
+[project.urls]
+Repository = "https://github.com/Hazykiuu/SyncUp"
+
 [tool.pytest.ini_options]
 minversion = "8.3"
 testpaths = ["tests"]

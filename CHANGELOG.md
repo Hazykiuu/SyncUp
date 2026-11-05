@@ -1,5 +1,18 @@
 # Changelog — SyncUp
 
+## [1.0.0] — 2026-11-05
+
+Primeira versão estável: dá para entregar o link do repositório a um colega e ele usa sem ajuda.
+
+### Novo
+- **`iniciar.bat`**: no Windows, dois cliques instalam (na primeira vez) e abrem o SyncUp no navegador. Acha o Python 3.10+ (`py -3` ou `python`), cria a `.venv`, instala o `requirements.txt` e mostra a mensagem se algo der errado.
+- **README reescrito por tarefa**: começa por "Como rodar o SyncUp na sua máquina" (instalar o Python, baixar, abrir, pedir o histórico ao Spotify, fechar e problemas comuns), depois uma seção por aba com capturas (`docs/img/`, dados fictícios).
+- **Créditos na barra**: links para o GitHub e o X (@HazyKiuu), numa constante só (`configuracao.GITHUB_URL`, `X_URL`, `X_USUARIO`).
+
+### Removido
+- **Notebook** (`SyncUp.ipynb`), com `tools/verificar_notebook.py` e `tests/test_notebook.py`. O projeto fica só com o app.
+- **seaborn e matplotlib**: só o notebook usava. O `requirements-dev.txt` fica com pytest e ruff.
+
 ## [0.99] — 2026-11-05
 
 Terceira etapa rumo à 1.0: visual e convite.

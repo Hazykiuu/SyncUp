@@ -1,6 +1,6 @@
 [project]
 name = "syncup"
-version = "0.99.0"
+version = "1.0.0"
 description = "Comparador local de históricos do Spotify: Dupla, Match, Wrapped e Grupo."
 readme = "README.md"
 license = { text = "MIT" }
@@ -15,7 +15,7 @@ minversion = "8.3"
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-ra --strict-config --strict-markers"
-norecursedirs = ["tests/fixtures", "exemplos_ficticios", "exportacoes_notebook"]
+norecursedirs = ["tests/fixtures", "exemplos_ficticios"]
 markers = [
     "golden: regressão contra referências numéricas previamente salvas",
     "ui: criação de componentes ou fluxo HTTP local do Gradio",
@@ -27,7 +27,6 @@ line-length = 100
 extend-exclude = [
     "tests/fixtures", # Fontes congeladas: hashes do golden master não podem mudar.
     "exemplos_ficticios",
-    "exportacoes_notebook",
     ".syncup_cache",
 ]
 

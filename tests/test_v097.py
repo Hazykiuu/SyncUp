@@ -25,6 +25,14 @@ def test_versao_unica_no_pyproject_readme_e_barra() -> None:
     assert f'v{VERSAO} · código aberto' in ui.TOPO
 
 
+def test_creditos_na_barra_e_no_inicio_vem_das_constantes() -> None:
+    from configuracao import GITHUB_URL, X_URL, X_USUARIO
+    from ui.layout import INICIO_RODAPE, TOPO
+
+    assert f'href="{GITHUB_URL}"' in TOPO and f'href="{X_URL}"' in TOPO and X_USUARIO in TOPO
+    assert f'href="{GITHUB_URL}"' in INICIO_RODAPE
+
+
 def test_match_sozinho_na_fila_e_o_resto_em_paralelo() -> None:
     import ui
 

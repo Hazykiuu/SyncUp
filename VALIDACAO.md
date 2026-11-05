@@ -126,3 +126,9 @@ O notebook distribuído está sem saídas e sem arquivos de dados/exports reais.
 - Acessibilidade conferida no navegador do app em 390 px (as cinco abas; Dupla, Wrapped e Grupo com resultado), 768 px (Match) e 1280 px: nenhuma rolagem lateral. Pelo teclado: Tab chega nos acordeões e no botão de pausar dos stories com o contorno verde, e Enter/Espaço funcionam. Corrigidos: rolagem lateral de todos os acordeões (Gradio 6), botão de pausar e links de download abaixo de 44 px, abas no celular.
 - Final: 242 testes aprovados e 3 pulados; `ruff check` e `ruff format --check` sem pendências. Leitor de tela não foi testado; o menu de abas extras do Gradio se anuncia em inglês ("More tabs").
 - Auditoria pelas skills `accessibility` (web-quality-skills) e `huggingface-gradio`: página em `pt-BR`; todos os campos com rótulo, imagens com `alt` e botões com nome; regiões `main`, `header` e `footer`. Corrigidos a ordem dos títulos do Início e o rótulo "More tabs". O axe-core não rodou (carregar script externo no navegador foi bloqueado); sem link de pular navegação, já que a barra tem só 5 abas e a página tem `main` e títulos. `gradio info` no app local: os 11 endpoints públicos do contrato.
+
+## v1.0.0 — lançamento (2026-11-05)
+
+- `pytest`: 237 testes aprovados e 3 pulados; `ruff check` e `ruff format --check` sem pendências. Saíram os 6 testes do notebook; entrou 1 de créditos.
+- `iniciar.bat` num clone limpo do repositório: achou o Python 3.14 pelo `py -3` (neste PC, `python` é o atalho da Microsoft Store), criou a `.venv`, instalou sem seaborn e matplotlib e o app respondeu em 127.0.0.1:7860 em cerca de 80 s.
+- No navegador do app: créditos na barra em 390 px (sem rolagem lateral, links com 44 px) e em 1280 px. Capturas do README feitas com dados fictícios; o perfil real salvo foi desmarcado no Match antes da captura.

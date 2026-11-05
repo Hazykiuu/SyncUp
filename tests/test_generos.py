@@ -146,7 +146,7 @@ def test_match_na_tela_busca_generos_e_avisa_falha(tmp_path: Path, monkeypatch) 
         def fechar(self) -> None:
             fechadas.append(True)
 
-    monkeypatch.setattr(ui, 'ConsultaMusicBrainz', ConsultaFalsa)
+    monkeypatch.setattr(ui.match, 'ConsultaMusicBrainz', ConsultaFalsa)
     monkeypatch.setattr(ui.gr, 'Warning', avisos.append)
     zips = []
     for nome, artista in (('Ana', 'X'), ('Bia', 'Y')):

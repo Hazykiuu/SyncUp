@@ -150,7 +150,7 @@ INICIO_TOPO = """<section class="su-hero">
   <div class="su-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <div class="su-hero-text">
     <small>SEUS HISTÓRICOS DO SPOTIFY, LADO A LADO</small>
-    <h1>Descubra com quem<br>você está em sintonia.</h1>
+    <h1>Descubra com quem<br> você está em sintonia.</h1>
     <p>Compare, encontre o seu match e poste o resultado. Tudo roda neste computador.</p>
   </div>
 </section>

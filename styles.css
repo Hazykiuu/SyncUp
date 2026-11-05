@@ -45,6 +45,7 @@ main.fillable { padding: 0 clamp(0px, 2vw, 32px) 16px !important; }
 .gr-accordion .label-wrap { align-items: center; }
 .gr-accordion .label-wrap > span:first-child { font-size: 16px; font-weight: 700; }
 .overflow-menu > button { min-width: 44px; min-height: 44px; }
+.gradio-container .download-link { display: inline-flex; align-items: center; min-height: 44px; }
 .gradio-container button:focus-visible, .gradio-container a:focus-visible,
 .gradio-container input:focus-visible, .gradio-container [role="tab"]:focus-visible,
 .su-race-progress:focus-visible {
@@ -552,7 +553,7 @@ footer { opacity: .55; }
 .su-tap.prev { left: 0; width: 30%; cursor: w-resize; }
 .su-tap.next { right: 0; width: 70%; cursor: e-resize; }
 .su-tap:focus-visible { outline: none; background: rgba(255, 255, 255, .06); }
-.su-story-pause { position: absolute; z-index: 3; top: 6cqw; right: 3cqw; width: 9cqw; height: 9cqw; min-height: 0 !important; border-radius: 50%; border: none;
+.su-story-pause { position: absolute; z-index: 3; top: 6cqw; right: 3cqw; width: max(9cqw, 44px); height: max(9cqw, 44px); min-height: 0 !important; border-radius: 50%; border: none;
   background: rgba(0, 0, 0, .35); cursor: pointer; display: grid; place-items: center; }
 .su-story-pause::before { content: ''; width: 2.6cqw; height: 3.4cqw; border-left: .9cqw solid #fff; border-right: .9cqw solid #fff; }
 .su-stories.pausado .su-story-pause::before { width: 0; height: 0; border-style: solid; border-width: 1.8cqw 0 1.8cqw 3cqw; border-color: transparent transparent transparent #fff; }
@@ -693,6 +694,7 @@ footer { opacity: .55; }
 @media (max-width: 640px) {
   .su-hero { margin: 12px 0 18px; padding: 28px 18px 26px; gap: 14px; }
   .su-hero > .su-logo { display: none; }
+  .su-hero h1 br { display: none; }
   .su-topbar-tag { display: none; }
   .su-logo { width: 58px; height: 58px; padding: 14px 12px; }
   .su-metric-grid, .su-mini-stats { grid-template-columns: 1fr; }

@@ -44,7 +44,19 @@ def criar_servidor():
 
     servidor = FastAPI(title='SyncUp')
     registrar_rotas(servidor)
-    return gr.mount_gradio_app(servidor, criar_interface(), path='/', max_file_size=LIMITE_BYTES)
+    from ui.comum import CSS, HEAD, JS
+    from ui.layout import _tema
+
+    return gr.mount_gradio_app(
+        servidor,
+        criar_interface(),
+        path='/',
+        max_file_size=LIMITE_BYTES,
+        theme=_tema(),
+        css=CSS,
+        js=JS,
+        head=HEAD,
+    )
 
 
 def executar(abrir_navegador: bool = True) -> None:

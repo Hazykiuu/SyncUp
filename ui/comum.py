@@ -60,6 +60,19 @@ def formatar(numero: int | float) -> str:
     return fmt_num(numero)
 
 
+def falha(mensagem: str) -> gr.Error:
+    """Erro para ``raise``, com título em português (o do Gradio vem como "Error")."""
+    return gr.Error(mensagem, title='Não deu certo')
+
+
+def aviso(mensagem: str) -> None:
+    gr.Warning(mensagem, title='Atenção')
+
+
+def info(mensagem: str) -> None:
+    gr.Info(mensagem, title='Pronto')
+
+
 def _linhas(texto: str | None) -> tuple[str, ...]:
     """Um nome por linha, ignorando linhas vazias."""
     return tuple(x.strip() for x in (texto or '').splitlines() if x.strip())
@@ -86,7 +99,7 @@ def _em_pasta_temporaria(prefixo: str, gerar: Callable[[Path], Any], o_que: str)
         return gerar(Path(pasta)), pasta
     except OSError as erro:
         shutil.rmtree(pasta, ignore_errors=True)
-        raise gr.Error(f'Não foi possível gravar {o_que} no diretório temporário.') from erro
+        raise falha(f'Não foi possível gravar {o_que} no diretório temporário.') from erro
 
 
 def _limpar_exportacoes(pastas: list[str]) -> None:

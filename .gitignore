@@ -12,3 +12,9 @@ exportacoes_notebook/
 
 # Perfis coletados pelo login do Spotify (dados pessoais)
 perfis_spotify/
+
+# Grafo local do graphify (gerado; não vai para o repositório)
+graphify-out/
+
+# Configurações locais do Claude Code (ganchos pessoais, não vão para o repositório)
+.claude/settings.local.json

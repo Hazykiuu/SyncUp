@@ -12,6 +12,7 @@ from formatacao import escape_html, fmt_num
 from perfil_gosto import listar_perfis
 from privacidade import apagar_perfil, dados_locais, limpar_cache_local
 from spotify_api import PASTA_PERFIS
+from ui.comum import aviso, info
 
 PASTA_CACHE = Path(ConfiguracaoCarga().diretorio_cache)
 
@@ -70,13 +71,13 @@ def apagar_perfil_salvo(nome: str | None) -> tuple[str, Any]:
     """``nome`` vazio: a pessoa cancelou a confirmação, então nada é apagado."""
     if nome:
         if apagar_perfil(PASTA_PERFIS, nome):
-            gr.Info(f'Perfil de {nome} apagado.')
+            info(f'Perfil de {nome} apagado.')
         else:
-            gr.Warning(f'O perfil de {nome} já não estava salvo.')
+            aviso(f'O perfil de {nome} já não estava salvo.')
     return atualizar_meus_dados()
 
 
 def limpar_cache(confirmado: bool) -> tuple[str, Any]:
     if confirmado:
-        gr.Info(f'Cache limpo: {fmt_num(limpar_cache_local(PASTA_CACHE))} arquivo(s) apagado(s).')
+        info(f'Cache limpo: {fmt_num(limpar_cache_local(PASTA_CACHE))} arquivo(s) apagado(s).')
     return atualizar_meus_dados()

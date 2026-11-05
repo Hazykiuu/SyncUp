@@ -17,9 +17,6 @@ from perfis import AVISO_TRACOS, LIMIAR_FAVORITOS, LIMIAR_MADRUGADA, LIMIAR_REPE
 from spotify_api import PASTA_PERFIS, REDIRECT_PADRAO
 from ui.comum import (
     CONCORRENCIA,
-    CSS,
-    HEAD,
-    JS,
     OPCOES_PONDERACAO,
     _limpar_exportacoes,
 )
@@ -36,6 +33,7 @@ from ui.match import (
     baixar_cartao_match,
     baixar_festa,
     executar_match,
+    gerar_meu_convite,
     perfis_salvos,
 )
 from ui.meu_wrapped import baixar_wrapped, carregar_demo_wrapped, executar_wrapped
@@ -132,7 +130,7 @@ def _mais_arquivos(elem_id: str) -> None:
     gr.Button('+ Adicionar mais arquivos', size='sm', elem_classes='su-add-files').click(
         None,
         js=f"() => document.querySelector('#{elem_id} input[type=file]')?.click()",
-        api_name=False,
+        api_visibility='private',
     )
 
 
@@ -152,15 +150,15 @@ INICIO_TOPO = """<section class="su-hero">
   <div class="su-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <div class="su-hero-text">
     <small>SEUS HISTÓRICOS DO SPOTIFY, LADO A LADO</small>
-    <h1>Descubra com quem<br>você está em sintonia.</h1>
+    <h1>Descubra com quem<br> você está em sintonia.</h1>
     <p>Compare, encontre o seu match e poste o resultado. Tudo roda neste computador.</p>
   </div>
 </section>
-<h3 class="su-home-h">O que dá para fazer</h3>"""
+<h2 class="su-home-h">O que dá para fazer</h2>"""
 
 
 INICIO_RODAPE = """<section class="su-steps-home">
-  <h3 class="su-home-h">Como funciona</h3>
+  <h2 class="su-home-h">Como funciona</h2>
   <ol>
     <li><b>1</b><span><strong>Pegue seus dados</strong>O Histórico Estendido do Spotify (ZIP), um login ou o usuário do ListenBrainz.</span></li>
     <li><b>2</b><span><strong>Envie e aperte o play</strong>O SyncUp compara rankings, horários e hábitos.</span></li>
@@ -198,7 +196,7 @@ def _cartao_recurso(icone: str, titulo: str, texto: str, cor: str) -> gr.Button:
         gr.HTML(
             f'<div class="su-feature-in" style="--c:{cor}">'
             f'<span class="su-feature-ico" aria-hidden="true">{icone}</span>'
-            f'<h4>{escape_html(titulo)}</h4><p>{escape_html(texto)}</p></div>'
+            f'<h3>{escape_html(titulo)}</h3><p>{escape_html(texto)}</p></div>'
         )
         # Texto próprio por botão: leitores de tela não ouvem seis "Abrir" iguais.
         return gr.Button(f'Abrir {titulo} →', elem_classes='su-secondary', size='sm')
@@ -215,10 +213,6 @@ def criar_interface() -> gr.Blocks:
     """Constrói Gradio 5 com tema Spotify, CSS/JS externos e comparação de dupla/grupo."""
     habilitar_leitura_paralela()
     with gr.Blocks(
-        theme=_tema(),
-        css=CSS,
-        js=JS,
-        head=HEAD,
         title='SyncUp',
         analytics_enabled=False,
         delete_cache=(3600, 3600),
@@ -502,7 +496,7 @@ def criar_interface() -> gr.Blocks:
                     api_name='comparar_dupla',
                     scroll_to_output=True,
                 )
-                demo_btn.click(carregar_demo, None, [fa, fb, na, nb], api_name=False)
+                demo_btn.click(carregar_demo, None, [fa, fb, na, nb], api_visibility='private')
                 exportar.click(
                     baixar_playlist,
                     [estado, pastas],
@@ -556,6 +550,7 @@ def criar_interface() -> gr.Blocks:
                             label='Usuários do ListenBrainz, um por linha',
                             placeholder='nicollas\nbia_musica',
                         )
+                with gr.Row(equal_height=True, elem_classes='su-sources'):
                     with gr.Column(elem_classes=['su-panel', 'b']):
                         gr.HTML(
                             '<div class="su-panel-title"><span class="su-avatar b">S</span>'
@@ -589,6 +584,45 @@ def criar_interface() -> gr.Blocks:
                                 '</li></ol><p class="su-note">Regra do Spotify para apps pessoais. '
                                 'Sem cadastro, use o ListenBrainz ou o ZIP. O token nunca é salvo.</p>'
                             )
+                    with gr.Column(elem_classes=['su-panel', 'd']):
+                        gr.HTML(
+                            '<div class="su-panel-title"><span class="su-avatar d">C</span>'
+                            'Convite<small>sem limite · sem conta</small></div>'
+                            '<p class="su-note">Cada amigo gera o próprio código no SyncUp dele e '
+                            'manda por mensagem. Só os rankings viajam: nada de histórico.</p>'
+                        )
+                        convites = gr.Textbox(
+                            lines=3,
+                            label='Códigos de convite, um por linha',
+                            placeholder='SYNCUP1.eJy…',
+                        )
+                with gr.Accordion(
+                    'Criar o meu convite · para mandar a um amigo',
+                    open=False,
+                    elem_classes='su-invite-box',
+                ):
+                    fc = gr.File(
+                        file_count='multiple',
+                        file_types=['.zip', '.json'],
+                        type='filepath',
+                        label='O seu ZIP do Histórico Estendido',
+                        elem_id='su-envio-convite',
+                    )
+                    _mais_arquivos('su-envio-convite')
+                    nome_convite = gr.Textbox(label='O seu nome', placeholder='Ex.: Bia')
+                    perfil_convite = gr.Dropdown(
+                        choices=perfis_salvos(),
+                        value=None,
+                        label='Ou use um perfil salvo do Spotify',
+                    )
+                    gerar_convite_btn = gr.Button('Gerar o meu código', elem_classes='su-secondary')
+                    codigo_convite = gr.Textbox(
+                        label='O seu código: copie e mande',
+                        interactive=False,
+                        buttons=['copy'],
+                        lines=2,
+                        max_lines=4,
+                    )
                 generos_mb = gr.Checkbox(
                     value=False,
                     label='Comparar também o estilo (gêneros do MusicBrainz)',
@@ -644,18 +678,29 @@ def criar_interface() -> gr.Blocks:
                     js="(cid, nome) => { window.open('/spotify/login?client_id=' + "
                     "encodeURIComponent(cid || '') + '&nome=' + encodeURIComponent(nome || ''), "
                     "'_blank'); }",
-                    api_name=False,
+                    api_visibility='private',
                 )
+
+                # A lista do convite acompanha a do Match (login novo, perfil apagado).
+                def lista_convite() -> gr.Dropdown:
+                    return gr.Dropdown(choices=perfis_salvos(), value=None)
+
                 recarregar.click(
-                    atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False
-                )
+                    atualizar_perfis,
+                    [salvos, conhecidos],
+                    [salvos, conhecidos],
+                    api_visibility='private',
+                ).then(lista_convite, None, perfil_convite, api_visibility='private')
                 # Cada aba nova do navegador vê os perfis salvos depois que o servidor subiu.
                 demo.load(
-                    atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False
-                )
+                    atualizar_perfis,
+                    [salvos, conhecidos],
+                    [salvos, conhecidos],
+                    api_visibility='private',
+                ).then(lista_convite, None, perfil_convite, api_visibility='private')
                 buscar.click(
                     executar_match,
-                    [fm, nm, salvos, *opcoes, generos_mb, lb],
+                    [fm, nm, salvos, *opcoes, generos_mb, lb, convites],
                     [
                         match_cartoes,
                         match_plot,
@@ -669,6 +714,12 @@ def criar_interface() -> gr.Blocks:
                     scroll_to_output=True,
                     # Um Match por vez: o MusicBrainz aceita 1 consulta/s para o app todo.
                     concurrency_limit=1,
+                )
+                gerar_convite_btn.click(
+                    gerar_meu_convite,
+                    [fc, nome_convite, perfil_convite, *opcoes],
+                    codigo_convite,
+                    api_name='gerar_convite',
                 )
                 festa_btn.click(
                     baixar_festa,
@@ -736,7 +787,7 @@ def criar_interface() -> gr.Blocks:
                     api_name='gerar_wrapped',
                     scroll_to_output=True,
                 )
-                demo_w.click(carregar_demo_wrapped, None, [fw, nw], api_name=False)
+                demo_w.click(carregar_demo_wrapped, None, [fw, nw], api_visibility='private')
                 baixar_w.click(
                     baixar_wrapped,
                     [estado_w, pastas_w],
@@ -744,16 +795,10 @@ def criar_interface() -> gr.Blocks:
                     api_name='baixar_wrapped',
                 )
             with gr.Tab('Grupo', id='grupo'):
-                gr.Markdown(
-                    f'Regras: top 2 artistas ≥{fmt_pct(LIMIAR_FAVORITOS)}; top 10 faixas ≥{fmt_pct(LIMIAR_REPEAT)}; '
-                    f'madrugada 00h–05h59 ≥{fmt_pct(LIMIAR_MADRUGADA)}. As proporções aparecem na tabela. '
-                    + AVISO_TRACOS,
-                    elem_classes='su-note',
-                )
-                gr.Markdown(
-                    'Cada arquivo desta aba representa **uma pessoa**. Se houver várias partes por pessoa, '
-                    'use `comparar_grupo()` com `EntradaPerfil` pelo Python. Na matriz comum, todas as células usam a mesma janela global.',
-                    elem_classes='su-note',
+                gr.HTML(
+                    '<div class="su-section"><h3>A galera lado a lado</h3>'
+                    '<p>Envie de 3 a 6 históricos, um arquivo por pessoa, e veja quanto cada um '
+                    'combina com cada outro, numa matriz só.</p></div>'
                 )
                 with gr.Row(equal_height=True):
                     with gr.Column(elem_classes=['su-panel', 'a']):
@@ -787,9 +832,23 @@ def criar_interface() -> gr.Blocks:
                     grupo_perfis = gr.Dataframe(
                         interactive=False, wrap=True, label='Perfis e arquétipos'
                     )
-                    grupo_diag = gr.Dataframe(
-                        interactive=False, wrap=True, label='Diagnóstico de cada perfil'
-                    )
+                    with gr.Accordion('Detalhes técnicos', open=False, elem_classes='su-tech'):
+                        gr.Markdown(
+                            f'Regras: top 2 artistas ≥{fmt_pct(LIMIAR_FAVORITOS)}; top 10 faixas '
+                            f'≥{fmt_pct(LIMIAR_REPEAT)}; madrugada 00h–05h59 '
+                            f'≥{fmt_pct(LIMIAR_MADRUGADA)}. As proporções aparecem na tabela. '
+                            + AVISO_TRACOS,
+                            elem_classes='su-note',
+                        )
+                        gr.Markdown(
+                            'Cada arquivo representa **uma pessoa**. Se houver várias partes por '
+                            'pessoa, use `comparar_grupo()` com `EntradaPerfil` pelo Python. Na matriz '
+                            'comum, todas as células usam a mesma janela global.',
+                            elem_classes='su-note',
+                        )
+                        grupo_diag = gr.Dataframe(
+                            interactive=False, wrap=True, label='Diagnóstico de cada perfil'
+                        )
                 grupo.click(
                     executar_grupo,
                     [fg, ng, cg, pg, *opcoes],
@@ -807,13 +866,15 @@ def criar_interface() -> gr.Blocks:
                 )
         for aba, sub, atalho in atalhos:
             if sub is None:
-                atalho.click(lambda a=aba: gr.Tabs(selected=a), None, abas, api_name=False)
+                atalho.click(
+                    lambda a=aba: gr.Tabs(selected=a), None, abas, api_visibility='private'
+                )
             else:
                 atalho.click(
                     lambda a=aba, s=sub: (gr.Tabs(selected=a), gr.Tabs(selected=s)),
                     None,
                     [abas, sub_dupla],
-                    api_name=False,
+                    api_visibility='private',
                 )
         apagar_btn.click(
             apagar_perfil_salvo,
@@ -821,16 +882,20 @@ def criar_interface() -> gr.Blocks:
             [meus_dados_html, perfil_apagar],
             js="(nome) => nome && confirm('Apagar o perfil de ' + nome + '? Não dá para desfazer.')"
             " ? nome : ''",
-            api_name=False,
-        ).then(atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False)
+            api_visibility='private',
+        ).then(
+            atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_visibility='private'
+        ).then(lista_convite, None, perfil_convite, api_visibility='private')
         limpar_btn.click(
             limpar_cache,
             confirmado,
             [meus_dados_html, perfil_apagar],
             js="() => confirm('Limpar todo o cache? Os históricos serão lidos de novo na próxima vez.')",
-            api_name=False,
+            api_visibility='private',
         )
-        demo.load(atualizar_meus_dados, None, [meus_dados_html, perfil_apagar], api_name=False)
+        demo.load(
+            atualizar_meus_dados, None, [meus_dados_html, perfil_apagar], api_visibility='private'
+        )
         gr.Markdown(
             'Plays: ≥30 segundos. Horas e describe(): todas as execuções válidas. '
             'O Ruzicka usa pesos absolutos e é sensível ao volume de escuta. ' + AVISO_TRACOS,

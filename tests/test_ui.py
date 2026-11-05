@@ -48,7 +48,7 @@ class InterfaceTest(unittest.TestCase):
             )
         )
         self.assertEqual(
-            {f.api_name for f in demo.fns.values() if f.api_name},
+            {f.api_name for f in demo.fns.values() if f.api_visibility == 'public'},
             {
                 'comparar_dupla',
                 'comparar_grupo',
@@ -60,6 +60,7 @@ class InterfaceTest(unittest.TestCase):
                 'playlist_festa',
                 'baixar_cartao_match',
                 'baixar_sintonia',
+                'gerar_convite',
             },
         )
         app = gr.mount_gradio_app(FastAPI(), demo, path='/')

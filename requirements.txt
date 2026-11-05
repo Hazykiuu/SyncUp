@@ -1,7 +1,7 @@
 # Dependências diretas fixadas. Python 3.10–3.14 (64 bits), com binários prontos.
-# Gradio 5 e pandas 2.x: mantenha esses limites ao atualizar as versões.
-gradio==5.50.0
-fastapi==0.143.0
+# Gradio 6 e pandas 2.x: mantenha esses limites ao atualizar as versões.
+gradio==6.31.0
+fastapi==0.162.0
 httpx[socks]==0.28.1
 # pandas 2.2.3 não publica binários para Python 3.13+/3.14 no Windows; 2.3.3 publica.
 pandas==2.2.3; python_version < "3.13"

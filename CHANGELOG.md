@@ -1,5 +1,32 @@
 # Changelog — SyncUp
 
+## [0.99] — 2026-11-05
+
+Terceira etapa rumo à 1.0: visual e convite.
+
+### Novo
+- **Convite por código** (`convite.py`): cada pessoa gera, no próprio SyncUp, um código curto (~1 mil caracteres) a partir do ZIP ou de um perfil salvo do Spotify, e manda por mensagem. Quem recebe cola no Match, no cartão **Convite**. Sem servidor, sem conta e sem limite de pessoas. Só os rankings viajam: o histórico, as músicas recentes (com horário), os artistas seguidos e os gêneros ficam de fora.
+- O código vindo de fora é sempre conferido: tamanho do texto, tamanho descompactado (barra zip bomb), estrutura, tipos e tamanho de cada nome. Um convite cortado ou alterado fica de fora com aviso, e os demais continuam. Códigos quebrados em várias linhas pelo aplicativo de mensagem são remontados.
+
+- **Avisos no tema do app**: erros, alertas e confirmações aparecem num cartão escuro com a cor do tipo (rosa, laranja ou verde) e com título em português: "Não deu certo", "Atenção" e "Pronto". Antes vinham com o título do Gradio em inglês ("Error", "Warning"). Todos passam por `ui.comum.falha`, `aviso` e `info`.
+
+### Visual
+- **Match**: as quatro fontes (ZIP, ListenBrainz, Login com Spotify e Convite) ficam numa grade 2×2, e "Criar o meu convite" virou um acordeão fechado abaixo delas.
+- **Grupo**: ganhou título e texto de abertura, como as outras abas. As regras dos traços, a nota sobre um arquivo por pessoa e o "Diagnóstico de cada perfil" foram para o acordeão **Detalhes técnicos**, no fim dos resultados (como na Dupla).
+
+### Correções
+- **Acordeões** (todos, inclusive "Meus dados"): desde o Gradio 6, a seta girada criava uma barra de rolagem lateral e o título aparecia pequeno e sem negrito.
+- **Celular (390 px)**: o selo dos painéis do Match ("sem limite · só o usuário") quebrava em várias linhas; agora desce inteiro para baixo do título. As abas principais usam o espaçamento menor de celular (cabem 3, antes 2), e o botão do menu das outras abas tem 44 px.
+- **Alvos de 44 px**: o botão de pausar dos stories (Dupla e Wrapped) media 32 px em qualquer largura; o link de download nas listas de arquivos tinha 17 px de altura.
+- **Início no celular**: o título não força mais a quebra depois de "quem", que ficava sozinho numa linha.
+- **Leitor de tela**: os títulos do Início seguem a ordem H1 → H2 → H3 (pulavam do H1 para o H3), e o botão do menu de abas extras se anuncia como "Mais abas" (o Gradio escreve "More tabs", sem tradução).
+
+### Dependências
+- **Gradio 5.50 → 6.31** (e FastAPI 0.143 → 0.162). Três mudanças do Gradio 6: o botão de copiar do convite virou `buttons=['copy']`; os eventos internos usam `api_visibility='private'` (`api_name=False` passou a criar endpoints chamados "false"); tema, CSS, JS e head saíram do `gr.Blocks` e agora vão no `mount_gradio_app` (`app.py`). O visual e os endpoints públicos ficaram iguais. O filtro de avisos "Gradio 6" do pytest saiu.
+
+### Contrato
+- `encontrar_matches` recebe uma entrada a mais no fim: os códigos de convite. Novo endpoint `gerar_convite` (arquivos, nome, perfil salvo e as 6 opções de dados).
+
 ## [0.98] — 2026-11-05
 
 Segunda etapa rumo à 1.0: privacidade e organização.

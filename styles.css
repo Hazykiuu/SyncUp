@@ -41,6 +41,11 @@ main.fillable { padding: 0 clamp(0px, 2vw, 32px) 16px !important; }
 .gradio-container label, .gradio-container button, .gradio-container input,
 .gradio-container textarea, .gradio-container select { font-size: 16px !important; }
 .gradio-container button { min-height: 44px; }
+/* Sem centralizar, a seta girada do acordeão estica a 44 px e cria rolagem lateral (Gradio 6). */
+.gr-accordion .label-wrap { align-items: center; }
+.gr-accordion .label-wrap > span:first-child { font-size: 16px; font-weight: 700; }
+.overflow-menu > button { min-width: 44px; min-height: 44px; }
+.gradio-container .download-link { display: inline-flex; align-items: center; min-height: 44px; }
 .gradio-container button:focus-visible, .gradio-container a:focus-visible,
 .gradio-container input:focus-visible, .gradio-container [role="tab"]:focus-visible,
 .su-race-progress:focus-visible {
@@ -96,7 +101,7 @@ footer { opacity: .55; }
   background: radial-gradient(140% 90% at 0% 0%, color-mix(in srgb, var(--c) 32%, transparent), transparent 65%); }
 .su-feature-ico { display: inline-grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; font-size: 26px;
   background: color-mix(in srgb, var(--c) 22%, #000); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, transparent); }
-.su-feature-in h4 { margin: 16px 0 6px; font-size: 22px; font-weight: 900; letter-spacing: -.02em; }
+.su-feature-in h3 { margin: 16px 0 6px; font-size: 22px; font-weight: 900; letter-spacing: -.02em; }
 .su-feature-in p { margin: 0; color: var(--su-sub); line-height: 1.5; min-height: 3em; }
 .su-feature button { margin: 8px 24px 22px !important; width: fit-content !important; min-width: 0 !important; }
 .su-steps-home ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
@@ -164,7 +169,7 @@ footer { opacity: .55; }
 .su-panel.a:hover { border-color: rgba(30, 215, 96, .45) !important; }
 .su-panel.b:hover { border-color: rgba(196, 183, 255, .45) !important; }
 .su-panel.b { animation-delay: .08s; }
-.su-panel-title { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 20px; }
+.su-panel-title { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-weight: 800; font-size: 20px; }
 .su-panel-title .su-avatar { width: 40px; height: 40px; font-size: 18px; }
 .gradio-container input[type="text"], .gradio-container textarea {
   border-radius: 8px !important; transition: box-shadow .2s, background .2s;
@@ -243,7 +248,9 @@ footer { opacity: .55; }
 .su-avatar.c { background: #ffa42b; }
 .su-panel.c:hover { border-color: rgba(255, 164, 43, .45) !important; }
 .su-panel.c { animation-delay: .04s; }
-.su-panel-title small { margin-left: auto; padding: 4px 10px; border-radius: 99px; background: rgba(255, 255, 255, .08); color: var(--su-sub); font-size: 12px; font-weight: 700; }
+.su-avatar.d { background: #f573a0; }
+.su-panel.d:hover { border-color: rgba(245, 115, 160, .45) !important; }
+.su-panel-title small { margin-left: auto; white-space: nowrap; padding: 4px 10px; border-radius: 99px; background: rgba(255, 255, 255, .08); color: var(--su-sub); font-size: 12px; font-weight: 700; }
 .su-panel .su-note a { color: var(--su-green); }
 .su-sources { gap: 16px !important; }
 .su-avatars .su-avatar.a { animation: su-slide-l .8s cubic-bezier(.2, .8, .2, 1) both; }
@@ -546,7 +553,7 @@ footer { opacity: .55; }
 .su-tap.prev { left: 0; width: 30%; cursor: w-resize; }
 .su-tap.next { right: 0; width: 70%; cursor: e-resize; }
 .su-tap:focus-visible { outline: none; background: rgba(255, 255, 255, .06); }
-.su-story-pause { position: absolute; z-index: 3; top: 6cqw; right: 3cqw; width: 9cqw; height: 9cqw; min-height: 0 !important; border-radius: 50%; border: none;
+.su-story-pause { position: absolute; z-index: 3; top: 6cqw; right: 3cqw; width: max(9cqw, 44px); height: max(9cqw, 44px); min-height: 0 !important; border-radius: 50%; border: none;
   background: rgba(0, 0, 0, .35); cursor: pointer; display: grid; place-items: center; }
 .su-story-pause::before { content: ''; width: 2.6cqw; height: 3.4cqw; border-left: .9cqw solid #fff; border-right: .9cqw solid #fff; }
 .su-stories.pausado .su-story-pause::before { width: 0; height: 0; border-style: solid; border-width: 1.8cqw 0 1.8cqw 3cqw; border-color: transparent transparent transparent #fff; }
@@ -687,13 +694,15 @@ footer { opacity: .55; }
 @media (max-width: 640px) {
   .su-hero { margin: 12px 0 18px; padding: 28px 18px 26px; gap: 14px; }
   .su-hero > .su-logo { display: none; }
+  .su-hero h1 br { display: none; }
   .su-topbar-tag { display: none; }
   .su-logo { width: 58px; height: 58px; padding: 14px 12px; }
   .su-metric-grid, .su-mini-stats { grid-template-columns: 1fr; }
   .su-blend-hero { grid-template-columns: 1fr; justify-items: start; padding: 20px; }
   .su-tracklist a { grid-template-columns: 26px 40px minmax(0, 1fr) 54px; }
   .su-mini { display: none; }
-  .gradio-container [role="tab"], .gradio-container .tab-container.visually-hidden button { padding: 6px 11px !important; font-size: 14px !important; }
+  .gradio-container [role="tab"], .gradio-container .tab-container.visually-hidden button,
+  .su-nav > .tab-wrapper [role="tab"], .su-nav > .tab-wrapper .tab-container.visually-hidden button { padding: 6px 11px !important; font-size: 14px !important; }
   .gradio-container [role="tablist"] { gap: 6px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -703,3 +712,14 @@ footer { opacity: .55; }
 .su-add-files { min-height: 44px !important; width: fit-content !important; align-self: flex-start; border-radius: 999px !important;
   border: 1px solid var(--su-green) !important; background: transparent !important; color: var(--su-green) !important; font-weight: 800 !important; }
 .su-add-files:hover { background: rgba(30, 215, 96, .12) !important; }
+/* Avisos (erro, atenção, pronto) no tema do app, em vez do padrão do Gradio. */
+.toast-body { background: #181818 !important; border: 1px solid rgba(255, 255, 255, .1) !important; border-left: 4px solid var(--su-green) !important;
+  border-radius: 16px !important; box-shadow: 0 18px 40px rgba(0, 0, 0, .5) !important; }
+.toast-body.error { border-left-color: #f573a0 !important; }
+.toast-body.warning { border-left-color: #ffa42b !important; }
+.toast-title { color: #fff !important; font-weight: 900 !important; letter-spacing: -.01em; }
+.toast-text { color: var(--su-sub) !important; font-size: 15px !important; line-height: 1.5; }
+.toast-body.error .toast-icon { color: #f573a0 !important; }
+.toast-body.warning .toast-icon { color: #ffa42b !important; }
+.toast-body.info .toast-icon { color: var(--su-green) !important; }
+.toast-close { min-width: 44px; min-height: 44px; color: var(--su-sub) !important; }

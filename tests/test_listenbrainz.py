@@ -120,7 +120,7 @@ def test_usuario_com_problema_fica_de_fora_com_aviso(monkeypatch) -> None:
 
     avisos: list[str] = []
     monkeypatch.setattr(ui.match, 'coletar_perfil_listenbrainz', falso)
-    monkeypatch.setattr(ui.gr, 'Warning', avisos.append)
+    monkeypatch.setattr(ui.gr, 'Warning', lambda m, **_: avisos.append(m))
     # Sem rede nos testes: listens vazios, então ninguém fica sem sintonia por falha.
     monkeypatch.setattr(ui.match, 'coletar_escutas_listenbrainz', lambda u, f: _sem_listens())
     html, *_ = ui.executar_match(

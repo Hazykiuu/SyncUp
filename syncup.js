@@ -307,6 +307,10 @@
 
   const registrar = (raiz) => {
     if (!(raiz instanceof Element)) return;
+    // O Gradio escreve este rótulo em inglês, sem tradução.
+    for (const b of [raiz, ...raiz.querySelectorAll('[aria-label="More tabs"]')]) {
+      if (b.getAttribute('aria-label') === 'More tabs') b.setAttribute('aria-label', 'Mais abas');
+    }
     const alvos = raiz.matches('[data-countup], .su-race, [data-stories]') ? [raiz] : [];
     alvos.push(...raiz.querySelectorAll('[data-countup], .su-race, [data-stories]'));
     for (const el of alvos) {

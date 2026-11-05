@@ -7,6 +7,10 @@ Segunda etapa rumo à 1.0: privacidade e organização.
 ### Novo
 - **Meus dados** (gaveta *Opções de dados*): mostra o que o SyncUp guardou no computador (perfis do Spotify, gêneros do MusicBrainz e cache de históricos), com tamanho e data, e permite **apagar um perfil** ou **limpar todo o cache**. As duas ações pedem confirmação. Ao apagar um perfil, a lista do Match é atualizada.
 - **Privacidade no Início**: três cartões dizem o que fica no computador, o que vai para a internet (só se você pedir) e o que nunca é guardado.
+### Correções
+- **Enviar históricos aos poucos**: depois do primeiro arquivo, o Gradio só deixava um ícone pequeno no canto, por cima do título, e parecia que não dava para enviar outro. Agora cada campo de envio (Dupla A e B, Match, Wrapped e Grupo) tem o botão **"+ Adicionar mais arquivos"**, que abre o seletor e soma os novos arquivos aos que já estavam.
+
+### Novo (continuação)
 - `privacidade.py`: listar e apagar dados locais, sem Gradio. Só arquivos criados pelo SyncUp são apagados; o nome do perfil é conferido na lista e nunca vira caminho.
 
 ### Interno

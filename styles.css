@@ -699,3 +699,7 @@ footer { opacity: .55; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+/* "Adicionar mais arquivos": depois do 1º envio, o Gradio só deixa um ícone pequeno no canto. */
+.su-add-files { min-height: 44px !important; width: fit-content !important; align-self: flex-start; border-radius: 999px !important;
+  border: 1px solid var(--su-green) !important; background: transparent !important; color: var(--su-green) !important; font-weight: 800 !important; }
+.su-add-files:hover { background: rgba(30, 215, 96, .12) !important; }

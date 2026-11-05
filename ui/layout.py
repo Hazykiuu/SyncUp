@@ -127,6 +127,15 @@ def _tema() -> gr.themes.Base:
     )
 
 
+def _mais_arquivos(elem_id: str) -> None:
+    """Botão visível para somar arquivos ao envio: o do Gradio é um ícone pequeno no canto."""
+    gr.Button('+ Adicionar mais arquivos', size='sm', elem_classes='su-add-files').click(
+        None,
+        js=f"() => document.querySelector('#{elem_id} input[type=file]')?.click()",
+        api_name=False,
+    )
+
+
 def _secao(titulo: str, texto: str = '') -> gr.HTML:
     """Cabeçalho de seção no estilo das prateleiras do Spotify."""
     corpo = f'<p>{escape_html(texto)}</p>' if texto else ''
@@ -291,7 +300,9 @@ def criar_interface() -> gr.Blocks:
                             file_types=['.zip', '.json'],
                             type='filepath',
                             label='Todas as partes do histórico de A',
+                            elem_id='su-envio-a',
                         )
+                        _mais_arquivos('su-envio-a')
                     with gr.Column(elem_classes=['su-panel', 'b']):
                         gr.HTML(
                             '<div class="su-panel-title"><span class="su-avatar b">B</span>Segundo perfil</div>'
@@ -302,7 +313,9 @@ def criar_interface() -> gr.Blocks:
                             file_types=['.zip', '.json'],
                             type='filepath',
                             label='Todas as partes do histórico de B',
+                            elem_id='su-envio-b',
                         )
+                        _mais_arquivos('su-envio-b')
                 gr.Markdown(
                     'Cada painel representa uma pessoa; vários ZIPs/JSONs do painel serão unidos.',
                     elem_classes='su-note',
@@ -525,7 +538,9 @@ def criar_interface() -> gr.Blocks:
                             file_types=['.zip', '.json'],
                             type='filepath',
                             label='Um ZIP do Histórico Estendido por pessoa',
+                            elem_id='su-envio-match',
                         )
+                        _mais_arquivos('su-envio-match')
                         nm = gr.Textbox(lines=3, label='Nomes, um por linha, na ordem dos arquivos')
                     with gr.Column(elem_classes=['su-panel', 'c']):
                         gr.HTML(
@@ -686,7 +701,9 @@ def criar_interface() -> gr.Blocks:
                             file_types=['.zip', '.json'],
                             type='filepath',
                             label='Histórico completo (ZIP ou todos os JSONs)',
+                            elem_id='su-envio-wrapped',
                         )
+                        _mais_arquivos('su-envio-wrapped')
                     with gr.Column(min_width=260):
                         gerar_w = gr.Button(
                             'Gerar meu Wrapped', variant='primary', elem_classes='su-play'
@@ -745,7 +762,9 @@ def criar_interface() -> gr.Blocks:
                             file_types=['.zip', '.json'],
                             type='filepath',
                             label='3 a 6 históricos · um arquivo por pessoa',
+                            elem_id='su-envio-grupo',
                         )
+                        _mais_arquivos('su-envio-grupo')
                     with gr.Column(elem_classes=['su-panel', 'b']):
                         ng = gr.Textbox(
                             lines=6, label='Um nome por linha, na mesma ordem dos arquivos'

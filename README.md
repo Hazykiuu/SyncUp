@@ -8,7 +8,9 @@ Comparador local do **Histórico Estendido do Spotify**: duas pessoas ou grupos 
 
 ## Executar
 
-Use **Python 3.10 a 3.14 (64 bits)**. As dependências fixadas escolhem automaticamente versões com binários prontos para a sua versão do Python (pandas 2.3.3 e PyArrow 26 no 3.13/3.14), então a instalação não precisa de compilador. Python 3.12 continua sendo a referência. Na pasta extraída `SyncUp`, crie um ambiente virtual:
+**No Windows, o jeito mais fácil:** instale o [Python](https://www.python.org/downloads/) 3.10 ou mais novo e dê dois cliques em `iniciar.bat`. Na primeira vez ele cria o ambiente e instala tudo (alguns minutos); depois só abre o SyncUp no navegador.
+
+**Passo a passo manual:** use **Python 3.10 a 3.14 (64 bits)**. As dependências fixadas escolhem automaticamente versões com binários prontos para a sua versão do Python (pandas 2.3.3 e PyArrow 26 no 3.13/3.14), então a instalação não precisa de compilador. Python 3.12 continua sendo a referência. Na pasta extraída `SyncUp`, crie um ambiente virtual:
 
 ```powershell
 py -3.12 -m venv .venv312

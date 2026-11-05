@@ -31,7 +31,7 @@ from analise import (
 )
 from cartao import gerar_cartao, gerar_cartao_match, gerar_cartao_sintonia, gerar_cartao_wrapped
 from conciliacao import conciliar
-from configuracao import MUSICAS_IGNORADAS_PADRAO, ConfiguracaoCarga
+from configuracao import MUSICAS_IGNORADAS_PADRAO, VERSAO, ConfiguracaoCarga
 from dados import (
     MAXIMO_HISTORICOS_CACHE,
     habilitar_leitura_paralela,
@@ -84,6 +84,9 @@ TEXTO_LIMIARES = (
     f'madrugada ≥{LIMIAR_MADRUGADA:.0%}. Descrevem este recorte de escuta; '
     'não medem personalidade ou afinidade amorosa.'
 )
+# Pessoas em abas diferentes não esperam umas pelas outras; as leituras de histórico já são
+# seguras em paralelo (travas em dados.py e perfil_gosto.py).
+CONCORRENCIA = 4
 HEAD = '<meta name="theme-color" content="#121212">'
 
 
@@ -927,9 +930,9 @@ def _secao(titulo: str, texto: str = '') -> gr.HTML:
     return gr.HTML(f'<div class="su-section"><h3>{escape_html(titulo)}</h3>{corpo}</div>')
 
 
-TOPO = """<header class="su-topbar">
+TOPO = f"""<header class="su-topbar">
   <div class="su-logo sm" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-  <b>SyncUp</b><span class="su-topbar-tag">v0.96 · código aberto</span>
+  <b>SyncUp</b><span class="su-topbar-tag">v{VERSAO} · código aberto</span>
 </header>"""
 
 INICIO_TOPO = """<section class="su-hero">
@@ -1426,6 +1429,8 @@ def criar_interface() -> gr.Blocks:
                     ],
                     api_name='encontrar_matches',
                     scroll_to_output=True,
+                    # Um Match por vez: o MusicBrainz aceita 1 consulta/s para o app todo.
+                    concurrency_limit=1,
                 )
                 festa_btn.click(
                     baixar_festa,
@@ -1573,4 +1578,4 @@ def criar_interface() -> gr.Blocks:
             'O Ruzicka usa pesos absolutos e é sensível ao volume de escuta. ' + AVISO_TRACOS,
             elem_classes=['su-note', 'su-footer'],
         )
-    return demo.queue(default_concurrency_limit=1)
+    return demo.queue(default_concurrency_limit=CONCORRENCIA)

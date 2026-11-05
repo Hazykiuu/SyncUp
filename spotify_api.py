@@ -21,6 +21,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 import httpx
+from fastapi import Request  # no topo: o FastAPI resolve a anotação pelo nome
 
 from perfil_gosto import PERIODOS, PerfilGosto, agora_iso, salvar_perfil
 
@@ -212,7 +213,17 @@ def registrar_rotas(app, pasta: Path = PASTA_PERFIS, redirect_uri: str = REDIREC
         )
 
     @app.get('/spotify/login')
-    def login(nome: str = '', client_id: str = ''):
+    def login(request: Request, nome: str = '', client_id: str = ''):
+        # O login só começa pelo próprio SyncUp (ou digitando o endereço): outra página aberta
+        # no navegador não consegue disparar um cadastro em nome de quem está usando.
+        # shortcut: navegadores sem Sec-Fetch-Site (anteriores a 2023) passam; exigir um
+        # nonce de sessão se o app sair do 127.0.0.1.
+        if request.headers.get('sec-fetch-site', 'none') not in ('same-origin', 'none'):
+            return pagina(
+                'Não foi possível conectar',
+                'Abra o login pelo botão do SyncUp, na aba Match.',
+                False,
+            )
         try:
             return RedirectResponse(iniciar_login(nome, client_id, redirect_uri))
         except ValueError as erro:

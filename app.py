@@ -1,4 +1,4 @@
-"""Entrada do SyncUp (v0.96) e reexportações compatíveis com imports da v0.4."""
+"""Entrada do SyncUp e reexportações compatíveis com imports da v0.4."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from analise import EntradaPerfil, ResultadoComparacao, ResultadoGrupo, comparar, comparar_grupo
 from configuracao import ConfiguracaoCarga
-from dados import carregar, limpar_cache
+from dados import LIMITE_BYTES, carregar, limpar_cache
 from metricas import metricas
 from perfis import arquetipo
 
@@ -44,7 +44,7 @@ def criar_servidor():
 
     servidor = FastAPI(title='SyncUp')
     registrar_rotas(servidor)
-    return gr.mount_gradio_app(servidor, criar_interface(), path='/')
+    return gr.mount_gradio_app(servidor, criar_interface(), path='/', max_file_size=LIMITE_BYTES)
 
 
 def executar(abrir_navegador: bool = True) -> None:

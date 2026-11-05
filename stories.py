@@ -427,8 +427,15 @@ def arquetipos_detalhe_html(w: Wrapped) -> str:
     )
 
 
-def stories_match_html(r: ResultadoConciliacao) -> str:
-    """Revelação animada das duplas do Match, no mesmo player do Wrapped."""
+def stories_match_html(
+    r: ResultadoConciliacao, sintonias: dict[tuple[str, str], Sintonia] | None = None
+) -> str:
+    """Revelação animada das duplas do Match, no mesmo player do Wrapped.
+
+    Com ``sintonias``, ganha o slide da dupla que mais ouviu a mesma música ao mesmo tempo.
+    """
+    from recursos import mais_sincronizada
+
     comparacoes = len(r.nomes) * (len(r.nomes) - 1) // 2
     slides = [
         _slide(
@@ -470,6 +477,28 @@ def stories_match_html(r: ResultadoConciliacao) -> str:
                 )
                 + (_a(f'<div class="su-badges">{comuns}</div>', 5) if comuns else '')
                 + estilo,
+            )
+        )
+    campea = mais_sincronizada(sintonias or {})
+    if campea:
+        x, y, s = campea
+        musica = s.top_musicas[0] if s.top_musicas else None
+        slides.append(
+            _slide(
+                'sintonia',
+                _a('<span class="su-kicker">DUPLA MAIS SINCRONIZADA</span>', 0)
+                + _a(f'<div class="su-big-name">{_e(x)}</div>', 1)
+                + _a(f'<div class="su-big-name">{_e(y)}</div>', 2)
+                + _a(f'<div class="su-mega">{_n(s.minutos)}<span>minutos juntos</span></div>', 3)
+                + _a('<p>ouvindo a mesma música, no mesmo instante.</p>', 4)
+                + (
+                    _a(
+                        f'<p class="su-sub">A música de vocês: {_e(musica[0])} · {_e(musica[1])}</p>',
+                        5,
+                    )
+                    if musica
+                    else ''
+                ),
             )
         )
     linhas = ''.join(f'<li>{" + ".join(_e(n) for n in g)}</li>' for g in r.pares)

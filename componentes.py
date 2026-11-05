@@ -16,7 +16,7 @@ from zlib import crc32
 import pandas as pd
 
 from formatacao import escape_html, fmt_horas, fmt_num, fmt_pct
-from recursos import link_spotify
+from recursos import Sintonia, link_spotify, mais_sincronizada, sintonia_do_par
 
 if TYPE_CHECKING:
     from analise import PerfilComparado, ResultadoComparacao, ResultadoGrupo
@@ -264,9 +264,37 @@ def _chips(nomes: list[str], limite: int, classe: str = '') -> str:
     )
 
 
-def match_html(resultado: ResultadoConciliacao, fontes: dict[str, str] | None = None) -> str:
-    """Pares escolhidos pela conciliação como pôsteres 4:5, prontos para print e post."""
-    fontes = fontes or {}
+def _sintonia_linha(sintonias: dict[tuple[str, str], Sintonia], grupo: list[str]) -> str:
+    """Minutos ouvindo junto dentro do grupo; vazio se alguém não tem histórico de escuta."""
+    pares = [sintonia_do_par(sintonias, x, y) for i, x in enumerate(grupo) for y in grupo[i + 1 :]]
+    if not pares or any(s is None for s in pares):
+        return ''
+    minutos = sum(s.minutos for s in pares)
+    if minutos > 0:
+        detalhe = (
+            'somando os pares do trio' if len(grupo) == 3 else 'a mesma música, no mesmo instante'
+        )
+        valor = f'<b>{fmt_num(minutos, 0)} min</b><small>{detalhe}</small>'
+    else:
+        quase = sum(s.quase_juntos for s in pares)
+        valor = (
+            f'<b>{fmt_num(quase, 0)}×</b><small>quase juntos (até 1 h de distância)</small>'
+            if quase
+            else '<small>Ainda não ouviram nada ao mesmo tempo.</small>'
+        )
+    return f'<div class="su-poster-line su-poster-sync"><span>Em sintonia</span>{valor}</div>'
+
+
+def match_html(
+    resultado: ResultadoConciliacao,
+    fontes: dict[str, str] | None = None,
+    sintonias: dict[tuple[str, str], Sintonia] | None = None,
+) -> str:
+    """Pares escolhidos pela conciliação como pôsteres 4:5, prontos para print e post.
+
+    ``sintonias``: escuta simultânea de cada par com histórico (``recursos.sintonia_entre``).
+    """
+    fontes, sintonias = fontes or {}, sintonias or {}
     cartoes = []
     for k, grupo in enumerate(resultado.pares):
         pares_internos = [resultado.par(x, y) for i, x in enumerate(grupo) for y in grupo[i + 1 :]]
@@ -318,11 +346,21 @@ def match_html(resultado: ResultadoConciliacao, fontes: dict[str, str] | None = 
             f'<p class="su-poster-sub">{escape_html(principal.descricao)}</p>'
             + dividem
             + estilo
+            + _sintonia_linha(sintonias, list(grupo))
             + trocas
             + (f'<small class="su-src">{selos}</small>' if selos else '')
             + '</article>'
         )
     media = resultado.pontuacao_media_pares
+    campea = mais_sincronizada(sintonias)
+    premio = (
+        '<div class="su-group-best su-sync-award"><span>Dupla mais sincronizada</span>'
+        f'<b>{escape_html(campea[0])} + {escape_html(campea[1])}</b>'
+        f'{_contador(campea[2].minutos, 0, " min")}'
+        '<small class="su-note">ouvindo a mesma música ao mesmo tempo</small></div>'
+        if campea
+        else ''
+    )
     divisao = 'duplas' if all(len(g) == 2 for g in resultado.pares) else 'duplas e um trio'
     return (
         '<section class="su-match">'
@@ -330,8 +368,7 @@ def match_html(resultado: ResultadoConciliacao, fontes: dict[str, str] | None = 
         f'<b>{len(resultado.nomes)} pessoas · {len(resultado.pares)} grupo'
         f'{"s" if len(resultado.pares) != 1 else ""}</b>'
         f'{_contador(media, 1, "%")}<small class="su-note">compatibilidade média dos grupos</small>'
-        '</div>'
-        f'<div class="su-match-grid">{"".join(cartoes)}</div>'
+        '</div>' + premio + f'<div class="su-match-grid">{"".join(cartoes)}</div>'
         '</section>'
     )
 

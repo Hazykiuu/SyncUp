@@ -16,6 +16,7 @@ from perfis import LIMIAR_FAVORITOS, QUANTIDADE_FAVORITOS
 if TYPE_CHECKING:
     from analise import ResultadoComparacao
     from conciliacao import Compatibilidade
+    from recursos import Sintonia
     from wrapped import Wrapped
 
 LARGURA_CARTAO = 1080
@@ -257,9 +258,12 @@ def gerar_cartao_wrapped(
 
 
 def gerar_cartao_match(
-    compatibilidade: Compatibilidade, destino: str | Path, fonte: str | Path | None = None
+    compatibilidade: Compatibilidade,
+    destino: str | Path,
+    fonte: str | Path | None = None,
+    sintonia: Sintonia | None = None,
 ) -> Path:
-    """Story 1080×1920 de uma dupla do Match: pontuação, nível, artistas e estilo em comum."""
+    """Story 1080×1920 de uma dupla do Match: pontuação, nível, artistas, estilo e sintonia."""
     c = compatibilidade
     story = _Story(VERDE, ROXO, fonte)
     story.cabecalho('SYNCUP MATCH')
@@ -267,10 +271,19 @@ def gerar_cartao_match(
     story.centro(f'{c.a}  +  {c.b}', 700, 60, forte=True)
     story.centro(f'{fmt_num(c.pontuacao, 1)}%', 790, 230, forte=True)
     story.pilula(c.nivel.upper(), 1060)
-    y = story.lista('VOCÊS DIVIDEM', c.artistas_comuns[:4] or ['Nenhum artista em comum'], 1180)
+    juntos = sintonia is not None and sintonia.minutos > 0
+    # Cada painel extra tira um artista da lista: tudo cabe acima do rodapé.
+    artistas = 4 - (c.pontuacao_generos is not None) - juntos
+    y = story.lista(
+        'VOCÊS DIVIDEM', c.artistas_comuns[:artistas] or ['Nenhum artista em comum'], 1180
+    )
     if c.pontuacao_generos is not None:
         estilo = ', '.join(c.generos_comuns[:3]) or 'estilos diferentes'
-        story.lista(f'NO ESTILO · {fmt_num(c.pontuacao_generos, 1)}%', [estilo], y)
+        y = story.lista(f'NO ESTILO · {fmt_num(c.pontuacao_generos, 1)}%', [estilo], y)
+    if juntos:
+        story.lista(
+            'EM SINTONIA', [f'{fmt_num(sintonia.minutos, 0)} min ouvindo a mesma música juntos'], y
+        )
     story.rodape('Compara os rankings musicais enviados. Não mede afinidade pessoal.')
     return story.salvar(destino)
 

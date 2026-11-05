@@ -93,3 +93,12 @@ O notebook distribuído está sem saídas e sem arquivos de dados/exports reais.
 - **Em sintonia**: teste conferido à mão (3 min de sobreposição contados; outra faixa no mesmo horário e sobreposição de 20 s ignoradas; hora local no fuso de A). Com dados fictícios de 20 mil eventos: 11 momentos e 25 min em 0,6 s. Pela interface real (botão de dados fictícios da Dupla): 5 stories montados, linha do tempo com os meses vazios preenchidos.
 - Suíte: 198 testes aprovados e 3 pulados.
 - **Stories do Match no Chromium**, com o HTML devolvido pelo endpoint real `encontrar_matches` (5 ZIPs fictícios): o player montou 4 slides (abertura, trio, dupla, resumo) com barras de progresso, as setas avançam e voltam, as contagens animadas mostram os valores finais e o nome com `<b>` aparece como texto.
+
+## v0.96 — sintonia no Match (2026-11-04)
+
+- `pytest`: 212 testes aprovados e 3 pulados (PyArrow não instalado); `ruff check` e `ruff format --check` sem pendências.
+- `tests/test_sintonia_match.py`: o cruzamento novo é comparado com uma **força bruta** (todos os intervalos contra todos) em 5 sorteios com muitas sobreposições; nomes de fontes diferentes se encontram; paginação do ListenBrainz **simulada** (`max_ts`, listens sem duração descartados, artista principal, espera pela cota); Match com 3 históricos mostrando a dupla mais sincronizada (7 min, conferidos à mão), nome com `<b>` escapado e story PNG 1080×1920.
+- Os testes antigos da sintonia da Dupla passaram sem mudança; nos dados fictícios de 285 mil eventos, a Dupla dá os mesmos 118 momentos e 282,8 min de antes.
+- **ListenBrainz real** (usuário público `rob`): 2.000 listens em 2 chamadas, em 3,7 s, com início e duração. Não foi possível conferir uma conta que importa do Spotify (a do `rob` usa o Navidrome).
+- App real numa porta de teste (7861), pela API HTTP do Gradio: Match com 5 ZIPs fictícios de 20 mil eventos em 3,7 s, com o prêmio e a linha de sintonia nos pôsteres. Pôsteres conferidos no navegador do app e story PNG conferido em imagem.
+

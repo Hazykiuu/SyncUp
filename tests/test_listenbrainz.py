@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import httpx
+import pandas as pd
 import pytest
 
 import ui
@@ -101,6 +102,13 @@ def test_perfil_que_acabou_de_logar_entra_marcado(tmp_path: Path, monkeypatch) -
     assert lista.value == ['Carlos']  # desmarcar continua valendo
 
 
+def _sem_listens() -> pd.DataFrame:
+    from listenbrainz import coletar_escutas_listenbrainz
+
+    vazio = httpx.MockTransport(lambda p: httpx.Response(200, json={'payload': {'listens': []}}))
+    return coletar_escutas_listenbrainz('x', 'UTC', httpx.Client(transport=vazio))
+
+
 def test_usuario_com_problema_fica_de_fora_com_aviso(monkeypatch) -> None:
     def falso(usuario: str) -> PerfilGosto:
         if usuario == 'errado':
@@ -113,6 +121,8 @@ def test_usuario_com_problema_fica_de_fora_com_aviso(monkeypatch) -> None:
     avisos: list[str] = []
     monkeypatch.setattr(ui, 'coletar_perfil_listenbrainz', falso)
     monkeypatch.setattr(ui.gr, 'Warning', avisos.append)
+    # Sem rede nos testes: listens vazios, então ninguém fica sem sintonia por falha.
+    monkeypatch.setattr(ui, 'coletar_escutas_listenbrainz', lambda u, f: _sem_listens())
     html, *_ = ui.executar_match(
         [],
         '',

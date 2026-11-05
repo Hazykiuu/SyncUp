@@ -1,5 +1,23 @@
 # Changelog — SyncUp
 
+## [0.96] — 2026-11-04
+
+### Novo
+- **Sintonia no Match**: o Match agora mostra quem ouviu a mesma música no mesmo instante, para **todos os pares** do grupo. A **Dupla mais sincronizada** ganha destaque na Revelação e um slide nos stories; cada pôster mostra os minutos em sintonia (ou quantas vezes ficaram "quase juntos", a menos de 1 h); a tabela "Todos com todos" ganha a coluna "Mais em sintonia"; e o story PNG da dupla ganha o painel "Em sintonia".
+- **Listens do ListenBrainz na sintonia**: até 5.000 listens por pessoa (5 chamadas de 1.000), respeitando a cota da API (`X-RateLimit`). O ListenBrainz guarda o início do play e a duração da faixa, então o intervalo é `[início, início + duração]`; listens sem duração ficam de fora. O artista principal (`mbid_mapping`) é usado para bater com o do ZIP ("Röyksopp", não "Röyksopp feat. …").
+- Quem entra pelo login do Spotify continua no Match, sem sintonia: a API só entrega as 50 músicas recentes, sem quanto tempo tocaram.
+
+### Desempenho
+- A sintonia foi dividida em `recursos.escutas` (uma vez por pessoa, guardada no cache do perfil do ZIP) e `recursos.sintonia_entre` (por par, com duas buscas `merge_asof` e sem laço em Python). Com 7 ZIPs fictícios, 2 deles com 285 mil eventos: os 21 pares em 9,7 s na primeira vez (com a leitura dos ZIPs) e em 0,8 s com o cache.
+- Na Dupla, a sintonia com 285 mil eventos por pessoa leva ~0,95 s (antes 0,55 s): o custo de normalizar os nomes, para que fontes diferentes se encontrem.
+
+### Correções
+- Os nomes de artista e música passam por `normalizar_nome` na sintonia: "Tempo Perdido" e "tempo perdido!" agora são a mesma faixa.
+
+### Contrato
+- Sem mudanças nos endpoints: `encontrar_matches` continua com as mesmas entradas e 7 saídas. O estado do Match ganha a chave `sintonias`, e a tabela de ranking ganha a coluna "Mais em sintonia".
+- Novos: `recursos.Escutas`, `escutas`, `sintonia_entre`, `sintonia_do_par`, `mais_sincronizada`; `Sintonia.quase_juntos` (padrão 0); `listenbrainz.coletar_escutas_listenbrainz`; `perfil_gosto.escutas_de_arquivos`. `match_html` e `stories_match_html` aceitam `sintonias`; `gerar_cartao_match` aceita `sintonia`.
+
 ## [0.95] — 2026-11-04
 
 ### Novo

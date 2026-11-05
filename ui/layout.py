@@ -36,6 +36,7 @@ from ui.match import (
     baixar_cartao_match,
     baixar_festa,
     executar_match,
+    gerar_meu_convite,
     perfis_salvos,
 )
 from ui.meu_wrapped import baixar_wrapped, carregar_demo_wrapped, executar_wrapped
@@ -589,6 +590,48 @@ def criar_interface() -> gr.Blocks:
                                 '</li></ol><p class="su-note">Regra do Spotify para apps pessoais. '
                                 'Sem cadastro, use o ListenBrainz ou o ZIP. O token nunca é salvo.</p>'
                             )
+                with gr.Row(equal_height=True, elem_classes='su-sources'):
+                    with gr.Column(elem_classes=['su-panel', 'd']):
+                        gr.HTML(
+                            '<div class="su-panel-title"><span class="su-avatar d">C</span>'
+                            'Convite<small>sem limite · sem conta</small></div>'
+                            '<p class="su-note">Cada amigo gera o próprio código no SyncUp dele e '
+                            'manda por mensagem. Só os rankings viajam: nada de histórico.</p>'
+                        )
+                        convites = gr.Textbox(
+                            lines=3,
+                            label='Códigos de convite, um por linha',
+                            placeholder='SYNCUP1.eJy…',
+                        )
+                    with gr.Column(elem_classes=['su-panel', 'd']):
+                        gr.HTML(
+                            '<div class="su-panel-title"><span class="su-avatar d">+</span>'
+                            'Criar o meu convite<small>para mandar a um amigo</small></div>'
+                        )
+                        fc = gr.File(
+                            file_count='multiple',
+                            file_types=['.zip', '.json'],
+                            type='filepath',
+                            label='O seu ZIP do Histórico Estendido',
+                            elem_id='su-envio-convite',
+                        )
+                        _mais_arquivos('su-envio-convite')
+                        nome_convite = gr.Textbox(label='O seu nome', placeholder='Ex.: Bia')
+                        perfil_convite = gr.Dropdown(
+                            choices=perfis_salvos(),
+                            value=None,
+                            label='Ou use um perfil salvo do Spotify',
+                        )
+                        gerar_convite_btn = gr.Button(
+                            'Gerar o meu código', elem_classes='su-secondary'
+                        )
+                        codigo_convite = gr.Textbox(
+                            label='O seu código: copie e mande',
+                            interactive=False,
+                            show_copy_button=True,
+                            lines=2,
+                            max_lines=4,
+                        )
                 generos_mb = gr.Checkbox(
                     value=False,
                     label='Comparar também o estilo (gêneros do MusicBrainz)',
@@ -646,16 +689,21 @@ def criar_interface() -> gr.Blocks:
                     "'_blank'); }",
                     api_name=False,
                 )
+
+                # A lista do convite acompanha a do Match (login novo, perfil apagado).
+                def lista_convite() -> gr.Dropdown:
+                    return gr.Dropdown(choices=perfis_salvos(), value=None)
+
                 recarregar.click(
                     atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False
-                )
+                ).then(lista_convite, None, perfil_convite, api_name=False)
                 # Cada aba nova do navegador vê os perfis salvos depois que o servidor subiu.
                 demo.load(
                     atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False
-                )
+                ).then(lista_convite, None, perfil_convite, api_name=False)
                 buscar.click(
                     executar_match,
-                    [fm, nm, salvos, *opcoes, generos_mb, lb],
+                    [fm, nm, salvos, *opcoes, generos_mb, lb, convites],
                     [
                         match_cartoes,
                         match_plot,
@@ -669,6 +717,12 @@ def criar_interface() -> gr.Blocks:
                     scroll_to_output=True,
                     # Um Match por vez: o MusicBrainz aceita 1 consulta/s para o app todo.
                     concurrency_limit=1,
+                )
+                gerar_convite_btn.click(
+                    gerar_meu_convite,
+                    [fc, nome_convite, perfil_convite, *opcoes],
+                    codigo_convite,
+                    api_name='gerar_convite',
                 )
                 festa_btn.click(
                     baixar_festa,
@@ -822,7 +876,9 @@ def criar_interface() -> gr.Blocks:
             js="(nome) => nome && confirm('Apagar o perfil de ' + nome + '? Não dá para desfazer.')"
             " ? nome : ''",
             api_name=False,
-        ).then(atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False)
+        ).then(atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False).then(
+            lista_convite, None, perfil_convite, api_name=False
+        )
         limpar_btn.click(
             limpar_cache,
             confirmado,

@@ -19,7 +19,7 @@ def test_criar_interface_monta_arvore_sem_erros() -> None:
         assert demo.config['title'] == 'SyncUp'
         componentes = list(demo.blocks.values())
         arquivos = [c for c in componentes if isinstance(c, gr.File) and c.interactive is not False]
-        assert len(arquivos) == 5  # dupla A, dupla B, match, Wrapped e grupo
+        assert len(arquivos) == 6  # dupla A e B, match, convite, Wrapped e grupo
         assert all(c.file_count == 'multiple' for c in arquivos)
         assert any(isinstance(c, gr.Tab) and 'Grupo' in c.label for c in componentes)
         assert len([c for c in componentes if isinstance(c, gr.Plot)]) >= 6
@@ -34,6 +34,7 @@ def test_criar_interface_monta_arvore_sem_erros() -> None:
             'playlist_festa',
             'baixar_cartao_match',
             'baixar_sintonia',
+            'gerar_convite',
         }
         assert 'fonts.googleapis.com' not in str(demo.theme._stylesheets)  # fonte local (OFL)
         assert demo.theme is not None

@@ -14,7 +14,7 @@ def test_cada_envio_tem_botao_que_abre_o_proprio_seletor() -> None:
         for b in demo.blocks.values()
         if isinstance(b, gr.File) and b.interactive is not False and b.file_count == 'multiple'
     ]
-    assert len(envios) == 5  # Dupla A e B, Match, Wrapped e Grupo
+    assert len(envios) == 6  # Dupla A e B, Match, convite, Wrapped e Grupo
     scripts = [f.js for f in demo.fns.values() if f.js and 'input[type=file]' in f.js]
     for envio in envios:
         assert envio.elem_id and envio.elem_id.startswith('su-envio-')

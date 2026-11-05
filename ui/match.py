@@ -14,6 +14,7 @@ import componentes
 import stories
 from cartao import gerar_cartao_match
 from conciliacao import conciliar
+from convite import gerar_convite, ler_convite, separar_convites
 from dados import (
     MAXIMO_HISTORICOS_CACHE,
     precarregar,
@@ -78,6 +79,7 @@ def executar_match(
     deduplicar: bool,
     buscar_generos: bool = False,
     usuarios_listenbrainz: str = '',
+    codigos_convite: str = '',
     progress: gr.Progress = gr.Progress(),
 ) -> list[Any]:
     """Junta perfis de ZIP, ListenBrainz e Spotify, concilia todos e mostra os melhores pares."""
@@ -129,6 +131,14 @@ def executar_match(
                 )
             except (ValueError, httpx.HTTPError):  # sem listens: entra no Match, sem sintonia
                 sem_sintonia.append(perfil.nome)
+        for k, codigo in enumerate(separar_convites(codigos_convite), 1):
+            try:
+                perfil = ler_convite(codigo)
+            except ValueError as erro:  # código cortado ou alterado: os demais continuam
+                fora.append(f'Convite {k}: {erro}')
+                continue
+            perfis.append(perfil)
+            fontes[perfil.nome] = 'Convite'
         if fora:
             # Um nome errado não derruba o Match: quem falhou fica de fora, com o motivo.
             gr.Warning('Ficaram de fora do Match · ' + ' · '.join(fora))
@@ -189,6 +199,35 @@ def executar_match(
             {'resultado': r, 'perfis': perfis, 'duplas': duplas, 'sintonias': sintonias},
             gr.Dropdown(choices=opcoes_duplas, value=0 if duplas else None),
         ]
+    except ValueError as erro:
+        raise gr.Error(str(erro)) from erro
+
+
+def gerar_meu_convite(
+    arquivos: list[str] | None,
+    nome: str,
+    perfil_salvo: str | None,
+    fuso: str,
+    musicas: str,
+    artistas: str,
+    varios: str,
+    disco: bool,
+    deduplicar: bool,
+) -> str:
+    """Código de convite a partir do ZIP da pessoa ou de um perfil salvo do Spotify."""
+    try:
+        if arquivos:
+            if not (nome or '').strip():
+                raise ValueError('Escreva o seu nome antes de gerar o código.')
+            config = _configuracao(fuso, musicas, artistas, varios, disco, deduplicar)
+            perfil = perfil_de_arquivos(list(arquivos), nome, config)
+        elif perfil_salvo:
+            if perfil_salvo not in perfis_salvos():  # nunca monta caminho com texto de fora
+                raise ValueError('Esse perfil não está mais salvo. Clique em Atualizar lista.')
+            perfil = carregar_perfil(PASTA_PERFIS / f'{perfil_salvo}.json')
+        else:
+            raise ValueError('Envie o seu ZIP ou escolha um perfil salvo do Spotify.')
+        return gerar_convite(perfil)
     except ValueError as erro:
         raise gr.Error(str(erro)) from erro
 

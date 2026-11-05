@@ -42,7 +42,7 @@ class PerfilGosto:
     """Rankings de uma pessoa, em qualquer fonte. Listas em ordem de preferência."""
 
     nome: str
-    fonte: str  # 'historico_zip', 'spotify_api' ou 'listenbrainz'
+    fonte: str  # 'historico_zip', 'spotify_api', 'listenbrainz' ou 'convite'
     coletado_em: str
     top_artistas: dict[str, list[str]] = field(default_factory=dict)
     top_musicas: dict[str, list[dict[str, str]]] = field(default_factory=dict)
@@ -53,7 +53,11 @@ class PerfilGosto:
 
     @property
     def rotulo_fonte(self) -> str:
-        rotulos = {'spotify_api': 'Spotify (login)', 'listenbrainz': 'ListenBrainz'}
+        rotulos = {
+            'spotify_api': 'Spotify (login)',
+            'listenbrainz': 'ListenBrainz',
+            'convite': 'Convite',
+        }
         return rotulos.get(self.fonte, 'Histórico ZIP')
 
     def para_json(self) -> str:

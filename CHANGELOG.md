@@ -1,5 +1,16 @@
 # Changelog — SyncUp
 
+## [0.99] — em andamento
+
+Terceira etapa rumo à 1.0: visual e convite.
+
+### Novo
+- **Convite por código** (`convite.py`): cada pessoa gera, no próprio SyncUp, um código curto (~1 mil caracteres) a partir do ZIP ou de um perfil salvo do Spotify, e manda por mensagem. Quem recebe cola no Match, no cartão **Convite**. Sem servidor, sem conta e sem limite de pessoas. Só os rankings viajam: o histórico, as músicas recentes (com horário), os artistas seguidos e os gêneros ficam de fora.
+- O código vindo de fora é sempre conferido: tamanho do texto, tamanho descompactado (barra zip bomb), estrutura, tipos e tamanho de cada nome. Um convite cortado ou alterado fica de fora com aviso, e os demais continuam. Códigos quebrados em várias linhas pelo aplicativo de mensagem são remontados.
+
+### Contrato
+- `encontrar_matches` recebe uma entrada a mais no fim: os códigos de convite. Novo endpoint `gerar_convite` (arquivos, nome, perfil salvo e as 6 opções de dados).
+
 ## [0.98] — 2026-11-05
 
 Segunda etapa rumo à 1.0: privacidade e organização.

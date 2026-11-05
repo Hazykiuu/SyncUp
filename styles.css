@@ -243,6 +243,8 @@ footer { opacity: .55; }
 .su-avatar.c { background: #ffa42b; }
 .su-panel.c:hover { border-color: rgba(255, 164, 43, .45) !important; }
 .su-panel.c { animation-delay: .04s; }
+.su-avatar.d { background: #f573a0; }
+.su-panel.d:hover { border-color: rgba(245, 115, 160, .45) !important; }
 .su-panel-title small { margin-left: auto; padding: 4px 10px; border-radius: 99px; background: rgba(255, 255, 255, .08); color: var(--su-sub); font-size: 12px; font-weight: 700; }
 .su-panel .su-note a { color: var(--su-green); }
 .su-sources { gap: 16px !important; }

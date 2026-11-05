@@ -73,7 +73,7 @@ def test_match_aceita_usuarios_do_listenbrainz(monkeypatch) -> None:
         tops = {p: ['X', usuario] for p in ('short_term', 'medium_term', 'long_term')}
         return PerfilGosto(usuario, 'listenbrainz', '', tops)
 
-    monkeypatch.setattr(ui, 'coletar_perfil_listenbrainz', falso)
+    monkeypatch.setattr(ui.match, 'coletar_perfil_listenbrainz', falso)
     html, *_ = ui.executar_match(
         [],
         '',
@@ -92,7 +92,7 @@ def test_match_aceita_usuarios_do_listenbrainz(monkeypatch) -> None:
 
 
 def test_perfil_que_acabou_de_logar_entra_marcado(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr(ui, 'PASTA_PERFIS', tmp_path)
+    monkeypatch.setattr(ui.match, 'PASTA_PERFIS', tmp_path)
     for nome in ('Carlos', 'Bia'):
         salvar_perfil(PerfilGosto(nome, 'spotify_api', '', {'long_term': ['X']}), tmp_path)
     # Carlos já estava na lista e foi desmarcado; Bia acabou de logar.
@@ -119,10 +119,10 @@ def test_usuario_com_problema_fica_de_fora_com_aviso(monkeypatch) -> None:
         return PerfilGosto(usuario, 'listenbrainz', '', tops)
 
     avisos: list[str] = []
-    monkeypatch.setattr(ui, 'coletar_perfil_listenbrainz', falso)
+    monkeypatch.setattr(ui.match, 'coletar_perfil_listenbrainz', falso)
     monkeypatch.setattr(ui.gr, 'Warning', avisos.append)
     # Sem rede nos testes: listens vazios, então ninguém fica sem sintonia por falha.
-    monkeypatch.setattr(ui, 'coletar_escutas_listenbrainz', lambda u, f: _sem_listens())
+    monkeypatch.setattr(ui.match, 'coletar_escutas_listenbrainz', lambda u, f: _sem_listens())
     html, *_ = ui.executar_match(
         [],
         '',

@@ -296,7 +296,7 @@ def test_match_na_interface_mistura_zip_e_spotify(tmp_path: Path, monkeypatch) -
         zips.append(str(p))
     pasta = tmp_path / 'perfis'
     salvar_perfil(_perfil('Caio', ['Y', 'Z']), pasta)
-    monkeypatch.setattr(ui, 'PASTA_PERFIS', pasta)
+    monkeypatch.setattr(ui.match, 'PASTA_PERFIS', pasta)
     assert ui.perfis_salvos() == ['Caio']
     html, figura, ranking, _, revelacao, estado, dupla = ui.executar_match(
         zips,
@@ -350,7 +350,7 @@ def test_perfil_novo_aparece_depois_de_atualizar_lista(tmp_path: Path, monkeypat
 
     import ui
 
-    monkeypatch.setattr(ui, 'PASTA_PERFIS', tmp_path)
+    monkeypatch.setattr(ui.match, 'PASTA_PERFIS', tmp_path)
     demo = ui.criar_interface()  # sem perfis salvos ainda
     funcoes = {f.fn.__name__: f for f in demo.fns.values() if f.fn}
     salvar_perfil(_perfil('Caio', ['Y']), tmp_path)
@@ -383,7 +383,9 @@ def test_match_repetido_nao_precarrega_zips_com_perfil_em_cache(
     import ui
 
     chamadas: list[list] = []
-    monkeypatch.setattr(ui, 'precarregar', lambda arquivos, config: chamadas.append(list(arquivos)))
+    monkeypatch.setattr(
+        ui.match, 'precarregar', lambda arquivos, config: chamadas.append(list(arquivos))
+    )
     zips = []
     for i in range(8):  # mais que MAXIMO_HISTORICOS_CACHE (6): dois blocos
         p = tmp_path / f'p{i}.json'

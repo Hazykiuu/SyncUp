@@ -1,848 +1,51 @@
-"""Apresentação do SyncUp no tema Spotify; consome os resultados estruturados de analise.py."""
+"""Montagem da interface Gradio: Início, abas e eventos."""
 
 from __future__ import annotations
 
-import base64
 import os
-import shutil
-from collections.abc import Callable
-from functools import lru_cache
-from itertools import combinations
-from numbers import Real
-from pathlib import Path
-from tempfile import gettempdir, mkdtemp
-from typing import Any
 from zoneinfo import available_timezones
 
 import gradio as gr
-import httpx
-import pandas as pd
-import plotly.express as px
-from plotly.graph_objects import Figure
 
-import componentes
-import stories
-from analise import (
-    EntradaPerfil,
-    PerfilComparado,
-    ResultadoComparacao,
-    comparar,
-    comparar_grupo,
-)
-from cartao import gerar_cartao, gerar_cartao_match, gerar_cartao_sintonia, gerar_cartao_wrapped
-from conciliacao import conciliar
-from configuracao import MUSICAS_IGNORADAS_PADRAO, VERSAO, ConfiguracaoCarga
+from configuracao import MUSICAS_IGNORADAS_PADRAO, VERSAO
 from dados import (
-    MAXIMO_HISTORICOS_CACHE,
     habilitar_leitura_paralela,
-    precarregar,
 )
-from exportacoes import exportar_playlist
-from festa import exportar_csv, exportar_xspf, playlist_festa
-from formatacao import escape_html, escape_markdown, fmt_horas, fmt_num, fmt_pct, listar_markdown
-from generos import ARQUIVO_CACHE as ARQUIVO_CACHE_GENEROS
-from generos import ConsultaMusicBrainz, preencher_generos
-from graficos import (
-    butterfly,
-    evolucao_mensal,
-    mapa_horarios,
-    matriz_conciliacao,
-    matriz_grupo,
-    radar_tracos,
-    slope_chart,
-)
-from listenbrainz import coletar_escutas_listenbrainz, coletar_perfil_listenbrainz
-from perfil_gosto import (
-    carregar_perfil,
-    escutas_de_arquivos,
-    listar_perfis,
-    perfil_de_arquivos,
-    tem_perfil_em_cache,
-)
+from formatacao import escape_html, fmt_pct
+from perfil_gosto import listar_perfis
 from perfis import AVISO_TRACOS, LIMIAR_FAVORITOS, LIMIAR_MADRUGADA, LIMIAR_REPEAT
-from recursos import Escutas, Sintonia, escutas, sintonia_do_par, sintonia_entre
 from spotify_api import PASTA_PERFIS, REDIRECT_PADRAO
-from wrapped import Wrapped, wrapped_de_arquivos
-
-PASTA = Path(__file__).resolve().parent
-# Figtree (OFL) embutida no CSS: nenhuma requisição ao Google Fonts, funciona offline.
-FONTE_CSS = (
-    "@font-face{font-family:'Figtree';font-weight:300 900;font-display:swap;"
-    'src:url(data:font/ttf;base64,'
-    + base64.b64encode((PASTA / 'fontes' / 'Figtree.ttf').read_bytes()).decode('ascii')
-    + ") format('truetype');}\n"
+from ui.comum import (
+    CONCORRENCIA,
+    CSS,
+    HEAD,
+    JS,
+    OPCOES_PONDERACAO,
+    _limpar_exportacoes,
 )
-CSS = FONTE_CSS + (PASTA / 'styles.css').read_text(encoding='utf-8')
-JS = (PASTA / 'syncup.js').read_text(encoding='utf-8')
-OPCOES_PONDERACAO = [
-    ('Bruta (x)', 'bruta'),
-    ('Raiz quadrada (√x)', 'raiz'),
-    ('Logaritmo (ln(1+x))', 'log1p'),
-]
-TEXTO_LIMIARES = (
-    f'Regras experimentais: favoritos ≥{LIMIAR_FAVORITOS:.0%}; repeat ≥{LIMIAR_REPEAT:.0%}; '
-    f'madrugada ≥{LIMIAR_MADRUGADA:.0%}. Descrevem este recorte de escuta; '
-    'não medem personalidade ou afinidade amorosa.'
+from ui.dupla import (
+    baixar_cartao,
+    baixar_cartao_sintonia,
+    baixar_playlist,
+    carregar_demo,
+    executar_dupla,
+    executar_grupo,
 )
-# Pessoas em abas diferentes não esperam umas pelas outras; as leituras de histórico já são
-# seguras em paralelo (travas em dados.py e perfil_gosto.py).
-CONCORRENCIA = 4
-HEAD = '<meta name="theme-color" content="#121212">'
-
-
-def formatar(numero: int | float) -> str:
-    """Formata contagens com separador de milhares brasileiro."""
-    return fmt_num(numero)
-
-
-def texto_periodo(resultado: ResultadoComparacao) -> str:
-    """Apresenta o recorte sem extrair informações de texto ou HTML."""
-    periodo = resultado.periodo
-    if periodo.comum:
-        return f'{periodo.inicio:%d/%m/%Y} a {periodo.fim:%d/%m/%Y} (fuso {periodo.fuso_horario})'
-    return f'Históricos completos, com coberturas potencialmente diferentes. Fuso: {periodo.fuso_horario}.'
-
-
-def perfil_card(perfil: PerfilComparado, cor: str, wrapped: Wrapped | None = None) -> str:
-    """Cartão de identidade musical (estilo Wrapped) com traços animados.
-
-    Com ``wrapped``, destaca o arquétipo da vida toda no topo do cartão.
-    """
-    destaque = stories.arquetipo_html(wrapped) if wrapped is not None else ''
-    return componentes.perfil_card(perfil, cor, TEXTO_LIMIARES, destaque)
-
-
-def _wrapped_seguro(
-    arquivos: list[str] | str | None, nome: str, config: ConfiguracaoCarga
-) -> Wrapped | None:
-    """Wrapped da vida toda sem interromper a comparação se algo faltar."""
-    if not arquivos:
-        return None
-    try:
-        return wrapped_de_arquivos(arquivos, nome, config)
-    except ValueError:
-        return None
-
-
-def wrapped_dupla_html(wa: Wrapped | None, wb: Wrapped | None) -> str:
-    """Dois players de stories lado a lado (histórico completo de cada pessoa)."""
-    blocos = [stories.stories_html(w) for w in (wa, wb) if w is not None]
-    if not blocos:
-        return '<p class="su-note">Não foi possível montar o Wrapped destes históricos.</p>'
-    return (
-        '<p class="su-note">Wrapped da vida toda: usa o histórico completo de cada pessoa, '
-        'não só o período comparado. Clique à direita para avançar, à esquerda para voltar.</p>'
-        f'<div class="su-wrapped-row">{"".join(blocos)}</div>'
-    )
-
-
-def resumo_html(resultado: ResultadoComparacao) -> str:
-    """Resumo estilo Blend: anel de similaridade, avatares e métricas com contagem animada."""
-    return componentes.blend_html(resultado, texto_periodo(resultado))
-
-
-def resumo_markdown(resultado: ResultadoComparacao) -> str:
-    """Mantém a apresentação textual da v0.4 para o notebook e a regressão."""
-    m, a, b = resultado.metricas, resultado.perfil_a, resultado.perfil_b
-    texto = f"""## Similaridade musical: {fmt_pct(m.cosseno)}
-**Cosseno:** compara o padrão de frequência por artista. **Jaccard geral:** {fmt_pct(m.jaccard)}. **Jaccard do Top 20:** {fmt_pct(m.jaccard_top20)}.
-
-Período: {escape_markdown(texto_periodo(resultado))}
-
-| Perfil | Plays ≥30s | Horas ouvidas (todas as execuções) | Artistas com plays ≥30s |
-|---|---:|---:|---:|
-| {escape_markdown(a.nome)} | {fmt_num(a.plays)} | {fmt_num(a.horas, 1)} | {fmt_num(a.quantidade_artistas)} |
-| {escape_markdown(b.nome)} | {fmt_num(b.plays)} | {fmt_num(b.horas, 1)} | {fmt_num(b.quantidade_artistas)} |
-
-O percentual mede semelhança dos dados musicais. Valores ausentes de escuta são tratados como zero; ausência no arquivo não prova que a pessoa não gosta do artista.
-"""
-    return texto + f'\n\n**{escape_markdown(resultado.aviso)}**'
-
-
-def texto_conexoes(resultado: ResultadoComparacao) -> str:
-    """Apresenta as listas de artistas calculadas pela análise."""
-    texto = '**Artistas em comum:** ' + listar_markdown(resultado.artistas_comuns, 20)
-    texto += '\n\n**Favoritos de A ausentes no recorte de B:** ' + listar_markdown(
-        resultado.exclusivos_a, 20
-    )
-    texto += '\n\n**Favoritos de B ausentes no recorte de A:** ' + listar_markdown(
-        resultado.exclusivos_b, 20
-    )
-    return texto
-
-
-def _celula(valor: Any, inteiro: bool) -> Any:
-    """Formata um único valor numérico; textos e datas passam inalterados."""
-    if not isinstance(valor, Real):
-        return valor
-    if pd.isna(valor):
-        return '—'
-    return fmt_num(valor, 0 if inteiro or isinstance(valor, int) else 2)
-
-
-def tabela_display(tabela: pd.DataFrame) -> pd.DataFrame:
-    """Formata somente a pequena tabela de apresentação; os dados do núcleo permanecem numéricos.
-
-    Processa coluna a coluna com listas, sem acessar célula por célula via ``.at``.
-    """
-    exibicao = tabela.astype(object)
-    if 'Medida' in tabela:
-        contagem = tabela['Medida'].eq('count').tolist()
-    else:
-        contagem = [False] * len(tabela)
-    for coluna in exibicao.columns:
-        exibicao[coluna] = [
-            _celula(valor, inteiro) for valor, inteiro in zip(exibicao[coluna].tolist(), contagem)
-        ]
-    return exibicao
-
-
-def apresentar(resultado: ResultadoComparacao) -> list[Any]:
-    """Adapta campos nomeados à lista de componentes da v0.4 (notebook e benchmark).
-
-    Este é o único limite posicional; o orquestrador não conhece os componentes.
-    """
-    a, b = resultado.perfil_a, resultado.perfil_b
-    return [
-        resumo_html(resultado),
-        grafico_artistas(resultado.participacao_artistas, resultado.ordem_artistas),
-        tabela_display(a.artistas),
-        tabela_display(b.artistas),
-        tabela_display(a.musicas),
-        tabela_display(b.musicas),
-        perfil_card(a, 'green'),
-        perfil_card(b, 'violet'),
-        texto_conexoes(resultado),
-        tabela_display(resultado.estatisticas),
-        tabela_display(resultado.diagnostico),
-        grafico_meses(resultado),
-    ]
-
-
-def _layout_legado(fig: Figure) -> Figure:
-    """Tema Spotify nas figuras legadas, sem alterar os dados protegidos pelo golden master."""
-    fig.update_layout(
-        separators=',.',
-        template='plotly_dark',
-        paper_bgcolor='#181818',
-        plot_bgcolor='#181818',
-        font=dict(family='Figtree, Helvetica Neue, Arial, sans-serif', size=16, color='#ffffff'),
-        transition_duration=500,
-    )
-    fig.update_xaxes(gridcolor='#2a2a2a')
-    fig.update_yaxes(gridcolor='#2a2a2a')
-    return fig
-
-
-def grafico_artistas(longo: pd.DataFrame, ordem: list[str]) -> Figure:
-    """Desenha os dados de participação preparados pelo orquestrador (figura legada v0.4)."""
-    longo = longo.copy()
-    for coluna in ('Artista', 'Perfil'):
-        longo[coluna] = longo[coluna].map(escape_html)
-    ordem = [escape_html(nome) for nome in ordem]
-    fig = px.bar(
-        longo,
-        x='Participação (%)',
-        y='Artista',
-        color='Perfil',
-        orientation='h',
-        barmode='group',
-        color_discrete_sequence=['#1db954', '#b1a5ff'],
-        category_orders={'Artista': list(ordem)},
-        height=690,
-    )
-    _layout_legado(fig).update_layout(
-        margin=dict(l=20, r=30, t=65, b=40),
-        legend=dict(orientation='h', y=1.08, x=0),
-        bargap=0.24,
-    )
-    fig.update_xaxes(ticksuffix='%')
-    fig.update_yaxes(title=None)
-    fig.update_traces(
-        hovertemplate='%{y}<br>%{x:.2f}% das reproduções<extra>%{fullData.name}</extra>'
-    )
-    return fig
-
-
-def grafico_meses(resultado: ResultadoComparacao) -> Figure:
-    """Desenha os meses observados, sem inserir zeros em lacunas (figura legada v0.4)."""
-    partes = []
-    for perfil, prefixo in ((resultado.perfil_a, 'A'), (resultado.perfil_b, 'B')):
-        mensal = perfil.mensal.copy()
-        mensal['Perfil'] = escape_html(f'{prefixo} · {perfil.nome}')
-        partes.append(mensal)
-    fig = px.line(
-        pd.concat(partes),
-        x='Mês',
-        y='Horas',
-        color='Perfil',
-        markers=True,
-        color_discrete_sequence=['#1db954', '#b1a5ff'],
-        height=400,
-    )
-    _layout_legado(fig).update_layout(
-        margin=dict(l=30, r=30, t=30, b=50),
-        legend=dict(orientation='h', y=1.12),
-        hovermode='x unified',
-    )
-    fig.update_xaxes(nticks=10)
-    return fig
-
-
-def _linhas(texto: str | None) -> tuple[str, ...]:
-    """Um nome por linha, ignorando linhas vazias."""
-    return tuple(x.strip() for x in (texto or '').splitlines() if x.strip())
-
-
-def _configuracao(
-    fuso: str, musicas: str, artistas: str, varios: str, disco: bool, deduplicar: bool
-) -> ConfiguracaoCarga:
-    """Converte controles visíveis em uma configuração única para os dois modos."""
-    return ConfiguracaoCarga(
-        fuso_horario=fuso or 'America/Sao_Paulo',
-        musicas_ignoradas=_linhas(musicas),
-        artistas_ignorados=_linhas(artistas),
-        various_artists=varios or 'manter',
-        usar_cache_disco=bool(disco),
-        deduplicar=bool(deduplicar),
-    )
-
-
-def _texto_ponte(resultado: ResultadoComparacao) -> str:
-    """Apresenta links de busca e mantém nomes especiais como texto literal."""
-    partes = [
-        'Sugestões de artistas ausentes no recorte do destino. Não são descobertas comprovadas.'
-    ]
-    for de, para, artista, plays, participacao, link in resultado.ponte.itertuples(
-        index=False, name=None
-    ):
-        partes.append(
-            f'- {escape_markdown(de)} → {escape_markdown(para)}: '
-            f'[{escape_markdown(artista)}]({link}) · {fmt_num(plays)} plays '
-            f'({fmt_num(participacao, 1)}% na origem).'
-        )
-    if resultado.ponte.empty:
-        partes.append('Não há artistas exclusivos para sugerir neste recorte.')
-    return '\n\n'.join(partes)
-
-
-def _diversidade(resultado: ResultadoComparacao) -> pd.DataFrame:
-    """Mostra métricas das contagens brutas, independentes da ponderação do cosseno."""
-    return pd.DataFrame(
-        [
-            {
-                'Perfil': p.nome,
-                'Artistas observados': fmt_num(p.quantidade_artistas),
-                'Entropia normalizada': fmt_num(p.entropia, 4) if p.entropia is not None else '—',
-                'Gini observado': fmt_num(p.gini, 4) if p.gini is not None else '—',
-            }
-            for p in (resultado.perfil_a, resultado.perfil_b)
-        ]
-    )
-
-
-def executar_dupla(
-    arquivos_a: list[str] | None,
-    arquivos_b: list[str] | None,
-    nome_a: str,
-    nome_b: str,
-    comum: bool,
-    ponderacao: str,
-    fuso: str,
-    musicas: str,
-    artistas: str,
-    varios: str,
-    disco: bool,
-    deduplicar: bool,
-    progress: gr.Progress = gr.Progress(),
-) -> list[Any]:
-    """Executa o núcleo e prepara componentes; progressos representam etapas reais."""
-    try:
-        progress(0.05, desc='Validando filtros e arquivos')
-        config = _configuracao(fuso, musicas, artistas, varios, disco, deduplicar)
-        progress(0.15, desc='Lendo históricos e calculando métricas e coincidências')
-        r = comparar(
-            arquivos_a or [],
-            arquivos_b or [],
-            nome_a,
-            nome_b,
-            bool(comum),
-            configuracao=config,
-            ponderacao=ponderacao or 'bruta',
-        )
-        progress(0.75, desc='Preparando gráficos e tabelas')
-        contribuicoes = r.contribuicoes.head(100).copy()
-        contribuicoes['Contribuição ao cosseno'] = [
-            fmt_num(float(x) * 100, 4) + ' p.p.' for x in contribuicoes['Contribuição ao cosseno']
-        ]
-        momentos = componentes.sintonia_html(r) + (
-            '<p class="su-note">Quase juntos (até 1 h de distância): '
-            f'<b>{fmt_num(r.momentos_artistas.total_pares)}</b> pares com o mesmo artista e '
-            f'<b>{fmt_num(r.momentos_musicas.total_pares)}</b> com a mesma música. '
-            'Os exemplos estão em "Quase juntos", abaixo.</p>'
-        )
-        a, b = r.perfil_a, r.perfil_b
-        progress(0.85, desc='Montando o Wrapped da vida toda')
-        wa = _wrapped_seguro(arquivos_a, a.nome, config)
-        wb = _wrapped_seguro(arquivos_b, b.nome, config)
-        saidas = [
-            r,
-            resumo_html(r),
-            butterfly(r),
-            mapa_horarios(r),
-            radar_tracos(r),
-            slope_chart(r),
-            perfil_card(a, 'green', wa),
-            perfil_card(b, 'violet', wb),
-            tabela_display(a.artistas),
-            tabela_display(b.artistas),
-            tabela_display(a.musicas),
-            tabela_display(b.musicas),
-            contribuicoes,
-            tabela_display(r.playlist.head(500)),
-            _texto_ponte(r),
-            momentos,
-            tabela_display(r.momentos_artistas.exemplos),
-            tabela_display(r.momentos_musicas.exemplos),
-            _diversidade(r),
-            tabela_display(r.estatisticas),
-            tabela_display(r.diagnostico),
-            evolucao_mensal(r),
-            texto_conexoes(r),
-            None,
-            None,
-            None,
-            # Novos blocos animados (anexados ao fim para manter as posições anteriores).
-            componentes.corrida_html(r),
-            componentes.lista_top(a.artistas, componentes.VERDE, f'Top artistas · {a.nome}'),
-            componentes.lista_top(b.artistas, componentes.ROXO, f'Top artistas · {b.nome}'),
-            componentes.lista_top(
-                a.musicas, componentes.VERDE, f'Top músicas · {a.nome}', musicas=True
-            ),
-            componentes.lista_top(
-                b.musicas, componentes.ROXO, f'Top músicas · {b.nome}', musicas=True
-            ),
-            gr.Column(visible=True),
-            gr.Column(visible=False),
-            wrapped_dupla_html(wa, wb),
-        ]
-        progress(1, desc='Comparação concluída')
-        return saidas
-    except ValueError as erro:
-        raise gr.Error(str(erro)) from erro
-
-
-def executar_grupo(
-    arquivos: list[str] | None,
-    nomes: str,
-    comum: bool,
-    ponderacao: str,
-    fuso: str,
-    musicas: str,
-    artistas: str,
-    varios: str,
-    disco: bool,
-    deduplicar: bool,
-    progress: gr.Progress = gr.Progress(),
-) -> list[Any]:
-    """No formulário de grupo, cada arquivo é uma pessoa; nomes seguem a ordem exibida."""
-    try:
-        nomes_lista = list(_linhas(nomes))
-        arquivos = arquivos or []
-        if not arquivos or len(nomes_lista) != len(arquivos):
-            raise ValueError(
-                'Informe um nome por arquivo, na mesma ordem, usando de 3 a 6 arquivos.'
-            )
-        progress(0.1, desc='Lendo os perfis do grupo')
-        config = _configuracao(fuso, musicas, artistas, varios, disco, deduplicar)
-        r = comparar_grupo(
-            [EntradaPerfil(nome, arquivo) for nome, arquivo in zip(nomes_lista, arquivos)],
-            bool(comum),
-            configuracao=config,
-            ponderacao=ponderacao or 'bruta',
-        )
-        progress(0.85, desc='Construindo matriz e perfis')
-
-        def numero(valor: float | None) -> str:
-            return fmt_num(valor, 4) if valor is not None else '—'
-
-        tabela = pd.DataFrame(
-            [
-                {
-                    'Perfil': p.nome,
-                    'Plays ≥30s': fmt_num(p.plays),
-                    'Horas': fmt_horas(p.horas),
-                    'Artistas': fmt_num(p.quantidade_artistas),
-                    'Favoritos': f'{p.arquetipos.favoritos.nome} ({fmt_pct(p.arquetipos.favoritos.proporcao)})',
-                    'Repeat': f'{p.arquetipos.repeticao.nome} ({fmt_pct(p.arquetipos.repeticao.proporcao)})',
-                    'Madrugada': f'{p.arquetipos.madrugada.nome} ({fmt_pct(p.arquetipos.madrugada.proporcao)})',
-                    'Entropia': numero(p.entropia),
-                    'Gini': numero(p.gini),
-                }
-                for p in r.perfis
-            ]
-        )
-        matriz = r.matriz.map(fmt_pct).reset_index(names='Perfil')
-        periodo = r.periodo
-        descricao = (
-            f'Recorte comum global: {periodo.inicio:%d/%m/%Y} a {periodo.fim:%d/%m/%Y}.'
-            if periodo.comum
-            else 'Históricos completos: coberturas podem ser diferentes.'
-        )
-        hashes = r.diagnostico['SHA-256 do arquivo']
-        if hashes.duplicated().any():
-            descricao += ' Atenção: há perfis com arquivos de conteúdo idêntico (SHA-256).'
-        descricao += f' Fuso: {periodo.fuso_horario}. Cosseno: {r.ponderacao}. ' + AVISO_TRACOS
-        progress(1, desc='Grupo concluído')
-        return [
-            matriz_grupo(r),
-            matriz,
-            tabela,
-            tabela_display(r.diagnostico),
-            descricao,
-            componentes.grupo_html(r, _arquetipos_grupo(arquivos, nomes_lista, config)),
-            gr.Column(visible=True),
-        ]
-    except ValueError as erro:
-        raise gr.Error(str(erro)) from erro
-
-
-def _arquetipos_grupo(
-    arquivos: list[str], nomes: list[str], config: ConfiguracaoCarga
-) -> list[tuple[str, str]]:
-    """Arquétipo da vida toda de cada pessoa do grupo (ícone, nome)."""
-    resultado = []
-    for arquivo, nome in zip(arquivos, nomes):
-        w = _wrapped_seguro(arquivo, nome, config)
-        principal = w.arquetipos.principal if w else None
-        resultado.append((principal.icone, principal.nome) if principal else ('', '—'))
-    return resultado
-
-
-def executar_wrapped(
-    arquivos: list[str] | None,
-    nome: str,
-    fuso: str,
-    musicas: str,
-    artistas: str,
-    varios: str,
-    disco: bool,
-    deduplicar: bool,
-    progress: gr.Progress = gr.Progress(),
-) -> list[Any]:
-    """Wrapped individual da vida toda: stories, detalhe dos arquétipos e estado para o PNG."""
-    try:
-        if not arquivos:
-            raise ValueError('Selecione o histórico (ZIP ou JSONs) para montar o Wrapped.')
-        progress(0.1, desc='Lendo o histórico completo')
-        config = _configuracao(fuso, musicas, artistas, varios, disco, deduplicar)
-        w = wrapped_de_arquivos(arquivos, nome, config)
-        progress(0.8, desc='Montando os stories')
-        saidas = [
-            w,
-            stories.stories_html(w),
-            stories.arquetipos_detalhe_html(w),
-            gr.Column(visible=True),
-            None,
-            None,
-        ]
-        progress(1, desc='Wrapped pronto')
-        return saidas
-    except ValueError as erro:
-        raise gr.Error(str(erro)) from erro
-
-
-def baixar_wrapped(w: Wrapped | None, pastas: list[str] | None) -> tuple[str, str, list[str]]:
-    """Story PNG 1080×1920 com o resumo do Wrapped, em pasta temporária da sessão."""
-    if w is None:
-        raise gr.Error('Gere o Wrapped antes de baixar a imagem.')
-    arquivo, pasta = _em_pasta_temporaria(
-        'wrapped', lambda p: str(gerar_cartao_wrapped(w, p / 'SyncUp_Wrapped.png')), 'a imagem'
-    )
-    return arquivo, arquivo, [*(pastas or []), pasta]
-
-
-def carregar_demo_wrapped() -> tuple[list[str], str]:
-    """Um histórico fictício para experimentar o Wrapped."""
-    a, _ = carregar_demo()[:2]
-    return a, 'Ana (fictícia)'
-
-
-def perfis_salvos() -> list[str]:
-    """Nomes dos perfis coletados via login do Spotify (pasta perfis_spotify)."""
-    return [p.stem for p in listar_perfis(PASTA_PERFIS)]
-
-
-def atualizar_perfis(
-    selecionados: list[str] | None, conhecidos: list[str] | None = None
-) -> tuple[Any, list[str]]:
-    """Recarrega a lista mantendo a seleção; quem acabou de logar já entra marcado."""
-    opcoes = perfis_salvos()
-    novos = [s for s in opcoes if s not in (conhecidos or [])]
-    marcados = [s for s in opcoes if s in (selecionados or []) or s in novos] or opcoes
-    return gr.CheckboxGroup(choices=opcoes, value=marcados), opcoes
-
-
-def _mais_em_sintonia(sintonias: dict[tuple[str, str], Sintonia], nome: str) -> str:
-    """Com quem a pessoa mais ouviu junto, para a tabela do Match."""
-    juntos = [
-        (s.minutos, y if x == nome else x) for (x, y), s in sintonias.items() if nome in (x, y)
-    ]
-    minutos, outro = max(juntos, default=(0.0, ''))
-    return f'{outro} ({fmt_num(minutos, 0)} min)' if minutos > 0 else '—'
-
-
-def executar_match(
-    arquivos: list[str] | None,
-    nomes: str,
-    selecionados: list[str] | None,
-    fuso: str,
-    musicas: str,
-    artistas: str,
-    varios: str,
-    disco: bool,
-    deduplicar: bool,
-    buscar_generos: bool = False,
-    usuarios_listenbrainz: str = '',
-    progress: gr.Progress = gr.Progress(),
-) -> list[Any]:
-    """Junta perfis de ZIP, ListenBrainz e Spotify, concilia todos e mostra os melhores pares."""
-    try:
-        arquivos = arquivos or []
-        nomes_zip = list(_linhas(nomes))
-        if arquivos and len(nomes_zip) != len(arquivos):
-            raise ValueError('Informe um nome por arquivo ZIP, na mesma ordem dos arquivos.')
-        config = _configuracao(fuso, musicas, artistas, varios, disco, deduplicar)
-        perfis, fontes = [], {}
-        entradas = list(zip(arquivos, nomes_zip))
-        # Só lê o que ainda não virou perfil em cache, em blocos paralelos do tamanho do
-        # cache de históricos (assim um bloco não descarta o anterior antes de ser usado).
-        pendentes = [(a, n) for a, n in entradas if not tem_perfil_em_cache(a, config)]
-        for j in range(0, len(pendentes), MAXIMO_HISTORICOS_CACHE):
-            bloco = pendentes[j : j + MAXIMO_HISTORICOS_CACHE]
-            precarregar([a for a, _ in bloco], config)
-            for k, (arquivo, nome) in enumerate(bloco, j):
-                progress(0.05 + 0.6 * k / len(pendentes), desc=f'Lendo o histórico de {nome}')
-                perfil_de_arquivos(arquivo, nome, config)
-        escutas_por_nome: dict[str, Escutas] = {}  # só quem tem histórico de escuta
-        for arquivo, nome in entradas:
-            perfil = perfil_de_arquivos(arquivo, nome, config)
-            perfis.append(perfil)
-            fontes[perfil.nome] = 'Histórico ZIP'
-            escutas_por_nome[perfil.nome] = escutas_de_arquivos(arquivo, config)
-        for nome in selecionados or []:
-            perfil = carregar_perfil(PASTA_PERFIS / f'{nome}.json')
-            perfis.append(perfil)
-            fontes[perfil.nome] = f'Spotify · {perfil.coletado_em[:10]}'
-        usuarios = _linhas(usuarios_listenbrainz)
-        fora: list[str] = []
-        sem_sintonia: list[str] = []
-        for i, usuario in enumerate(usuarios):
-            progress(0.6 + 0.05 * i / len(usuarios), desc=f'Lendo o ListenBrainz de {usuario}')
-            try:
-                perfil = coletar_perfil_listenbrainz(usuario)
-            except ValueError as erro:  # usuário inexistente, sem estatísticas ou serviço ocupado
-                fora.append(f'{usuario}: {erro}')
-                continue
-            except httpx.HTTPError:
-                fora.append(f'{usuario}: o ListenBrainz não respondeu. Confira a internet.')
-                continue
-            perfis.append(perfil)
-            fontes[perfil.nome] = 'ListenBrainz'
-            try:
-                escutas_por_nome[perfil.nome] = escutas(
-                    coletar_escutas_listenbrainz(usuario, config.fuso_horario)
-                )
-            except (ValueError, httpx.HTTPError):  # sem listens: entra no Match, sem sintonia
-                sem_sintonia.append(perfil.nome)
-        if fora:
-            # Um nome errado não derruba o Match: quem falhou fica de fora, com o motivo.
-            gr.Warning('Ficaram de fora do Match · ' + ' · '.join(fora))
-        if sem_sintonia:
-            gr.Warning(
-                'Os listens não vieram do ListenBrainz, então ficaram sem sintonia: '
-                + ', '.join(sem_sintonia)
-            )
-        if buscar_generos:
-            consulta = ConsultaMusicBrainz(
-                cache=Path(config.diretorio_cache) / ARQUIVO_CACHE_GENEROS
-            )
-            try:
-                for i, perfil in enumerate(perfis):
-                    progress(0.65 + 0.1 * i / len(perfis), desc=f'Gêneros de {perfil.nome}')
-                    perfis[i] = preencher_generos(perfil, consulta)
-            finally:
-                consulta.fechar()
-            if consulta.falhas:
-                gr.Warning(
-                    'O MusicBrainz não respondeu (sem internet ou serviço ocupado). '
-                    'O estilo foi calculado só com os gêneros já conhecidos.'
-                )
-        progress(0.75, desc='Comparando todos com todos')
-        r = conciliar(perfis)
-        nomes_escuta = [n for n in r.nomes if n in escutas_por_nome]
-        pares_escuta = list(combinations(nomes_escuta, 2))
-        sintonias = {}
-        for k, (x, y) in enumerate(pares_escuta):
-            progress(0.8 + 0.19 * k / len(pares_escuta), desc=f'Sintonia de {x} e {y}')
-            sintonias[(x, y)] = sintonia_entre(escutas_por_nome[x], escutas_por_nome[y])
-        ranking = pd.DataFrame(
-            [
-                {
-                    'Pessoa': nome,
-                    'Fonte': fontes.get(nome, ''),
-                    '1º match': f'{r.melhores[nome][0][0]} ({fmt_num(r.melhores[nome][0][1], 1)}%)',
-                    '2º match': (
-                        f'{r.melhores[nome][1][0]} ({fmt_num(r.melhores[nome][1][1], 1)}%)'
-                        if len(r.melhores[nome]) > 1
-                        else '—'
-                    ),
-                    'Mais em sintonia': _mais_em_sintonia(sintonias, nome),
-                }
-                for nome in r.nomes
-            ]
-        )
-        progress(1, desc='Matches prontos')
-        duplas = [par for g in r.pares for par in combinations(g, 2)]
-        # Valor = índice: nomes são texto livre e não precisam ser separados de volta.
-        opcoes_duplas = [(f'{x} × {y}', i) for i, (x, y) in enumerate(duplas)]
-        return [
-            componentes.match_html(r, fontes, sintonias),
-            matriz_conciliacao(r),
-            ranking,
-            gr.Column(visible=True),
-            stories.stories_match_html(r, sintonias),
-            {'resultado': r, 'perfis': perfis, 'duplas': duplas, 'sintonias': sintonias},
-            gr.Dropdown(choices=opcoes_duplas, value=0 if duplas else None),
-        ]
-    except ValueError as erro:
-        raise gr.Error(str(erro)) from erro
-
-
-def baixar_festa(match: dict | None, pastas: list[str] | None) -> tuple[str, list[str], list[str]]:
-    """Playlist que cobre o gosto do grupo do último Match, em CSV e XSPF."""
-    if not match:
-        raise gr.Error('Encontre os matches antes de montar a playlist da festa.')
-    faixas = playlist_festa(match['perfis'])
-    if not faixas:
-        raise gr.Error('Os perfis não têm músicas favoritas suficientes para a playlist.')
-    arquivos, pasta = _em_pasta_temporaria(
-        'festa',
-        lambda p: [
-            str(exportar_csv(faixas, p / 'SyncUp_festa.csv')),
-            str(exportar_xspf(faixas, p / 'SyncUp_festa.xspf', 'SyncUp · Playlist da festa')),
-        ],
-        'a playlist',
-    )
-    linhas = ''.join(
-        f'<li><a href="{escape_html(f.link)}" target="_blank" rel="noopener">'
-        f'<b>{escape_html(f.musica)}</b> · {escape_html(f.artista)}</a>'
-        f'<small>para {escape_html(", ".join(f.para))}</small></li>'
-        for f in faixas
-    )
-    html = f'<ol class="su-festa">{linhas}</ol>'
-    return html, arquivos, [*(pastas or []), pasta]
-
-
-def baixar_cartao_match(
-    match: dict | None, dupla: int | None, pastas: list[str] | None
-) -> tuple[str, str, list[str]]:
-    """Cartão PNG de uma dupla do último Match (``dupla`` é o índice em ``match['duplas']``)."""
-    if not match or dupla is None:
-        raise gr.Error('Encontre os matches e escolha uma dupla antes de gerar o cartão.')
-    try:
-        a, b = match['duplas'][int(dupla)]
-    except (IndexError, ValueError, TypeError) as erro:
-        raise gr.Error('Essa dupla não faz parte do último Match.') from erro
-    compatibilidade = match['resultado'].par(a, b)
-    s = sintonia_do_par(match.get('sintonias', {}), a, b)
-    arquivo, pasta = _em_pasta_temporaria(
-        'match',
-        lambda p: str(gerar_cartao_match(compatibilidade, p / 'SyncUp_match.png', sintonia=s)),
-        'o cartão',
-    )
-    return arquivo, arquivo, [*(pastas or []), pasta]
-
-
-def baixar_cartao_sintonia(
-    resultado: ResultadoComparacao | None, pastas: list[str] | None
-) -> tuple[str, str, list[str]]:
-    """Story PNG da escuta simultânea da dupla comparada."""
-    if resultado is None:
-        raise gr.Error('Faça uma comparação antes de gerar o story da sintonia.')
-    arquivo, pasta = _em_pasta_temporaria(
-        'sintonia',
-        lambda p: str(gerar_cartao_sintonia(resultado, p / 'SyncUp_sintonia.png')),
-        'o story',
-    )
-    return arquivo, arquivo, [*(pastas or []), pasta]
-
-
-def _em_pasta_temporaria(prefixo: str, gerar: Callable[[Path], Any], o_que: str) -> tuple[Any, str]:
-    """Gera exportações numa pasta própria do clique; apaga a pasta se a gravação falhar."""
-    pasta = mkdtemp(prefix=f'syncup-{prefixo}-')
-    try:
-        return gerar(Path(pasta)), pasta
-    except OSError as erro:
-        shutil.rmtree(pasta, ignore_errors=True)
-        raise gr.Error(f'Não foi possível gravar {o_que} no diretório temporário.') from erro
-
-
-def _limpar_exportacoes(pastas: list[str]) -> None:
-    """Apaga apenas diretórios temporários criados para exportações desta sessão."""
-    for pasta in pastas or []:
-        shutil.rmtree(pasta, ignore_errors=True)
-
-
-def baixar_playlist(
-    resultado: ResultadoComparacao | None, pastas: list[str] | None
-) -> tuple[str, list[str]]:
-    """Cria um CSV isolado por clique, sem sobrescrever exportações de outras sessões."""
-    if resultado is None:
-        raise gr.Error('Faça uma comparação antes de exportar a playlist.')
-    arquivo, pasta = _em_pasta_temporaria(
-        'playlist',
-        lambda p: str(exportar_playlist(resultado, p / 'SyncUp_playlist_comum.csv')),
-        'a playlist',
-    )
-    return arquivo, [*(pastas or []), pasta]
-
-
-def baixar_cartao(
-    resultado: ResultadoComparacao | None, pastas: list[str] | None
-) -> tuple[str, str, list[str]]:
-    """Cria cartão e download isolados, usando somente Pillow e fontes locais."""
-    if resultado is None:
-        raise gr.Error('Faça uma comparação antes de gerar o cartão.')
-    arquivo, pasta = _em_pasta_temporaria(
-        'cartao', lambda p: str(gerar_cartao(resultado, p / 'SyncUp_cartao.png')), 'o cartão'
-    )
-    return arquivo, arquivo, [*(pastas or []), pasta]
-
-
-@lru_cache(maxsize=1)
-def _arquivos_demo() -> tuple[str, str]:
-    """Gera (uma vez por processo) dois históricos fictícios pequenos para demonstração."""
-    from tools.gerar_dados_falsos import Configuracao, gerar_zip
-
-    pasta = Path(gettempdir()) / 'syncup-demo-v1'
-    pasta.mkdir(parents=True, exist_ok=True)
-    caminhos = []
-    for nome, semente in (('demo_ana.zip', 41), ('demo_bruno.zip', 97)):
-        destino = pasta / nome
-        if not destino.is_file():
-            gerar_zip(destino, Configuracao(linhas=40_000, artistas=250, seed=semente))
-        caminhos.append(str(destino))
-    return caminhos[0], caminhos[1]
-
-
-def carregar_demo() -> tuple[list[str], list[str], str, str]:
-    """Preenche os dois painéis com dados fictícios (nenhum dado real é usado)."""
-    try:
-        a, b = _arquivos_demo()
-    except (OSError, ImportError, ValueError) as erro:
-        raise gr.Error('Não foi possível gerar os dados fictícios de demonstração.') from erro
-    return [a], [b], 'Ana (fictícia)', 'Bruno (fictício)'
+from ui.match import (
+    atualizar_perfis,
+    baixar_cartao_match,
+    baixar_festa,
+    executar_match,
+    perfis_salvos,
+)
+from ui.meu_wrapped import baixar_wrapped, carregar_demo_wrapped, executar_wrapped
+from ui.meus_dados import (
+    PRIVACIDADE,
+    apagar_perfil_salvo,
+    atualizar_meus_dados,
+    limpar_cache,
+    resumo_html,
+)
 
 
 def _tema() -> gr.themes.Base:
@@ -924,6 +127,15 @@ def _tema() -> gr.themes.Base:
     )
 
 
+def _mais_arquivos(elem_id: str) -> None:
+    """Botão visível para somar arquivos ao envio: o do Gradio é um ícone pequeno no canto."""
+    gr.Button('+ Adicionar mais arquivos', size='sm', elem_classes='su-add-files').click(
+        None,
+        js=f"() => document.querySelector('#{elem_id} input[type=file]')?.click()",
+        api_name=False,
+    )
+
+
 def _secao(titulo: str, texto: str = '') -> gr.HTML:
     """Cabeçalho de seção no estilo das prateleiras do Spotify."""
     corpo = f'<p>{escape_html(texto)}</p>' if texto else ''
@@ -935,6 +147,7 @@ TOPO = f"""<header class="su-topbar">
   <b>SyncUp</b><span class="su-topbar-tag">v{VERSAO} · código aberto</span>
 </header>"""
 
+
 INICIO_TOPO = """<section class="su-hero">
   <div class="su-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <div class="su-hero-text">
@@ -944,6 +157,7 @@ INICIO_TOPO = """<section class="su-hero">
   </div>
 </section>
 <h3 class="su-home-h">O que dá para fazer</h3>"""
+
 
 INICIO_RODAPE = """<section class="su-steps-home">
   <h3 class="su-home-h">Como funciona</h3>
@@ -959,6 +173,8 @@ INICIO_RODAPE = """<section class="su-steps-home">
 </section>"""
 
 # Aba de destino, sub-aba da Dupla (ou None), ícone, título, texto e cor de cada cartão.
+
+
 RECURSOS = [
     ('dupla', None, '🎧', 'Dupla', 'Blend, identidades e rankings de duas pessoas.', '#1ed760'),
     (
@@ -1044,6 +260,21 @@ def criar_interface() -> gr.Blocks:
                 elem_classes='su-note',
             )
             gr.Markdown(AVISO_TRACOS, elem_classes='su-note')
+            with gr.Accordion('Meus dados', open=False, elem_classes='su-my-data-box'):
+                gr.Markdown(
+                    'O que o SyncUp guardou neste computador. Apagar não tem volta.',
+                    elem_classes='su-note',
+                )
+                meus_dados_html = gr.HTML(resumo_html())
+                perfil_apagar = gr.Dropdown(
+                    choices=[p.stem for p in listar_perfis(PASTA_PERFIS)],
+                    value=None,
+                    label='Perfil do Spotify salvo',
+                )
+                apagar_btn = gr.Button('Apagar este perfil', variant='stop')
+                limpar_btn = gr.Button('Limpar todo o cache', variant='stop')
+                # Recebe o resultado do confirm() do navegador: cancelar não apaga nada.
+                confirmado = gr.Checkbox(value=False, visible=False)
         opcoes = [fuso, ignorar_musicas, ignorar_artistas, varios, disco, deduplicar]
         with gr.Tabs(elem_classes='su-nav') as abas:
             with gr.Tab('Início', id='inicio'):
@@ -1054,6 +285,7 @@ def criar_interface() -> gr.Blocks:
                         for aba, sub, icone, titulo, texto, cor in linha:
                             atalhos.append((aba, sub, _cartao_recurso(icone, titulo, texto, cor)))
                 gr.HTML(INICIO_RODAPE)
+                gr.HTML(PRIVACIDADE)
             with gr.Tab('Dupla', id='dupla'):
                 estado = gr.State(value=None, time_to_live=3600)
                 pastas = gr.State(value=[], time_to_live=3600, delete_callback=_limpar_exportacoes)
@@ -1068,7 +300,9 @@ def criar_interface() -> gr.Blocks:
                             file_types=['.zip', '.json'],
                             type='filepath',
                             label='Todas as partes do histórico de A',
+                            elem_id='su-envio-a',
                         )
+                        _mais_arquivos('su-envio-a')
                     with gr.Column(elem_classes=['su-panel', 'b']):
                         gr.HTML(
                             '<div class="su-panel-title"><span class="su-avatar b">B</span>Segundo perfil</div>'
@@ -1079,7 +313,9 @@ def criar_interface() -> gr.Blocks:
                             file_types=['.zip', '.json'],
                             type='filepath',
                             label='Todas as partes do histórico de B',
+                            elem_id='su-envio-b',
                         )
+                        _mais_arquivos('su-envio-b')
                 gr.Markdown(
                     'Cada painel representa uma pessoa; vários ZIPs/JSONs do painel serão unidos.',
                     elem_classes='su-note',
@@ -1302,7 +538,9 @@ def criar_interface() -> gr.Blocks:
                             file_types=['.zip', '.json'],
                             type='filepath',
                             label='Um ZIP do Histórico Estendido por pessoa',
+                            elem_id='su-envio-match',
                         )
+                        _mais_arquivos('su-envio-match')
                         nm = gr.Textbox(lines=3, label='Nomes, um por linha, na ordem dos arquivos')
                     with gr.Column(elem_classes=['su-panel', 'c']):
                         gr.HTML(
@@ -1463,7 +701,9 @@ def criar_interface() -> gr.Blocks:
                             file_types=['.zip', '.json'],
                             type='filepath',
                             label='Histórico completo (ZIP ou todos os JSONs)',
+                            elem_id='su-envio-wrapped',
                         )
+                        _mais_arquivos('su-envio-wrapped')
                     with gr.Column(min_width=260):
                         gerar_w = gr.Button(
                             'Gerar meu Wrapped', variant='primary', elem_classes='su-play'
@@ -1522,7 +762,9 @@ def criar_interface() -> gr.Blocks:
                             file_types=['.zip', '.json'],
                             type='filepath',
                             label='3 a 6 históricos · um arquivo por pessoa',
+                            elem_id='su-envio-grupo',
                         )
+                        _mais_arquivos('su-envio-grupo')
                     with gr.Column(elem_classes=['su-panel', 'b']):
                         ng = gr.Textbox(
                             lines=6, label='Um nome por linha, na mesma ordem dos arquivos'
@@ -1573,6 +815,22 @@ def criar_interface() -> gr.Blocks:
                     [abas, sub_dupla],
                     api_name=False,
                 )
+        apagar_btn.click(
+            apagar_perfil_salvo,
+            perfil_apagar,
+            [meus_dados_html, perfil_apagar],
+            js="(nome) => nome && confirm('Apagar o perfil de ' + nome + '? Não dá para desfazer.')"
+            " ? nome : ''",
+            api_name=False,
+        ).then(atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False)
+        limpar_btn.click(
+            limpar_cache,
+            confirmado,
+            [meus_dados_html, perfil_apagar],
+            js="() => confirm('Limpar todo o cache? Os históricos serão lidos de novo na próxima vez.')",
+            api_name=False,
+        )
+        demo.load(atualizar_meus_dados, None, [meus_dados_html, perfil_apagar], api_name=False)
         gr.Markdown(
             'Plays: ≥30 segundos. Horas e describe(): todas as execuções válidas. '
             'O Ruzicka usa pesos absolutos e é sensível ao volume de escuta. ' + AVISO_TRACOS,

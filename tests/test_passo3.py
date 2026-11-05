@@ -298,7 +298,7 @@ class Passo3Test(unittest.TestCase):
         ):
             ls = sorted((luminancia(texto), luminancia(fundo)))
             self.assertGreaterEqual((ls[1] + 0.05) / (ls[0] + 0.05), 4.5)
-        for caminho in RAIZ.glob('*.py'):
+        for caminho in [*RAIZ.glob('*.py'), *RAIZ.glob('ui/*.py')]:
             tree = ast.parse(caminho.read_text(encoding='utf-8'), feature_version=(3, 10))
             for node in ast.walk(tree):
                 if isinstance(node, (ast.Import, ast.ImportFrom)):

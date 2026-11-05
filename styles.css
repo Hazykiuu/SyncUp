@@ -41,6 +41,10 @@ main.fillable { padding: 0 clamp(0px, 2vw, 32px) 16px !important; }
 .gradio-container label, .gradio-container button, .gradio-container input,
 .gradio-container textarea, .gradio-container select { font-size: 16px !important; }
 .gradio-container button { min-height: 44px; }
+/* Sem centralizar, a seta girada do acordeão estica a 44 px e cria rolagem lateral (Gradio 6). */
+.gr-accordion .label-wrap { align-items: center; }
+.gr-accordion .label-wrap > span:first-child { font-size: 16px; font-weight: 700; }
+.overflow-menu > button { min-width: 44px; min-height: 44px; }
 .gradio-container button:focus-visible, .gradio-container a:focus-visible,
 .gradio-container input:focus-visible, .gradio-container [role="tab"]:focus-visible,
 .su-race-progress:focus-visible {
@@ -164,7 +168,7 @@ footer { opacity: .55; }
 .su-panel.a:hover { border-color: rgba(30, 215, 96, .45) !important; }
 .su-panel.b:hover { border-color: rgba(196, 183, 255, .45) !important; }
 .su-panel.b { animation-delay: .08s; }
-.su-panel-title { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 20px; }
+.su-panel-title { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-weight: 800; font-size: 20px; }
 .su-panel-title .su-avatar { width: 40px; height: 40px; font-size: 18px; }
 .gradio-container input[type="text"], .gradio-container textarea {
   border-radius: 8px !important; transition: box-shadow .2s, background .2s;
@@ -245,7 +249,7 @@ footer { opacity: .55; }
 .su-panel.c { animation-delay: .04s; }
 .su-avatar.d { background: #f573a0; }
 .su-panel.d:hover { border-color: rgba(245, 115, 160, .45) !important; }
-.su-panel-title small { margin-left: auto; padding: 4px 10px; border-radius: 99px; background: rgba(255, 255, 255, .08); color: var(--su-sub); font-size: 12px; font-weight: 700; }
+.su-panel-title small { margin-left: auto; white-space: nowrap; padding: 4px 10px; border-radius: 99px; background: rgba(255, 255, 255, .08); color: var(--su-sub); font-size: 12px; font-weight: 700; }
 .su-panel .su-note a { color: var(--su-green); }
 .su-sources { gap: 16px !important; }
 .su-avatars .su-avatar.a { animation: su-slide-l .8s cubic-bezier(.2, .8, .2, 1) both; }
@@ -695,7 +699,8 @@ footer { opacity: .55; }
   .su-blend-hero { grid-template-columns: 1fr; justify-items: start; padding: 20px; }
   .su-tracklist a { grid-template-columns: 26px 40px minmax(0, 1fr) 54px; }
   .su-mini { display: none; }
-  .gradio-container [role="tab"], .gradio-container .tab-container.visually-hidden button { padding: 6px 11px !important; font-size: 14px !important; }
+  .gradio-container [role="tab"], .gradio-container .tab-container.visually-hidden button,
+  .su-nav > .tab-wrapper [role="tab"], .su-nav > .tab-wrapper .tab-container.visually-hidden button { padding: 6px 11px !important; font-size: 14px !important; }
   .gradio-container [role="tablist"] { gap: 6px; }
 }
 @media (prefers-reduced-motion: reduce) {

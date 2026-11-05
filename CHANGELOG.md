@@ -10,6 +10,14 @@ Terceira etapa rumo à 1.0: visual e convite.
 
 - **Avisos no tema do app**: erros, alertas e confirmações aparecem num cartão escuro com a cor do tipo (rosa, laranja ou verde) e com título em português: "Não deu certo", "Atenção" e "Pronto". Antes vinham com o título do Gradio em inglês ("Error", "Warning"). Todos passam por `ui.comum.falha`, `aviso` e `info`.
 
+### Visual
+- **Match**: as quatro fontes (ZIP, ListenBrainz, Login com Spotify e Convite) ficam numa grade 2×2, e "Criar o meu convite" virou um acordeão fechado abaixo delas.
+- **Grupo**: ganhou título e texto de abertura, como as outras abas. As regras dos traços, a nota sobre um arquivo por pessoa e o "Diagnóstico de cada perfil" foram para o acordeão **Detalhes técnicos**, no fim dos resultados (como na Dupla).
+
+### Correções
+- **Acordeões** (todos, inclusive "Meus dados"): desde o Gradio 6, a seta girada criava uma barra de rolagem lateral e o título aparecia pequeno e sem negrito.
+- **Celular (390 px)**: o selo dos painéis do Match ("sem limite · só o usuário") quebrava em várias linhas; agora desce inteiro para baixo do título. As abas principais usam o espaçamento menor de celular (cabem 3, antes 2), e o botão do menu das outras abas tem 44 px.
+
 ### Dependências
 - **Gradio 5.50 → 6.31** (e FastAPI 0.143 → 0.162). Três mudanças do Gradio 6: o botão de copiar do convite virou `buttons=['copy']`; os eventos internos usam `api_visibility='private'` (`api_name=False` passou a criar endpoints chamados "false"); tema, CSS, JS e head saíram do `gr.Blocks` e agora vão no `mount_gradio_app` (`app.py`). O visual e os endpoints públicos ficaram iguais. O filtro de avisos "Gradio 6" do pytest saiu.
 

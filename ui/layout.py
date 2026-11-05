@@ -12,8 +12,9 @@ from dados import (
     habilitar_leitura_paralela,
 )
 from formatacao import escape_html, fmt_pct
+from perfil_gosto import listar_perfis
 from perfis import AVISO_TRACOS, LIMIAR_FAVORITOS, LIMIAR_MADRUGADA, LIMIAR_REPEAT
-from spotify_api import REDIRECT_PADRAO
+from spotify_api import PASTA_PERFIS, REDIRECT_PADRAO
 from ui.comum import (
     CONCORRENCIA,
     CSS,
@@ -38,6 +39,13 @@ from ui.match import (
     perfis_salvos,
 )
 from ui.meu_wrapped import baixar_wrapped, carregar_demo_wrapped, executar_wrapped
+from ui.meus_dados import (
+    PRIVACIDADE,
+    apagar_perfil_salvo,
+    atualizar_meus_dados,
+    limpar_cache,
+    resumo_html,
+)
 
 
 def _tema() -> gr.themes.Base:
@@ -243,6 +251,21 @@ def criar_interface() -> gr.Blocks:
                 elem_classes='su-note',
             )
             gr.Markdown(AVISO_TRACOS, elem_classes='su-note')
+            with gr.Accordion('Meus dados', open=False, elem_classes='su-my-data-box'):
+                gr.Markdown(
+                    'O que o SyncUp guardou neste computador. Apagar não tem volta.',
+                    elem_classes='su-note',
+                )
+                meus_dados_html = gr.HTML(resumo_html())
+                perfil_apagar = gr.Dropdown(
+                    choices=[p.stem for p in listar_perfis(PASTA_PERFIS)],
+                    value=None,
+                    label='Perfil do Spotify salvo',
+                )
+                apagar_btn = gr.Button('Apagar este perfil', variant='stop')
+                limpar_btn = gr.Button('Limpar todo o cache', variant='stop')
+                # Recebe o resultado do confirm() do navegador: cancelar não apaga nada.
+                confirmado = gr.Checkbox(value=False, visible=False)
         opcoes = [fuso, ignorar_musicas, ignorar_artistas, varios, disco, deduplicar]
         with gr.Tabs(elem_classes='su-nav') as abas:
             with gr.Tab('Início', id='inicio'):
@@ -253,6 +276,7 @@ def criar_interface() -> gr.Blocks:
                         for aba, sub, icone, titulo, texto, cor in linha:
                             atalhos.append((aba, sub, _cartao_recurso(icone, titulo, texto, cor)))
                 gr.HTML(INICIO_RODAPE)
+                gr.HTML(PRIVACIDADE)
             with gr.Tab('Dupla', id='dupla'):
                 estado = gr.State(value=None, time_to_live=3600)
                 pastas = gr.State(value=[], time_to_live=3600, delete_callback=_limpar_exportacoes)
@@ -772,6 +796,22 @@ def criar_interface() -> gr.Blocks:
                     [abas, sub_dupla],
                     api_name=False,
                 )
+        apagar_btn.click(
+            apagar_perfil_salvo,
+            perfil_apagar,
+            [meus_dados_html, perfil_apagar],
+            js="(nome) => nome && confirm('Apagar o perfil de ' + nome + '? Não dá para desfazer.')"
+            " ? nome : ''",
+            api_name=False,
+        ).then(atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_name=False)
+        limpar_btn.click(
+            limpar_cache,
+            confirmado,
+            [meus_dados_html, perfil_apagar],
+            js="() => confirm('Limpar todo o cache? Os históricos serão lidos de novo na próxima vez.')",
+            api_name=False,
+        )
+        demo.load(atualizar_meus_dados, None, [meus_dados_html, perfil_apagar], api_name=False)
         gr.Markdown(
             'Plays: ≥30 segundos. Horas e describe(): todas as execuções válidas. '
             'O Ruzicka usa pesos absolutos e é sensível ao volume de escuta. ' + AVISO_TRACOS,

@@ -7,7 +7,7 @@ continuam importáveis de ``ui``, como antes da divisão.
 
 import gradio as gr
 
-from ui import comum, dupla, layout, match, meu_wrapped
+from ui import comum, dupla, layout, match, meu_wrapped, meus_dados
 from ui.comum import CONCORRENCIA, _limpar_exportacoes
 from ui.dupla import (
     apresentar,
@@ -50,6 +50,7 @@ __all__ = [
     'layout',
     'match',
     'meu_wrapped',
+    'meus_dados',
     'perfil_card',
     'perfis_salvos',
     'resumo_markdown',

@@ -105,6 +105,18 @@ footer { opacity: .55; }
   background: var(--su-green); color: #000; font-weight: 900; }
 .su-steps-home li span { color: var(--su-sub); line-height: 1.5; }
 .su-steps-home li strong { display: block; color: #fff; font-size: 17px; margin-bottom: 2px; }
+.su-privacy { margin-top: 32px; }
+.su-privacy h2 { margin: 0 0 4px; font-size: clamp(24px, 3vw, 32px); font-weight: 900; letter-spacing: -.02em; }
+.su-privacy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
+.su-privacy-grid > div { padding: 20px; border-radius: 20px; background: var(--su-card); border-top: 4px solid var(--su-green); }
+.su-privacy-grid > div:nth-child(2) { border-top-color: #c4b7ff; }
+.su-privacy-grid > div:nth-child(3) { border-top-color: #f573a0; }
+.su-privacy-grid h3 { margin: 0 0 10px; font-size: 18px; font-weight: 900; }
+.su-privacy-grid ul { margin: 0; padding-left: 18px; color: var(--su-sub); line-height: 1.55; }
+.su-privacy-grid li + li { margin-top: 6px; }
+.su-my-data { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 8px; }
+.su-my-data li { display: grid; gap: 2px; padding: 12px 14px; border-radius: 12px; background: var(--su-card); }
+.su-my-data span, .su-my-data small { color: var(--su-sub); font-size: 13px; overflow-wrap: anywhere; }
 .su-open { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 26px 0 8px; padding: 18px 20px; border-radius: 20px;
   background: linear-gradient(90deg, rgba(30, 215, 96, .14), rgba(196, 183, 255, .1)); }
 .su-open span { padding: 6px 12px; border-radius: 99px; background: rgba(0, 0, 0, .35); font-size: 14px; font-weight: 700; }

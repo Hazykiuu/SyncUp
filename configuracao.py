@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-VERSAO = '0.99'  # Fonte única: pyproject, README e barra do app conferidos em teste.
+VERSAO = '1.0'  # Fonte única: pyproject, README e barra do app conferidos em teste.
 GITHUB_URL = 'https://github.com/Hazykiuu/SyncUp'
 X_URL = 'https://x.com/HazyKiuu'
 X_USUARIO = '@HazyKiuu'

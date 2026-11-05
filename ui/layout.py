@@ -550,6 +550,7 @@ def criar_interface() -> gr.Blocks:
                             label='Usuários do ListenBrainz, um por linha',
                             placeholder='nicollas\nbia_musica',
                         )
+                with gr.Row(equal_height=True, elem_classes='su-sources'):
                     with gr.Column(elem_classes=['su-panel', 'b']):
                         gr.HTML(
                             '<div class="su-panel-title"><span class="su-avatar b">S</span>'
@@ -583,7 +584,6 @@ def criar_interface() -> gr.Blocks:
                                 '</li></ol><p class="su-note">Regra do Spotify para apps pessoais. '
                                 'Sem cadastro, use o ListenBrainz ou o ZIP. O token nunca é salvo.</p>'
                             )
-                with gr.Row(equal_height=True, elem_classes='su-sources'):
                     with gr.Column(elem_classes=['su-panel', 'd']):
                         gr.HTML(
                             '<div class="su-panel-title"><span class="su-avatar d">C</span>'
@@ -596,35 +596,33 @@ def criar_interface() -> gr.Blocks:
                             label='Códigos de convite, um por linha',
                             placeholder='SYNCUP1.eJy…',
                         )
-                    with gr.Column(elem_classes=['su-panel', 'd']):
-                        gr.HTML(
-                            '<div class="su-panel-title"><span class="su-avatar d">+</span>'
-                            'Criar o meu convite<small>para mandar a um amigo</small></div>'
-                        )
-                        fc = gr.File(
-                            file_count='multiple',
-                            file_types=['.zip', '.json'],
-                            type='filepath',
-                            label='O seu ZIP do Histórico Estendido',
-                            elem_id='su-envio-convite',
-                        )
-                        _mais_arquivos('su-envio-convite')
-                        nome_convite = gr.Textbox(label='O seu nome', placeholder='Ex.: Bia')
-                        perfil_convite = gr.Dropdown(
-                            choices=perfis_salvos(),
-                            value=None,
-                            label='Ou use um perfil salvo do Spotify',
-                        )
-                        gerar_convite_btn = gr.Button(
-                            'Gerar o meu código', elem_classes='su-secondary'
-                        )
-                        codigo_convite = gr.Textbox(
-                            label='O seu código: copie e mande',
-                            interactive=False,
-                            buttons=['copy'],
-                            lines=2,
-                            max_lines=4,
-                        )
+                with gr.Accordion(
+                    'Criar o meu convite · para mandar a um amigo',
+                    open=False,
+                    elem_classes='su-invite-box',
+                ):
+                    fc = gr.File(
+                        file_count='multiple',
+                        file_types=['.zip', '.json'],
+                        type='filepath',
+                        label='O seu ZIP do Histórico Estendido',
+                        elem_id='su-envio-convite',
+                    )
+                    _mais_arquivos('su-envio-convite')
+                    nome_convite = gr.Textbox(label='O seu nome', placeholder='Ex.: Bia')
+                    perfil_convite = gr.Dropdown(
+                        choices=perfis_salvos(),
+                        value=None,
+                        label='Ou use um perfil salvo do Spotify',
+                    )
+                    gerar_convite_btn = gr.Button('Gerar o meu código', elem_classes='su-secondary')
+                    codigo_convite = gr.Textbox(
+                        label='O seu código: copie e mande',
+                        interactive=False,
+                        buttons=['copy'],
+                        lines=2,
+                        max_lines=4,
+                    )
                 generos_mb = gr.Checkbox(
                     value=False,
                     label='Comparar também o estilo (gêneros do MusicBrainz)',
@@ -797,16 +795,10 @@ def criar_interface() -> gr.Blocks:
                     api_name='baixar_wrapped',
                 )
             with gr.Tab('Grupo', id='grupo'):
-                gr.Markdown(
-                    f'Regras: top 2 artistas ≥{fmt_pct(LIMIAR_FAVORITOS)}; top 10 faixas ≥{fmt_pct(LIMIAR_REPEAT)}; '
-                    f'madrugada 00h–05h59 ≥{fmt_pct(LIMIAR_MADRUGADA)}. As proporções aparecem na tabela. '
-                    + AVISO_TRACOS,
-                    elem_classes='su-note',
-                )
-                gr.Markdown(
-                    'Cada arquivo desta aba representa **uma pessoa**. Se houver várias partes por pessoa, '
-                    'use `comparar_grupo()` com `EntradaPerfil` pelo Python. Na matriz comum, todas as células usam a mesma janela global.',
-                    elem_classes='su-note',
+                gr.HTML(
+                    '<div class="su-section"><h3>A galera lado a lado</h3>'
+                    '<p>Envie de 3 a 6 históricos, um arquivo por pessoa, e veja quanto cada um '
+                    'combina com cada outro, numa matriz só.</p></div>'
                 )
                 with gr.Row(equal_height=True):
                     with gr.Column(elem_classes=['su-panel', 'a']):
@@ -840,9 +832,23 @@ def criar_interface() -> gr.Blocks:
                     grupo_perfis = gr.Dataframe(
                         interactive=False, wrap=True, label='Perfis e arquétipos'
                     )
-                    grupo_diag = gr.Dataframe(
-                        interactive=False, wrap=True, label='Diagnóstico de cada perfil'
-                    )
+                    with gr.Accordion('Detalhes técnicos', open=False, elem_classes='su-tech'):
+                        gr.Markdown(
+                            f'Regras: top 2 artistas ≥{fmt_pct(LIMIAR_FAVORITOS)}; top 10 faixas '
+                            f'≥{fmt_pct(LIMIAR_REPEAT)}; madrugada 00h–05h59 '
+                            f'≥{fmt_pct(LIMIAR_MADRUGADA)}. As proporções aparecem na tabela. '
+                            + AVISO_TRACOS,
+                            elem_classes='su-note',
+                        )
+                        gr.Markdown(
+                            'Cada arquivo representa **uma pessoa**. Se houver várias partes por '
+                            'pessoa, use `comparar_grupo()` com `EntradaPerfil` pelo Python. Na matriz '
+                            'comum, todas as células usam a mesma janela global.',
+                            elem_classes='su-note',
+                        )
+                        grupo_diag = gr.Dataframe(
+                            interactive=False, wrap=True, label='Diagnóstico de cada perfil'
+                        )
                 grupo.click(
                     executar_grupo,
                     [fg, ng, cg, pg, *opcoes],

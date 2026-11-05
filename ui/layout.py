@@ -7,7 +7,7 @@ from zoneinfo import available_timezones
 
 import gradio as gr
 
-from configuracao import MUSICAS_IGNORADAS_PADRAO, VERSAO
+from configuracao import GITHUB_URL, MUSICAS_IGNORADAS_PADRAO, VERSAO, X_URL, X_USUARIO
 from dados import (
     habilitar_leitura_paralela,
 )
@@ -143,6 +143,10 @@ def _secao(titulo: str, texto: str = '') -> gr.HTML:
 TOPO = f"""<header class="su-topbar">
   <div class="su-logo sm" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <b>SyncUp</b><span class="su-topbar-tag">v{VERSAO} · código aberto</span>
+  <nav class="su-credits" aria-label="Créditos">
+    <a href="{GITHUB_URL}" target="_blank" rel="noopener">GitHub</a>
+    <a href="{X_URL}" target="_blank" rel="noopener">{X_USUARIO}</a>
+  </nav>
 </header>"""
 
 
@@ -157,7 +161,7 @@ INICIO_TOPO = """<section class="su-hero">
 <h2 class="su-home-h">O que dá para fazer</h2>"""
 
 
-INICIO_RODAPE = """<section class="su-steps-home">
+INICIO_RODAPE = f"""<section class="su-steps-home">
   <h2 class="su-home-h">Como funciona</h2>
   <ol>
     <li><b>1</b><span><strong>Pegue seus dados</strong>O Histórico Estendido do Spotify (ZIP), um login ou o usuário do ListenBrainz.</span></li>
@@ -167,7 +171,7 @@ INICIO_RODAPE = """<section class="su-steps-home">
 </section>
 <section class="su-open">
   <span>🔒 100% local</span><span>MIT · código aberto</span><span>ListenBrainz e MusicBrainz</span>
-  <a href="https://github.com/Hazykiuu/SyncUp" target="_blank" rel="noopener">Ver no GitHub →</a>
+  <a href="{GITHUB_URL}" target="_blank" rel="noopener">Ver no GitHub →</a>
 </section>"""
 
 # Aba de destino, sub-aba da Dupla (ou None), ícone, título, texto e cor de cada cartão.

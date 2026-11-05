@@ -4,9 +4,7 @@ __pycache__/
 .ruff_cache/
 .syncup_cache/
 .venv/
-.ipynb_checkpoints/
 exemplos_ficticios/
-exportacoes_notebook/
 # Históricos reais não devem ser acrescentados ao código-fonte.
 *.zip
 

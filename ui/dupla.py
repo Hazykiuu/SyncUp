@@ -92,7 +92,7 @@ def resumo_html(resultado: ResultadoComparacao) -> str:
 
 
 def resumo_markdown(resultado: ResultadoComparacao) -> str:
-    """Mantém a apresentação textual da v0.4 para o notebook e a regressão."""
+    """Mantém a apresentação textual da v0.4 para o benchmark e a regressão."""
     m, a, b = resultado.metricas, resultado.perfil_a, resultado.perfil_b
     texto = f"""## Similaridade musical: {fmt_pct(m.cosseno)}
 **Cosseno:** compara o padrão de frequência por artista. **Jaccard geral:** {fmt_pct(m.jaccard)}. **Jaccard do Top 20:** {fmt_pct(m.jaccard_top20)}.
@@ -148,7 +148,7 @@ def tabela_display(tabela: pd.DataFrame) -> pd.DataFrame:
 
 
 def apresentar(resultado: ResultadoComparacao) -> list[Any]:
-    """Adapta campos nomeados à lista de componentes da v0.4 (notebook e benchmark).
+    """Adapta campos nomeados à lista de componentes da v0.4 (benchmark e regressão).
 
     Este é o único limite posicional; o orquestrador não conhece os componentes.
     """

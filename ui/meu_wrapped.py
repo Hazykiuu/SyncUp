@@ -11,6 +11,7 @@ from cartao import gerar_cartao_wrapped
 from ui.comum import (
     _configuracao,
     _em_pasta_temporaria,
+    falha,
 )
 from ui.dupla import (
     carregar_demo,
@@ -48,13 +49,13 @@ def executar_wrapped(
         progress(1, desc='Wrapped pronto')
         return saidas
     except ValueError as erro:
-        raise gr.Error(str(erro)) from erro
+        raise falha(str(erro)) from erro
 
 
 def baixar_wrapped(w: Wrapped | None, pastas: list[str] | None) -> tuple[str, str, list[str]]:
     """Story PNG 1080×1920 com o resumo do Wrapped, em pasta temporária da sessão."""
     if w is None:
-        raise gr.Error('Gere o Wrapped antes de baixar a imagem.')
+        raise falha('Gere o Wrapped antes de baixar a imagem.')
     arquivo, pasta = _em_pasta_temporaria(
         'wrapped', lambda p: str(gerar_cartao_wrapped(w, p / 'SyncUp_Wrapped.png')), 'a imagem'
     )

@@ -8,6 +8,8 @@ Terceira etapa rumo à 1.0: visual e convite.
 - **Convite por código** (`convite.py`): cada pessoa gera, no próprio SyncUp, um código curto (~1 mil caracteres) a partir do ZIP ou de um perfil salvo do Spotify, e manda por mensagem. Quem recebe cola no Match, no cartão **Convite**. Sem servidor, sem conta e sem limite de pessoas. Só os rankings viajam: o histórico, as músicas recentes (com horário), os artistas seguidos e os gêneros ficam de fora.
 - O código vindo de fora é sempre conferido: tamanho do texto, tamanho descompactado (barra zip bomb), estrutura, tipos e tamanho de cada nome. Um convite cortado ou alterado fica de fora com aviso, e os demais continuam. Códigos quebrados em várias linhas pelo aplicativo de mensagem são remontados.
 
+- **Avisos no tema do app**: erros, alertas e confirmações aparecem num cartão escuro com a cor do tipo (rosa, laranja ou verde) e com título em português: "Não deu certo", "Atenção" e "Pronto". Antes vinham com o título do Gradio em inglês ("Error", "Warning"). Todos passam por `ui.comum.falha`, `aviso` e `info`.
+
 ### Contrato
 - `encontrar_matches` recebe uma entrada a mais no fim: os códigos de convite. Novo endpoint `gerar_convite` (arquivos, nome, perfil salvo e as 6 opções de dados).
 

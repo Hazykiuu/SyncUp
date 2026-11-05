@@ -40,6 +40,8 @@ from ui.comum import (
     _configuracao,
     _em_pasta_temporaria,
     _linhas,
+    aviso,
+    falha,
 )
 
 
@@ -141,9 +143,9 @@ def executar_match(
             fontes[perfil.nome] = 'Convite'
         if fora:
             # Um nome errado não derruba o Match: quem falhou fica de fora, com o motivo.
-            gr.Warning('Ficaram de fora do Match · ' + ' · '.join(fora))
+            aviso('Ficaram de fora do Match · ' + ' · '.join(fora))
         if sem_sintonia:
-            gr.Warning(
+            aviso(
                 'Os listens não vieram do ListenBrainz, então ficaram sem sintonia: '
                 + ', '.join(sem_sintonia)
             )
@@ -158,7 +160,7 @@ def executar_match(
             finally:
                 consulta.fechar()
             if consulta.falhas:
-                gr.Warning(
+                aviso(
                     'O MusicBrainz não respondeu (sem internet ou serviço ocupado). '
                     'O estilo foi calculado só com os gêneros já conhecidos.'
                 )
@@ -200,7 +202,7 @@ def executar_match(
             gr.Dropdown(choices=opcoes_duplas, value=0 if duplas else None),
         ]
     except ValueError as erro:
-        raise gr.Error(str(erro)) from erro
+        raise falha(str(erro)) from erro
 
 
 def gerar_meu_convite(
@@ -229,16 +231,16 @@ def gerar_meu_convite(
             raise ValueError('Envie o seu ZIP ou escolha um perfil salvo do Spotify.')
         return gerar_convite(perfil)
     except ValueError as erro:
-        raise gr.Error(str(erro)) from erro
+        raise falha(str(erro)) from erro
 
 
 def baixar_festa(match: dict | None, pastas: list[str] | None) -> tuple[str, list[str], list[str]]:
     """Playlist que cobre o gosto do grupo do último Match, em CSV e XSPF."""
     if not match:
-        raise gr.Error('Encontre os matches antes de montar a playlist da festa.')
+        raise falha('Encontre os matches antes de montar a playlist da festa.')
     faixas = playlist_festa(match['perfis'])
     if not faixas:
-        raise gr.Error('Os perfis não têm músicas favoritas suficientes para a playlist.')
+        raise falha('Os perfis não têm músicas favoritas suficientes para a playlist.')
     arquivos, pasta = _em_pasta_temporaria(
         'festa',
         lambda p: [
@@ -262,11 +264,11 @@ def baixar_cartao_match(
 ) -> tuple[str, str, list[str]]:
     """Cartão PNG de uma dupla do último Match (``dupla`` é o índice em ``match['duplas']``)."""
     if not match or dupla is None:
-        raise gr.Error('Encontre os matches e escolha uma dupla antes de gerar o cartão.')
+        raise falha('Encontre os matches e escolha uma dupla antes de gerar o cartão.')
     try:
         a, b = match['duplas'][int(dupla)]
     except (IndexError, ValueError, TypeError) as erro:
-        raise gr.Error('Essa dupla não faz parte do último Match.') from erro
+        raise falha('Essa dupla não faz parte do último Match.') from erro
     compatibilidade = match['resultado'].par(a, b)
     s = sintonia_do_par(match.get('sintonias', {}), a, b)
     arquivo, pasta = _em_pasta_temporaria(

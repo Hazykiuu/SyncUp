@@ -105,7 +105,7 @@ def test_convite_do_zip_entra_no_match_e_o_invalido_sai_com_aviso(tmp_path, monk
     )
     assert codigo.startswith(PREFIXO)
     avisos: list[str] = []
-    monkeypatch.setattr(ui.gr, 'Warning', avisos.append)
+    monkeypatch.setattr(ui.gr, 'Warning', lambda m, **_: avisos.append(m))
     html, *_, estado, _ = ui.executar_match(
         [_historico(tmp_path, 'ana', ['X', 'Z'])],
         'Ana',

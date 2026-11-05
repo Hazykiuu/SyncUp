@@ -55,7 +55,7 @@ def test_painel_apaga_so_depois_de_confirmar(pastas: tuple[Path, Path], monkeypa
     monkeypatch.setattr(ui.meus_dados, 'PASTA_PERFIS', perfis)
     monkeypatch.setattr(ui.meus_dados, 'PASTA_CACHE', cache)
     avisos: list[str] = []
-    monkeypatch.setattr(ui.gr, 'Info', avisos.append)
+    monkeypatch.setattr(ui.gr, 'Info', lambda m, **_: avisos.append(m))
     html, lista = ui.meus_dados.apagar_perfil_salvo('')  # cancelou o confirm()
     assert (perfis / 'Carlos.json').exists() and not avisos
     assert 'Carlos, Nicollas' in html and lista.choices == [

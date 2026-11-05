@@ -705,3 +705,14 @@ footer { opacity: .55; }
 .su-add-files { min-height: 44px !important; width: fit-content !important; align-self: flex-start; border-radius: 999px !important;
   border: 1px solid var(--su-green) !important; background: transparent !important; color: var(--su-green) !important; font-weight: 800 !important; }
 .su-add-files:hover { background: rgba(30, 215, 96, .12) !important; }
+/* Avisos (erro, atenção, pronto) no tema do app, em vez do padrão do Gradio. */
+.toast-body { background: #181818 !important; border: 1px solid rgba(255, 255, 255, .1) !important; border-left: 4px solid var(--su-green) !important;
+  border-radius: 16px !important; box-shadow: 0 18px 40px rgba(0, 0, 0, .5) !important; }
+.toast-body.error { border-left-color: #f573a0 !important; }
+.toast-body.warning { border-left-color: #ffa42b !important; }
+.toast-title { color: #fff !important; font-weight: 900 !important; letter-spacing: -.01em; }
+.toast-text { color: var(--su-sub) !important; font-size: 15px !important; line-height: 1.5; }
+.toast-body.error .toast-icon { color: #f573a0 !important; }
+.toast-body.warning .toast-icon { color: #ffa42b !important; }
+.toast-body.info .toast-icon { color: var(--su-green) !important; }
+.toast-close { min-width: 44px; min-height: 44px; color: var(--su-sub) !important; }

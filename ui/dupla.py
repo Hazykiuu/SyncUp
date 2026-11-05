@@ -40,6 +40,7 @@ from ui.comum import (
     _configuracao,
     _em_pasta_temporaria,
     _linhas,
+    falha,
 )
 from wrapped import Wrapped, wrapped_de_arquivos
 
@@ -359,7 +360,7 @@ def executar_dupla(
         progress(1, desc='Comparação concluída')
         return saidas
     except ValueError as erro:
-        raise gr.Error(str(erro)) from erro
+        raise falha(str(erro)) from erro
 
 
 def executar_grupo(
@@ -434,7 +435,7 @@ def executar_grupo(
             gr.Column(visible=True),
         ]
     except ValueError as erro:
-        raise gr.Error(str(erro)) from erro
+        raise falha(str(erro)) from erro
 
 
 def _arquetipos_grupo(
@@ -454,7 +455,7 @@ def baixar_cartao_sintonia(
 ) -> tuple[str, str, list[str]]:
     """Story PNG da escuta simultânea da dupla comparada."""
     if resultado is None:
-        raise gr.Error('Faça uma comparação antes de gerar o story da sintonia.')
+        raise falha('Faça uma comparação antes de gerar o story da sintonia.')
     arquivo, pasta = _em_pasta_temporaria(
         'sintonia',
         lambda p: str(gerar_cartao_sintonia(resultado, p / 'SyncUp_sintonia.png')),
@@ -468,7 +469,7 @@ def baixar_playlist(
 ) -> tuple[str, list[str]]:
     """Cria um CSV isolado por clique, sem sobrescrever exportações de outras sessões."""
     if resultado is None:
-        raise gr.Error('Faça uma comparação antes de exportar a playlist.')
+        raise falha('Faça uma comparação antes de exportar a playlist.')
     arquivo, pasta = _em_pasta_temporaria(
         'playlist',
         lambda p: str(exportar_playlist(resultado, p / 'SyncUp_playlist_comum.csv')),
@@ -482,7 +483,7 @@ def baixar_cartao(
 ) -> tuple[str, str, list[str]]:
     """Cria cartão e download isolados, usando somente Pillow e fontes locais."""
     if resultado is None:
-        raise gr.Error('Faça uma comparação antes de gerar o cartão.')
+        raise falha('Faça uma comparação antes de gerar o cartão.')
     arquivo, pasta = _em_pasta_temporaria(
         'cartao', lambda p: str(gerar_cartao(resultado, p / 'SyncUp_cartao.png')), 'o cartão'
     )
@@ -510,5 +511,5 @@ def carregar_demo() -> tuple[list[str], list[str], str, str]:
     try:
         a, b = _arquivos_demo()
     except (OSError, ImportError, ValueError) as erro:
-        raise gr.Error('Não foi possível gerar os dados fictícios de demonstração.') from erro
+        raise falha('Não foi possível gerar os dados fictícios de demonstração.') from erro
     return [a], [b], 'Ana (fictícia)', 'Bruno (fictício)'

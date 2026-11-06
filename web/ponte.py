@@ -7,6 +7,7 @@ Também roda no Python comum: os testes chamam as mesmas funções.
 
 from __future__ import annotations
 
+import gc
 import json
 from pathlib import Path
 from typing import Any
@@ -70,6 +71,11 @@ def comparar_dupla(
         False,  # sem cache em disco no navegador
         bool(o.get('deduplicar', False)),
     )
+    _ultimo.clear()  # o resultado anterior não fica vivo durante o novo pico
+    # Wrapped primeiro: o pico dele (histórico inteiro) não se soma ao da comparação (iOS ~350 MB).
+    wa = _wrapped_seguro(arquivos_a, (nome_a or '').strip() or 'Pessoa A', config)
+    wb = _wrapped_seguro(arquivos_b, (nome_b or '').strip() or 'Pessoa B', config)
+    gc.collect()
     r = comparar(
         arquivos_a,
         arquivos_b,
@@ -81,8 +87,6 @@ def comparar_dupla(
     )
     _ultimo['dupla'] = r
     a, b = r.perfil_a, r.perfil_b
-    wa = _wrapped_seguro(arquivos_a, a.nome, config)
-    wb = _wrapped_seguro(arquivos_b, b.nome, config)
     contribuicoes = r.contribuicoes.head(100).copy()
     contribuicoes['Contribuição ao cosseno'] = [
         fmt_num(float(x) * 100, 4) + ' p.p.' for x in contribuicoes['Contribuição ao cosseno']

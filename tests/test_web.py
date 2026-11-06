@@ -71,3 +71,28 @@ def test_downloads_da_dupla(zips: tuple[str, str], tmp_path: Path, monkeypatch) 
     ):
         caminho = Path(gerar())
         assert caminho.suffix == sufixo and caminho.stat().st_size > 0
+
+
+def test_nomes_maliciosos_nao_viram_html_ativo(zips: tuple[str, str]) -> None:
+    """O HTML vai para dangerouslySetInnerHTML: nada de tag ou atributo executável."""
+    from html.parser import HTMLParser
+
+    from web import ponte
+
+    ativos: list[str] = []
+
+    class Caçador(HTMLParser):
+        def handle_starttag(self, tag: str, attrs: list) -> None:
+            ativos.extend(tag for _ in [0] if tag in {'script', 'img', 'iframe'})
+            ativos.extend(k for k, v in attrs if k.startswith('on') or 'javascript:' in (v or ''))
+
+    nome_a, nome_b = '<img src=x onerror=alert(1)>', "\"><script>alert('2')</script>"
+    r = ponte.comparar_dupla([zips[0]], [zips[1]], nome_a, nome_b)
+    for parte in r['html'].values():
+        for trecho in parte if isinstance(parte, list) else [parte]:
+            Caçador().feed(trecho)
+    assert not ativos
+    assert 'su-stories' in r['html']['wrapped']  # o Wrapped (calculado antes) continua saindo
+    # Gráficos: < > escapados, aspas legíveis (o Plotly não decodifica &quot;).
+    legendas = json.dumps(r['graficos']['artistas'])
+    assert '&lt;img' in legendas and '&quot;' not in legendas and '&#x27;' not in legendas

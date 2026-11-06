@@ -15,7 +15,7 @@ function Motor({ estado }) {
       <div class="trilho" role="progressbar" aria-label="Carregando o SyncUp" aria-valuemin="0" aria-valuemax="100" aria-valuenow=${Math.round(estado.fracao * 100)}>
         <i style=${`width:${Math.round(estado.fracao * 100)}%`}></i>
       </div>
-      <small>Na primeira visita o navegador baixa o Python (~30 MB); depois fica guardado.</small>
+      <small>Na primeira visita o navegador baixa o Python (~15 MB); depois fica guardado.</small>
     </div>`;
 }
 
@@ -28,7 +28,7 @@ function Dupla({ pronto }) {
   const pode = pronto && !ocupado && arquivos[0].length > 0 && arquivos[1].length > 0;
 
   const rodar = async (args, envio = []) => {
-    setFase({ tipo: 'processando', etapa: 'Lendo os históricos e calculando a sintonia…' });
+    setFase({ tipo: 'processando', etapa: 'Lendo os históricos e calculando a sintonia… (na primeira comparação o navegador também baixa os gráficos, ~10 MB)' });
     try {
       const r = await executar('comparar_dupla', args, { arquivos: envio });
       setFase({ tipo: 'resultado', r });

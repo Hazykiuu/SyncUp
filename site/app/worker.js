@@ -2,7 +2,7 @@
 // Mensagens: {tipo: 'iniciar'} e {tipo: 'acao', id, nome, args, arquivos, saida}.
 // Respostas: {tipo: 'progresso', etapa, fracao}, {tipo: 'pronto'}, {tipo: 'resposta', id, ok, dados|erro}.
 const PYODIDE = 'https://cdn.jsdelivr.net/pyodide/v0.29.0/full/';
-const PLOTLY = 'plotly==6.9.0'; // o mesmo do app local; desenha com o plotly.js 3.7.0
+const PLOTLY = 'plotly==6.9.0'; // o mesmo do app local; desenha com o plotly.js 3.7.0 (só na Dupla)
 let py = null;
 
 const progresso = (etapa, fracao) => self.postMessage({ tipo: 'progresso', etapa, fracao });
@@ -11,10 +11,8 @@ async function iniciar() {
   progresso('Baixando o Python (só na primeira vez)', 0.05);
   const { loadPyodide } = await import(PYODIDE + 'pyodide.mjs');
   py = await loadPyodide({ indexURL: PYODIDE });
-  progresso('Baixando pandas e Pillow', 0.35);
-  await py.loadPackage(['pandas', 'pillow', 'tzdata', 'micropip']);
-  progresso('Baixando os gráficos', 0.7);
-  await py.pyimport('micropip').install(PLOTLY);
+  progresso('Baixando o pandas', 0.4);
+  await py.loadPackage(['pandas', 'tzdata']);
   progresso('Preparando o SyncUp', 0.9);
   const nucleo = await (await fetch('syncup-core.zip', { cache: 'no-cache' })).arrayBuffer();
   py.unpackArchive(nucleo, 'zip', { extractDir: '/home/pyodide/syncup' });
@@ -31,7 +29,19 @@ function mensagem(erro) {
   return m ? m[1] : 'Algo deu errado ao processar os arquivos. Confira se são ZIPs do Histórico Estendido.';
 }
 
+// Pacotes sob demanda: o Wrapped não usa plotly (9,9 MB) nem Pillow (1 MB); só baixa quem precisa.
+const PRECISA = { comparar_dupla: ['plotly'], cartao_dupla: ['pillow'], cartao_sintonia: ['pillow'], cartao_wrapped: ['pillow'] };
+const extras = {};
+const baixar = {
+  plotly: async () => { await py.loadPackage('micropip'); await py.pyimport('micropip').install(PLOTLY); },
+  pillow: () => py.loadPackage('pillow'),
+};
+const garantir = (pacote) => (extras[pacote] ??= baixar[pacote]().catch((e) => { delete extras[pacote]; throw e; }));
+
 async function acao({ id, nome, args = [], arquivos = [], saida = 'json' }) {
+  try { await Promise.all((PRECISA[nome] || []).map(garantir)); } catch {
+    throw new Error('RuntimeError: Não deu para baixar uma parte do SyncUp (gráficos ou imagens). Confira a internet e tente de novo.');
+  }
   // Cada arquivo vai direto para o sistema de arquivos virtual, sem cópia extra.
   for (const { caminho, bytes } of arquivos) py.FS.writeFile(caminho, new Uint8Array(bytes));
   let resultado;

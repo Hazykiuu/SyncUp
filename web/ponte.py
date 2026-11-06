@@ -27,10 +27,8 @@ from apresentacao import (
     texto_periodo,
     wrapped_dupla_html,
 )
-from cartao import gerar_cartao, gerar_cartao_sintonia, gerar_cartao_wrapped
 from exportacoes import exportar_playlist
 from formatacao import fmt_num
-from graficos import butterfly, evolucao_mensal, mapa_horarios, radar_tracos, slope_chart
 from wrapped import wrapped_de_arquivos
 
 SAIDA = Path('/tmp/syncup-saida')
@@ -64,6 +62,9 @@ def comparar_dupla(
     opcoes: dict | None = None,
 ) -> dict:
     """Ação ``comparar_dupla``: o mesmo cálculo da aba Dupla do Gradio, em dados simples."""
+    # Sob demanda: o worker só baixa o plotly (9,9 MB) quando a Dupla é usada.
+    from graficos import butterfly, evolucao_mensal, mapa_horarios, radar_tracos, slope_chart
+
     o = opcoes or {}
     config = _configuracao(
         o.get('fuso', ''),
@@ -163,12 +164,16 @@ def _resultado() -> ResultadoComparacao:
 
 def cartao_dupla() -> str:
     """Ação ``gerar_cartao``: PNG do resultado da Dupla; devolve o caminho no sistema virtual."""
+    from cartao import gerar_cartao  # Pillow sob demanda
+
     SAIDA.mkdir(parents=True, exist_ok=True)
     return str(gerar_cartao(_resultado(), SAIDA / 'SyncUp_cartao.png'))
 
 
 def cartao_sintonia() -> str:
     """Ação ``baixar_sintonia``: story PNG da sintonia da Dupla."""
+    from cartao import gerar_cartao_sintonia  # Pillow sob demanda
+
     SAIDA.mkdir(parents=True, exist_ok=True)
     return str(gerar_cartao_sintonia(_resultado(), SAIDA / 'SyncUp_sintonia.png'))
 
@@ -242,6 +247,8 @@ def _trilha(w: Any) -> dict:
 
 def cartao_wrapped() -> str:
     """Ação ``baixar_wrapped``: story PNG 1080×1920 do Wrapped."""
+    from cartao import gerar_cartao_wrapped  # Pillow sob demanda
+
     if 'wrapped' not in _ultimo:
         raise ValueError('Monte o Wrapped antes de baixar.')
     SAIDA.mkdir(parents=True, exist_ok=True)

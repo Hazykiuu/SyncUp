@@ -113,3 +113,20 @@ def test_wrapped_e_cartao_no_navegador(zips: tuple[str, str], tmp_path: Path, mo
     assert png.suffix == '.png' and png.stat().st_size > 10_000
     ponte.comparar_dupla([zips[0]], [zips[1]], 'Ana', 'Bia')
     assert Path(ponte.cartao_wrapped()).is_file()  # a Dupla não apaga o Wrapped
+
+
+def test_wrapped_roda_sem_plotly_nem_pillow(zips: tuple[str, str]) -> None:
+    """O worker só baixa o plotly (9,9 MB) na Dupla e o Pillow no PNG: o Wrapped não pode precisar deles."""
+    codigo = (
+        'import sys\n'
+        'class Bloqueio:\n'
+        '    def find_spec(self, nome, *args):\n'
+        "        if nome.split('.')[0] in {'plotly', 'PIL'}:\n"
+        "            raise ImportError('bloqueado: ' + nome)\n"
+        'sys.meta_path.insert(0, Bloqueio())\n'
+        'from web import ponte\n'
+        f'r = ponte.wrapped([{zips[0]!r}], "Ana")\n'
+        "assert 'su-stories' in r['stories']\n"
+        "assert not {'plotly', 'PIL'} & {m.split('.')[0] for m in sys.modules}\n"
+    )
+    subprocess.run([sys.executable, '-c', codigo], cwd=RAIZ, check=True)

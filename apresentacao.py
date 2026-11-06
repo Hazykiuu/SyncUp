@@ -6,11 +6,9 @@ Usado pela interface Gradio (``ui/``) e pelo app no navegador (``web/ponte.py``,
 from __future__ import annotations
 
 from numbers import Real
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
-import plotly.express as px
-from plotly.graph_objects import Figure
 
 import componentes
 import stories
@@ -19,6 +17,9 @@ from configuracao import ConfiguracaoCarga
 from formatacao import escape_html, escape_markdown, fmt_num, fmt_pct, listar_markdown
 from perfis import LIMIAR_FAVORITOS, LIMIAR_MADRUGADA, LIMIAR_REPEAT
 from wrapped import Wrapped, wrapped_de_arquivos
+
+if TYPE_CHECKING:
+    from plotly.graph_objects import Figure
 
 OPCOES_PONDERACAO = [
     ('Bruta (x)', 'bruta'),
@@ -199,6 +200,8 @@ def _layout_legado(fig: Figure) -> Figure:
 
 def grafico_artistas(longo: pd.DataFrame, ordem: list[str]) -> Figure:
     """Desenha os dados de participação preparados pelo orquestrador (figura legada v0.4)."""
+    import plotly.express as px  # sob demanda: o app no navegador só baixa o plotly na Dupla
+
     longo = longo.copy()
     for coluna in ('Artista', 'Perfil'):
         longo[coluna] = longo[coluna].map(escape_html)
@@ -229,6 +232,8 @@ def grafico_artistas(longo: pd.DataFrame, ordem: list[str]) -> Figure:
 
 def grafico_meses(resultado: ResultadoComparacao) -> Figure:
     """Desenha os meses observados, sem inserir zeros em lacunas (figura legada v0.4)."""
+    import plotly.express as px  # sob demanda: o app no navegador só baixa o plotly na Dupla
+
     partes = []
     for perfil, prefixo in ((resultado.perfil_a, 'A'), (resultado.perfil_b, 'B')):
         mensal = perfil.mensal.copy()

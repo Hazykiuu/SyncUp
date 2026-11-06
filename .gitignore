@@ -16,3 +16,6 @@ graphify-out/
 
 # Configurações locais do Claude Code (ganchos pessoais, não vão para o repositório)
 .claude/settings.local.json
+
+# Pacote do núcleo para o app no navegador (gerado por tools/empacotar_web.py no CI)
+site/app/syncup-core.zip

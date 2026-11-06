@@ -1,11 +1,11 @@
-# Publica a pasta site/ no GitHub Pages a cada push na main que mexa nela.
+# Publica site/ (landing + app) no GitHub Pages a cada push na main que mexa no site ou no núcleo.
 # Ativar uma vez: Settings → Pages → Source: GitHub Actions.
 name: Site
 
 on:
   push:
     branches: [main]
-    paths: ['site/**', '.github/workflows/site.yml']
+    paths: ['site/**', '*.py', 'web/**', 'tools/**', 'fontes/**', '.github/workflows/site.yml']
   workflow_dispatch:
 
 permissions:
@@ -26,6 +26,11 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Empacotar o núcleo para o app no navegador
+        run: python tools/empacotar_web.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

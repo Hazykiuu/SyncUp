@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from conftest import FabricaEvento, HistoricosFicticios
 
+import json
 import zipfile
 from dataclasses import asdict
 from pathlib import Path
@@ -220,3 +221,25 @@ def test_leituras_simultaneas_nao_dependem_da_trava(
     for i, esperado in enumerate(esperados):
         assert resultados[i].dados.equals(esperado)
     assert len(dados._memoria) <= dados.MAXIMO_HISTORICOS_CACHE
+
+
+def test_nomes_repetidos_viram_um_texto_so(tmp_path: Path) -> None:
+    """Cada nome repetido é guardado uma vez: segura o pico de memória ao ler (navegador)."""
+    import dados
+
+    eventos = [
+        {
+            'ts': f'2024-01-01T00:{i:02d}:00Z',
+            'ms_played': 60_000,
+            'master_metadata_track_name': 'Tempo Perdido',
+            'master_metadata_album_artist_name': 'Legião Urbana',
+            'platform': 'android',
+        }
+        for i in range(3)
+    ]
+    caminho = tmp_path / 'h.json'
+    caminho.write_text(json.dumps(eventos), encoding='utf-8')
+    colunas = dados._extrair_registros(caminho)
+    for campo in ('master_metadata_track_name', 'master_metadata_album_artist_name', 'platform'):
+        primeiro, *resto = colunas[campo]
+        assert all(v is primeiro for v in resto), campo

@@ -8,6 +8,7 @@ uvicorn: no navegador eles não existem. Uso: ``python tools/empacotar_web.py``.
 from __future__ import annotations
 
 import ast
+import shutil
 import sys
 import zipfile
 from pathlib import Path
@@ -70,6 +71,11 @@ def empacotar(destino: Path = DESTINO) -> Path:
     with zipfile.ZipFile(destino, 'w', zipfile.ZIP_DEFLATED) as pacote:
         for arquivo in [*modulos(), *(RAIZ / e for e in EXTRAS)]:
             pacote.write(arquivo, arquivo.relative_to(RAIZ).as_posix())
+    # O HTML do núcleo (Blend, stories, corrida) usa as mesmas classes e animações do app local.
+    shutil.copyfile(RAIZ / 'styles.css', destino.parent / 'componentes.css')
+    # syncup.js é uma função solta (o Gradio a executa); no app ela é chamada direto.
+    js = (RAIZ / 'syncup.js').read_text(encoding='utf-8').strip()
+    (destino.parent / 'componentes.js').write_text(f'({js})();\n', encoding='utf-8')
     return destino
 
 

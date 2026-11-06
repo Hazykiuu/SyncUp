@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SyncUp · app</title>
+<meta name="description" content="Compare históricos do Spotify direto no navegador. Nada sai do seu aparelho.">
+<meta name="theme-color" content="#121212">
+<link rel="preload" href="../assets/Figtree.ttf" as="font" type="font/ttf" crossorigin>
+<!-- Ordem: componentes do núcleo (Blend, stories) → estilo do site → ajustes do app. -->
+<link rel="stylesheet" href="componentes.css">
+<link rel="stylesheet" href="../estilo.css">
+<link rel="stylesheet" href="app.css">
+<script type="importmap">{ "imports": { "preact-htm": "https://unpkg.com/htm@3.1.1/preact/standalone.module.js" } }</script>
+</head>
+<body class="js">
+<a class="pular" href="#principal">Pular para o conteúdo</a>
+<div class="bolhas fixas" aria-hidden="true"><i></i><i></i><i></i></div>
+<div id="app"><p class="shell" style="padding-top:6rem">Carregando o SyncUp…</p></div>
+<noscript><p class="shell">O SyncUp precisa de JavaScript para rodar no navegador.</p></noscript>
+<script src="componentes.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import gc
 import json
+import math
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
@@ -203,7 +205,33 @@ def wrapped(arquivos: list[str], nome: str, opcoes: dict | None = None) -> dict:
         'stories': stories.stories_html(w),
         'arquetipos': stories.arquetipos_detalhe_html(w),
         'trilha': _trilha(w),
+        'dados': _wrapped_json(w),
     }
+
+
+def _simples(valor: Any) -> Any:
+    """Converte para tipos que o JSON aceita: datas em ISO, NaN em None, numpy em Python."""
+    if isinstance(valor, dict):
+        return {str(k): _simples(v) for k, v in valor.items()}
+    if isinstance(valor, (list, tuple)):
+        return [_simples(v) for v in valor]
+    if valor is pd.NaT:
+        return None
+    if isinstance(valor, pd.Timestamp):
+        return valor.isoformat()
+    if hasattr(valor, 'item') and not isinstance(valor, (str, bytes)):
+        valor = valor.item()  # numpy.int64, numpy.float64…
+    if isinstance(valor, float) and not math.isfinite(valor):
+        return None
+    return valor
+
+
+def _wrapped_json(w: Any) -> dict:
+    """Contrato do Wrapped para o Preact: todos os campos do ``Wrapped`` em JSON puro.
+
+    Os textos vão crus (sem escape HTML): o Preact escapa ao desenhar. Datas em ISO 8601.
+    """
+    return _simples(asdict(w))
 
 
 def _trilha(w: Any) -> dict:

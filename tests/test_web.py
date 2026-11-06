@@ -130,3 +130,38 @@ def test_wrapped_roda_sem_plotly_nem_pillow(zips: tuple[str, str]) -> None:
         "assert not {'plotly', 'PIL'} & {m.split('.')[0] for m in sys.modules}\n"
     )
     subprocess.run([sys.executable, '-c', codigo], cwd=RAIZ, check=True)
+
+
+def test_contrato_json_do_wrapped(zips: tuple[str, str]) -> None:
+    """``dados`` leva todos os campos do Wrapped em JSON puro; textos crus (o Preact escapa)."""
+    from dataclasses import fields
+    from datetime import datetime
+
+    from web import ponte
+    from wrapped import Wrapped
+
+    r = ponte.wrapped([zips[0]], '<b>Ana</b>')
+    dados = json.loads(json.dumps(r['dados'], allow_nan=False))  # sem NaN, sem tipos estranhos
+    assert set(dados) == {f.name for f in fields(Wrapped)}
+    assert dados['nome'] == '<b>Ana</b>'  # cru: escapar aqui viraria &lt;b&gt; na tela
+    for campo in ('inicio', 'fim', 'primeira_data', 'dia_recorde', 'descoberta_artista_vida'):
+        datetime.fromisoformat(dados[campo])
+    item = dados['top_musicas'][0]
+    assert set(item) == {'nome', 'plays', 'horas', 'artista'} and isinstance(item['plays'], int)
+    assert dados['anos'][0]['ano'] and isinstance(dados['anos'][0]['top_artistas'], list)
+    assert len(dados['plays_por_hora']) == 24
+    assert {'nome', 'icone', 'forca'} <= set(dados['arquetipos']['principal'])
+    assert all(len(p) == 2 for p in dados['plataformas'])
+
+
+def test_simples_troca_nan_e_numpy() -> None:
+    import numpy as np
+    import pandas as pd
+
+    from web.ponte import _simples
+
+    assert _simples({'a': float('nan'), 'b': np.int64(3), 'c': (pd.NaT, np.float64(1.5))}) == {
+        'a': None,
+        'b': 3,
+        'c': [None, 1.5],
+    }

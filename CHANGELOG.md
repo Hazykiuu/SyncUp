@@ -1,5 +1,21 @@
 # Changelog — SyncUp
 
+## [1.3.1] — 2026-11-06
+
+Correções da inspeção de segurança e estabilidade do app no navegador.
+
+### Corrigido
+- Pico de memória do histórico gigante de 371 para 309 MB (abaixo do limite do iPhone): o Wrapped é calculado antes da comparação.
+- Se o motor parar (falta de memória), a tela avisa em vez de girar para sempre; sem internet, a mensagem fala da conexão.
+- Os ZIPs saem da memória do navegador mesmo quando a comparação dá erro.
+- Gráficos: aspas aparecem certas ("Guns N' Roses"); se o plotly.js não baixar, cada gráfico avisa e tenta de novo ao reabrir a aba.
+- O deploy do site agora também roda quando `styles.css` ou `syncup.js` mudam.
+
+### Novo
+- Teto de 50 MB por pessoa no app web.
+- Landing com os botões **Abrir o app** e textos do app no navegador.
+- Testes de XSS na ponte e dos textos da landing.
+
 ## [1.3.0] — 2026-11-06
 
 Primeira tela do SyncUp rodando 100% no navegador.

@@ -7,12 +7,13 @@ sejam animadas entre um resultado e outro.
 
 from __future__ import annotations
 
+from html import escape
 from typing import TYPE_CHECKING
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from formatacao import escape_html, fmt_num, fmt_pct
+from formatacao import fmt_num, fmt_pct
 from perfis import LIMIAR_FAVORITOS, LIMIAR_MADRUGADA, LIMIAR_REPEAT
 
 if TYPE_CHECKING:
@@ -31,6 +32,11 @@ FONTE = 'Figtree, "Circular Std", "Helvetica Neue", Helvetica, Arial, sans-serif
 CORES_GRUPO = [VERDE, ROXO, '#ffa42b', '#4cc9f0', '#f573a0', '#e8db5a']
 DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
 TRANSICAO = dict(duration=650, easing='cubic-in-out')
+
+
+def _texto(texto: object) -> str:
+    """Escapa só & < >: o Plotly lê tags, mas mostra &quot; e &#x27; ao pé da letra."""
+    return escape(str(texto), quote=False)
 
 
 def _base(figura: go.Figure, titulo: str, altura: int = 520) -> go.Figure:
@@ -75,7 +81,7 @@ def butterfly(resultado: ResultadoComparacao) -> go.Figure:
     a, b = resultado.perfil_a, resultado.perfil_b
     valores_a = [a.contagens_artistas.get(x, 0) / a.plays * 100 for x in artistas]
     valores_b = [b.contagens_artistas.get(x, 0) / b.plays * 100 for x in artistas]
-    nomes = [escape_html(x) for x in artistas]
+    nomes = [_texto(x) for x in artistas]
     fig = go.Figure()
     for perfil, valores, sinal, cor, prefixo in (
         (a, valores_a, -1, VERDE, 'A'),
@@ -85,7 +91,7 @@ def butterfly(resultado: ResultadoComparacao) -> go.Figure:
             y=nomes,
             x=[sinal * x for x in valores],
             orientation='h',
-            name=escape_html(f'{prefixo} · {perfil.nome}'),
+            name=_texto(f'{prefixo} · {perfil.nome}'),
             marker=dict(color=cor, line=dict(width=0), cornerradius=6),
             customdata=valores,
             hovertemplate='%{y}<br>%{customdata:.2f}% dos plays<extra>%{fullData.name}</extra>',
@@ -118,8 +124,8 @@ def mapa_horarios(resultado: ResultadoComparacao) -> go.Figure:
         rows=1,
         cols=2,
         subplot_titles=[
-            escape_html(f'A · {resultado.perfil_a.nome}'),
-            escape_html(f'B · {resultado.perfil_b.nome}'),
+            _texto(f'A · {resultado.perfil_a.nome}'),
+            _texto(f'B · {resultado.perfil_b.nome}'),
         ],
         horizontal_spacing=0.12,
     )
@@ -138,7 +144,7 @@ def mapa_horarios(resultado: ResultadoComparacao) -> go.Figure:
             row=1,
             col=coluna,
         )
-    _base(fig, f'Horários de escuta · {escape_html(resultado.periodo.fuso_horario)}', 540)
+    _base(fig, f'Horários de escuta · {_texto(resultado.periodo.fuso_horario)}', 540)
     fig.update_layout(
         coloraxis=dict(
             colorscale=[[0, '#202020'], [0.35, '#1a5c33'], [0.7, VERDE_ESCURO], [1, VERDE]],
@@ -174,7 +180,7 @@ def radar_tracos(resultado: ResultadoComparacao) -> go.Figure:
                 fillcolor=preenchimento,
                 line=dict(color=cor, width=3),
                 marker=dict(size=9),
-                name=escape_html(f'{prefixo} · {perfil.nome}'),
+                name=_texto(f'{prefixo} · {perfil.nome}'),
                 hovertemplate='%{theta}: %{r:.1f}%<extra>%{fullData.name}</extra>',
             )
         )
@@ -222,7 +228,7 @@ def slope_chart(resultado: ResultadoComparacao, limite: int = 8) -> go.Figure:
                 x=[0, 1],
                 y=valores,
                 mode='lines+markers',
-                name=escape_html(artista),
+                name=_texto(artista),
                 line=dict(color=CORES_GRUPO[i % len(CORES_GRUPO)], width=3),
                 marker=dict(size=12, symbol='circle' if i < 6 else 'diamond'),
                 hovertemplate='%{y:.2f}% dos plays<extra>%{fullData.name}</extra>',
@@ -237,7 +243,7 @@ def slope_chart(resultado: ResultadoComparacao, limite: int = 8) -> go.Figure:
     )
     fig.update_xaxes(
         tickvals=[0, 1],
-        ticktext=[escape_html(f'A · {a.nome}'), escape_html(f'B · {b.nome}')],
+        ticktext=[_texto(f'A · {a.nome}'), _texto(f'B · {b.nome}')],
         range=[-0.15, 1.15],
         showgrid=False,
         zeroline=False,
@@ -252,7 +258,7 @@ def slope_chart(resultado: ResultadoComparacao, limite: int = 8) -> go.Figure:
 
 def matriz_grupo(resultado: ResultadoGrupo) -> go.Figure:
     """Exibe a matriz simétrica, com valores explícitos além das cores."""
-    nomes = [escape_html(x) for x in resultado.matriz.index]
+    nomes = [_texto(x) for x in resultado.matriz.index]
     valores = resultado.matriz.values.tolist()
     fig = go.Figure(
         go.Heatmap(
@@ -271,7 +277,7 @@ def matriz_grupo(resultado: ResultadoGrupo) -> go.Figure:
             hovertemplate='%{y} × %{x}<br>Cosseno: %{z:.4f}<extra></extra>',
         )
     )
-    _base(fig, f'Grupo · cosseno com ponderação {escape_html(resultado.ponderacao)}', 640)
+    _base(fig, f'Grupo · cosseno com ponderação {_texto(resultado.ponderacao)}', 640)
     fig.update_xaxes(showgrid=False, side='bottom')
     fig.update_yaxes(autorange='reversed', showgrid=False)
     return fig
@@ -289,7 +295,7 @@ def evolucao_mensal(resultado: ResultadoComparacao) -> go.Figure:
                 x=perfil.mensal['Mês'],
                 y=perfil.mensal['Horas'],
                 mode='lines+markers',
-                name=escape_html(f'{prefixo} · {perfil.nome}'),
+                name=_texto(f'{prefixo} · {perfil.nome}'),
                 line=dict(color=cor, width=3, shape='spline', smoothing=0.6),
                 marker=dict(size=6),
                 fill='tozeroy',
@@ -306,7 +312,7 @@ def evolucao_mensal(resultado: ResultadoComparacao) -> go.Figure:
 
 def matriz_conciliacao(resultado: ResultadoConciliacao) -> go.Figure:
     """Compatibilidade de todos com todos (0–100); a diagonal fica em branco."""
-    nomes = [escape_html(x) for x in resultado.nomes]
+    nomes = [_texto(x) for x in resultado.nomes]
     valores = [
         [None if i == j else v for j, v in enumerate(linha)]
         for i, linha in enumerate(resultado.matriz.values.tolist())

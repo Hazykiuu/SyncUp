@@ -5,7 +5,7 @@ name: Site
 on:
   push:
     branches: [main]
-    paths: ['site/**', '*.py', 'web/**', 'tools/**', 'fontes/**', '.github/workflows/site.yml']
+    paths: ['site/**', '*.py', 'styles.css', 'syncup.js', 'web/**', 'tools/**', 'fontes/**', '.github/workflows/site.yml']
   workflow_dispatch:
 
 permissions:

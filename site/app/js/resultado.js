@@ -18,18 +18,22 @@ function Tabela({ titulo, tabela }) {
 // plotly.js só baixa quando a aba Gráficos abre (~5 MB).
 let plotly = null;
 const carregarPlotly = () => plotly ??= new Promise((ok, erro) => {
-  const s = Object.assign(document.createElement('script'), { src: 'https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.7.0/plotly.min.js', onload: () => ok(window.Plotly), onerror: erro });
+  const s = Object.assign(document.createElement('script'), { src: 'https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.7.0/plotly.min.js', onload: () => ok(window.Plotly), onerror: () => { s.remove(); plotly = null; erro(); } });
   document.head.append(s);
 });
 
 function Grafico({ figura, titulo }) {
   const alvo = useRef(null);
+  const [falhou, setFalhou] = useState(false);
   useEffect(() => {
     let vivo = true;
-    carregarPlotly().then((P) => vivo && P.newPlot(alvo.current, figura.data, { ...figura.layout, autosize: true }, { responsive: true, displaylogo: false }));
+    carregarPlotly().then((P) => vivo && P.newPlot(alvo.current, figura.data, { ...figura.layout, autosize: true }, { responsive: true, displaylogo: false }))
+      .catch(() => vivo && setFalhou(true));
     return () => { vivo = false; window.Plotly?.purge(alvo.current); };
   }, [figura]);
-  return html`<figure class="grafico vidro"><figcaption>${titulo}</figcaption><div ref=${alvo} class="grafico-area" role="img" aria-label=${titulo}></div></figure>`;
+  return html`<figure class="grafico vidro"><figcaption>${titulo}</figcaption>
+    ${falhou && html`<p class="erro" role="alert">Não deu para baixar os gráficos. Confira a internet e abra esta aba de novo.</p>`}
+    <div ref=${alvo} class="grafico-area" role="img" aria-label=${titulo}></div></figure>`;
 }
 
 function Lista({ titulo, itens }) {

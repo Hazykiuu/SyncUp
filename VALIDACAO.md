@@ -143,3 +143,11 @@ O notebook distribuído está sem saídas e sem arquivos de dados/exports reais.
 
 - `pytest`: 246 testes aprovados e 3 pulados (novos em `tests/test_web.py`: pacote só com o que roda no navegador, ponte sem Gradio nem rede, resultado igual ao núcleo, downloads).
 - App local em `/app/` no navegador do app Claude: Python pronto em ~11 s (com cache), demo em 9 s, p1 × p2 enviados pelo campo de arquivo em 3 s com 5,0% (igual ao nativo); JSON inválido mostra a mensagem do núcleo; 5 gráficos, stories e 3 downloads funcionando; abas pelo teclado; sem rolagem lateral em 390 e 1280 px. Não medido: primeira visita sem cache e celular de verdade.
+
+## v1.3.1 — Inspeção do app no navegador (2026-11-06)
+
+- `pytest`: 248 testes aprovados e 3 pulados (novos: XSS na ponte com nomes maliciosos; textos e links da landing).
+- XSS: ZIPs com `<img onerror>`, `<script>`, `javascript:` e atributos em artistas, faixas, álbuns e nomes. Nenhuma tag ativa no HTML e nada executou nas 7 abas do app.
+- Memória (Pyodide, painel do navegador): demo 6× estável em 149 MB, p1 × p2 6× em 179 MB; histórico gigante 3× em 309 MB (antes 371 MB). Transferência sem cópia conferida (buffer da página fica com 0 bytes).
+- Falhas simuladas: sem internet e pacote 404 mostram a mensagem de conexão; plotly.js fora do ar mostra aviso e carrega ao reabrir a aba; arquivo de 51 MB recusado com aviso.
+- Não medido: celular de verdade e rede lenta.

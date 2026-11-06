@@ -1,17 +1,24 @@
 // Cartão de uma pessoa: nome + arquivos do histórico (vários, por clique ou arrastando).
-import { html, useRef, useState } from 'preact-htm';
+import { html, useEffect, useRef, useState } from 'preact-htm';
 
 const ACEITOS = /\.(zip|json)$/i;
+// Acima disso o celular (iPhone ~350 MB por aba) corre risco de fechar a página no meio da conta.
+const TETO = 50 * 1048576;
 const tamanho = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(1).replace('.', ',')} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
 
 export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquivos, desabilitado }) {
   const entrada = useRef(null);
   const [arrastando, setArrastando] = useState(false);
-  const somar = (lista) => {
-    const novos = [...lista].filter((f) => ACEITOS.test(f.name));
+  const [aviso, setAviso] = useState('');
+  useEffect(() => { if (!arquivos.length) setAviso(''); }, [arquivos]); // a demonstração zera a lista
+  const somar = (escolhidos) => {
+    const novos = [...escolhidos].filter((f) => ACEITOS.test(f.name));
     const chave = (f) => `${f.name}|${f.size}`;
     const existentes = new Set(arquivos.map(chave));
-    aoMudarArquivos([...arquivos, ...novos.filter((f) => !existentes.has(chave(f)))]);
+    const lista = [...arquivos, ...novos.filter((f) => !existentes.has(chave(f)))];
+    if (lista.reduce((t, f) => t + f.size, 0) > TETO) { setAviso('Passou de 50 MB para esta pessoa. Envie só o Histórico Estendido (o ZIP do Spotify costuma ter bem menos).'); return; }
+    setAviso('');
+    aoMudarArquivos(lista);
   };
   const idNome = `nome-${rotulo}`;
   return html`
@@ -34,6 +41,7 @@ export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquiv
         <input ref=${entrada} type="file" accept=".zip,.json" multiple hidden
           onChange=${(e) => { somar(e.target.files); e.target.value = ''; }} />
         <small>Pode enviar várias partes. Os arquivos não saem do seu aparelho.</small>
+        ${aviso && html`<p class="erro" role="alert">${aviso}</p>`}
       </div>
       ${arquivos.length > 0 && html`
         <ul class="lista-arquivos" aria-label=${`Arquivos da pessoa ${rotulo}`}>

@@ -1,5 +1,19 @@
 # Changelog — SyncUp
 
+## [1.2.0] — 2026-11-06
+
+Site novo e um núcleo pronto para rodar no navegador.
+
+### Novo
+- **Landing page** em `site/` (HTML único, visual adaptado do modelo Lumora do GetLayers com a identidade do SyncUp): hero com "liquid reveal" das duas pessoas (verde e roxo), vidro líquido, faixa de recursos, as 4 abas com capturas, como funciona, números, privacidade e rodapé com GitHub e X. Publicada pelo GitHub Pages (workflow `site.yml`) em <https://hazykiuu.github.io/SyncUp/>. Respeita "menos movimento", alvos de 44 px e funciona em 390 px.
+
+### Correções
+- **Sintonia com pandas 3**: as datas eram convertidas supondo nanossegundos; no pandas 3 (microssegundos) a sintonia saía errada sem erro. Agora `recursos._ns()` fixa a unidade.
+- **Site**: a tela de carregamento não bloqueia mais os cliques (contagem pelo relógio, trava de 2,5 s, Lenis sem `await`) e o menu do celular prende o foco (`inert`).
+
+### Desempenho
+- **Menos memória** para históricos grandes, pensando no navegador (iOS ~350 MB): nomes repetidos guardados uma vez na leitura, e o `comparar()` solta as cópias do período antes da sintonia. Com 285 mil plays por pessoa, no Pyodide: Dupla 446 → 309 MB, Wrapped 215 MB. Resultados idênticos.
+
 ## [1.1.0] — 2026-11-06
 
 Primeira etapa do Roadmap 2.0: cara de produto.

@@ -30,3 +30,15 @@ def test_scripts_externos_so_da_lista_permitida() -> None:
     assert externos == ['https://unpkg.com/lenis@1.3.23/dist/lenis.mjs']
     assert 'gsap' not in HTML.lower()
     assert not re.search(r'googletagmanager|google-analytics|gtag\(|facebook\.net', HTML)
+
+
+def test_landing_leva_ao_app_e_nao_promete_o_que_saiu() -> None:
+    assert HTML.count('href="app/"') >= 3 and (SITE / 'app' / 'index.html').is_file()
+    for velho in (
+        '100% local',
+        'seu computador',
+        'Login do Spotify',
+        'token do Spotify',
+        'iniciar.bat',
+    ):
+        assert velho not in HTML, velho

@@ -1,12 +1,51 @@
-// Teste mínimo de áudio (Fase 1 da Etapa 4): um único <audio> desbloqueado por UM toque
-// troca de src sozinho a cada trecho. Serve para validar o autoplay no Safari do iPhone.
-import { html, useRef, useState } from 'preact-htm';
+// Trilha dos stories do Wrapped: trechos de 30 s do iTunes tocando enquanto os slides passam.
+// Um único <audio>, desbloqueado pelo toque em "Começar com som" (validado no iPhone),
+// troca de src sozinho. Volume por Web Audio: no iOS o audio.volume é ignorado.
+import { html, useEffect, useRef, useState } from 'preact-htm';
 
-const TRECHO_MS = 6000;
-// Músicas conhecidas para quando o histórico é fictício (o iTunes não acha "Artista fictício").
-const RESERVA = [{ artista: 'Legião Urbana', faixa: 'Tempo Perdido' }, { artista: 'Tim Maia', faixa: 'Azul da Cor do Mar' }, { artista: 'Marisa Monte', faixa: 'Ainda Bem' }];
+const VOLUME = 0.2;
+const ENTRA = 1.2; // segundos de fade in
+const SAI = 0.5; // fade out antes de trocar de música (e no fim do trecho)
+// Para históricos fictícios (o iTunes não acha "Artista fictício"): trechos de exemplo.
+const EXEMPLO = [{ artista: 'Legião Urbana', faixa: 'Tempo Perdido' }, { artista: 'Tim Maia', faixa: 'Azul da Cor do Mar' }, { artista: 'Marisa Monte', faixa: 'Ainda Bem' }];
+const cache = new Map();
 
-// 0,2 s de silêncio em WAV (8 kHz, 8 bits): o play() dentro do toque desbloqueia o elemento.
+const normalizar = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const chave = (m) => `${normalizar(m.artista)}|${normalizar(m.faixa)}`;
+
+async function itunes(params) {
+  const r = await fetch(`https://itunes.apple.com/search?${new URLSearchParams({ entity: 'song', country: 'BR', ...params })}`);
+  if (!r.ok) throw new Error(`iTunes ${r.status}`);
+  return (await r.json()).results || [];
+}
+// Trecho = { url, id }; o id (artista|faixa do iTunes) evita tocar a mesma música duas vezes.
+const trecho = (x) => ({ url: x.previewUrl, id: `${normalizar(x.artistName)}|${normalizar(x.trackName)}` });
+const doArtista = (x, nome) => x.previewUrl && normalizar(x.artistName).includes(normalizar(nome));
+
+// shortcut: casa só pelo artista; o casamento completo (faixa, remaster, feat.) vem na Fase 3.
+async function buscar(m) {
+  const k = `m:${chave(m)}`;
+  if (!cache.has(k)) {
+    const item = (await itunes({ term: `${m.artista} ${m.faixa}`, limit: '5' })).find((x) => doArtista(x, m.artista));
+    cache.set(k, item ? [trecho(item)] : []);
+  }
+  return cache.get(k);
+}
+
+// As mais famosas do artista, na ordem de relevância do iTunes, sem repetir a mesma faixa.
+async function famosas(nome) {
+  const k = `a:${normalizar(nome)}`;
+  if (!cache.has(k)) {
+    const vistos = new Set();
+    const lista = (await itunes({ term: nome, attribute: 'artistTerm', limit: '15' }))
+      .filter((x) => doArtista(x, nome)).map(trecho).filter((t) => !vistos.has(t.id) && vistos.add(t.id));
+    cache.set(k, lista);
+  }
+  return cache.get(k);
+}
+const resolver = (c) => (c.faixa ? buscar(c) : famosas(c.artista)).catch(() => []);
+
+// 0,2 s de silêncio em WAV: o play() dentro do toque desbloqueia o elemento.
 function silencio() {
   const n = 1600, b = new DataView(new ArrayBuffer(44 + n));
   const txt = (o, s) => [...s].forEach((c, i) => b.setUint8(o + i, c.charCodeAt(0)));
@@ -17,50 +56,133 @@ function silencio() {
   return URL.createObjectURL(new Blob([b], { type: 'audio/wav' }));
 }
 
-async function preview({ artista, faixa }) {
-  const url = `https://itunes.apple.com/search?${new URLSearchParams({ term: `${artista} ${faixa}`, entity: 'song', country: 'BR', limit: '1' })}`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(`iTunes respondeu ${r.status}`);
-  const item = (await r.json()).results?.[0];
-  return item?.previewUrl ? { ...item, rotulo: `${item.artistName} · ${item.trackName}` } : null;
+// Um só <audio> e um só AudioContext para a página toda: o iOS limita os contextos e
+// um elemento novo precisaria de outro toque. Criados no primeiro "Começar com som".
+let som = null;
+function prepararSom() {
+  if (!som) {
+    const el = new Audio();
+    el.crossOrigin = 'anonymous'; // o iTunes manda CORS *: o Web Audio pode ler o trecho
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ganho = ctx.createGain(); ganho.gain.value = 0;
+    ctx.createMediaElementSource(el).connect(ganho).connect(ctx.destination);
+    som = { el, ctx, ganho };
+  }
+  return som;
 }
 
-// play() rejeita com AbortError quando o src muda antes de começar: não é falha de som.
-async function tocar(audio) {
-  try { await audio.play(); return 'tocando'; } catch (e) { return e.name === 'AbortError' ? 'interrompido (normal)' : `bloqueado (${e.name})`; }
-}
+export function SomStories({ trilha, alvo }) {
+  const trilhaPronta = useRef(null);
+  const [status, setStatus] = useState('');
+  const [estado, setEstado] = useState('escolher'); // escolher | carregando | tocando | sem
+  const [mudo, setMudo] = useState(false);
+  const mudoAgora = useRef(false); // lido pelos ouvintes do player, que não re-renderizam
+  mudoAgora.current = mudo;
+  const raiz = () => alvo.current?.querySelector('[data-stories]');
+  const [aviso, setAviso] = useState('');
 
-export function TesteSom({ musicas }) {
-  const audio = useRef(null);
-  const [log, setLog] = useState([]);
-  const [ativo, setAtivo] = useState(false);
-  const anotar = (linha) => setLog((l) => [...l, linha]);
+  const rampa = (valor, segundos = ENTRA) => {
+    const m = som; if (!m) return;
+    const t = m.ctx.currentTime;
+    m.ganho.gain.cancelScheduledValues(t); m.ganho.gain.setValueAtTime(m.ganho.gain.value, t);
+    m.ganho.gain.linearRampToValueAtTime(valor, t + segundos);
+  };
+  // play() rejeita com AbortError quando o slide troca rápido: não é falha de som.
+  const tocar = (el) => el.play().catch((e) => { if (e.name !== 'AbortError') setAviso('O navegador bloqueou o som. Toque em “Ligar som” para tentar de novo.'); });
 
-  const comecar = async () => {
-    const el = audio.current;
-    setLog([]); setAtivo(true);
-    el.src = silencio();
-    const desbloqueio = tocar(el); // chamado dentro do toque, antes de qualquer await
-    anotar(`Desbloqueio no toque: ${await desbloqueio}`);
-    try {
-      const achados = (await Promise.all(musicas.map((m) => preview(m).catch(() => null)))).filter(Boolean);
-      for (const m of RESERVA) { if (achados.length >= 3) break; const p = await preview(m).catch(() => null); if (p) achados.push(p); }
-      if (!achados.length) anotar('Nenhum trecho encontrado no iTunes (sem internet?).');
-      for (const [i, p] of achados.slice(0, 3).entries()) {
-        el.src = p.previewUrl; el.currentTime = 0;
-        anotar(`Trecho ${i + 1} sem novo toque (${p.rotulo}): ${await tocar(el)}`);
-        await new Promise((ok) => setTimeout(ok, TRECHO_MS));
-      }
-    } catch (e) { anotar(`Erro: ${e.message}`); }
-    el.pause(); setAtivo(false); anotar('Fim do teste.');
+  // Qualquer erro na busca vira "sem som", nunca um "Buscando…" eterno.
+  const comecar = () => iniciarSom().catch(() => { setEstado('sem'); setAviso('Não deu para preparar o som. Os stories seguem sem som.'); });
+  const iniciarSom = async () => {
+    const { el, ctx, ganho } = prepararSom();
+    ganho.gain.cancelScheduledValues(ctx.currentTime); ganho.gain.value = 0;
+    el.src = silencio(); tocar(el); // dentro do toque, antes de qualquer await
+    ctx.resume();
+    setEstado('carregando'); setAviso('');
+    const porSlide = Object.fromEntries(await Promise.all(Object.entries(trilha.slides).map(
+      async ([tipo, candidatas]) => [tipo, (await Promise.all(candidatas.map(resolver))).flat()])));
+    // Intercala: a 1ª de cada candidata, depois a 2ª… (não esgota um artista antes do próximo).
+    const listas = await Promise.all(trilha.fila.map(resolver));
+    let fila = Array.from({ length: Math.max(0, ...listas.map((l) => l.length)) }, (_, i) => listas.map((l) => l[i])).flat().filter(Boolean);
+    if (!fila.length && !Object.values(porSlide).some((l) => l.length)) {
+      fila = (await Promise.all(EXEMPLO.map(resolver))).flat();
+      if (fila.length) setAviso('Não achamos estas músicas no iTunes (histórico fictício?). Tocando trechos de exemplo.');
+    }
+    if (!fila.length && !Object.values(porSlide).some((l) => l.length)) { setEstado('sem'); setAviso('Não deu para buscar os trechos (sem internet?). Os stories seguem sem som.'); return; }
+    trilhaPronta.current = { fila, porSlide };
+    setEstado('tocando');
+    raiz()?.__suPlay?.(); // recomeça do primeiro slide, já com som
+    raiz()?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
+  // Uma música por story: cada slide tem a sua (a própria do slide ou a próxima das mais ouvidas).
+  // Troca com fade out → novo trecho do início → fade in. Pausar os stories pausa o som.
+  useEffect(() => {
+    const stories = raiz();
+    if (estado !== 'tocando' || !stories) return undefined;
+    const { el } = som;
+    const { fila, porSlide } = trilhaPronta.current;
+    const slides = [...stories.querySelectorAll('.su-story')];
+    // Cada story: a 1ª candidata do seu dado que ainda não tocou; senão, a próxima das mais ouvidas.
+    const tocadas = new Set();
+    const livre = (lista) => lista.find((t) => !tocadas.has(t.id));
+    const musicas = slides.map((slide) => {
+      const tipo = [...slide.classList].find((c) => c.startsWith('s-'))?.slice(2);
+      const t = livre(porSlide[tipo] || []) || livre(fila) || fila[tocadas.size % (fila.length || 1)];
+      if (!t) return null; // sem trecho: este story fica em silêncio
+      tocadas.add(t.id);
+      slide.dataset.trecho = t.id; // qual música tocou neste story (conferível no DOM)
+      return t.url;
+    });
+    const volume = () => (mudoAgora.current ? 0 : VOLUME);
+    let atual = -1, troca = 0, tentou = false;
+    const trocar = (url) => {
+      const minha = ++troca; // um toque rápido em vários slides cancela as trocas antigas
+      const comecarNova = () => { if (minha !== troca) return; tentou = false; el.src = url; tocar(el); rampa(volume()); };
+      if (!url) { rampa(0, SAI); return; }
+      if (el.paused || el.src.startsWith('blob:')) comecarNova();
+      else { rampa(0, SAI); setTimeout(comecarNova, SAI * 1000); }
+    };
+    const aoMudar = () => {
+      if (stories.classList.contains('pausado')) { el.pause(); return; }
+      const i = slides.findIndex((sl) => sl.classList.contains('ativo'));
+      if (i < 0) return;
+      if (i !== atual) { atual = i; trocar(musicas[i]); } else if (el.paused && !el.src.startsWith('blob:')) { tocar(el); rampa(volume()); }
+    };
+    // Fade out no fim do trecho de 30 s, em vez de cortar seco.
+    const fim = () => { if (el.duration && el.duration - el.currentTime < SAI + 0.3) rampa(0, SAI); };
+    // Linha de status (diagnóstico no celular) e uma nova tentativa se o trecho falhar ao carregar.
+    const tocando = () => setStatus(`♪ Story ${atual + 1} de ${slides.length}: tocando`);
+    const erro = () => {
+      if (!tentou && musicas[atual]) { tentou = true; el.src = musicas[atual]; tocar(el); setStatus(`Story ${atual + 1}: tentando de novo…`); }
+      else setStatus(`Story ${atual + 1}: este trecho não carregou`);
+    };
+    const obs = new MutationObserver(aoMudar);
+    obs.observe(stories, { attributes: true, attributeFilter: ['class'], subtree: true });
+    el.addEventListener('timeupdate', fim);
+    el.addEventListener('playing', tocando);
+    el.addEventListener('error', erro);
+    aoMudar();
+    return () => {
+      troca++; obs.disconnect(); el.pause();
+      el.removeEventListener('timeupdate', fim); el.removeEventListener('playing', tocando); el.removeEventListener('error', erro);
+    };
+  }, [estado]);
+
+  useEffect(() => { if (estado === 'tocando') rampa(mudo ? 0 : VOLUME); }, [mudo]);
+
   return html`
-    <div class="vidro teste-som">
-      <h3>Teste de som <small>(validação no iPhone)</small></h3>
-      <p class="nota">Toca 3 trechos de 30 s, trocando sozinho a cada 6 s depois de um único toque. Para buscar os trechos, envia o nome das músicas e o seu endereço IP para a Apple (iTunes).</p>
-      <button type="button" class="btn btn-borda vidro" onClick=${comecar} disabled=${ativo}>${ativo ? 'Tocando…' : 'Tocar 3 trechos'}</button>
-      <audio ref=${audio} preload="none"></audio>
-      ${log.length > 0 && html`<ol class="log-som" role="status">${log.map((l) => html`<li>${l}</li>`)}</ol>`}
+    <div class="som-stories vidro">
+      ${estado === 'escolher' || estado === 'sem' ? html`
+        <div class="acoes">
+          <button type="button" class="btn btn-verde" onClick=${comecar}>♪ Começar com som</button>
+          ${estado === 'escolher' && html`<button type="button" class="btn btn-borda vidro" onClick=${() => setEstado('sem')}>Começar sem</button>`}
+        </div>
+        <p class="nota">Com som, o SyncUp envia o nome das suas músicas mais ouvidas e o seu endereço IP para a Apple (iTunes), para buscar trechos de 30 s. O histórico e o seu nome não saem do aparelho.</p>` : html`
+        <div class="acoes">
+          <button type="button" class="btn btn-borda vidro" aria-pressed=${mudo} disabled=${estado !== 'tocando'} onClick=${() => setMudo((m) => !m)}>
+            ${estado === 'carregando' ? 'Buscando os trechos…' : mudo ? '🔇 Ligar som' : '🔊 Silenciar'}</button>
+        </div>`}
+      ${aviso && html`<p class="nota" role="status">${aviso}</p>`}
+      ${estado === 'tocando' && status && html`<p class="nota">${status}</p>`}
     </div>`;
 }

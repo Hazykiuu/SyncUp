@@ -105,7 +105,10 @@ def test_wrapped_e_cartao_no_navegador(zips: tuple[str, str], tmp_path: Path, mo
     r = ponte.wrapped([zips[0]], ' <b>Ana</b> ')
     json.dumps(r)  # atravessa o Worker
     assert 'su-stories' in r['stories'] and '&lt;b&gt;Ana&lt;/b&gt;' in r['stories']
-    assert len(r['musicas']) == 3 and all(m['faixa'] and m['artista'] for m in r['musicas'])
+    trilha = r['trilha']
+    assert {'primeira', 'artista', 'top_musicas', 'recorde', 'fiel'} <= set(trilha['slides'])
+    assert trilha['slides']['artista'] == [{'artista': trilha['slides']['artista'][0]['artista']}]
+    assert trilha['fila'] and all(m['artista'] for m in trilha['fila'])
     png = Path(ponte.cartao_wrapped())
     assert png.suffix == '.png' and png.stat().st_size > 10_000
     ponte.comparar_dupla([zips[0]], [zips[1]], 'Ana', 'Bia')

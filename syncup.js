@@ -203,7 +203,7 @@
 
 
   /* ---------- Stories do Wrapped ---------- */
-  const DURACAO_STORY = 7000;
+  const DURACAO_STORY = 10000; // 10 s: dá tempo de ouvir o trecho de cada story
   const montarStories = (raiz) => {
     if (raiz.dataset.suStoriesReady) return;
     raiz.dataset.suStoriesReady = '1';

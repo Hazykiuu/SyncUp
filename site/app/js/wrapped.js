@@ -1,9 +1,9 @@
 // Tela Wrapped: o histórico de uma pessoa vira stories da vida toda e um PNG.
-import { html, useState } from 'preact-htm';
+import { html, useRef, useState } from 'preact-htm';
 import { baixar, executar } from './motor.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
-import { TesteSom } from './som.js';
+import { SomStories } from './som.js';
 
 const Html = ({ conteudo }) => html`<div class="nucleo" dangerouslySetInnerHTML=${{ __html: conteudo }} />`;
 
@@ -13,6 +13,7 @@ export function Wrapped({ pronto }) {
   const [opcoes, setOpcoes] = useState(PADRAO);
   const [fase, setFase] = useState({ tipo: 'parado' });
   const [baixando, setBaixando] = useState(false);
+  const stories = useRef(null);
   const ocupado = fase.tipo === 'processando';
 
   const rodar = async (args, envio = []) => {
@@ -56,11 +57,11 @@ export function Wrapped({ pronto }) {
     </div>
     <div id="resultado-wrapped">${fase.tipo === 'resultado' && html`
       <section class="resultado" aria-label=${`Wrapped de ${fase.r.nome}`}>
-        <${Html} conteudo=${fase.r.stories} />
+        <${SomStories} key=${fase.r} trilha=${fase.r.trilha} alvo=${stories} />
+        <div ref=${stories}><${Html} conteudo=${fase.r.stories} /></div>
         <div class="compartilhar"><div class="acoes">
           <button type="button" class="btn btn-verde" onClick=${png} disabled=${baixando}>${baixando ? 'Gerando…' : 'Baixar o story · PNG'}</button>
         </div></div>
         <details class="vidro detalhe"><summary>Como o arquétipo foi calculado</summary><${Html} conteudo=${fase.r.arquetipos} /></details>
-        <${TesteSom} musicas=${fase.r.musicas} />
       </section>`}</div>`;
 }

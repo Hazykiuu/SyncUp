@@ -197,8 +197,46 @@ def wrapped(arquivos: list[str], nome: str, opcoes: dict | None = None) -> dict:
         'nome': w.nome,
         'stories': stories.stories_html(w),
         'arquetipos': stories.arquetipos_detalhe_html(w),
-        # Para o teste de áudio (e depois as capas): o que o JS pode buscar se a pessoa pedir.
-        'musicas': [{'faixa': m.nome, 'artista': m.artista} for m in w.top_musicas[:3]],
+        'trilha': _trilha(w),
+    }
+
+
+def _trilha(w: Any) -> dict:
+    """Candidatas de música de cada slide, ligadas ao dado dele, em ordem de preferência.
+
+    ``{'faixa', 'artista'}`` é uma música certa; ``{'artista'}`` pede as mais famosas do artista
+    (ordem do iTunes). O JS toca a primeira candidata ainda não tocada; ``fila`` cobre o resto.
+    O JS só busca algo se a pessoa pedir som.
+    """
+
+    def musica(item: Any) -> dict | None:
+        return {'faixa': item.nome, 'artista': item.artista} if item and item.artista else None
+
+    def artista(nome: str) -> dict | None:
+        return {'artista': nome} if nome else None
+
+    def lista(*candidatas: dict | None) -> list[dict]:
+        return [c for c in candidatas if c]
+
+    tops = [musica(m) for m in w.top_musicas]
+    ultimo = w.anos[-1] if w.anos else None
+    slides = {
+        'intro': lista(musica(ultimo.top_musica) if ultimo else None, *tops),
+        'primeira': lista(musica(w.primeira_musica)),
+        'artista': lista(artista(w.artista_vida.nome)),
+        'top_artistas': lista(*(artista(a.nome) for a in w.top_artistas[1:3])),
+        'top_musicas': lista(*tops),
+        'anos': lista(musica(w.anos[0].top_musica) if w.anos else None),
+        'descobertas': lista(
+            artista(ultimo.top_artistas[0].nome) if ultimo and ultimo.top_artistas else None
+        ),
+        'recorde': lista(musica(w.repeticao_dia), artista(w.artista_dia_recorde)),
+        'fiel': lista(artista(w.fiel.nome)),
+    }
+    return {
+        'slides': {tipo: c for tipo, c in slides.items() if c},
+        # Acabaram as mais ouvidas? Seguem as mais famosas dos top artistas, sem repetir.
+        'fila': [m for m in tops[:10] if m] + lista(*(artista(a.nome) for a in w.top_artistas[:5])),
     }
 
 

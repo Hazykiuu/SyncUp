@@ -98,9 +98,7 @@ textarea.entrada { resize: vertical; }
 
 @media (prefers-reduced-motion: reduce) { .giro { animation: none; } }
 
-/* Wrapped: uma pessoa só e o teste de som da Etapa 4. */
+/* Wrapped: uma pessoa só e a trilha dos stories. */
 @media (min-width: 900px) { .pessoas.uma { grid-template-columns: minmax(0, 40rem); } }
-.teste-som { display: flex; flex-direction: column; gap: .75rem; margin-top: 1.5rem; padding: 1.5rem; border-radius: var(--cartao); }
-.teste-som h3 small { font-weight: 600; color: var(--fraco); font-size: .8rem; }
-.teste-som .btn { align-self: flex-start; }
-.log-som { display: grid; gap: .3rem; padding-left: 1.2rem; font-size: .9rem; color: var(--sub); }
+.som-stories { display: flex; flex-direction: column; gap: .6rem; margin-bottom: 1rem; padding: 1.25rem; border-radius: var(--cartao); }
+.som-stories .acoes { display: flex; flex-wrap: wrap; gap: .75rem; }

@@ -1,5 +1,15 @@
 # Changelog — SyncUp
 
+## [1.1.0] — 2026-11-06
+
+Primeira etapa do Roadmap 2.0: cara de produto.
+
+### Novo
+- **Badges no README**: Testes, Lint, versão da release, licença e Python. O CI virou dois workflows (`testes.yml` e `lint.yml`), porque a badge do GitHub Actions mostra o estado do workflow inteiro.
+
+### Visual
+- Sem "cara de demo de IA": rodapé padrão do Gradio escondido, ícones de traço próprios no lugar dos emojis dos cartões do Início, selo "100% local" sem o cadeado e botão principal sem brilho pulsante.
+
 ## [1.0.0] — 2026-11-05
 
 Primeira versão estável: dá para entregar o link do repositório a um colega e ele usa sem ajuda.

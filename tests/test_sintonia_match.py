@@ -43,6 +43,23 @@ def test_fontes_diferentes_se_encontram_pelo_nome_normalizado() -> None:
     assert s.primeira.artista == 'Legião Urbana'  # nomes de quem é o "A"
 
 
+def test_sintonia_igual_com_datas_em_microssegundos() -> None:
+    """O pandas 3 lê datas em µs: a sintonia e o horário local não podem mudar com a unidade."""
+    zip_ = _plays([('Legião Urbana', 'Tempo Perdido', '2026-03-06T13:05:00Z', 300)])
+    lb = _plays([('Legião Urbana', 'Tempo Perdido', '2026-03-06T13:07:00Z', 300)])
+
+    def em_us(d: pd.DataFrame) -> pd.DataFrame:
+        return d.assign(data_utc=d.data_utc.dt.as_unit('us'), data=d.data.dt.as_unit('us'))
+
+    ns, us = (
+        sintonia_entre(escutas(zip_), escutas(lb)),
+        sintonia_entre(escutas(em_us(zip_)), escutas(em_us(lb))),
+    )
+    assert us.minutos == pytest.approx(ns.minutos) == pytest.approx(3.0)
+    assert us.primeira.inicio_local == ns.primeira.inicio_local
+    assert us.hora_favorita == ns.hora_favorita
+
+
 def _referencia(a: pd.DataFrame, b: pd.DataFrame) -> tuple[int, float]:
     """Força bruta: une os intervalos de cada pessoa por faixa e cruza todos com todos."""
 

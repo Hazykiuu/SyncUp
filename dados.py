@@ -215,6 +215,10 @@ def _extrair_registros_impl(caminho: Path) -> Colunas:
     colunas = _novas_colunas()
     encontrados: set[str] = set()
     campos = set(CAMPOS_SPOTIFY)
+    # O JSON cria um texto novo a cada ocorrência: guardar cada nome uma vez só baixa o pico
+    # de memória (285 mil plays no navegador: 446 → 371 MB), decisivo no iOS (~350 MB).
+    unicos: dict[str, str] = {}
+    unico = unicos.setdefault
 
     def selecionar(conteudo: Any) -> None:
         """Processa listas de histórico e ignora listas auxiliares sem campos reconhecidos."""
@@ -238,7 +242,8 @@ def _extrair_registros_impl(caminho: Path) -> Colunas:
         )
         for campo in CAMPOS_SPOTIFY[2:]:
             colunas[campo].extend(
-                v if isinstance(v, str) else None for v in (item.get(campo) for item in itens)
+                unico(v, v) if isinstance(v, str) else None
+                for v in (item.get(campo) for item in itens)
             )
         colunas['podcast'].extend(
             bool(
@@ -254,7 +259,8 @@ def _extrair_registros_impl(caminho: Path) -> Colunas:
             )
         for campo in ('platform', 'reason_end'):
             colunas[campo].extend(
-                v if isinstance(v, str) else None for v in (item.get(campo) for item in itens)
+                unico(v, v) if isinstance(v, str) else None
+                for v in (item.get(campo) for item in itens)
             )
 
     sufixo = caminho.suffix.lower()

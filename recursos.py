@@ -77,6 +77,15 @@ def _chaves_comuns(
     return artista_a * quantidade + musica_a, artista_b * quantidade + musica_b
 
 
+def _ns(serie: pd.Series) -> pd.Series:
+    """Datas ou durações em nanossegundos inteiros, seja qual for a resolução da coluna.
+
+    O pandas 3 lê datas em microssegundos: um ``astype('int64')`` direto mudaria a
+    unidade e a sintonia sairia errada sem erro nenhum.
+    """
+    return serie.dt.as_unit('ns').astype('int64')
+
+
 def _ordenar_eventos(
     dados: pd.DataFrame, chave: pd.Series, comuns: pd.Index
 ) -> tuple[list[int], list[int], list[int]]:
@@ -84,7 +93,7 @@ def _ordenar_eventos(
     eventos = pd.DataFrame(
         {
             'chave': chave.to_numpy(),
-            'instante': dados.data_utc.astype('int64').to_numpy(),
+            'instante': _ns(dados.data_utc).to_numpy(),
             'posicao': range(len(dados)),
         }
     )
@@ -251,7 +260,7 @@ def escutas(dados: pd.DataFrame) -> Escutas:
     """
     artista, artistas = _normalizados(dados.artista)
     musica, musicas = _normalizados(dados.musica)
-    fim = dados.data_utc.astype('int64').to_numpy()
+    fim = _ns(dados.data_utc).to_numpy()
     tabela = pd.DataFrame(
         {
             'faixa': artista.to_numpy() * max(len(musicas), 1) + musica.to_numpy(),
@@ -270,8 +279,8 @@ def escutas(dados: pd.DataFrame) -> Escutas:
         inicio=('inicio', 'first'), fim=('fim', 'max'), posicao=('posicao', 'first')
     )
     posicoes = unidos.posicao.to_numpy()
-    primeiras = dados.iloc[posicoes]
-    deslocamento = primeiras.data - primeiras.data_utc.dt.tz_localize(None)
+    # Só as colunas usadas, nas posições do 1º play de cada intervalo (sem copiar a linha toda).
+    deslocamento = dados.data.iloc[posicoes] - dados.data_utc.iloc[posicoes].dt.tz_localize(None)
     return Escutas(
         pd.DataFrame(
             {
@@ -279,9 +288,9 @@ def escutas(dados: pd.DataFrame) -> Escutas:
                 'musica': musica.to_numpy()[posicoes],
                 'inicio': unidos.inicio.to_numpy(),
                 'fim': unidos.fim.to_numpy(),
-                'nome_artista': primeiras.artista.to_numpy(),
-                'nome_musica': primeiras.musica.to_numpy(),
-                'deslocamento': deslocamento.astype('int64').to_numpy(),
+                'nome_artista': dados.artista.iloc[posicoes].to_numpy(),
+                'nome_musica': dados.musica.iloc[posicoes].to_numpy(),
+                'deslocamento': _ns(deslocamento).to_numpy(),
             }
         ),
         artistas,

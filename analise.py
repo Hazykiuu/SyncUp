@@ -341,13 +341,17 @@ def comparar(
         axis=1,
     )
     estatisticas.columns = ['Minutos por execução · A', 'Minutos por execução · B']
+    perfil_a, perfil_b = _perfil(a, va, ra, fa, nome_a), _perfil(b, vb, rb, fb, nome_b)
+    # Solta as cópias do período comum antes das etapas mais pesadas (sincronia e sintonia):
+    # só va/vb seguem; derruba o pico de memória, que importa no navegador.
+    del a, b
     return ResultadoComparacao(
         metricas=MetricasComparacao(cosine, jac, top, ponderado),
         periodo=PeriodoComparacao(
             periodo_comum, inicio, fim, config.fuso_horario, inicio_utc, fim_utc
         ),
-        perfil_a=_perfil(a, va, ra, fa, nome_a),
-        perfil_b=_perfil(b, vb, rb, fb, nome_b),
+        perfil_a=perfil_a,
+        perfil_b=perfil_b,
         participacao_artistas=grafico,
         ordem_artistas=list(selecionados),
         artistas_comuns=comuns,

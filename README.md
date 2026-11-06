@@ -1,4 +1,4 @@
-# SyncUp v1.2
+# SyncUp v1.3
 
 Compare o seu histórico do Spotify com o dos amigos e descubra com quem você está em sintonia. Tudo roda **no seu computador**: sem conta, sem servidor e sem anúncios. Projeto de ciência de dados, **código aberto** ([licença MIT](LICENSE)).
 

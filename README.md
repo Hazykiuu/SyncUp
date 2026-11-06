@@ -8,6 +8,8 @@ Compare o seu histórico do Spotify com o dos amigos e descubra com quem você e
 [![Licença](https://img.shields.io/github/license/Hazykiuu/SyncUp?label=licen%C3%A7a)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.10%20a%203.14-3776AB?logo=python&logoColor=white)
 
+**Site:** <https://hazykiuu.github.io/SyncUp/>
+
 ![Início do SyncUp](docs/img/inicio.jpg)
 
 > **Aviso:** as métricas descrevem o recorte de escuta enviado. Elas não medem personalidade nem afinidade amorosa.
@@ -148,7 +150,7 @@ print(r.metricas.cosseno)
 
 **Benchmark:** `python tools/gerar_dados_falsos.py a.zip --seed 41` gera um histórico fictício de ~300 mil eventos, e `python medir_desempenho.py a.zip b.zip --repeticoes 3 --somente-nucleo --saida benchmark/meu_pc` mede os tempos.
 
-**Dependências**, todas abertas (`tests/test_licencas.py` confere): Gradio e orjson (Apache-2.0), FastAPI e Plotly (MIT), httpx e pandas (BSD-3-Clause), Pillow (MIT-CMU), pytest e Ruff (MIT) e a fonte Figtree (SIL OFL 1.1).
+**Dependências**, todas abertas (`tests/test_licencas.py` confere): Gradio e orjson (Apache-2.0), FastAPI e Plotly (MIT), httpx e pandas (BSD-3-Clause), Pillow (MIT-CMU), pytest e Ruff (MIT) e a fonte Figtree (SIL OFL 1.1). O site (`site/`) usa a Lenis (MIT), com o visual adaptado do modelo Lumora do GetLayers.
 
 **Contribuir:** abra uma *issue* ou um *pull request*. Nunca envie históricos reais nem a pasta `perfis_spotify/`: são dados pessoais. O histórico de cada versão está no [CHANGELOG](CHANGELOG.md).
 

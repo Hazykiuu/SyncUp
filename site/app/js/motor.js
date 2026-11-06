@@ -17,6 +17,15 @@ worker.onmessage = ({ data }) => {
   }
 };
 
+// O Worker morreu (falta de memória, arquivo que não carregou): ninguém fica esperando para sempre.
+worker.onerror = (e) => {
+  e.preventDefault?.();
+  const erro = new Error('o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos arquivos.');
+  prontoRejeitar(erro);
+  for (const { erro: rejeitar } of pendentes.values()) rejeitar(erro);
+  pendentes.clear();
+};
+
 export function aoProgredir(fn) { ouvinteProgresso = fn; }
 
 export function iniciar() { worker.postMessage({ tipo: 'iniciar' }); return pronto; }

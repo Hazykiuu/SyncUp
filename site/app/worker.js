@@ -34,9 +34,9 @@ function mensagem(erro) {
 async function acao({ id, nome, args = [], arquivos = [], saida = 'json' }) {
   // Cada arquivo vai direto para o sistema de arquivos virtual, sem cópia extra.
   for (const { caminho, bytes } of arquivos) py.FS.writeFile(caminho, new Uint8Array(bytes));
-  const ponte = py.pyimport('web.ponte');
-  const resultado = ponte[nome](...args.map((a) => py.toPy(a)));
+  let resultado;
   try {
+    resultado = py.pyimport('web.ponte')[nome](...args.map((a) => py.toPy(a)));
     if (saida === 'arquivo') {
       const conteudo = py.FS.readFile(resultado);
       self.postMessage({ tipo: 'resposta', id, ok: true, dados: { nome: resultado.split('/').pop(), bytes: conteudo.buffer } }, [conteudo.buffer]);
@@ -56,6 +56,7 @@ self.onmessage = async ({ data }) => {
     if (data.tipo === 'iniciar') { await iniciar(); self.postMessage({ tipo: 'pronto' }); }
     else if (data.tipo === 'acao') await acao(data);
   } catch (erro) {
-    self.postMessage({ tipo: data.tipo === 'iniciar' ? 'falhou' : 'resposta', id: data.id, ok: false, erro: mensagem(erro) });
+    if (data.tipo === 'iniciar') self.postMessage({ tipo: 'falhou', erro: 'não deu para baixar os arquivos. Confira a internet e tente de novo.' });
+    else self.postMessage({ tipo: 'resposta', id: data.id, ok: false, erro: mensagem(erro) });
   }
 };

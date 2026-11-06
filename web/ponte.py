@@ -15,6 +15,7 @@ from typing import Any
 import pandas as pd
 
 import componentes
+import stories
 from analise import ResultadoComparacao, comparar
 from apresentacao import (
     _configuracao,
@@ -26,15 +27,16 @@ from apresentacao import (
     texto_periodo,
     wrapped_dupla_html,
 )
-from cartao import gerar_cartao, gerar_cartao_sintonia
+from cartao import gerar_cartao, gerar_cartao_sintonia, gerar_cartao_wrapped
 from exportacoes import exportar_playlist
 from formatacao import fmt_num
 from graficos import butterfly, evolucao_mensal, mapa_horarios, radar_tracos, slope_chart
+from wrapped import wrapped_de_arquivos
 
 SAIDA = Path('/tmp/syncup-saida')
 # shortcut: guarda só o último resultado (o app no navegador atende uma pessoa por aba);
 # trocar por um dicionário por id se um dia houver mais de uma comparação aberta.
-_ultimo: dict[str, ResultadoComparacao] = {}
+_ultimo: dict[str, Any] = {}
 
 
 def _tabela(tabela: pd.DataFrame) -> dict[str, list]:
@@ -71,7 +73,7 @@ def comparar_dupla(
         False,  # sem cache em disco no navegador
         bool(o.get('deduplicar', False)),
     )
-    _ultimo.clear()  # o resultado anterior não fica vivo durante o novo pico
+    _ultimo.pop('dupla', None)  # o resultado anterior não fica vivo durante o novo pico
     # Wrapped primeiro: o pico dele (histórico inteiro) não se soma ao da comparação (iOS ~350 MB).
     wa = _wrapped_seguro(arquivos_a, (nome_a or '').strip() or 'Pessoa A', config)
     wb = _wrapped_seguro(arquivos_b, (nome_b or '').strip() or 'Pessoa B', config)
@@ -175,6 +177,37 @@ def playlist_dupla() -> str:
     """Ação ``exportar_playlist``: CSV protegido da playlist comum."""
     SAIDA.mkdir(parents=True, exist_ok=True)
     return str(exportar_playlist(_resultado(), SAIDA / 'SyncUp_playlist.csv'))
+
+
+def wrapped(arquivos: list[str], nome: str, opcoes: dict | None = None) -> dict:
+    """Ação ``executar_wrapped``: Wrapped da vida toda de uma pessoa (stories e arquétipos)."""
+    o = opcoes or {}
+    config = _configuracao(
+        o.get('fuso', ''),
+        o.get('musicas', ''),
+        o.get('artistas', ''),
+        o.get('varios', 'manter'),
+        False,  # sem cache em disco no navegador
+        bool(o.get('deduplicar', False)),
+    )
+    _ultimo.pop('wrapped', None)  # o anterior não fica vivo durante o novo pico
+    w = wrapped_de_arquivos(arquivos, (nome or '').strip() or 'Você', config)
+    _ultimo['wrapped'] = w
+    return {
+        'nome': w.nome,
+        'stories': stories.stories_html(w),
+        'arquetipos': stories.arquetipos_detalhe_html(w),
+        # Para o teste de áudio (e depois as capas): o que o JS pode buscar se a pessoa pedir.
+        'musicas': [{'faixa': m.nome, 'artista': m.artista} for m in w.top_musicas[:3]],
+    }
+
+
+def cartao_wrapped() -> str:
+    """Ação ``baixar_wrapped``: story PNG 1080×1920 do Wrapped."""
+    if 'wrapped' not in _ultimo:
+        raise ValueError('Monte o Wrapped antes de baixar.')
+    SAIDA.mkdir(parents=True, exist_ok=True)
+    return str(gerar_cartao_wrapped(_ultimo['wrapped'], SAIDA / 'SyncUp_wrapped.png'))
 
 
 def arquivos_demo(pasta: str = '/tmp/syncup-demo') -> dict:

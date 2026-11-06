@@ -97,3 +97,10 @@ textarea.entrada { resize: vertical; }
 .nucleo { min-width: 0; }
 
 @media (prefers-reduced-motion: reduce) { .giro { animation: none; } }
+
+/* Wrapped: uma pessoa só e o teste de som da Etapa 4. */
+@media (min-width: 900px) { .pessoas.uma { grid-template-columns: minmax(0, 40rem); } }
+.teste-som { display: flex; flex-direction: column; gap: .75rem; margin-top: 1.5rem; padding: 1.5rem; border-radius: var(--cartao); }
+.teste-som h3 small { font-weight: 600; color: var(--fraco); font-size: .8rem; }
+.teste-som .btn { align-self: flex-start; }
+.log-som { display: grid; gap: .3rem; padding-left: 1.2rem; font-size: .9rem; color: var(--sub); }

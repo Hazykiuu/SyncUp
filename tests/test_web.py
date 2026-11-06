@@ -96,3 +96,17 @@ def test_nomes_maliciosos_nao_viram_html_ativo(zips: tuple[str, str]) -> None:
     # Gráficos: < > escapados, aspas legíveis (o Plotly não decodifica &quot;).
     legendas = json.dumps(r['graficos']['artistas'])
     assert '&lt;img' in legendas and '&quot;' not in legendas and '&#x27;' not in legendas
+
+
+def test_wrapped_e_cartao_no_navegador(zips: tuple[str, str], tmp_path: Path, monkeypatch) -> None:
+    from web import ponte
+
+    monkeypatch.setattr(ponte, 'SAIDA', tmp_path)
+    r = ponte.wrapped([zips[0]], ' <b>Ana</b> ')
+    json.dumps(r)  # atravessa o Worker
+    assert 'su-stories' in r['stories'] and '&lt;b&gt;Ana&lt;/b&gt;' in r['stories']
+    assert len(r['musicas']) == 3 and all(m['faixa'] and m['artista'] for m in r['musicas'])
+    png = Path(ponte.cartao_wrapped())
+    assert png.suffix == '.png' and png.stat().st_size > 10_000
+    ponte.comparar_dupla([zips[0]], [zips[1]], 'Ana', 'Bia')
+    assert Path(ponte.cartao_wrapped()).is_file()  # a Dupla não apaga o Wrapped

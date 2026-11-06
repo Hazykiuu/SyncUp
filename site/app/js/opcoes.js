@@ -5,19 +5,19 @@ export const PADRAO = { comum: true, ponderacao: 'bruta', fuso: 'America/Sao_Pau
 
 const FUSOS = ['America/Sao_Paulo', 'America/Manaus', 'America/Fortaleza', 'America/Noronha', 'America/Rio_Branco', 'Europe/Lisbon', 'UTC'];
 
-export function Opcoes({ valor, aoMudar, desabilitado }) {
+export function Opcoes({ valor, aoMudar, desabilitado, comPeriodo = true }) {
   const muda = (campo) => (e) => aoMudar({ ...valor, [campo]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
   return html`
     <details class="opcoes vidro">
       <summary>Opções de dados <small>período, fuso e filtros</small></summary>
       <fieldset disabled=${desabilitado}>
-        <label class="marcar"><input type="checkbox" checked=${valor.comum} onChange=${muda('comum')} />
-          Comparar só o período em comum <small>(recomendado: os dois históricos no mesmo intervalo)</small></label>
+        ${comPeriodo && html`<label class="marcar"><input type="checkbox" checked=${valor.comum} onChange=${muda('comum')} />
+          Comparar só o período em comum <small>(recomendado: os dois históricos no mesmo intervalo)</small></label>`}
         <div class="grade-opcoes">
-          <label class="campo">Ponderação do cosseno
+          ${comPeriodo && html`<label class="campo">Ponderação do cosseno
             <select class="entrada" value=${valor.ponderacao} onChange=${muda('ponderacao')}>
               <option value="bruta">Bruta (x)</option><option value="raiz">Raiz quadrada (√x)</option><option value="log1p">Logaritmo (ln(1+x))</option>
-            </select></label>
+            </select></label>`}
           <label class="campo">Fuso horário
             <select class="entrada" value=${valor.fuso} onChange=${muda('fuso')}>${FUSOS.map((f) => html`<option value=${f}>${f}</option>`)}</select></label>
           <label class="campo">Various Artists

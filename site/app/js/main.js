@@ -4,6 +4,7 @@ import { aoProgredir, executar, iniciar } from './motor.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { Resultado } from './resultado.js';
+import { Wrapped } from './wrapped.js';
 
 function Motor({ estado }) {
   if (estado.pronto) return html`<p class="motor ok" role="status"><span class="ponto" aria-hidden="true"></span>Pronto · tudo roda no seu aparelho</p>`;
@@ -71,6 +72,14 @@ function Dupla({ pronto }) {
 
 function App() {
   const [motor, setMotor] = useState({ etapa: 'Preparando…', fracao: 0, pronto: false, erro: '' });
+  // As duas telas ficam montadas (hidden): trocar de aba não perde o resultado.
+  const lerModo = () => (location.hash === '#wrapped' ? 'wrapped' : 'dupla');
+  const [modo, setModo] = useState(lerModo);
+  useEffect(() => {
+    const mudar = () => setModo(lerModo());
+    addEventListener('hashchange', mudar);
+    return () => removeEventListener('hashchange', mudar);
+  }, []);
   useEffect(() => {
     aoProgredir(({ etapa, fracao }) => setMotor((m) => ({ ...m, etapa, fracao })));
     iniciar().then(() => setMotor((m) => ({ ...m, pronto: true }))).catch((e) => setMotor((m) => ({ ...m, erro: e.message })));
@@ -79,20 +88,20 @@ function App() {
     <header class="app-topo shell">
       <a class="marca vivo" href="../" aria-label="SyncUp, voltar ao site"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>SyncUp</a>
       <nav class="abas-app" aria-label="Modos">
-        <a class="ativa" href="#dupla" aria-current="page">Dupla</a>
+        ${[['dupla', 'Dupla'], ['wrapped', 'Wrapped']].map(([id, rotulo]) => html`<a class=${modo === id ? 'ativa' : ''} href=${`#${id}`} aria-current=${modo === id ? 'page' : null}>${rotulo}</a>`)}
         <span aria-disabled="true">Match <small>em breve</small></span>
-        <span aria-disabled="true">Wrapped <small>em breve</small></span>
         <span aria-disabled="true">Grupo <small>em breve</small></span>
       </nav>
     </header>
     <main id="principal" class="shell app-corpo">
       <div class="app-cabeca">
-        <span class="etiqueta">Dupla · 100% no seu aparelho</span>
-        <h1>Compare dois históricos</h1>
-        <p class="sub">Envie o Histórico Estendido do Spotify de duas pessoas. Nada é enviado para nenhum servidor.</p>
+        <span class="etiqueta">${modo === 'wrapped' ? 'Wrapped' : 'Dupla'} · 100% no seu aparelho</span>
+        <h1>${modo === 'wrapped' ? 'Seu Wrapped da vida toda' : 'Compare dois históricos'}</h1>
+        <p class="sub">${modo === 'wrapped' ? 'Envie o seu Histórico Estendido do Spotify e veja a sua vida musical em stories.' : 'Envie o Histórico Estendido do Spotify de duas pessoas.'} Nada é enviado para nenhum servidor.</p>
         <${Motor} estado=${motor} />
       </div>
-      <${Dupla} pronto=${motor.pronto} />
+      <div hidden=${modo !== 'dupla'}><${Dupla} pronto=${motor.pronto} /></div>
+      <div hidden=${modo !== 'wrapped'}><${Wrapped} pronto=${motor.pronto} /></div>
     </main>`;
 }
 

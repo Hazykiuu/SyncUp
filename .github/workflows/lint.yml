@@ -1,0 +1,26 @@
+# Lint e formatação com o Ruff a cada push e PR (badge "Lint" no README).
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar o Ruff (versão do requirements-dev.txt)
+        run: python -m pip install "$(grep '^ruff==' requirements-dev.txt)"
+      - name: Lint
+        run: python -m ruff check .
+      - name: Formatação
+        run: python -m ruff format --check .

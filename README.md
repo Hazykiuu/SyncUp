@@ -1,8 +1,12 @@
 # SyncUp v1.0
 
-Compare o seu histórico do Spotify com o dos amigos e descubra com quem você está em sintonia. Tudo roda **no seu computador**: sem conta, sem servidor e sem anúncios. Projeto acadêmico de ciência de dados, **código aberto** ([licença MIT](LICENSE)).
+Compare o seu histórico do Spotify com o dos amigos e descubra com quem você está em sintonia. Tudo roda **no seu computador**: sem conta, sem servidor e sem anúncios. Projeto de ciência de dados, **código aberto** ([licença MIT](LICENSE)).
 
-![CI](https://github.com/Hazykiuu/SyncUp/actions/workflows/ci.yml/badge.svg)
+[![Testes](https://github.com/Hazykiuu/SyncUp/actions/workflows/testes.yml/badge.svg)](https://github.com/Hazykiuu/SyncUp/actions/workflows/testes.yml)
+[![Lint](https://github.com/Hazykiuu/SyncUp/actions/workflows/lint.yml/badge.svg)](https://github.com/Hazykiuu/SyncUp/actions/workflows/lint.yml)
+[![Versão](https://img.shields.io/github/v/release/Hazykiuu/SyncUp?label=vers%C3%A3o)](https://github.com/Hazykiuu/SyncUp/releases/latest)
+[![Licença](https://img.shields.io/github/license/Hazykiuu/SyncUp?label=licen%C3%A7a)](LICENSE)
+![Python](https://img.shields.io/badge/python-3.10%20a%203.14-3776AB?logo=python&logoColor=white)
 
 ![Início do SyncUp](docs/img/inicio.jpg)
 

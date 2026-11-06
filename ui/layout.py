@@ -170,27 +170,78 @@ INICIO_RODAPE = f"""<section class="su-steps-home">
   </ol>
 </section>
 <section class="su-open">
-  <span>🔒 100% local</span><span>MIT · código aberto</span><span>ListenBrainz e MusicBrainz</span>
+  <span>100% local</span><span>MIT · código aberto</span><span>ListenBrainz e MusicBrainz</span>
   <a href="{GITHUB_URL}" target="_blank" rel="noopener">Ver no GitHub →</a>
 </section>"""
 
+
+def _icone(desenho: str) -> str:
+    """Ícone de traço próprio (24×24), na cor do cartão: sem emoji nem biblioteca de ícones."""
+    return (
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        f'stroke-linecap="round" stroke-linejoin="round">{desenho}</svg>'
+    )
+
+
+ICONE_DUPLA = _icone(
+    '<path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/>'
+    '<rect x="17" y="14" width="4" height="6" rx="1.5"/>'
+)
+ICONE_SINTONIA = _icone(
+    '<path d="M12 20s-7-4.4-7-9.6A3.9 3.9 0 0 1 12 8a3.9 3.9 0 0 1 7 2.4C19 15.6 12 20 12 20z"/>'
+)
+ICONE_MATCH = _icone('<circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/>')
+ICONE_FESTA = _icone(
+    '<path d="M4 6h11M4 11h11M4 16h6"/><circle cx="16.5" cy="17.5" r="2.5"/><path d="M19 17.5V7"/>'
+)
+ICONE_WRAPPED = _icone('<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M10 6.5h4"/>')
+ICONE_GRUPO = _icone(
+    '<circle cx="7" cy="9" r="3"/><circle cx="17" cy="9" r="3"/><circle cx="12" cy="17" r="3"/>'
+)
+
 # Aba de destino, sub-aba da Dupla (ou None), ícone, título, texto e cor de cada cartão.
-
-
 RECURSOS = [
-    ('dupla', None, '🎧', 'Dupla', 'Blend, identidades e rankings de duas pessoas.', '#1ed760'),
+    (
+        'dupla',
+        None,
+        ICONE_DUPLA,
+        'Dupla',
+        'Blend, identidades e rankings de duas pessoas.',
+        '#1ed760',
+    ),
     (
         'dupla',
         'sintonia',
-        '💞',
+        ICONE_SINTONIA,
         'Em sintonia',
         'Quando vocês ouviram a mesma música ao mesmo tempo.',
         '#f573a0',
     ),
-    ('match', None, '✨', 'Match', 'Junte a galera e descubra as melhores duplas.', '#c4b7ff'),
-    ('match', None, '🎉', 'Playlist da festa', 'Músicas que agradam o grupo inteiro.', '#ffa42b'),
-    ('wrapped', None, '📼', 'Wrapped', 'A sua vida inteira no Spotify, em stories.', '#4cc9f0'),
-    ('grupo', None, '👥', 'Grupo', 'Até 6 perfis comparados numa matriz.', '#e8db5a'),
+    (
+        'match',
+        None,
+        ICONE_MATCH,
+        'Match',
+        'Junte a galera e descubra as melhores duplas.',
+        '#c4b7ff',
+    ),
+    (
+        'match',
+        None,
+        ICONE_FESTA,
+        'Playlist da festa',
+        'Músicas que agradam o grupo inteiro.',
+        '#ffa42b',
+    ),
+    (
+        'wrapped',
+        None,
+        ICONE_WRAPPED,
+        'Wrapped',
+        'A sua vida inteira no Spotify, em stories.',
+        '#4cc9f0',
+    ),
+    ('grupo', None, ICONE_GRUPO, 'Grupo', 'Até 6 perfis comparados numa matriz.', '#e8db5a'),
 ]
 
 

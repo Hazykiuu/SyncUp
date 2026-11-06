@@ -56,6 +56,7 @@ def criar_servidor():
         css=CSS,
         js=JS,
         head=HEAD,
+        footer_links=[],  # Sem "Usar via API · Construído com Gradio · Configurações".
     )
 
 

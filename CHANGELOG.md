@@ -1,5 +1,17 @@
 # Changelog — SyncUp
 
+## [1.3.0] — 2026-11-06
+
+Primeira tela do SyncUp rodando 100% no navegador.
+
+### Novo
+- **App no navegador** em <https://hazykiuu.github.io/SyncUp/app/>, com a tela **Dupla**: o Python (Pyodide 0.29 + pandas, Pillow e plotly) roda num Web Worker e nada sai do aparelho. Envio de vários arquivos por pessoa, opções de dados, demo com dados fictícios, resultado em abas (resumo, sintonia, rankings, gráficos, Wrapped, downloads PNG/CSV e detalhes técnicos). Match, Wrapped e Grupo chegam nas próximas versões.
+- `web/ponte.py` (ações do app web) e `tools/empacotar_web.py` (pacote do núcleo gerado no deploy, sem Gradio nem rede).
+
+### Interno
+- As funções puras da Dupla saíram de `ui/` para `apresentacao.py`, sem Gradio; o `ui/` reexporta os mesmos nomes.
+- O CSS da landing virou `site/estilo.css`, compartilhado com o app.
+
 ## [1.2.0] — 2026-11-06
 
 Site novo e um núcleo pronto para rodar no navegador.

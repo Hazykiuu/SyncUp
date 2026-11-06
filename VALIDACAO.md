@@ -138,3 +138,8 @@ O notebook distribuído está sem saídas e sem arquivos de dados/exports reais.
 - `pytest`: 242 testes aprovados e 3 pulados; `ruff` sem pendências. Novos: `tests/test_site.py` (idioma, links, arquivos e scripts externos permitidos), sintonia com datas em µs (falha sem a correção) e nomes repetidos como um objeto só.
 - Site no navegador do app: tela de carregamento sai em ~1,9 s mesmo com o painel oculto; os 6 botões visíveis recebem o clique; com o menu aberto, header/main/footer ficam `inert` e o Esc devolve o foco. Sem rolagem lateral em 390 e 1280 px.
 - Spike do Pyodide 0.29.0 (Python 3.13, pandas 2.3.2) num Web Worker: o núcleo roda sem mudanças e com resultados idênticos ao nativo, 1,5–2× mais lento. Memória com 285 mil plays por pessoa: Dupla 309 MB, Wrapped 215 MB. Pyodide 314 (pandas 3) dava a sintonia errada antes da correção. Não testado em celular de verdade.
+
+## v1.3.0 — Dupla no navegador (2026-11-06)
+
+- `pytest`: 246 testes aprovados e 3 pulados (novos em `tests/test_web.py`: pacote só com o que roda no navegador, ponte sem Gradio nem rede, resultado igual ao núcleo, downloads).
+- App local em `/app/` no navegador do app Claude: Python pronto em ~11 s (com cache), demo em 9 s, p1 × p2 enviados pelo campo de arquivo em 3 s com 5,0% (igual ao nativo); JSON inválido mostra a mensagem do núcleo; 5 gráficos, stories e 3 downloads funcionando; abas pelo teclado; sem rolagem lateral em 390 e 1280 px. Não medido: primeira visita sem cache e celular de verdade.

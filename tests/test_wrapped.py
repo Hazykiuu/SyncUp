@@ -143,6 +143,23 @@ def test_estatisticas_da_vida_toda(historico: Path) -> None:
     assert len(w.fiel_anos) == w.anos_fiel and w.fiel_anos == sorted(w.fiel_anos)
 
 
+def test_musicas_levam_o_id_do_spotify_mais_tocado(tmp_path: Path) -> None:
+    """A mesma faixa com 2 IDs (ex.: remaster) fica com o mais tocado; sem ID, fica None."""
+    uri = 'spotify:track:{}'.format
+    eventos = [
+        _evento('2024-01-01T12:00:00Z', 'Ana', 'Hit', spotify_track_uri=uri('A')),
+        _evento('2024-01-02T12:00:00Z', 'Ana', 'Hit', spotify_track_uri=uri('B')),
+        _evento('2024-01-03T12:00:00Z', 'Ana', 'Hit', spotify_track_uri=uri('B')),
+        _evento('2024-01-04T12:00:00Z', 'Bia', 'Sem ID'),
+    ]
+    caminho = tmp_path / 'uri.json'
+    caminho.write_text(json.dumps(eventos), encoding='utf-8')
+    w = wrapped_de_arquivos(caminho, 'X')
+    assert w.top_musicas[0].uri == uri('B') and w.repeticao_dia.uri in {uri('A'), uri('B')}
+    assert next(m for m in w.top_musicas if m.nome == 'Sem ID').uri is None
+    assert w.top_artistas[0].uri is None
+
+
 def test_arquetipos_principal_secundarios_e_equilibrado() -> None:
     """Intensidade escolhe o principal; sem regra atingida, cai em equilibrado."""
     medidas = {r.medida: 0.0 for r in REGRAS}

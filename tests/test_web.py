@@ -148,7 +148,11 @@ def test_contrato_json_do_wrapped(zips: tuple[str, str]) -> None:
     for campo in ('inicio', 'fim', 'primeira_data', 'dia_recorde', 'descoberta_artista_vida'):
         datetime.fromisoformat(dados[campo])
     item = dados['top_musicas'][0]
-    assert set(item) == {'nome', 'plays', 'horas', 'artista'} and isinstance(item['plays'], int)
+    assert set(item) == {'nome', 'plays', 'horas', 'artista', 'uri'} and isinstance(
+        item['plays'], int
+    )
+    assert item['uri'].startswith('spotify:track:')  # o JS só aceita ID real (22 caracteres)
+    assert dados['top_artistas'][0]['uri'] is None  # artista não tem ID no ZIP
     assert dados['anos'][0]['ano'] and isinstance(dados['anos'][0]['top_artistas'], list)
     assert len(dados['plays_por_hora']) == 24
     assert {'nome', 'icone', 'forca'} <= set(dados['arquetipos']['principal'])

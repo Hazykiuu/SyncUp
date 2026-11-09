@@ -7,7 +7,7 @@ Nenhum dado sai do computador; nenhuma chamada de rede é feita.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import pandas as pd
 
@@ -35,6 +35,7 @@ class ItemRanking:
     plays: int
     horas: float = 0.0
     artista: str = ''
+    uri: str | None = None  # ID da faixa no Spotify (só músicas): capa exata no app web
 
 
 @dataclass(frozen=True)
@@ -291,7 +292,7 @@ def calcular_wrapped(dados: pd.DataFrame, nome: str, fuso_horario: str = '') -> 
         'repeticao': float(top10_musicas) / total_plays,
         'offline': offline,
     }
-    return Wrapped(
+    wrapped = Wrapped(
         nome=nome,
         inicio=inicio,
         fim=fim,
@@ -335,6 +336,34 @@ def calcular_wrapped(dados: pd.DataFrame, nome: str, fuso_horario: str = '') -> 
         arquetipos=classificar(medidas),
         fuso_horario=fuso_horario,
         avisos=avisos,
+    )
+    return _com_uris(wrapped, plays)
+
+
+def _com_uris(w: Wrapped, plays: pd.DataFrame) -> Wrapped:
+    """Põe nas músicas do Wrapped o ID do Spotify mais tocado de cada par (música, artista)."""
+    if 'uri' not in plays:
+        return w
+    musicas = [w.primeira_musica, w.repeticao_dia, *w.top_musicas]
+    musicas += [a.top_musica for a in w.anos if a.top_musica]
+    base = plays.loc[
+        plays['musica'].isin({m.nome for m in musicas}) & plays['uri'].notna(),
+        ['musica', 'artista', 'uri'],
+    ]
+    melhor: dict[tuple[str, str], str] = {}
+    for (musica, artista, uri), _ in base.astype(object).value_counts().items():
+        melhor.setdefault((musica, artista), uri)  # value_counts vem do mais tocado ao menos
+
+    def com(item: ItemRanking) -> ItemRanking:
+        uri = melhor.get((item.nome, item.artista))
+        return replace(item, uri=str(uri)) if uri else item
+
+    return replace(
+        w,
+        primeira_musica=com(w.primeira_musica),
+        repeticao_dia=com(w.repeticao_dia),
+        top_musicas=[com(m) for m in w.top_musicas],
+        anos=[replace(a, top_musica=com(a.top_musica)) if a.top_musica else a for a in w.anos],
     )
 
 

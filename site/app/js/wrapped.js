@@ -5,23 +5,18 @@ import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { SomStories } from './som.js';
 import { Player } from './stories/player.js';
-import { Antigo, NOVOS } from './stories/slides.js';
+import { NOVOS } from './stories/slides.js';
+import { tiposDoWrapped } from './stories/logica.js';
 
 const Html = ({ conteudo }) => html`<div class="nucleo" dangerouslySetInnerHTML=${{ __html: conteudo }} />`;
 
-// Slides na ordem do núcleo: os já refeitos vêm de `dados` (Preact); os outros, do HTML antigo.
+// Slides a partir de `dados` (JSON da ponte), com as mesmas regras de quais entram do núcleo.
 function montarSlides(r) {
-  const molde = document.createElement('template');
-  molde.innerHTML = r.stories;
-  const avisos = [...molde.content.querySelectorAll('.su-note')].map((p) => p.textContent);
-  const slides = [...molde.content.querySelectorAll('.su-story')].map((sec) => {
-    const tipo = [...sec.classList].find((c) => c.startsWith('s-')).slice(2);
-    const Novo = NOVOS[tipo];
-    sec.classList.add('ativo'); // a visibilidade é do player (st-slot); o CSS antigo pede .ativo
-    const antigo = sec.outerHTML;
-    return { tipo, render: (p) => (Novo ? html`<${Novo} d=${r.dados} ...${p} />` : html`<${Antigo} html=${antigo} replay=${p.replay} />`) };
+  const slides = tiposDoWrapped(r.dados).map((tipo) => {
+    const Slide = NOVOS[tipo];
+    return { tipo, render: (p) => html`<${Slide} d=${r.dados} ...${p} />` };
   });
-  return { slides, avisos };
+  return { slides, avisos: r.dados.avisos };
 }
 
 export function Wrapped({ pronto }) {

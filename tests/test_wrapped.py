@@ -140,6 +140,7 @@ def test_estatisticas_da_vida_toda(historico: Path) -> None:
     assert w.habitos['fim_natural'] == pytest.approx(4 / 6)
     assert sum(w.plays_por_hora) == 5
     assert w.fiel.nome == 'Ana' and w.anos_fiel == 2
+    assert len(w.fiel_anos) == w.anos_fiel and w.fiel_anos == sorted(w.fiel_anos)
 
 
 def test_arquetipos_principal_secundarios_e_equilibrado() -> None:

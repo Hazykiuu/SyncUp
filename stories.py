@@ -301,7 +301,7 @@ def stories_html(w: Wrapped) -> str:
             + _a(
                 '<div class="su-dots">'
                 + ''.join(
-                    f'<span class="{"on" if any(x.nome == w.fiel.nome for x in a.top_artistas) else ""}">{a.ano}</span>'
+                    f'<span class="{"on" if a.ano in w.fiel_anos else ""}">{a.ano}</span>'
                     for a in w.anos
                 )
                 + '</div>',

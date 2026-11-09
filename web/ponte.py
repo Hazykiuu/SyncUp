@@ -202,7 +202,6 @@ def wrapped(arquivos: list[str], nome: str, opcoes: dict | None = None) -> dict:
     _ultimo['wrapped'] = w
     return {
         'nome': w.nome,
-        'stories': stories.stories_html(w),
         'arquetipos': stories.arquetipos_detalhe_html(w),
         'trilha': _trilha(w),
         'dados': _wrapped_json(w),

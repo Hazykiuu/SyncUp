@@ -11,6 +11,9 @@ const reduzido = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 export function Player({ slides, rotulo, aoMudar }) {
   const [estado, despachar] = useReducer(player, slides.length, (n) => inicial(n, { semMovimento: reduzido() }));
   const toque = useRef(null);
+  const replay = () => despachar({ tipo: 'REPLAY' });
+  // Para slides interativos (anos do story 11): pausar e retomar por um motivo próprio.
+  const controle = { pausar: (motivo) => despachar({ tipo: 'PAUSAR', motivo }), retomar: (motivo) => despachar({ tipo: 'RETOMAR', motivo }) };
   const parado = pausado(estado);
 
   useEffect(() => { aoMudar?.({ i: estado.i, tipo: slides[estado.i].tipo, pausado: parado, volta: estado.volta }); }, [estado.i, parado, estado.volta]);
@@ -71,7 +74,7 @@ export function Player({ slides, rotulo, aoMudar }) {
           onClick=${() => despachar({ tipo: estado.fim ? 'REPLAY' : 'ALTERNAR' })}></button>
       </div>
       <div class="su-stories-frame">
-        ${slides.map((s, k) => html`<div class=${`st-slot${k === estado.i ? ' ativo' : ''}`} hidden=${k !== estado.i} key=${s.tipo}>${s.render({ ativo: k === estado.i, i: k, replay: () => despachar({ tipo: 'REPLAY' }) })}</div>`)}
+        ${slides.map((s, k) => html`<div class=${`st-slot${k === estado.i ? ' ativo' : ''}`} hidden=${k !== estado.i} key=${s.tipo}>${s.render({ ativo: k === estado.i, i: k, replay, controle })}</div>`)}
       </div>
     </div>`;
 }

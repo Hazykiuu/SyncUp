@@ -104,7 +104,8 @@ def test_wrapped_e_cartao_no_navegador(zips: tuple[str, str], tmp_path: Path, mo
     monkeypatch.setattr(ponte, 'SAIDA', tmp_path)
     r = ponte.wrapped([zips[0]], ' <b>Ana</b> ')
     json.dumps(r)  # atravessa o Worker
-    assert 'su-stories' in r['stories'] and '&lt;b&gt;Ana&lt;/b&gt;' in r['stories']
+    assert 'stories' not in r  # o app web desenha os stories a partir de `dados`
+    assert r['dados']['nome'] == '<b>Ana</b>'  # cru: o Preact escapa
     trilha = r['trilha']
     assert {'primeira', 'artista', 'top_musicas', 'recorde', 'fiel'} <= set(trilha['slides'])
     assert trilha['slides']['artista'] == [{'artista': trilha['slides']['artista'][0]['artista']}]
@@ -126,7 +127,7 @@ def test_wrapped_roda_sem_plotly_nem_pillow(zips: tuple[str, str]) -> None:
         'sys.meta_path.insert(0, Bloqueio())\n'
         'from web import ponte\n'
         f'r = ponte.wrapped([{zips[0]!r}], "Ana")\n'
-        "assert 'su-stories' in r['stories']\n"
+        "assert r['dados']['top_musicas']\n"
         "assert not {'plotly', 'PIL'} & {m.split('.')[0] for m in sys.modules}\n"
     )
     subprocess.run([sys.executable, '-c', codigo], cwd=RAIZ, check=True)

@@ -86,3 +86,65 @@ export function hashNome(texto) {
   for (const c of texto) h = (h * 31 + c.codePointAt(0)) >>> 0;
   return h;
 }
+
+/* ---------- Quais slides entram (mesma ordem do núcleo) ---------- */
+export function tiposDoWrapped(d) {
+  const variosAnos = d.anos.length > 1;
+  const temHabitos = Object.values(d.habitos || {}).some((v) => v !== null);
+  return [
+    'intro', 'primeira', 'artista', 'top_artistas', 'top_musicas',
+    variosAnos && 'anos',
+    d.quantidade_artistas >= 10 && 'descobertas', // com 1 ano só, entra a versão curta
+    'recorde', 'relogio', 'maratona', 'fiel',
+    temHabitos && 'habitos',
+    'arquetipo', 'resumo',
+  ].filter(Boolean);
+}
+
+/* ---------- Frases dinâmicas (texto aprovado no design; neutras em gênero) ---------- */
+export function fraseRecorde(horas) {
+  if (horas >= 12) return 'Mais horas de música do que de sono.';
+  if (horas >= 8) return 'Um expediente inteiro de música.';
+  if (horas >= 4) return `Dava para ouvir uns ${Math.floor((horas * 60) / 45)} álbuns inteiros.`;
+  return 'Um dia intenso, no seu ritmo.';
+}
+export function fraseRepeticao(plays) {
+  if (plays >= 20) return 'Isso não é ouvir, é estudar.';
+  if (plays >= 10) return 'Virou a trilha daquele dia.';
+  return 'Um dia com trilha sonora definida.';
+}
+export function fraseSequencia(dias) {
+  if (dias >= 365) return 'Um ano inteiro sem um dia de silêncio.';
+  if (dias >= 100) return `${Math.floor(dias / 30)} meses sem pausa.`;
+  if (dias >= 30) return 'Mais de um mês inteiro, todo dia.';
+  if (dias >= 7) return `Uma boa sequência de ${dias} dias.`;
+  return 'Você ouve no seu ritmo, sem obrigação.';
+}
+export function fraseConstancia(fracao) {
+  if (fracao >= 0.9) return 'Música é rotina.';
+  if (fracao >= 0.6) return 'Quase todo dia tem trilha.';
+  return 'Você escolhe os momentos.';
+}
+
+// Hábito em destaque: o que mais passa do limiar do arquétipo correspondente.
+const HABITOS = [
+  ['pulos', 0.35, (p) => `Dedo rápido: ${p} das faixas puladas.`],
+  ['aleatorio', 0.6, (p) => `Quem escolhe é o aleatório: ${p} das vezes.`],
+  ['fim_natural', 0.65, (p) => `Você ouve até o fim: ${p} das faixas.`],
+  ['offline', 0.2, (p) => `Sem sinal, com som: ${p} offline.`],
+];
+export function habitoDestaque(habitos) {
+  let melhor = null;
+  for (const [chave, limiar, frase] of HABITOS) {
+    const v = habitos?.[chave];
+    if (v == null || v < limiar) continue;
+    if (!melhor || v / limiar > melhor.razao) melhor = { chave, razao: v / limiar, frase: frase(fmtPct(v)) };
+  }
+  return melhor ? { chave: melhor.chave, frase: melhor.frase } : { chave: null, frase: 'Equilíbrio: nem pula demais, nem deixa tudo no aleatório.' };
+}
+
+// Story 7 com 1 ano só: "1 artista novo a cada N plays".
+export function descobertasCurta(medida) {
+  const n = Math.max(1, Math.round(1 / medida));
+  return { n, frase: medida >= 0.06 ? 'Você vive caçando som novo.' : 'Você sabe do que gosta.' };
+}

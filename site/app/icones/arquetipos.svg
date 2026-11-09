@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- Ícones dos arquétipos do SyncUp (desenho próprio, MIT). Grade 64×64, traço 2,5, currentColor. -->
+  <defs>
+    <style>symbol * { fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }</style>
+  </defs>
+  <!-- devoto: coração com uma nota dentro -->
+  <symbol id="devoto" viewBox="0 0 64 64">
+    <path pathLength="1" d="M32 54 C14 42 6 32 6 21 C6 13 12 7 20 7 C25 7 29 10 32 14 C35 10 39 7 44 7 C52 7 58 13 58 21 C58 32 50 42 32 54 Z"/>
+    <path pathLength="1" d="M36 18 V35 M36 18 L44 21"/>
+    <circle pathLength="1" cx="32" cy="36" r="4"/>
+  </symbol>
+  <!-- explorador: bússola com agulha em forma de nota -->
+  <symbol id="explorador" viewBox="0 0 64 64">
+    <circle pathLength="1" cx="32" cy="32" r="25"/>
+    <path pathLength="1" d="M32 7 V12 M32 52 V57 M7 32 H12 M52 32 H57"/>
+    <path pathLength="1" d="M41 21 L35 35 L23 43 L29 29 Z"/>
+    <circle pathLength="1" cx="32" cy="32" r="2"/>
+  </symbol>
+  <!-- coruja: lua crescente com dois olhos redondos -->
+  <symbol id="coruja" viewBox="0 0 64 64">
+    <path pathLength="1" d="M40 8 A26 26 0 1 0 56 44 A20 20 0 0 1 40 8 Z"/>
+    <circle pathLength="1" cx="24" cy="34" r="5"/>
+    <circle pathLength="1" cx="38" cy="38" r="5"/>
+    <path pathLength="1" d="M29 42 L31 45 L33 42"/>
+  </symbol>
+  <!-- madrugador: meio sol no horizonte com 3 raios -->
+  <symbol id="madrugador" viewBox="0 0 64 64">
+    <path pathLength="1" d="M6 44 H58"/>
+    <path pathLength="1" d="M18 44 A14 14 0 0 1 46 44"/>
+    <path pathLength="1" d="M32 14 V22 M14 22 L19 27 M50 22 L45 27"/>
+    <path pathLength="1" d="M16 52 H48"/>
+  </symbol>
+  <!-- noturno: lua com 3 estrelas pequenas -->
+  <symbol id="noturno" viewBox="0 0 64 64">
+    <path pathLength="1" d="M30 10 A22 22 0 1 0 54 40 A17 17 0 0 1 30 10 Z"/>
+    <path pathLength="1" d="M48 8 V14 M45 11 H51"/>
+    <path pathLength="1" d="M56 22 V26 M54 24 H58"/>
+    <path pathLength="1" d="M42 24 V28 M40 26 H44"/>
+  </symbol>
+  <!-- fim_de_semana: calendário com os 2 últimos dias preenchidos -->
+  <symbol id="fim_de_semana" viewBox="0 0 64 64">
+    <rect pathLength="1" x="8" y="12" width="48" height="42" rx="6"/>
+    <path pathLength="1" d="M8 24 H56 M20 6 V16 M44 6 V16"/>
+    <path pathLength="1" d="M16 33 H20 M26 33 H30 M16 43 H20 M26 43 H30"/>
+    <rect pathLength="1" x="36" y="30" width="14" height="18" rx="3"/>
+    <path pathLength="1" d="M43 30 V48"/>
+  </symbol>
+  <!-- pulador: duas setas ▷▷ e um traço vertical -->
+  <symbol id="pulador" viewBox="0 0 64 64">
+    <path pathLength="1" d="M8 16 L26 32 L8 48 Z"/>
+    <path pathLength="1" d="M28 16 L46 32 L28 48 Z"/>
+    <path pathLength="1" d="M54 16 V48"/>
+  </symbol>
+  <!-- aleatorio: duas setas que se cruzam -->
+  <symbol id="aleatorio" viewBox="0 0 64 64">
+    <path pathLength="1" d="M6 18 H16 C30 18 34 46 48 46 H56"/>
+    <path pathLength="1" d="M6 46 H16 C22 46 26 40 29 34 M35 26 C38 21 42 18 48 18 H56"/>
+    <path pathLength="1" d="M50 12 L56 18 L50 24 M50 40 L56 46 L50 52"/>
+  </symbol>
+  <!-- album: disco de vinil com selo central -->
+  <symbol id="album" viewBox="0 0 64 64">
+    <circle pathLength="1" cx="32" cy="32" r="25"/>
+    <circle pathLength="1" cx="32" cy="32" r="17"/>
+    <circle pathLength="1" cx="32" cy="32" r="7"/>
+    <circle pathLength="1" cx="32" cy="32" r="1.5"/>
+  </symbol>
+  <!-- maratonista: chama de traço contínuo -->
+  <symbol id="maratonista" viewBox="0 0 64 64">
+    <path pathLength="1" d="M32 58 C18 58 12 48 12 39 C12 28 22 22 24 10 C30 16 34 22 33 30 C37 27 39 22 39 18 C47 25 52 32 52 40 C52 50 45 58 32 58 Z"/>
+    <path pathLength="1" d="M32 50 C27 50 24 46 24 42 C24 37 29 34 31 29 C35 34 40 37 40 42 C40 47 37 50 32 50 Z"/>
+  </symbol>
+  <!-- repeat: laço circular com seta e uma nota no centro -->
+  <symbol id="repeat" viewBox="0 0 64 64">
+    <path pathLength="1" d="M50 22 A22 22 0 1 0 54 34"/>
+    <path pathLength="1" d="M50 10 V22 H38"/>
+    <path pathLength="1" d="M34 22 V38 M34 22 L41 25"/>
+    <circle pathLength="1" cx="30" cy="39" r="4"/>
+  </symbol>
+  <!-- offline: nuvem riscada com uma nota embaixo -->
+  <symbol id="offline" viewBox="0 0 64 64">
+    <path pathLength="1" d="M18 38 H46 C52 38 56 34 56 28 C56 22 51 18 45 18 C43 11 37 7 31 7 C23 7 17 13 17 20 C11 20 8 24 8 29 C8 34 12 38 18 38 Z"/>
+    <path pathLength="1" d="M10 6 L54 46"/>
+    <path pathLength="1" d="M34 44 V56 M34 44 L40 46"/>
+    <circle pathLength="1" cx="31" cy="57" r="3"/>
+  </symbol>
+</svg>

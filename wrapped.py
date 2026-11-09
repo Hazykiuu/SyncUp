@@ -90,6 +90,7 @@ class Wrapped:
     arquetipos: PerfilArquetipos
     fuso_horario: str = 'America/Sao_Paulo'
     avisos: list[str] = field(default_factory=list)
+    fiel_anos: list[int] = field(default_factory=list)  # anos em que o fiel esteve no top 5
 
 
 def mes_ano(data: pd.Timestamp) -> str:
@@ -231,6 +232,7 @@ def calcular_wrapped(dados: pd.DataFrame, nome: str, fuso_horario: str = '') -> 
         .sort_values(['anos', 'plays', 'artista'], ascending=[False, False, True], kind='stable')
     )
     fiel_nome, fiel_anos, fiel_plays = fidelidade.iloc[0][['artista', 'anos', 'plays']]
+    anos_do_fiel = sorted(int(a) for a in top5_ano.loc[top5_ano['artista'] == fiel_nome, 'ano'])
 
     # Dia recorde e maior repetição de uma música em um único dia.
     horas_dia = dados['minutos'].groupby(dias, observed=True).sum() / 60
@@ -321,6 +323,7 @@ def calcular_wrapped(dados: pd.DataFrame, nome: str, fuso_horario: str = '') -> 
         periodos=periodos,
         fiel=ItemRanking(str(fiel_nome), int(fiel_plays)),
         anos_fiel=int(fiel_anos),
+        fiel_anos=anos_do_fiel,
         habitos={
             'pulos': pulos,
             'aleatorio': aleatorio,

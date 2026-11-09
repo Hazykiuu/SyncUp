@@ -26,7 +26,7 @@ function pedidos(d) {
   const topo = d.anos.length ? d.anos.reduce((a, b) => (b.horas > a.horas ? b : a)) : null;
   const lista = [
     faixa(d.top_musicas[0]), faixa(d.primeira_musica), artista(d.artista_vida),
-    ...d.top_artistas.slice(0, 3).map(artista), ...d.top_musicas.slice(0, 9).map(faixa),
+    ...d.top_artistas.slice(0, 5).map(artista), ...d.top_musicas.slice(0, 9).map(faixa),
     faixa(topo?.top_musica), artista(d.anos.at(-1)?.top_artistas[0]), faixa(d.repeticao_dia), artista(d.fiel),
   ].filter(Boolean);
   return [...new Map(lista.map((p) => [chaveCapa(p.item, p.tipo), p])).values()];

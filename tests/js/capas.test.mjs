@@ -71,4 +71,9 @@ test('429 espera dobrando e tenta de novo; sem rede não grava no cache', async 
   const semRede = criarBuscador({ fetch: async () => { throw new TypeError('offline'); }, esperar, cache });
   assert.equal(await semRede.faixa(`spotify:track:${ID}`), null);
   assert.equal(await cache.ler(`t:${ID}`), undefined);
+
+  // Recusou as 4 vezes: sem imagem agora, e nada gravado (não vira "não achou" por 30 dias).
+  const ocupado = criarBuscador({ fetch: falso([[`track%2F${ID}`, resposta(503, {})]]).fetch, esperar, cache });
+  assert.equal(await ocupado.faixa(`spotify:track:${ID}`), null);
+  assert.equal(await cache.ler(`t:${ID}`), undefined);
 });

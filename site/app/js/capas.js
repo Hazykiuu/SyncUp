@@ -67,7 +67,8 @@ export function criarBuscador({ fetch = globalThis.fetch.bind(globalThis), esper
   const spotify = limitador(PARALELO, 0, esperar);
   const musicbrainz = limitador(1, INTERVALO_MB, esperar);
 
-  // 429/503: espera dobrando (2 s, 4 s, 8 s); depois de 3 recusas, segue sem imagem.
+  // 429/503: espera dobrando (2 s, 4 s, 8 s). Se continuar recusando, erro: segue sem imagem
+  // agora, mas não grava "não achou" no cache (tenta de novo na próxima vez).
   async function json(url, vez) {
     for (let tentativa = 0; tentativa < 4; tentativa++) {
       const r = await vez(() => fetch(url));
@@ -75,7 +76,7 @@ export function criarBuscador({ fetch = globalThis.fetch.bind(globalThis), esper
       if (r.status !== 429 && r.status !== 503) return null;
       if (tentativa < 3) await esperar(2000 * 2 ** tentativa);
     }
-    return null;
+    throw new Error('serviço ocupado');
   }
   const oembed = async (tipo, id) => {
     const d = await json(OEMBED + encodeURIComponent(`https://open.spotify.com/${tipo}/${id}`), spotify);

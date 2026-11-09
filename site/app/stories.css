@@ -141,9 +141,19 @@
 .st-resumo-numeros { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 2cqw; }
 .st-resumo-numeros > div { display: grid; gap: .6cqw; padding: 3cqw; border-radius: 3.4cqw; }
 .st-resumo-numeros b { font-size: 4.2cqw; font-weight: 900; line-height: 1.1; }
-/* "Sua trilha": mosaico 3×3, capas lado a lado, nada por cima. */
-.st-mosaico { align-self: center; width: 76cqw; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2cqw; }
-.st-mosaico .st-capa { width: 100%; font-size: 8cqw; box-shadow: none; }
+/* "Sua trilha": a nº 1 em 2×2 e as outras 8 em volta; nomes fora das capas (regras do Spotify). */
+.st-mosaico { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.6cqw; }
+.st-mosaico .st-capa { width: 100%; font-size: 7cqw; box-shadow: none; }
+.st-mosaico .st-capa.n1 { grid-column: span 2; grid-row: span 2; font-size: 16cqw; border-radius: 8px; }
+.st-mais-ouvida { font-size: 3.6cqw; }
+.st-trilha-lista { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1.4cqw 3cqw; font-size: 2.9cqw; }
+.st-trilha-lista li { display: grid; grid-template-columns: 3.4cqw minmax(0, 1fr); column-gap: 1cqw; }
+.st-trilha-lista span { grid-row: span 2; font-weight: 900; color: rgba(255, 255, 255, .6); }
+.st-trilha-lista b, .st-trilha-lista small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.st-trilha-lista small { color: rgba(255, 255, 255, .62); }
+/* Logo oficial do Spotify (mín. 70 px de largura) + link de volta, no pé dos slides com capa. */
+.st-marca { display: flex; flex-wrap: wrap; align-items: center; gap: 3cqw; }
+.st-marca img { width: 80px; height: auto; }
 /* Link de volta obrigatório pelas regras do Spotify. */
 .st-spotify { justify-self: start; align-self: start; display: inline-flex; align-items: center; min-height: 44px; padding: 0 4cqw; border-radius: var(--raio-chip);
   color: #fff; font-size: 3cqw; font-weight: 800; letter-spacing: .08em; text-decoration: none; }

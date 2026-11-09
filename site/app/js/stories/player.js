@@ -1,12 +1,30 @@
 // Player dos stories do Wrapped (Preact). A máquina de estados fica em logica.js (testada);
 // aqui só entram os gestos: toque (esquerda volta, direita avança), segurar pausa, arrastar troca,
 // teclado (← → espaço) e aba oculta. Quem marca o tempo é a animação CSS do segmento ativo.
-import { html, useEffect, useReducer, useRef } from 'preact-htm';
+import { html, useEffect, useReducer, useRef, useState } from 'preact-htm';
 import { inicial, pausado, player } from './logica.js';
 
 const SEGURAR_MS = 250;
 const ARRASTO_PX = 40;
 const reduzido = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ?fps=1: quadros por segundo no canto da tela, para medir o player em celulares (só desenvolvimento).
+const MEDIR_FPS = new URLSearchParams(location.search).get('fps') === '1';
+const ESTILO_FPS = { position: 'fixed', left: '8px', bottom: '8px', zIndex: 50, margin: 0, padding: '4px 8px', borderRadius: '6px', background: 'rgba(0,0,0,.8)', color: '#1ed760', font: '700 12px/1 monospace' };
+function Fps() {
+  const [fps, setFps] = useState(0);
+  useEffect(() => {
+    let quadro, n = 0, inicio = performance.now();
+    const passo = (t) => {
+      n++;
+      if (t - inicio >= 1000) { setFps(Math.round((n * 1000) / (t - inicio))); n = 0; inicio = t; }
+      quadro = requestAnimationFrame(passo);
+    };
+    quadro = requestAnimationFrame(passo);
+    return () => cancelAnimationFrame(quadro);
+  }, []);
+  return html`<p aria-hidden="true" style=${ESTILO_FPS}>${fps} fps</p>`;
+}
 
 export function Player({ slides, rotulo, aoMudar }) {
   const [estado, despachar] = useReducer(player, slides.length, (n) => inicial(n, { semMovimento: reduzido() }));
@@ -58,6 +76,7 @@ export function Player({ slides, rotulo, aoMudar }) {
   };
 
   return html`
+    ${MEDIR_FPS && html`<${Fps} />`}
     <div ref=${raiz} class=${`su-stories su-js st-player${parado ? ' pausado' : ''}`} tabindex="0" role="region"
       aria-roledescription="stories" aria-label=${rotulo} onKeyDown=${tecla}
       onPointerDown=${baixo} onPointerUp=${cima} onPointerCancel=${cancelar} onPointerLeave=${cancelar}>

@@ -28,3 +28,16 @@ jobs:
         run: python -m pip install -r requirements-dev.txt
       - name: Testes
         run: python -m pytest -q
+
+  js:
+    name: JavaScript (node --test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Sintaxe do app
+        run: for f in site/app/*.js site/app/js/*.js site/app/js/stories/*.js; do node --check "$f"; done
+      - name: Testes da lógica dos stories
+        run: node --test tests/js

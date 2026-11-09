@@ -4,8 +4,25 @@ import { baixar, executar } from './motor.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { SomStories } from './som.js';
+import { Player } from './stories/player.js';
+import { Antigo, NOVOS } from './stories/slides.js';
 
 const Html = ({ conteudo }) => html`<div class="nucleo" dangerouslySetInnerHTML=${{ __html: conteudo }} />`;
+
+// Slides na ordem do núcleo: os já refeitos vêm de `dados` (Preact); os outros, do HTML antigo.
+function montarSlides(r) {
+  const molde = document.createElement('template');
+  molde.innerHTML = r.stories;
+  const avisos = [...molde.content.querySelectorAll('.su-note')].map((p) => p.textContent);
+  const slides = [...molde.content.querySelectorAll('.su-story')].map((sec) => {
+    const tipo = [...sec.classList].find((c) => c.startsWith('s-')).slice(2);
+    const Novo = NOVOS[tipo];
+    sec.classList.add('ativo'); // a visibilidade é do player (st-slot); o CSS antigo pede .ativo
+    const antigo = sec.outerHTML;
+    return { tipo, render: (p) => (Novo ? html`<${Novo} d=${r.dados} ...${p} />` : html`<${Antigo} html=${antigo} replay=${p.replay} />`) };
+  });
+  return { slides, avisos };
+}
 
 export function Wrapped({ pronto }) {
   const [nome, setNome] = useState('');
@@ -20,7 +37,7 @@ export function Wrapped({ pronto }) {
     setFase({ tipo: 'processando', etapa: 'Lendo o histórico completo e montando os stories…' });
     try {
       const r = await executar('wrapped', args, { arquivos: envio });
-      setFase({ tipo: 'resultado', r });
+      setFase({ tipo: 'resultado', r, slides: montarSlides(r) });
       requestAnimationFrame(() => document.getElementById('resultado-wrapped')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     } catch (e) { setFase({ tipo: 'erro', mensagem: e.message }); }
   };
@@ -58,7 +75,10 @@ export function Wrapped({ pronto }) {
     <div id="resultado-wrapped">${fase.tipo === 'resultado' && html`
       <section class="resultado" aria-label=${`Wrapped de ${fase.r.nome}`}>
         <${SomStories} key=${fase.r} trilha=${fase.r.trilha} alvo=${stories} />
-        <div ref=${stories}><${Html} conteudo=${fase.r.stories} /></div>
+        <div ref=${stories} class="nucleo">
+          <${Player} key=${fase.r} slides=${fase.slides.slides} rotulo=${`Wrapped de ${fase.r.nome}`} />
+          ${fase.slides.avisos.map((a) => html`<p class="su-note">${a}</p>`)}
+        </div>
         <div class="compartilhar"><div class="acoes">
           <button type="button" class="btn btn-verde" onClick=${png} disabled=${baixando}>${baixando ? 'Gerando…' : 'Baixar o story · PNG'}</button>
         </div></div>

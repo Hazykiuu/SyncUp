@@ -78,7 +78,7 @@ export function SomStories({ trilha, alvo }) {
   const [mudo, setMudo] = useState(false);
   const mudoAgora = useRef(false); // lido pelos ouvintes do player, que não re-renderizam
   mudoAgora.current = mudo;
-  const raiz = () => alvo.current?.querySelector('[data-stories]');
+  const raiz = () => alvo.current?.querySelector('.st-player');
   const [aviso, setAviso] = useState('');
 
   const rampa = (valor, segundos = ENTRA) => {
@@ -110,7 +110,7 @@ export function SomStories({ trilha, alvo }) {
     if (!fila.length && !Object.values(porSlide).some((l) => l.length)) { setEstado('sem'); setAviso('Não deu para buscar os trechos (sem internet?). Os stories seguem sem som.'); return; }
     trilhaPronta.current = { fila, porSlide };
     setEstado('tocando');
-    raiz()?.__suPlay?.(); // recomeça do primeiro slide, já com som
+    raiz()?.dispatchEvent(new Event('st-replay')); // recomeça do primeiro slide, já com som
     raiz()?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
@@ -121,7 +121,8 @@ export function SomStories({ trilha, alvo }) {
     if (estado !== 'tocando' || !stories) return undefined;
     const { el } = som;
     const { fila, porSlide } = trilhaPronta.current;
-    const slides = [...stories.querySelectorAll('.su-story')];
+    const slides = [...stories.querySelectorAll('.st-slot .su-story')];
+    const slots = [...stories.querySelectorAll('.st-slot')];
     // Cada story: a 1ª candidata do seu dado que ainda não tocou; senão, a próxima das mais ouvidas.
     const tocadas = new Set();
     const livre = (lista) => lista.find((t) => !tocadas.has(t.id));
@@ -144,7 +145,7 @@ export function SomStories({ trilha, alvo }) {
     };
     const aoMudar = () => {
       if (stories.classList.contains('pausado')) { el.pause(); return; }
-      const i = slides.findIndex((sl) => sl.classList.contains('ativo'));
+      const i = slots.findIndex((sl) => sl.classList.contains('ativo'));
       if (i < 0) return;
       if (i !== atual) { atual = i; trocar(musicas[i]); } else if (el.paused && !el.src.startsWith('blob:')) { tocar(el); rampa(volume()); }
     };

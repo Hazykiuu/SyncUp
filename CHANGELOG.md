@@ -1,5 +1,29 @@
 # Changelog — SyncUp
 
+## [1.4.0] — 2026-11-09
+
+Wrapped novo no app do navegador: stories com capas, fotos e trilha sonora, e um pôster para compartilhar.
+
+### Novo
+- **Aba Wrapped no app web**: 15 stories da vida toda em Preact (visual "Capa Viva + Liquid Glass"), com toque, segurar para pausar, arrastar e teclado.
+- **Capas e fotos do Spotify** (opcional, com "Começar com capas e som"): capa exata pelo ID da música do ZIP e foto do artista via MusicBrainz → Spotify. Logo e link "ABRIR NO SPOTIFY" conforme as diretrizes do Spotify.
+- **Trilha sonora**: um trecho de 30 s (iTunes) por story, ligado ao dado de cada um, com fade.
+- **"Sua trilha"**: mosaico das 9 músicas mais ouvidas.
+- **Pôster final** com o convite "Qual é a nossa sintonia? Compare comigo" e o botão **Compartilhar pôster** (PNG 1080×1920 gerado no navegador; no celular abre o compartilhar).
+- Ícones próprios dos 12 arquétipos; anos clicáveis no story de fidelidade.
+- "Apagar capas guardadas" e `?fps=1` para medir o desempenho.
+
+### Mudado
+- O app web baixa ~15 MB em vez de ~26 MB: plotly só na Dupla e Pillow sob demanda.
+- O núcleo lê o `spotify_track_uri` e calcula o top 10 de músicas.
+
+### Corrigido
+- Story de fidelidade: as bolinhas contavam o top 3 do ano em vez do top 5 (vale também para o app local).
+
+### Segurança e privacidade
+- Imagens e trechos só de domínios esperados, em https; cache de capas expira em 30 dias.
+- README e site explicam o que vai para Spotify, MusicBrainz e Apple, e só depois do toque.
+
 ## [1.3.1] — 2026-11-06
 
 Correções da inspeção de segurança e estabilidade do app no navegador.

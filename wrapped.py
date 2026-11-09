@@ -137,7 +137,7 @@ def _maior_sequencia(dias: pd.Series) -> tuple[int, pd.Timestamp, pd.Timestamp]:
     """Maior sequência de dias consecutivos com pelo menos uma reprodução."""
     unicos = pd.Series(dias.drop_duplicates().sort_values().to_numpy())
     quebras = unicos.diff().dt.days.ne(1).cumsum()
-    tamanhos = quebras.value_counts()
+    tamanhos = quebras.value_counts().sort_index()  # empate: a sequência mais antiga
     grupo = tamanhos.idxmax()
     trecho = unicos[quebras == grupo]
     return int(tamanhos.max()), trecho.iloc[0], trecho.iloc[-1]
@@ -240,7 +240,11 @@ def calcular_wrapped(dados: pd.DataFrame, nome: str, fuso_horario: str = '') -> 
     horas_dia = dados['minutos'].groupby(dias, observed=True).sum() / 60
     dia_recorde = horas_dia.idxmax()
     plays_dia = plays[plays['data'].dt.normalize() == dia_recorde]
-    artista_dia = str(plays_dia['artista'].value_counts().idxmax()) if len(plays_dia) else ''
+    # Empates com regra explícita: a ordem do value_counts do pandas nos empates não é garantida.
+    contagem_dia = plays_dia['artista'].astype(object).value_counts()
+    artista_dia = (
+        min(contagem_dia.index[contagem_dia == contagem_dia.max()]) if len(plays_dia) else ''
+    )
     repeticoes = (
         plays.assign(dia=plays['data'].dt.normalize())
         .groupby(['dia', 'musica', 'artista'], observed=True)
@@ -257,7 +261,7 @@ def calcular_wrapped(dados: pd.DataFrame, nome: str, fuso_horario: str = '') -> 
         nome_periodo: float(horas_plays.between(ini, fim_p - 1).mean())
         for nome_periodo, ini, fim_p in PERIODOS
     }
-    semana = plays['dia_semana'].value_counts()
+    semana = plays['dia_semana'].value_counts().sort_index()  # empate: o primeiro da semana
     fim_de_semana = float(plays['dia_semana'].ge(5).mean())
 
     # Hábitos (podem faltar em exportações antigas).
@@ -269,12 +273,11 @@ def calcular_wrapped(dados: pd.DataFrame, nome: str, fuso_horario: str = '') -> 
     fim_natural = float(motivos.dropna().eq('trackdone').mean()) if motivos_conhecidos else None
     aleatorio = _fracao(dados['aleatorio'])
     offline = _fracao(dados['offline'])
-    plataformas_validas = dados['plataforma'].dropna()
-    plataformas = [
-        (str(nome_p), float(v))
-        for nome_p, v in plataformas_validas.value_counts(normalize=True).head(4).items()
-        if v > 0
-    ]
+    contagem_plataformas = dados['plataforma'].dropna().astype(object).value_counts(normalize=True)
+    plataformas = sorted(
+        ((str(nome_p), float(v)) for nome_p, v in contagem_plataformas.items() if v > 0),
+        key=lambda p: (-p[1], p[0]),  # empate: ordem alfabética
+    )[:4]
     if pulos is None and aleatorio is None:
         avisos.append('Este histórico não traz pulos/aleatório; esses hábitos foram omitidos.')
 
@@ -352,8 +355,10 @@ def _com_uris(w: Wrapped, plays: pd.DataFrame) -> Wrapped:
         ['musica', 'artista', 'uri'],
     ]
     melhor: dict[tuple[str, str], str] = {}
-    for (musica, artista, uri), _ in base.astype(object).value_counts().items():
-        melhor.setdefault((musica, artista), uri)  # value_counts vem do mais tocado ao menos
+    contagem = base.astype(object).value_counts()
+    # Do mais tocado ao menos; empate: o menor ID.
+    for (musica, artista, uri), _ in sorted(contagem.items(), key=lambda kv: (-kv[1], kv[0])):
+        melhor.setdefault((musica, artista), uri)
 
     def com(item: ItemRanking) -> ItemRanking:
         uri = melhor.get((item.nome, item.artista))

@@ -83,6 +83,14 @@ export const corReserva = (i) => (i % 2 ? [196, 183, 255] : [30, 215, 96]);
 // Comparação de nomes vindos de fontes diferentes: sem acento, caixa e pontuação.
 export const normalizar = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
+// Pôster em Canvas: texto que não cabe na largura termina em "…" (ctx só precisa de measureText).
+export function cortar(ctx, texto, largura) {
+  if (ctx.measureText(texto).width <= largura) return texto;
+  let fim = texto.length;
+  while (fim > 0 && ctx.measureText(`${texto.slice(0, fim).trimEnd()}…`).width > largura) fim--;
+  return `${texto.slice(0, fim).trimEnd()}…`;
+}
+
 // Número estável por nome (capa de teste e matiz da capa tipográfica).
 export function hashNome(texto) {
   let h = 0;

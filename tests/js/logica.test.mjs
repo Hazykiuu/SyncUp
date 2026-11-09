@@ -83,6 +83,14 @@ test('frases de cada faixa (stories 7, 8, 10 e 12)', async () => {
   assert.equal(L.descobertasCurta(0.02).frase, 'Você sabe do que gosta.');
 });
 
+test('pôster: texto longo corta com reticências', async () => {
+  const { cortar } = await import('../../site/app/js/stories/logica.js');
+  const ctx = { measureText: (t) => ({ width: t.length * 10 }) }; // 10 px por letra
+  assert.equal(cortar(ctx, 'doll', 100), 'doll');
+  assert.equal(cortar(ctx, 'we fell in love in october', 100), 'we fell i…');
+  assert.ok(cortar(ctx, 'abcdefghijklmnop', 50).length <= 5);
+});
+
 test('slides condicionais', async () => {
   const { tiposDoWrapped } = await import('../../site/app/js/stories/logica.js');
   const base = { anos: [{}, {}], quantidade_artistas: 300, habitos: { pulos: 0.2 } };

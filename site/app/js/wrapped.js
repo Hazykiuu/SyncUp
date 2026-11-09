@@ -1,7 +1,8 @@
 // Tela Wrapped: o histórico de uma pessoa vira stories da vida toda e um PNG.
 import { html, useMemo, useRef, useState } from 'preact-htm';
 import { criarBuscador } from './capas.js';
-import { baixar, executar } from './motor.js';
+import { compartilhar, desenharPoster } from './poster.js';
+import { executar } from './motor.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { SomStories } from './som.js';
@@ -41,6 +42,7 @@ export function Wrapped({ pronto }) {
   const [opcoes, setOpcoes] = useState(PADRAO);
   const [fase, setFase] = useState({ tipo: 'parado' });
   const [baixando, setBaixando] = useState(false);
+  const [aviso, setAviso] = useState('');
   const [capas, setCapas] = useState(null); // null = desligadas; Map chave → { url, link }
   const stories = useRef(null);
   const rodada = useRef(0); // resultados de uma rodada antiga não entram na nova
@@ -85,9 +87,16 @@ export function Wrapped({ pronto }) {
       await rodar([[d.a], d.nome_a, opcoes]);
     } catch (e) { setFase({ tipo: 'erro', mensagem: e.message }); }
   };
+  // Pôster em PNG desenhado no navegador (Canvas): compartilha no celular, baixa no computador.
   const png = async () => {
-    setBaixando(true);
-    try { baixar(await executar('cartao_wrapped', [], { saida: 'arquivo' })); } catch (e) { setFase({ tipo: 'erro', mensagem: e.message }); } finally { setBaixando(false); }
+    setBaixando(true); setAviso('');
+    try {
+      const inicio = performance.now();
+      const blob = await desenharPoster(fase.r.dados, capas);
+      const ms = Math.round(performance.now() - inicio);
+      const como = await compartilhar(blob);
+      setAviso(como === 'cancelado' ? '' : `Pôster pronto em ${(ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} s${como === 'baixado' ? ' (baixado como syncup-wrapped.png)' : ''}.`);
+    } catch (e) { setAviso(`Não deu para gerar o pôster: ${e.message}`); } finally { setBaixando(false); }
   };
 
   return html`
@@ -114,9 +123,10 @@ export function Wrapped({ pronto }) {
           ${fase.r.dados.avisos.map((a) => html`<p class="su-note">${a}</p>`)}
         </div>
         <div class="compartilhar"><div class="acoes">
-          <button type="button" class="btn btn-verde" onClick=${png} disabled=${baixando}>${baixando ? 'Gerando…' : 'Baixar o story · PNG'}</button>
+          <button type="button" class="btn btn-verde" onClick=${png} disabled=${baixando}>${baixando ? 'Gerando…' : 'Compartilhar pôster'}</button>
           <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
         </div>
+        ${aviso && html`<p class="nota" role="status">${aviso}</p>`}
         <p class="nota">Dica: no último story, tire um print para postar nos stories e chamar os amigos para comparar.</p></div>
         <details class="vidro detalhe"><summary>Como o arquétipo foi calculado</summary><${Html} conteudo=${fase.r.arquetipos} /></details>
       </section>`}</div>`;

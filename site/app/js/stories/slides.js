@@ -13,9 +13,11 @@ export const chaveCapa = (item, tipo) => (tipo === 'faixa' ? item?.uri && `t:${i
 // Capas de teste locais (?capas=teste), para treinar o layout sem rede.
 const CAPAS_TESTE = new URLSearchParams(location.search).get('capas') === 'teste';
 
+export const capaTeste = (item) => (CAPAS_TESTE && item?.nome ? `fixtures/capas/capa-${(hashNome(item.nome) % 8) + 1}.jpg` : null);
+
 function useCapa(item, tipo) {
   const capas = useContext(CapasCtx);
-  if (CAPAS_TESTE && item?.nome) return { url: `fixtures/capas/capa-${(hashNome(item.nome) % 8) + 1}.jpg` };
+  if (capaTeste(item)) return { url: capaTeste(item) };
   return capas?.get(chaveCapa(item, tipo)) || null;
 }
 

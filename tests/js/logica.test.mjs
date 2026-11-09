@@ -91,4 +91,10 @@ test('slides condicionais', async () => {
   assert.ok(!umAno.includes('anos') && umAno.includes('descobertas'));
   assert.ok(!tiposDoWrapped({ ...base, quantidade_artistas: 5 }).includes('descobertas'));
   assert.ok(!tiposDoWrapped({ ...base, habitos: { pulos: null, offline: null } }).includes('habitos'));
+  // "Sua trilha" só com as capas ligadas e pelo menos 9 músicas, logo depois do top músicas.
+  const nove = { ...base, top_musicas: Array(9).fill({}) };
+  assert.ok(!tiposDoWrapped(nove).includes('trilha'));
+  const comCapas = tiposDoWrapped(nove, { capas: true });
+  assert.equal(comCapas[comCapas.indexOf('top_musicas') + 1], 'trilha');
+  assert.ok(!tiposDoWrapped({ ...base, top_musicas: [{}] }, { capas: true }).includes('trilha'));
 });

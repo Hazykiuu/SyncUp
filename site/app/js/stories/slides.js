@@ -1,14 +1,27 @@
 // Slides novos do Wrapped ("Capa Viva" + "Liquid Glass"), desenhados a partir de `dados` (JSON da ponte).
 // O Gradio continua com o HTML de stories.py; o app web usa só estes.
-import { html, useEffect, useRef, useState } from 'preact-htm';
+import { createContext, html, useContext, useEffect, useRef, useState } from 'preact-htm';
 import {
   ajustarCor, corReserva, dataBr, descobertasCurta, fmtNum, fmtPct, fraseConstancia, fraseRecorde,
   fraseRepeticao, fraseSequencia, habitoDestaque, hashNome, mesAno,
 } from './logica.js';
 
-// shortcut: capas de teste locais (?capas=teste) até a Fase 4 trazer as do iTunes.
+// Capas que já chegaram (Map chave → { url, link }), ou null com as capas desligadas.
+// Vêm do Spotify: pelas regras dele, a capa aparece nítida e inteira, sem blur nem texto por cima.
+export const CapasCtx = createContext(null);
+export const chaveCapa = (item, tipo) => (tipo === 'faixa' ? item?.uri && `t:${item.uri}` : item?.nome && `a:${item.nome}`);
+// Capas de teste locais (?capas=teste), para treinar o layout sem rede.
 const CAPAS_TESTE = new URLSearchParams(location.search).get('capas') === 'teste';
-const capaDe = (nome) => (CAPAS_TESTE && nome ? `fixtures/capas/capa-${(hashNome(nome) % 8) + 1}.jpg` : null);
+
+function useCapa(item, tipo) {
+  const capas = useContext(CapasCtx);
+  if (CAPAS_TESTE && item?.nome) return { url: `fixtures/capas/capa-${(hashNome(item.nome) % 8) + 1}.jpg` };
+  return capas?.get(chaveCapa(item, tipo)) || null;
+}
+
+// Link de volta obrigatório pelas regras do Spotify; data-interativo: o toque não troca de story.
+const NoSpotify = ({ capa }) => capa?.link
+  ? html`<a class="st-spotify st-vidro" href=${capa.link} target="_blank" rel="noopener" data-interativo>ABRIR NO SPOTIFY</a>` : null;
 
 // Contador que sobe até o valor (menos movimento: valor final direto).
 function Contador({ valor, casas = 0, ativo }) {
@@ -23,7 +36,7 @@ function Contador({ valor, casas = 0, ativo }) {
   return fmtNum(v, casas);
 }
 
-// Moldura comum: fundo (capa borrada ou gradiente), véu e a cor da capa em --capa.
+// Moldura comum: fundo em gradiente com a cor média da capa (--capa), lida de uma cópia escondida.
 function Slide({ tipo, i, capa, children }) {
   const raiz = useRef(null);
   const [cor, setCor] = useState(corReserva(i));
@@ -46,18 +59,18 @@ function Slide({ tipo, i, capa, children }) {
 }
 
 // Capa nítida, ou a "capa tipográfica" (inicial num quadrado de matiz estável) quando não há.
-function Capa({ nome, classe = '' }) {
-  const src = capaDe(nome);
-  return src
-    ? html`<img class=${`st-capa ${classe}`} src=${src} alt="" crossorigin="anonymous" />`
-    : html`<span class=${`st-capa st-capa-tipo ${classe}`} style=${{ '--hue': hashNome(nome || '?') % 360 }} aria-hidden="true">${(nome || '?').slice(0, 1).toUpperCase()}</span>`;
+function Capa({ item, tipo, classe = '' }) {
+  const capa = useCapa(item, tipo), nome = item?.nome || '?';
+  return capa
+    ? html`<img class=${`st-capa ${classe}`} src=${capa.url} alt="" crossorigin="anonymous" />`
+    : html`<span class=${`st-capa st-capa-tipo ${classe}`} style=${{ '--hue': hashNome(nome) % 360 }} aria-hidden="true">${nome.slice(0, 1).toUpperCase()}</span>`;
 }
 
 const Entra = ({ i, tag = 'div', classe = '', children }) => html`<${tag} class=${`entra ${classe}`} style=${{ '--i': i }}>${children}<//>`;
 
 export function Intro({ d, ativo, i }) {
   const dias = d.horas / 24;
-  return html`<${Slide} tipo="intro" i=${i} capa=${capaDe(d.top_musicas[0]?.artista)}>
+  return html`<${Slide} tipo="intro" i=${i} capa=${useCapa(d.top_musicas[0], 'faixa')?.url}>
     <${Entra} i=${0} tag="span" classe="st-kicker">SyncUp Wrapped · vida toda<//>
     <${Entra} i=${1} tag="h2" classe="st-titulo">${d.nome},<br />sua vida no Spotify<//>
     <${Entra} i=${2} tag="p" classe="st-sub">${mesAno(d.inicio)} → ${mesAno(d.fim)}<//>
@@ -70,10 +83,10 @@ export function Intro({ d, ativo, i }) {
 }
 
 export function Artista({ d, ativo, i }) {
-  const a = d.artista_vida;
-  return html`<${Slide} tipo="artista" i=${i} capa=${capaDe(a.nome)}>
+  const a = d.artista_vida, capa = useCapa(a, 'artista');
+  return html`<${Slide} tipo="artista" i=${i} capa=${capa?.url}>
     <${Entra} i=${0} tag="span" classe="st-kicker">O artista da sua vida<//>
-    <${Entra} i=${1} classe="st-capa-palco"><${Capa} nome=${a.nome} classe="flutua grande" /><//>
+    <${Entra} i=${1} classe="st-capa-palco"><${Capa} item=${a} tipo="artista" classe="grande" /><//>
     <${Entra} i=${2} tag="h2" classe="st-nome-xxl">${a.nome}<//>
     <${Entra} i=${3} classe="st-chips">
       <span class="st-vidro"><b><${Contador} valor=${a.plays} ativo=${ativo} /></b> plays</span>
@@ -81,6 +94,7 @@ export function Artista({ d, ativo, i }) {
       <span class="st-vidro"><b>${fmtPct(d.participacao_artista_vida)}</b> de tudo</span>
     <//>
     <${Entra} i=${4} tag="p">Vocês se conheceram em <strong>${mesAno(d.descoberta_artista_vida)}</strong>.<//>
+    <${NoSpotify} capa=${capa} />
   <//>`;
 }
 
@@ -88,25 +102,26 @@ const Kicker = ({ i = 0, children }) => html`<${Entra} i=${i} tag="span" classe=
 const hora = (iso) => iso.slice(11, 16);
 
 export function Primeira({ d, i }) {
-  const m = d.primeira_musica;
-  return html`<${Slide} tipo="primeira" i=${i} capa=${capaDe(m.nome)}>
+  const m = d.primeira_musica, capa = useCapa(m, 'faixa');
+  return html`<${Slide} tipo="primeira" i=${i} capa=${capa?.url}>
     <${Kicker}>Lá no começo<//>
     <${Entra} i=${1} tag="h3" classe="st-titulo menor">Tudo começou com<//>
-    <${Entra} i=${2} classe="st-capa-palco"><${Capa} nome=${m.nome} classe="flutua grande" /><//>
+    <${Entra} i=${2} classe="st-capa-palco"><${Capa} item=${m} tipo="faixa" classe="grande" /><//>
     <${Entra} i=${3} tag="h2" classe="st-nome-xxl">${m.nome}<//>
     <${Entra} i=${4} tag="p" classe="st-sub">${m.artista}<//>
     <${Entra} i=${5} tag="p">em ${dataBr(d.primeira_data)}, às ${hora(d.primeira_data)}.<//>
+    <${NoSpotify} capa=${capa} />
   <//>`;
 }
 
 // Lista do top 5 (artistas ou músicas): capas em escada nas 3 primeiras, barra com a proporção.
-function Top5({ itens, nome, sub, valor }) {
+function Top5({ itens, tipo, nome, sub, valor }) {
   const maximo = itens[0]?.plays || 1;
   return html`<ol class="st-lista">
     ${itens.map((m, k) => html`
       <li class="entra" style=${{ '--i': k + 2 }}>
         <span class="st-pos">${k + 1}</span>
-        ${k < 3 ? html`<${Capa} nome=${nome(m)} classe=${`n${k + 1}`} />` : html`<span class="st-capa-vazia"></span>`}
+        ${k < 3 ? html`<${Capa} item=${m} tipo=${tipo} classe=${`n${k + 1}`} />` : html`<span class="st-capa-vazia"></span>`}
         <span class="st-meta"><b>${nome(m)}</b><small>${sub(m)}</small>
           <i class="st-barra-valor" style=${{ '--valor': m.plays / maximo }}></i></span>
         <em>${valor(m)}</em>
@@ -115,25 +130,25 @@ function Top5({ itens, nome, sub, valor }) {
 }
 
 export function TopArtistas({ d, i }) {
-  return html`<${Slide} tipo="top_artistas" i=${i} capa=${capaDe(d.top_artistas[0]?.nome)}>
+  return html`<${Slide} tipo="top_artistas" i=${i} capa=${useCapa(d.top_artistas[0], 'artista')?.url}>
     <${Kicker}>Seu top 5 de todos os tempos<//>
     <${Entra} i=${1} tag="h3" classe="st-titulo">Artistas<//>
-    <${Top5} itens=${d.top_artistas} nome=${(a) => a.nome} sub=${(a) => `${fmtNum(a.plays)} plays`} valor=${(a) => `${fmtNum(a.horas)} h`} />
+    <${Top5} itens=${d.top_artistas} tipo="artista" nome=${(a) => a.nome} sub=${(a) => `${fmtNum(a.plays)} plays`} valor=${(a) => `${fmtNum(a.horas)} h`} />
   <//>`;
 }
 
 export function TopMusicas({ d, i }) {
-  return html`<${Slide} tipo="top_musicas" i=${i} capa=${capaDe(d.top_musicas[0]?.nome)}>
+  return html`<${Slide} tipo="top_musicas" i=${i} capa=${useCapa(d.top_musicas[0], 'faixa')?.url}>
     <${Kicker}>As que mais tocaram<//>
     <${Entra} i=${1} tag="h3" classe="st-titulo">Músicas<//>
-    <${Top5} itens=${d.top_musicas} nome=${(m) => m.nome} sub=${(m) => m.artista} valor=${(m) => fmtNum(m.plays)} />
+    <${Top5} itens=${d.top_musicas.slice(0, 5)} tipo="faixa" nome=${(m) => m.nome} sub=${(m) => m.artista} valor=${(m) => fmtNum(m.plays)} />
   <//>`;
 }
 
 export function Anos({ d, i }) {
   const maior = Math.max(...d.anos.map((a) => a.horas)) || 1;
   const topo = d.anos.reduce((a, b) => (b.horas > a.horas ? b : a));
-  return html`<${Slide} tipo="anos" i=${i} capa=${capaDe(topo.top_musica?.nome)}>
+  return html`<${Slide} tipo="anos" i=${i} capa=${useCapa(topo.top_musica, 'faixa')?.url}>
     <${Kicker}>Ano a ano<//>
     <${Entra} i=${1} tag="h3" classe="st-titulo menor">${topo.ano} foi o seu ano mais musical<//>
     <ol class="st-anos">
@@ -151,7 +166,7 @@ export function Descobertas({ d, ativo, i }) {
   const curioso = d.anos.reduce((a, b) => (b.novos_artistas > a.novos_artistas ? b : a));
   const maior = Math.max(...d.anos.map((a) => a.novos_artistas)) || 1;
   const curta = descobertasCurta(d.medidas.descobertas || 0);
-  return html`<${Slide} tipo="descobertas" i=${i} capa=${capaDe(d.anos.at(-1)?.top_artistas[0]?.nome)}>
+  return html`<${Slide} tipo="descobertas" i=${i} capa=${useCapa(d.anos.at(-1)?.top_artistas[0], 'artista')?.url}>
     <${Kicker}>Descobertas<//>
     <${Entra} i=${1} classe="st-cartao st-vidro">
       <div class="st-mega"><${Contador} valor=${d.quantidade_artistas} ativo=${ativo} /></div>
@@ -167,8 +182,8 @@ export function Descobertas({ d, ativo, i }) {
 }
 
 export function Recorde({ d, ativo, i }) {
-  const r = d.repeticao_dia;
-  return html`<${Slide} tipo="recorde" i=${i} capa=${capaDe(r.nome)}>
+  const r = d.repeticao_dia, capa = useCapa(r, 'faixa');
+  return html`<${Slide} tipo="recorde" i=${i} capa=${capa?.url}>
     <${Kicker}>O dia mais musical<//>
     <${Entra} i=${1} tag="h3" classe="st-titulo menor">${dataBr(d.dia_recorde)}<//>
     <${Entra} i=${2} classe="st-cartao st-vidro">
@@ -178,6 +193,7 @@ export function Recorde({ d, ativo, i }) {
     <${Entra} i=${3} tag="p" classe="st-destaque">${fraseRecorde(d.horas_dia_recorde)}<//>
     ${d.artista_dia_recorde && html`<${Entra} i=${4} tag="p">Quem mais tocou: <strong>${d.artista_dia_recorde}</strong>.<//>`}
     <${Entra} i=${5} classe="st-callout st-vidro">Em ${dataBr(d.data_repeticao_dia)}, <strong>${r.nome}</strong> (${r.artista}) tocou <strong>${fmtNum(r.plays)} vezes</strong>. ${fraseRepeticao(r.plays)}<//>
+    <${NoSpotify} capa=${capa} />
   <//>`;
 }
 
@@ -237,7 +253,8 @@ export function Fiel({ d, ativo, i, controle }) {
     if (e.key === 'Escape' && aberto !== null) { e.preventDefault(); fechar(); }
   };
   const ano = d.anos.find((a) => a.ano === aberto);
-  return html`<${Slide} tipo="fiel" i=${i} capa=${capaDe(d.fiel.nome)}>
+  const capa = useCapa(d.fiel, 'artista');
+  return html`<${Slide} tipo="fiel" i=${i} capa=${capa?.url}>
     <${Kicker}>Fidelidade<//>
     <${Entra} i=${1} tag="h3" classe="st-titulo menor">Presença mais constante no seu top 5<//>
     <${Entra} i=${2} tag="h2" classe="st-nome-xxl">${d.fiel.nome}<//>
@@ -255,6 +272,7 @@ export function Fiel({ d, ativo, i, controle }) {
         <ol>${ano.top_artistas.map((a) => html`<li>${a.nome}</li>`)}</ol>
         <button type="button" class="st-continuar" onClick=${fechar}>Continuar ▸</button>
       </div>`}</div>
+    ${aberto === null && html`<${NoSpotify} capa=${capa} />`}
   <//>`;
 }
 
@@ -297,14 +315,14 @@ export function Arquetipo({ d, i }) {
 
 export function Resumo({ d, i, replay }) {
   const p = d.arquetipos.principal;
-  return html`<${Slide} tipo="resumo" i=${i} capa=${capaDe(d.artista_vida.nome)}>
+  return html`<${Slide} tipo="resumo" i=${i} capa=${useCapa(d.artista_vida, 'artista')?.url}>
     <${Entra} i=${0} classe="st-resumo-topo">
       <span class="st-capa st-capa-tipo pequena" style=${{ '--hue': hashNome(d.nome) % 360 }} aria-hidden="true">${d.nome.slice(0, 1).toUpperCase()}</span>
       <div><span class="st-kicker">SyncUp Wrapped</span><b>${d.nome}</b><small>${mesAno(d.inicio)} → ${mesAno(d.fim)}</small></div>
     <//>
     <${Entra} i=${1} classe="st-resumo-grade st-vidro">
       <div><span>Top artistas</span><ol>${d.top_artistas.map((a) => html`<li>${a.nome}</li>`)}</ol></div>
-      <div><span>Top músicas</span><ol>${d.top_musicas.map((m) => html`<li>${m.nome}</li>`)}</ol></div>
+      <div><span>Top músicas</span><ol>${d.top_musicas.slice(0, 5).map((m) => html`<li>${m.nome}</li>`)}</ol></div>
     <//>
     <${Entra} i=${2} classe="st-resumo-numeros">
       <div class="st-vidro"><span>Horas</span><b>${fmtNum(d.horas)}</b></div>
@@ -315,8 +333,19 @@ export function Resumo({ d, i, replay }) {
   <//>`;
 }
 
+// Só com as capas ligadas: as 9 mais tocadas como uma capa de playlist.
+export function Trilha({ d, i }) {
+  const musicas = d.top_musicas.slice(0, 9);
+  return html`<${Slide} tipo="trilha" i=${i} capa=${useCapa(musicas[0], 'faixa')?.url}>
+    <${Kicker}>Sua trilha<//>
+    <${Entra} i=${1} tag="h3" classe="st-titulo menor">As 9 que mais tocaram na sua vida<//>
+    <${Entra} i=${2} classe="st-mosaico">${musicas.map((m) => html`<${Capa} item=${m} tipo="faixa" />`)}<//>
+    <${Entra} i=${3} tag="p" classe="st-nota">${musicas.slice(0, 3).map((m) => m.nome).join(' · ')}…<//>
+  <//>`;
+}
+
 export const NOVOS = {
-  intro: Intro, primeira: Primeira, artista: Artista, top_artistas: TopArtistas, top_musicas: TopMusicas,
+  intro: Intro, primeira: Primeira, artista: Artista, top_artistas: TopArtistas, top_musicas: TopMusicas, trilha: Trilha,
   anos: Anos, descobertas: Descobertas, recorde: Recorde, relogio: RelogioSlide, maratona: Maratona,
   fiel: Fiel, habitos: Habitos, arquetipo: Arquetipo, resumo: Resumo,
 };

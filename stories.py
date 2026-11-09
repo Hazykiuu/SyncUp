@@ -180,7 +180,7 @@ def stories_html(w: Wrapped) -> str:
             'top_musicas',
             _a('<span class="su-kicker">AS QUE MAIS TOCARAM</span>', 0)
             + _a('<h3>Músicas</h3>', 1)
-            + _lista([(m.nome, m.artista, m.plays) for m in w.top_musicas], maximo_mus),
+            + _lista([(m.nome, m.artista, m.plays) for m in w.top_musicas[:5]], maximo_mus),
         )
     )
     if len(w.anos) > 1:
@@ -354,7 +354,7 @@ def stories_html(w: Wrapped) -> str:
         )
     )
     top_a = ''.join(f'<li>{_e(a.nome)}</li>' for a in w.top_artistas)
-    top_m = ''.join(f'<li>{_e(m.nome)}</li>' for m in w.top_musicas)
+    top_m = ''.join(f'<li>{_e(m.nome)}</li>' for m in w.top_musicas[:5])
     slides.append(
         _slide(
             'resumo',

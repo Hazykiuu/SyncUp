@@ -165,7 +165,8 @@ def calcular_wrapped(dados: pd.DataFrame, nome: str, fuso_horario: str = '') -> 
     total_plays = len(plays)
 
     top_artistas = _ranking_artistas(plays, 5)
-    top_musicas = _ranking_musicas(plays, 5)
+    # 10: o mosaico "Sua trilha" do web usa 9; as listas mostram 5.
+    top_musicas = _ranking_musicas(plays, 10)
     artista_vida = top_artistas[0]
     contagem_artistas = plays['artista'].value_counts()
     contagem_artistas = contagem_artistas[contagem_artistas > 0]

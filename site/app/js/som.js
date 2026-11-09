@@ -71,7 +71,7 @@ function prepararSom() {
   return som;
 }
 
-export function SomStories({ trilha, alvo }) {
+export function SomStories({ trilha, alvo, aoLigar }) {
   const trilhaPronta = useRef(null);
   const [status, setStatus] = useState('');
   const [estado, setEstado] = useState('escolher'); // escolher | carregando | tocando | sem
@@ -91,7 +91,8 @@ export function SomStories({ trilha, alvo }) {
   const tocar = (el) => el.play().catch((e) => { if (e.name !== 'AbortError') setAviso('O navegador bloqueou o som. Toque em “Ligar som” para tentar de novo.'); });
 
   // Qualquer erro na busca vira "sem som", nunca um "Buscando…" eterno.
-  const comecar = () => iniciarSom().catch(() => { setEstado('sem'); setAviso('Não deu para preparar o som. Os stories seguem sem som.'); });
+  // Um toque só: liga as capas (opt-in) e desbloqueia o áudio.
+  const comecar = () => { aoLigar?.(); return iniciarSom().catch(() => { setEstado('sem'); setAviso('Não deu para preparar o som. Os stories seguem sem som.'); }); };
   const iniciarSom = async () => {
     const { el, ctx, ganho } = prepararSom();
     ganho.gain.cancelScheduledValues(ctx.currentTime); ganho.gain.value = 0;
@@ -175,10 +176,10 @@ export function SomStories({ trilha, alvo }) {
     <div class="som-stories vidro">
       ${estado === 'escolher' || estado === 'sem' ? html`
         <div class="acoes">
-          <button type="button" class="btn btn-verde" onClick=${comecar}>♪ Começar com som</button>
+          <button type="button" class="btn btn-verde" onClick=${comecar}>${estado === 'escolher' ? '♪ Começar com capas e som' : '♪ Ligar capas e som'}</button>
           ${estado === 'escolher' && html`<button type="button" class="btn btn-borda vidro" onClick=${() => setEstado('sem')}>Começar sem</button>`}
         </div>
-        <p class="nota">Com som, o SyncUp envia o nome das suas músicas mais ouvidas e o seu endereço IP para a Apple (iTunes), para buscar trechos de 30 s. O histórico e o seu nome não saem do aparelho.</p>` : html`
+        <p class="nota">Com capas e som, o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify, o nome dos seus artistas para o MusicBrainz e os nomes das músicas para a Apple (iTunes), além do seu endereço IP, para buscar capas, fotos e trechos de 30 s. O histórico e o seu nome não saem do aparelho. Capas e fotos: Spotify · Trechos: iTunes.</p>` : html`
         <div class="acoes">
           <button type="button" class="btn btn-borda vidro" aria-pressed=${mudo} disabled=${estado !== 'tocando'} onClick=${() => setMudo((m) => !m)}>
             ${estado === 'carregando' ? 'Buscando os trechos…' : mudo ? '🔇 Ligar som' : '🔊 Silenciar'}</button>

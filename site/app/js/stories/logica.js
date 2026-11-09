@@ -91,11 +91,12 @@ export function hashNome(texto) {
 }
 
 /* ---------- Quais slides entram (mesma ordem do núcleo) ---------- */
-export function tiposDoWrapped(d) {
+export function tiposDoWrapped(d, { capas = false } = {}) {
   const variosAnos = d.anos.length > 1;
   const temHabitos = Object.values(d.habitos || {}).some((v) => v !== null);
   return [
     'intro', 'primeira', 'artista', 'top_artistas', 'top_musicas',
+    capas && d.top_musicas.length >= 9 && 'trilha', // mosaico de capas: só com as capas ligadas
     variosAnos && 'anos',
     d.quantidade_artistas >= 10 && 'descobertas', // com 1 ano só, entra a versão curta
     'recorde', 'relogio', 'maratona', 'fiel',

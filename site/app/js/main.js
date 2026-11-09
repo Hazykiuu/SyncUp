@@ -109,4 +109,7 @@ function App() {
     </main>`;
 }
 
-render(html`<${App} />`, document.getElementById('app'));
+// O aviso "Carregando o SyncUp…" do index.html sai: o render do Preact não apaga o que ele não criou.
+const raiz = document.getElementById('app');
+raiz.replaceChildren();
+render(html`<${App} />`, raiz);

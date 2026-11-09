@@ -10,7 +10,7 @@ import pytest
 
 RAIZ = Path(__file__).resolve().parents[1]
 # Identificadores SPDX de licenças abertas aceitas para dependências.
-ABERTAS = re.compile(r'\b(MIT|BSD|Apache|MPL|PSF|Python Software Foundation|ISC|LGPL|GPL|HPND)')
+ABERTAS = re.compile(r'\b(MIT|BSD|Apache|MPL|PSF|Python Software Foundation|ISC|LGPL|HPND)')
 
 
 def _dependencias() -> list[str]:

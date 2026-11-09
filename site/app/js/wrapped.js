@@ -87,6 +87,13 @@ export function Wrapped({ pronto }) {
       await rodar([[d.a], d.nome_a, opcoes]);
     } catch (e) { setFase({ tipo: 'erro', mensagem: e.message }); }
   };
+  // Capas guardadas no navegador (só endereços): apaga tudo na hora.
+  const apagarCapas = async () => {
+    buscador ??= criarBuscador();
+    await buscador.apagarTudo();
+    setAviso('Capas guardadas apagadas deste navegador.');
+  };
+
   // Pôster em PNG desenhado no navegador (Canvas): compartilha no celular, baixa no computador.
   const png = async () => {
     setBaixando(true); setAviso('');
@@ -125,6 +132,7 @@ export function Wrapped({ pronto }) {
         <div class="compartilhar"><div class="acoes">
           <button type="button" class="btn btn-verde" onClick=${png} disabled=${baixando}>${baixando ? 'Gerando…' : 'Compartilhar pôster'}</button>
           <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
+          <button type="button" class="btn btn-borda vidro" onClick=${apagarCapas}>Apagar capas guardadas</button>
         </div>
         ${aviso && html`<p class="nota" role="status">${aviso}</p>`}
         <p class="nota">Dica: no último story, tire um print para postar nos stories e chamar os amigos para comparar.</p></div>

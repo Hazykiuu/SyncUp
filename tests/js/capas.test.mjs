@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { cacheMemoria, criarBuscador, idFaixa } from '../../site/app/js/capas.js';
+import { cacheMemoria, criarBuscador, HOSTS_AUDIO, HOSTS_IMAGEM, idFaixa, urlSegura } from '../../site/app/js/capas.js';
 
 const ID = '4cOdK2wGLETKBW3PvgPWqT';
 const ARTISTA = '6tw6EpC9RgmSRZiZg0n22t';
@@ -62,9 +62,9 @@ test('nome diferente em qualquer ponta → sem foto (nunca a foto errada)', asyn
 
 test('429 espera dobrando e tenta de novo; sem rede não grava no cache', async () => {
   let vez = 0;
-  const { fetch } = falso([[`track%2F${ID}`, () => (++vez < 3 ? resposta(429, {}) : resposta(200, { thumbnail_url: 'u' }))]]);
+  const { fetch } = falso([[`track%2F${ID}`, () => (++vez < 3 ? resposta(429, {}) : resposta(200, { thumbnail_url: 'https://i.scdn.co/image/u' }))]]);
   esperas.length = 0;
-  assert.equal((await criarBuscador({ fetch, esperar, cache: cacheMemoria() }).faixa(`spotify:track:${ID}`)).url, 'u');
+  assert.equal((await criarBuscador({ fetch, esperar, cache: cacheMemoria() }).faixa(`spotify:track:${ID}`)).url, 'https://i.scdn.co/image/u');
   assert.deepEqual(esperas, [2000, 4000]);
 
   const cache = cacheMemoria();
@@ -76,4 +76,29 @@ test('429 espera dobrando e tenta de novo; sem rede não grava no cache', async 
   const ocupado = criarBuscador({ fetch: falso([[`track%2F${ID}`, resposta(503, {})]]).fetch, esperar, cache });
   assert.equal(await ocupado.faixa(`spotify:track:${ID}`), null);
   assert.equal(await cache.ler(`t:${ID}`), undefined);
+});
+
+test('só imagens e trechos dos domínios esperados, em https', async () => {
+  assert.equal(urlSegura('https://i.scdn.co/image/x', HOSTS_IMAGEM), 'https://i.scdn.co/image/x');
+  assert.equal(urlSegura('https://image-cdn-ak.spotifycdn.com/image/x', HOSTS_IMAGEM), 'https://image-cdn-ak.spotifycdn.com/image/x');
+  assert.equal(urlSegura('http://i.scdn.co/image/x', HOSTS_IMAGEM), null);
+  assert.equal(urlSegura('https://i.scdn.co.ruim.com/x', HOSTS_IMAGEM), null);
+  assert.equal(urlSegura('javascript:alert(1)', HOSTS_IMAGEM), null);
+  assert.equal(urlSegura(undefined, HOSTS_IMAGEM), null);
+  assert.ok(urlSegura('https://audio-ssl.itunes.apple.com/a.m4a', HOSTS_AUDIO));
+  // oEmbed adulterado apontando para outro servidor → sem capa.
+  const { fetch } = falso([[`track%2F${ID}`, resposta(200, { thumbnail_url: 'https://rastreio.exemplo/pixel.gif' })]]);
+  assert.equal(await criarBuscador({ fetch, esperar, cache: cacheMemoria() }).faixa(`spotify:track:${ID}`), null);
+});
+
+test('cache vencido é apagado ao criar o buscador; "apagar tudo" esvazia', async () => {
+  const cache = cacheMemoria();
+  await cache.gravar('t:velha', { valor: null, quando: 0 });
+  await cache.gravar('t:nova', { valor: null, quando: Date.now() });
+  const b = criarBuscador({ fetch: falso([]).fetch, esperar, cache });
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(await cache.ler('t:velha'), undefined);
+  assert.ok(await cache.ler('t:nova'));
+  await b.apagarTudo();
+  assert.equal(await cache.ler('t:nova'), undefined);
 });

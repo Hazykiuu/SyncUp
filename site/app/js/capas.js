@@ -16,6 +16,14 @@ const ID_FAIXA = /^spotify:track:([A-Za-z0-9]{22})$/;
 export const idFaixa = (uri) => (typeof uri === 'string' && uri.match(ID_FAIXA)?.[1]) || null;
 const ID_ARTISTA = /open\.spotify\.com\/artist\/([A-Za-z0-9]{22})/;
 
+// Só https dos domínios esperados: uma resposta adulterada não consegue apontar <img>/<audio>
+// para outro servidor (rastreio de quem abriu o Wrapped).
+export const HOSTS_IMAGEM = /^(i\.scdn\.co|[a-z0-9-]+\.spotifycdn\.com)$/;
+export const HOSTS_AUDIO = /^(audio-ssl\.itunes\.apple\.com|[a-z0-9-]+\.mzstatic\.com)$/;
+export function urlSegura(url, hosts) {
+  try { const u = new URL(url); return u.protocol === 'https:' && hosts.test(u.hostname) ? u.href : null; } catch { return null; }
+}
+
 // Cache: IndexedDB quando existe (aba anônima ou erro → só memória).
 export function cacheIndexedDB(nome = 'syncup-capas') {
   const memoria = new Map();
@@ -38,12 +46,34 @@ export function cacheIndexedDB(nome = 'syncup-capas') {
       memoria.set(chave, valor);
       try { (await loja('readwrite'))?.put(valor, chave); } catch { /* fica só na memória */ }
     },
+    // Apaga o que venceu: as regras do Spotify pedem para não guardar capas para sempre.
+    async limpar(antesDe) {
+      for (const [k, v] of memoria) if (v.quando < antesDe) memoria.delete(k);
+      try {
+        const l = await loja('readwrite');
+        if (!l) return;
+        const cursor = l.openCursor();
+        await new Promise((ok) => {
+          cursor.onsuccess = () => { const c = cursor.result; if (!c) return ok(); if (c.value?.quando < antesDe) c.delete(); c.continue(); };
+          cursor.onerror = () => ok();
+        });
+      } catch { /* sem IndexedDB: nada a apagar */ }
+    },
+    async apagarTudo() {
+      memoria.clear();
+      try { const l = await loja('readwrite'); if (l) await comoPromessa(l.clear()); } catch { /* idem */ }
+    },
   };
 }
 
 export function cacheMemoria() {
   const m = new Map();
-  return { ler: async (k) => m.get(k), gravar: async (k, v) => { m.set(k, v); } };
+  return {
+    ler: async (k) => m.get(k),
+    gravar: async (k, v) => { m.set(k, v); },
+    limpar: async (antesDe) => { for (const [k, v] of m) if (v.quando < antesDe) m.delete(k); },
+    apagarTudo: async () => { m.clear(); },
+  };
 }
 
 // Limite de concorrência: no máximo `n` tarefas ao mesmo tempo, com espaço mínimo entre os inícios.
@@ -64,6 +94,7 @@ function limitador(n, espaco, esperar) {
 }
 
 export function criarBuscador({ fetch = globalThis.fetch.bind(globalThis), esperar = (ms) => new Promise((r) => setTimeout(r, ms)), cache = cacheIndexedDB(), agora = Date.now } = {}) {
+  cache.limpar(agora() - VALIDADE);
   const spotify = limitador(PARALELO, 0, esperar);
   const musicbrainz = limitador(1, INTERVALO_MB, esperar);
 
@@ -80,7 +111,8 @@ export function criarBuscador({ fetch = globalThis.fetch.bind(globalThis), esper
   }
   const oembed = async (tipo, id) => {
     const d = await json(OEMBED + encodeURIComponent(`https://open.spotify.com/${tipo}/${id}`), spotify);
-    return d?.thumbnail_url ? { url: d.thumbnail_url, titulo: d.title || '' } : null;
+    const url = urlSegura(d?.thumbnail_url, HOSTS_IMAGEM);
+    return url ? { url, titulo: d.title || '' } : null;
   };
 
   // Mesmo pedido duas vezes (ex.: artista em dois slides) → uma busca só.
@@ -100,6 +132,8 @@ export function criarBuscador({ fetch = globalThis.fetch.bind(globalThis), esper
   };
 
   return {
+    // "Apagar capas guardadas": cache e buscas em memória.
+    async apagarTudo() { emAndamento.clear(); await cache.apagarTudo(); },
     // { url, link } da capa, ou null.
     faixa(uri) {
       const id = idFaixa(uri);

@@ -2,6 +2,7 @@
 // Um único <audio>, desbloqueado pelo toque em "Começar com som" (validado no iPhone),
 // troca de src sozinho. Volume por Web Audio: no iOS o audio.volume é ignorado.
 import { html, useEffect, useRef, useState } from 'preact-htm';
+import { HOSTS_AUDIO, urlSegura } from './capas.js';
 import { normalizar } from './stories/logica.js';
 
 const VOLUME = 0.2;
@@ -19,8 +20,8 @@ async function itunes(params) {
   return (await r.json()).results || [];
 }
 // Trecho = { url, id }; o id (artista|faixa do iTunes) evita tocar a mesma música duas vezes.
-const trecho = (x) => ({ url: x.previewUrl, id: `${normalizar(x.artistName)}|${normalizar(x.trackName)}` });
-const doArtista = (x, nome) => x.previewUrl && normalizar(x.artistName).includes(normalizar(nome));
+const trecho = (x) => ({ url: urlSegura(x.previewUrl, HOSTS_AUDIO), id: `${normalizar(x.artistName)}|${normalizar(x.trackName)}` });
+const doArtista = (x, nome) => urlSegura(x.previewUrl, HOSTS_AUDIO) && normalizar(x.artistName).includes(normalizar(nome));
 
 // shortcut: casa só pelo artista; o casamento completo (faixa, remaster, feat.) vem na Fase 3.
 async function buscar(m) {

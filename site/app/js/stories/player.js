@@ -48,15 +48,29 @@ export function Player({ slides, rotulo, aoMudar }) {
     return () => document.removeEventListener('visibilitychange', aba);
   }, []);
 
+  // Último story = pôster: barra e pausa somem depois de 2 s para o print sair limpo; um toque traz de volta.
+  const [limpo, setLimpo] = useState(false);
+  const [mexeu, setMexeu] = useState(0);
+  const ultimo = estado.i === slides.length - 1;
+  useEffect(() => {
+    setLimpo(false);
+    if (!ultimo) return undefined;
+    const t = setTimeout(() => setLimpo(true), 2000);
+    return () => clearTimeout(t);
+  }, [ultimo, mexeu]);
+  const acordar = () => setMexeu((n) => n + 1);
+
   // Elementos com data-interativo (ex.: anos do story 11) e botões não contam como navegação.
   const ignorar = (e) => e.target.closest('[data-interativo], button, a');
   const baixo = (e) => {
+    if (ultimo && limpo) { acordar(); return; } // toque no pôster limpo só mostra os controles
     if (ignorar(e)) return;
     const t = { x: e.clientX, y: e.clientY, segurou: false };
     t.timer = setTimeout(() => { t.segurou = true; despachar({ tipo: 'PAUSAR', motivo: 'segurar' }); }, SEGURAR_MS);
     toque.current = t;
   };
   const cima = (e) => {
+    acordar();
     const t = toque.current; toque.current = null;
     if (!t) return;
     clearTimeout(t.timer);
@@ -70,6 +84,7 @@ export function Player({ slides, rotulo, aoMudar }) {
   };
   const cancelar = () => { const t = toque.current; toque.current = null; if (t) { clearTimeout(t.timer); if (t.segurou) despachar({ tipo: 'RETOMAR', motivo: 'segurar' }); } };
   const tecla = (e) => {
+    acordar();
     if (e.target.closest('[data-interativo]')) return; // lá dentro as setas são dos chips
     const acao = { ArrowRight: 'AVANCAR', ArrowLeft: 'VOLTAR', ' ': 'ALTERNAR' }[e.key];
     if (acao) { e.preventDefault(); despachar({ tipo: acao }); }
@@ -77,7 +92,7 @@ export function Player({ slides, rotulo, aoMudar }) {
 
   return html`
     ${MEDIR_FPS && html`<${Fps} />`}
-    <div ref=${raiz} class=${`su-stories su-js st-player${parado ? ' pausado' : ''}`} tabindex="0" role="region"
+    <div ref=${raiz} class=${`su-stories su-js st-player${parado ? ' pausado' : ''}${limpo ? ' limpo' : ''}`} onFocusIn=${acordar} tabindex="0" role="region"
       aria-roledescription="stories" aria-label=${rotulo} onKeyDown=${tecla}
       onPointerDown=${baixo} onPointerUp=${cima} onPointerCancel=${cancelar} onPointerLeave=${cancelar}>
       <div class="st-barra vidro-ctrl" aria-hidden="true">

@@ -129,18 +129,34 @@
 .st-anel.destaque .valor { stroke: var(--verde, #1ed760); }
 .st-anel b { font-size: 3.6cqw; color: #fff; }
 /* Resumo (14) */
-.st-resumo-topo { display: flex; align-items: center; gap: 3cqw; }
-.st-resumo-topo div { display: grid; }
-.st-resumo-topo b { font-size: 6cqw; font-weight: 900; line-height: 1.05; }
-.st-resumo-topo small { color: rgba(255, 255, 255, .7); }
+/* Print limpo no último story: barra, contador e pausa somem (voltam com um toque). */
+.st-player .st-barra, .st-player .st-controles { transition: opacity .4s ease; }
+.st-player.limpo .st-barra, .st-player.limpo .st-controles { opacity: 0; }
+/* Pôster (último story): é o print que vai para o Instagram. Fotos e capas nítidas, texto só ao lado. */
+.s-resumo .st-conteudo { gap: 3cqw; }
+.st-poster-topo { display: flex; align-items: center; justify-content: space-between; }
+.st-poster-topo .marca { font-size: 4.6cqw; }
+.st-poster-topo small { font-size: 3cqw; color: rgba(255, 255, 255, .7); }
+.st-poster-nome { display: grid; gap: 1cqw; }
+.st-poster-nome .st-nome-xxl { font-size: 11cqw; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.st-poster-nome p { font-size: 3.4cqw; }
+.st-poster-horas { font-size: 6cqw; font-weight: 900; color: var(--verde, #1ed760); font-variant-numeric: tabular-nums; }
+.st-poster-artista { display: grid; grid-template-columns: 30cqw minmax(0, 1fr); gap: 4cqw; align-items: center; }
+.st-poster-artista .st-capa { font-size: 14cqw; }
+.st-poster-artista div { display: grid; gap: 1cqw; min-width: 0; }
+.st-poster-artista b { font-size: 6.4cqw; font-weight: 900; line-height: 1; overflow-wrap: anywhere; }
+.st-poster-artista small { font-size: 3.2cqw; color: rgba(255, 255, 255, .7); }
+.st-poster-capas { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.6cqw; }
+.st-poster-capas .st-capa { width: 100%; font-size: 6cqw; box-shadow: none; }
+.st-poster-musicas p { margin-top: 1.6cqw !important; font-size: 2.9cqw; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.st-poster-musicas p b { color: var(--verde, #1ed760); }
+.st-poster-fatos { display: flex; flex-wrap: wrap; gap: 2cqw; }
+.st-poster-fatos span { display: inline-flex; align-items: center; gap: 1.4cqw; padding: 2cqw 3.4cqw; border-radius: var(--raio-chip); font-size: 3.4cqw; font-weight: 800; }
+.st-poster-convite { display: grid; gap: .8cqw; padding: 4cqw; border-radius: var(--raio-cartao); border-color: rgba(30, 215, 96, .7) !important; }
+.st-poster-convite b { font-size: 5.6cqw; font-weight: 900; line-height: 1.05; }
+.st-poster-convite span { font-size: 3.8cqw; font-weight: 800; color: var(--verde, #1ed760); }
+.st-poster-convite small { font-size: 3.2cqw; color: rgba(255, 255, 255, .8); letter-spacing: .02em; }
 .st-capa.pequena { width: 14cqw; font-size: 7cqw; border-radius: 50%; }
-.st-resumo-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 3cqw; padding: 4cqw; border-radius: var(--raio-cartao); font-size: 3.3cqw; }
-.st-resumo-grade span, .st-resumo-numeros span { font-size: 2.6cqw; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: rgba(255, 255, 255, .62); }
-.st-resumo-grade ol { margin: 1cqw 0 0; padding-left: 4.4cqw; display: grid; gap: .6cqw; }
-.st-resumo-grade li { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.st-resumo-numeros { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 2cqw; }
-.st-resumo-numeros > div { display: grid; gap: .6cqw; padding: 3cqw; border-radius: 3.4cqw; }
-.st-resumo-numeros b { font-size: 4.2cqw; font-weight: 900; line-height: 1.1; }
 /* "Sua trilha": a nº 1 em 2×2 e as outras 8 em volta; nomes fora das capas (regras do Spotify). */
 .st-mosaico { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.6cqw; }
 .st-mosaico .st-capa { width: 100%; font-size: 7cqw; box-shadow: none; }

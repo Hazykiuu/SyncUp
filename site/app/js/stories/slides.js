@@ -313,23 +313,35 @@ export function Arquetipo({ d, i }) {
   <//>`;
 }
 
-export function Resumo({ d, i, replay }) {
-  const p = d.arquetipos.principal;
-  return html`<${Slide} tipo="resumo" i=${i} capa=${useCapa(d.artista_vida, 'artista')?.url}>
-    <${Entra} i=${0} classe="st-resumo-topo">
-      <span class="st-capa st-capa-tipo pequena" style=${{ '--hue': hashNome(d.nome) % 360 }} aria-hidden="true">${d.nome.slice(0, 1).toUpperCase()}</span>
-      <div><span class="st-kicker">SyncUp Wrapped</span><b>${d.nome}</b><small>${mesAno(d.inicio)} → ${mesAno(d.fim)}</small></div>
+// Último story = o pôster que vai para o Instagram: termina com o convite para comparar no SyncUp.
+export function Resumo({ d, ativo, i }) {
+  const p = d.arquetipos.principal, a = d.artista_vida, top = d.top_musicas.slice(0, 5);
+  return html`<${Slide} tipo="resumo" i=${i} capa=${useCapa(a, 'artista')?.url}>
+    <${Entra} i=${0} classe="st-poster-topo">
+      <span class="marca"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>SyncUp</span>
+      <small>${mesAno(d.inicio)} → ${mesAno(d.fim)}</small>
     <//>
-    <${Entra} i=${1} classe="st-resumo-grade st-vidro">
-      <div><span>Top artistas</span><ol>${d.top_artistas.map((a) => html`<li>${a.nome}</li>`)}</ol></div>
-      <div><span>Top músicas</span><ol>${d.top_musicas.slice(0, 5).map((m) => html`<li>${m.nome}</li>`)}</ol></div>
+    <${Entra} i=${1} classe="st-poster-nome">
+      <h2 class="st-nome-xxl">${d.nome}</h2>
+      <p><b class="st-poster-horas"><${Contador} valor=${d.horas} ativo=${ativo} /></b> horas de música · ${fmtNum(d.horas / 24)} dias sem parar</p>
     <//>
-    <${Entra} i=${2} classe="st-resumo-numeros">
-      <div class="st-vidro"><span>Horas</span><b>${fmtNum(d.horas)}</b></div>
-      <div class="st-vidro"><span>Artistas</span><b>${fmtNum(d.quantidade_artistas)}</b></div>
-      <div class="st-vidro"><span>Arquétipo</span><b><${Icone} id=${p.chave} classe="mini" /> ${p.nome}</b></div>
+    <${Entra} i=${2} classe="st-poster-artista">
+      <${Capa} item=${a} tipo="artista" classe="grande" />
+      <div><span class="st-kicker">Artista da vida</span><b>${a.nome}</b><small>${fmtNum(a.plays)} plays</small></div>
     <//>
-    <${Entra} i=${3}><button type="button" class="st-replay st-vidro" onClick=${replay}>↺ Ver de novo</button><//>
+    <${Entra} i=${3} classe="st-poster-musicas">
+      <div class="st-poster-capas">${top.map((m) => html`<${Capa} item=${m} tipo="faixa" />`)}</div>
+      <p>${top.map((m, k) => html`${k ? ' · ' : ''}<b>${k + 1}</b> ${m.nome}`)}</p>
+    <//>
+    <${Entra} i=${4} classe="st-poster-fatos">
+      <span class="st-vidro"><${Icone} id=${p.chave} classe="mini" /> ${p.nome}</span>
+      <span class="st-vidro">pico às <b>${d.pico_hora}h</b></span>
+    <//>
+    <${Entra} i=${5} classe="st-poster-convite st-vidro">
+      <b>Qual é a nossa sintonia?</b>
+      <span>Compare comigo →</span>
+      <small>hazykiuu.github.io/SyncUp</small>
+    <//>
   <//>`;
 }
 

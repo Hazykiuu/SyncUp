@@ -115,7 +115,9 @@ export function Wrapped({ pronto }) {
         </div>
         <div class="compartilhar"><div class="acoes">
           <button type="button" class="btn btn-verde" onClick=${png} disabled=${baixando}>${baixando ? 'Gerando…' : 'Baixar o story · PNG'}</button>
-        </div></div>
+          <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
+        </div>
+        <p class="nota">Dica: no último story, tire um print para postar nos stories e chamar os amigos para comparar.</p></div>
         <details class="vidro detalhe"><summary>Como o arquétipo foi calculado</summary><${Html} conteudo=${fase.r.arquetipos} /></details>
       </section>`}</div>`;
 }

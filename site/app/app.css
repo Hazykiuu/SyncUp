@@ -97,3 +97,8 @@ textarea.entrada { resize: vertical; }
 .nucleo { min-width: 0; }
 
 @media (prefers-reduced-motion: reduce) { .giro { animation: none; } }
+
+/* Wrapped: uma pessoa só e a trilha dos stories. */
+@media (min-width: 900px) { .pessoas.uma { grid-template-columns: minmax(0, 40rem); } }
+.som-stories { display: flex; flex-direction: column; gap: .6rem; margin-bottom: 1rem; padding: 1.25rem; border-radius: var(--cartao); }
+.som-stories .acoes { display: flex; flex-wrap: wrap; gap: .75rem; }

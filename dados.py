@@ -39,7 +39,7 @@ CHAVE_DEDUPLICACAO = ['data_utc', 'ms_played', 'musica', 'artista']
 # (zip bomb) antes de descompactar. O mesmo teto vale para o upload (app.py).
 LIMITE_BYTES = 1024**3
 MAXIMO_HISTORICOS_CACHE = 6  # Comporta o Modo Grupo completo sem reler arquivos.
-VERSAO_CACHE = 'v07-wrapped-1'
+VERSAO_CACHE = 'v08-uri-1'
 COLUNAS_PREPARADAS = [
     'data',
     'data_utc',
@@ -57,6 +57,8 @@ COLUNAS_PREPARADAS = [
     'offline',
     'plataforma',
     'motivo_fim',
+    # v1.4 · ID da faixa no Spotify (capa exata no Wrapped web); nulo quando falta.
+    'uri',
 ]
 # Campos opcionais do Spotify → nomes internos. A plataforma guarda só a família
 # (Android, Windows…), nunca o modelo do aparelho ou a versão do sistema.
@@ -66,6 +68,7 @@ CAMPOS_HABITOS = {
     'offline': 'offline',
     'platform': 'plataforma',
     'reason_end': 'motivo_fim',
+    'spotify_track_uri': 'uri',
 }
 CAMPOS_BOOLEANOS = ('pulada', 'aleatorio', 'offline')
 ChaveArquivo = tuple[str, int, int, int, int]
@@ -257,7 +260,7 @@ def _extrair_registros_impl(caminho: Path) -> Colunas:
             colunas[campo].extend(
                 v if isinstance(v, bool) else None for v in (item.get(campo) for item in itens)
             )
-        for campo in ('platform', 'reason_end'):
+        for campo in ('platform', 'reason_end', 'spotify_track_uri'):
             colunas[campo].extend(
                 unico(v, v) if isinstance(v, str) else None
                 for v in (item.get(campo) for item in itens)
@@ -345,7 +348,7 @@ def _tipos_habitos(dados: pd.DataFrame) -> None:
     """Fixa os tipos dos hábitos; usado também ao ler o Parquet (colunas vazias)."""
     for coluna in CAMPOS_BOOLEANOS:
         dados[coluna] = dados[coluna].astype('boolean')
-    for coluna in ('plataforma', 'motivo_fim'):
+    for coluna in ('plataforma', 'motivo_fim', 'uri'):
         dados[coluna] = dados[coluna].astype(object).astype('category')
 
 
@@ -782,7 +785,7 @@ def carregar_historicos(
         tamanho = len(dados)
         dados = dados.drop_duplicates(CHAVE_DEDUPLICACAO).reset_index(drop=True)
         extras = tamanho - len(dados)
-    for coluna in ('artista', 'musica', 'plataforma', 'motivo_fim'):
+    for coluna in ('artista', 'musica', 'plataforma', 'motivo_fim', 'uri'):
         dados[coluna] = dados[coluna].astype('category')
     somas = {
         campo: sum(getattr(h.contadores, campo) for h in historicos)

@@ -6,7 +6,7 @@ const ACEITOS = /\.(zip|json)$/i;
 const TETO = 50 * 1048576;
 const tamanho = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(1).replace('.', ',')} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
 
-export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquivos, desabilitado }) {
+export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquivos, desabilitado, titulo = `Pessoa ${rotulo}` }) {
   const entrada = useRef(null);
   const [arrastando, setArrastando] = useState(false);
   const [aviso, setAviso] = useState('');
@@ -25,7 +25,7 @@ export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquiv
     <section class=${`pessoa vidro ${cor}`} aria-labelledby=${`titulo-${rotulo}`}>
       <div class="pessoa-topo">
         <span class=${`avatar ${cor}`} aria-hidden="true">${rotulo}</span>
-        <h2 id=${`titulo-${rotulo}`}>Pessoa ${rotulo}</h2>
+        <h2 id=${`titulo-${rotulo}`}>${titulo}</h2>
       </div>
       <label class="campo" for=${idNome}>Nome</label>
       <input id=${idNome} class="entrada" value=${nome} placeholder=${rotulo === 'A' ? 'Ex.: Ana' : 'Ex.: Bia'}
@@ -44,7 +44,7 @@ export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquiv
         ${aviso && html`<p class="erro" role="alert">${aviso}</p>`}
       </div>
       ${arquivos.length > 0 && html`
-        <ul class="lista-arquivos" aria-label=${`Arquivos da pessoa ${rotulo}`}>
+        <ul class="lista-arquivos" aria-label=${`Arquivos: ${titulo}`}>
           ${arquivos.map((f, i) => html`
             <li key=${f.name + f.size}>
               <span class="nome-arquivo">${f.name}</span><span class="peso">${tamanho(f.size)}</span>

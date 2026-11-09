@@ -9,12 +9,15 @@ from __future__ import annotations
 
 import gc
 import json
+import math
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
 import componentes
+import stories
 from analise import ResultadoComparacao, comparar
 from apresentacao import (
     _configuracao,
@@ -26,15 +29,14 @@ from apresentacao import (
     texto_periodo,
     wrapped_dupla_html,
 )
-from cartao import gerar_cartao, gerar_cartao_sintonia
 from exportacoes import exportar_playlist
 from formatacao import fmt_num
-from graficos import butterfly, evolucao_mensal, mapa_horarios, radar_tracos, slope_chart
+from wrapped import wrapped_de_arquivos
 
 SAIDA = Path('/tmp/syncup-saida')
 # shortcut: guarda só o último resultado (o app no navegador atende uma pessoa por aba);
 # trocar por um dicionário por id se um dia houver mais de uma comparação aberta.
-_ultimo: dict[str, ResultadoComparacao] = {}
+_ultimo: dict[str, Any] = {}
 
 
 def _tabela(tabela: pd.DataFrame) -> dict[str, list]:
@@ -62,6 +64,9 @@ def comparar_dupla(
     opcoes: dict | None = None,
 ) -> dict:
     """Ação ``comparar_dupla``: o mesmo cálculo da aba Dupla do Gradio, em dados simples."""
+    # Sob demanda: o worker só baixa o plotly (9,9 MB) quando a Dupla é usada.
+    from graficos import butterfly, evolucao_mensal, mapa_horarios, radar_tracos, slope_chart
+
     o = opcoes or {}
     config = _configuracao(
         o.get('fuso', ''),
@@ -71,7 +76,7 @@ def comparar_dupla(
         False,  # sem cache em disco no navegador
         bool(o.get('deduplicar', False)),
     )
-    _ultimo.clear()  # o resultado anterior não fica vivo durante o novo pico
+    _ultimo.pop('dupla', None)  # o resultado anterior não fica vivo durante o novo pico
     # Wrapped primeiro: o pico dele (histórico inteiro) não se soma ao da comparação (iOS ~350 MB).
     wa = _wrapped_seguro(arquivos_a, (nome_a or '').strip() or 'Pessoa A', config)
     wb = _wrapped_seguro(arquivos_b, (nome_b or '').strip() or 'Pessoa B', config)
@@ -161,12 +166,16 @@ def _resultado() -> ResultadoComparacao:
 
 def cartao_dupla() -> str:
     """Ação ``gerar_cartao``: PNG do resultado da Dupla; devolve o caminho no sistema virtual."""
+    from cartao import gerar_cartao  # Pillow sob demanda
+
     SAIDA.mkdir(parents=True, exist_ok=True)
     return str(gerar_cartao(_resultado(), SAIDA / 'SyncUp_cartao.png'))
 
 
 def cartao_sintonia() -> str:
     """Ação ``baixar_sintonia``: story PNG da sintonia da Dupla."""
+    from cartao import gerar_cartao_sintonia  # Pillow sob demanda
+
     SAIDA.mkdir(parents=True, exist_ok=True)
     return str(gerar_cartao_sintonia(_resultado(), SAIDA / 'SyncUp_sintonia.png'))
 
@@ -175,6 +184,102 @@ def playlist_dupla() -> str:
     """Ação ``exportar_playlist``: CSV protegido da playlist comum."""
     SAIDA.mkdir(parents=True, exist_ok=True)
     return str(exportar_playlist(_resultado(), SAIDA / 'SyncUp_playlist.csv'))
+
+
+def wrapped(arquivos: list[str], nome: str, opcoes: dict | None = None) -> dict:
+    """Ação ``executar_wrapped``: Wrapped da vida toda de uma pessoa (stories e arquétipos)."""
+    o = opcoes or {}
+    config = _configuracao(
+        o.get('fuso', ''),
+        o.get('musicas', ''),
+        o.get('artistas', ''),
+        o.get('varios', 'manter'),
+        False,  # sem cache em disco no navegador
+        bool(o.get('deduplicar', False)),
+    )
+    _ultimo.pop('wrapped', None)  # o anterior não fica vivo durante o novo pico
+    w = wrapped_de_arquivos(arquivos, (nome or '').strip() or 'Você', config)
+    _ultimo['wrapped'] = w
+    return {
+        'nome': w.nome,
+        'arquetipos': stories.arquetipos_detalhe_html(w),
+        'trilha': _trilha(w),
+        'dados': _wrapped_json(w),
+    }
+
+
+def _simples(valor: Any) -> Any:
+    """Converte para tipos que o JSON aceita: datas em ISO, NaN em None, numpy em Python."""
+    if isinstance(valor, dict):
+        return {str(k): _simples(v) for k, v in valor.items()}
+    if isinstance(valor, (list, tuple)):
+        return [_simples(v) for v in valor]
+    if valor is pd.NaT:
+        return None
+    if isinstance(valor, pd.Timestamp):
+        return valor.isoformat()
+    if hasattr(valor, 'item') and not isinstance(valor, (str, bytes)):
+        valor = valor.item()  # numpy.int64, numpy.float64…
+    if isinstance(valor, float) and not math.isfinite(valor):
+        return None
+    return valor
+
+
+def _wrapped_json(w: Any) -> dict:
+    """Contrato do Wrapped para o Preact: todos os campos do ``Wrapped`` em JSON puro.
+
+    Os textos vão crus (sem escape HTML): o Preact escapa ao desenhar. Datas em ISO 8601.
+    """
+    return _simples(asdict(w))
+
+
+def _trilha(w: Any) -> dict:
+    """Candidatas de música de cada slide, ligadas ao dado dele, em ordem de preferência.
+
+    ``{'faixa', 'artista'}`` é uma música certa; ``{'artista'}`` pede as mais famosas do artista
+    (ordem do iTunes). O JS toca a primeira candidata ainda não tocada; ``fila`` cobre o resto.
+    O JS só busca algo se a pessoa pedir som.
+    """
+
+    def musica(item: Any) -> dict | None:
+        return {'faixa': item.nome, 'artista': item.artista} if item and item.artista else None
+
+    def artista(nome: str) -> dict | None:
+        return {'artista': nome} if nome else None
+
+    def lista(*candidatas: dict | None) -> list[dict]:
+        return [c for c in candidatas if c]
+
+    tops = [musica(m) for m in w.top_musicas]
+    ultimo = w.anos[-1] if w.anos else None
+    slides = {
+        'intro': lista(musica(ultimo.top_musica) if ultimo else None, *tops),
+        'primeira': lista(musica(w.primeira_musica)),
+        'artista': lista(artista(w.artista_vida.nome)),
+        'top_artistas': lista(*(artista(a.nome) for a in w.top_artistas[1:3])),
+        'top_musicas': lista(*tops),
+        'anos': lista(musica(w.anos[0].top_musica) if w.anos else None),
+        'descobertas': lista(
+            artista(ultimo.top_artistas[0].nome) if ultimo and ultimo.top_artistas else None
+        ),
+        'recorde': lista(musica(w.repeticao_dia), artista(w.artista_dia_recorde)),
+        'fiel': lista(artista(w.fiel.nome)),
+    }
+    return {
+        'slides': {tipo: c for tipo, c in slides.items() if c},
+        # Acabaram as mais ouvidas? Seguem as mais famosas dos top artistas, sem repetir.
+        'fila': [m for m in tops[:10] if m] + lista(*(artista(a.nome) for a in w.top_artistas[:5])),
+    }
+
+
+def cartao_wrapped() -> str:
+    """Ação ``baixar_wrapped``: story PNG 1080×1920 do Wrapped."""
+    from cartao import gerar_cartao_wrapped  # Pillow sob demanda
+
+    if 'wrapped' not in _ultimo:
+        raise ValueError('Monte o Wrapped antes de baixar.')
+    SAIDA.mkdir(parents=True, exist_ok=True)
+    return str(gerar_cartao_wrapped(_ultimo['wrapped'], SAIDA / 'SyncUp_wrapped.png'))
 
 
 def arquivos_demo(pasta: str = '/tmp/syncup-demo') -> dict:

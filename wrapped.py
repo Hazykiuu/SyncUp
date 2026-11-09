@@ -7,7 +7,7 @@ Nenhum dado sai do computador; nenhuma chamada de rede é feita.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 import pandas as pd
 
@@ -35,6 +35,7 @@ class ItemRanking:
     plays: int
     horas: float = 0.0
     artista: str = ''
+    uri: str | None = None  # ID da faixa no Spotify (só músicas): capa exata no app web
 
 
 @dataclass(frozen=True)
@@ -90,6 +91,7 @@ class Wrapped:
     arquetipos: PerfilArquetipos
     fuso_horario: str = 'America/Sao_Paulo'
     avisos: list[str] = field(default_factory=list)
+    fiel_anos: list[int] = field(default_factory=list)  # anos em que o fiel esteve no top 5
 
 
 def mes_ano(data: pd.Timestamp) -> str:
@@ -163,7 +165,8 @@ def calcular_wrapped(dados: pd.DataFrame, nome: str, fuso_horario: str = '') -> 
     total_plays = len(plays)
 
     top_artistas = _ranking_artistas(plays, 5)
-    top_musicas = _ranking_musicas(plays, 5)
+    # 10: o mosaico "Sua trilha" do web usa 9; as listas mostram 5.
+    top_musicas = _ranking_musicas(plays, 10)
     artista_vida = top_artistas[0]
     contagem_artistas = plays['artista'].value_counts()
     contagem_artistas = contagem_artistas[contagem_artistas > 0]
@@ -231,6 +234,7 @@ def calcular_wrapped(dados: pd.DataFrame, nome: str, fuso_horario: str = '') -> 
         .sort_values(['anos', 'plays', 'artista'], ascending=[False, False, True], kind='stable')
     )
     fiel_nome, fiel_anos, fiel_plays = fidelidade.iloc[0][['artista', 'anos', 'plays']]
+    anos_do_fiel = sorted(int(a) for a in top5_ano.loc[top5_ano['artista'] == fiel_nome, 'ano'])
 
     # Dia recorde e maior repetição de uma música em um único dia.
     horas_dia = dados['minutos'].groupby(dias, observed=True).sum() / 60
@@ -289,7 +293,7 @@ def calcular_wrapped(dados: pd.DataFrame, nome: str, fuso_horario: str = '') -> 
         'repeticao': float(top10_musicas) / total_plays,
         'offline': offline,
     }
-    return Wrapped(
+    wrapped = Wrapped(
         nome=nome,
         inicio=inicio,
         fim=fim,
@@ -321,6 +325,7 @@ def calcular_wrapped(dados: pd.DataFrame, nome: str, fuso_horario: str = '') -> 
         periodos=periodos,
         fiel=ItemRanking(str(fiel_nome), int(fiel_plays)),
         anos_fiel=int(fiel_anos),
+        fiel_anos=anos_do_fiel,
         habitos={
             'pulos': pulos,
             'aleatorio': aleatorio,
@@ -332,6 +337,34 @@ def calcular_wrapped(dados: pd.DataFrame, nome: str, fuso_horario: str = '') -> 
         arquetipos=classificar(medidas),
         fuso_horario=fuso_horario,
         avisos=avisos,
+    )
+    return _com_uris(wrapped, plays)
+
+
+def _com_uris(w: Wrapped, plays: pd.DataFrame) -> Wrapped:
+    """Põe nas músicas do Wrapped o ID do Spotify mais tocado de cada par (música, artista)."""
+    if 'uri' not in plays:
+        return w
+    musicas = [w.primeira_musica, w.repeticao_dia, *w.top_musicas]
+    musicas += [a.top_musica for a in w.anos if a.top_musica]
+    base = plays.loc[
+        plays['musica'].isin({m.nome for m in musicas}) & plays['uri'].notna(),
+        ['musica', 'artista', 'uri'],
+    ]
+    melhor: dict[tuple[str, str], str] = {}
+    for (musica, artista, uri), _ in base.astype(object).value_counts().items():
+        melhor.setdefault((musica, artista), uri)  # value_counts vem do mais tocado ao menos
+
+    def com(item: ItemRanking) -> ItemRanking:
+        uri = melhor.get((item.nome, item.artista))
+        return replace(item, uri=str(uri)) if uri else item
+
+    return replace(
+        w,
+        primeira_musica=com(w.primeira_musica),
+        repeticao_dia=com(w.repeticao_dia),
+        top_musicas=[com(m) for m in w.top_musicas],
+        anos=[replace(a, top_musica=com(a.top_musica)) if a.top_musica else a for a in w.anos],
     )
 
 

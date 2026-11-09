@@ -80,6 +80,9 @@ function deHsl(h, s, l) {
 // Sem capa: verde e violeta alternando por slide (a mesma ideia dos pares --bg1/--bg2 de hoje).
 export const corReserva = (i) => (i % 2 ? [196, 183, 255] : [30, 215, 96]);
 
+// Comparação de nomes vindos de fontes diferentes: sem acento, caixa e pontuação.
+export const normalizar = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+
 // Número estável por nome (capa de teste e matiz da capa tipográfica).
 export function hashNome(texto) {
   let h = 0;

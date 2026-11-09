@@ -2,6 +2,7 @@
 // Um único <audio>, desbloqueado pelo toque em "Começar com som" (validado no iPhone),
 // troca de src sozinho. Volume por Web Audio: no iOS o audio.volume é ignorado.
 import { html, useEffect, useRef, useState } from 'preact-htm';
+import { normalizar } from './stories/logica.js';
 
 const VOLUME = 0.2;
 const ENTRA = 1.2; // segundos de fade in
@@ -10,7 +11,6 @@ const SAI = 0.5; // fade out antes de trocar de música (e no fim do trecho)
 const EXEMPLO = [{ artista: 'Legião Urbana', faixa: 'Tempo Perdido' }, { artista: 'Tim Maia', faixa: 'Azul da Cor do Mar' }, { artista: 'Marisa Monte', faixa: 'Ainda Bem' }];
 const cache = new Map();
 
-const normalizar = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 const chave = (m) => `${normalizar(m.artista)}|${normalizar(m.faixa)}`;
 
 async function itunes(params) {

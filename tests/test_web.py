@@ -34,6 +34,8 @@ def test_pacote_leva_so_o_que_roda_no_navegador(tmp_path: Path) -> None:
     # Rede, servidor e interface Gradio ficam de fora.
     assert not nomes & {'generos.py', 'spotify_api.py', 'listenbrainz.py', 'app.py'}
     assert not any(n.startswith('ui/') for n in nomes)
+    with zipfile.ZipFile(tmp_path / 'demo-wrapped.zip') as demo:  # demo do Wrapped (JS)
+        assert any(n.endswith('.json') for n in demo.namelist())
 
 
 def test_ponte_nao_importa_gradio_nem_rede() -> None:

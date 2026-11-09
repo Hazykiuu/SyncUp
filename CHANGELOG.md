@@ -1,5 +1,23 @@
 # Changelog — SyncUp
 
+## [1.5.0] — 2026-11-09
+
+Wrapped do app no navegador sem baixar o Python: monta em segundos, até em celular simples.
+
+### Mudado
+- **Wrapped em JavaScript**: a aba Wrapped lê o ZIP e calcula tudo em JS, num Worker próprio, com as mesmas regras do núcleo em Python. O Python (Pyodide) só baixa quando a aba Dupla é aberta. Histórico fictício de 300 mil eventos: 2,4 s no Redmi Note 15 (antes 29,9 s + 24,9 s para baixar o motor) e 1,5 s no PC (antes 9,4 s).
+- **Empates com regra fixa** (vale também para o app local): artista do dia recorde e plataformas em ordem alfabética, dia da semana favorito de segunda a domingo, a sequência de dias mais antiga e o menor ID da faixa. Antes, a ordem do pandas nos empates podia variar.
+- "Como o arquétipo foi calculado" é desenhado pelo app (sem HTML pronto) e a demo do Wrapped usa um histórico fictício baixado só ao clicar.
+- Nota "Montado em X s" abaixo dos stories.
+- Navegador sem suporte para abrir ZIP (iPhone abaixo do iOS 16.4) recebe o aviso para atualizar.
+
+### Corrigido
+- O aviso "Carregando o SyncUp…" sobrava no rodapé do app web.
+- Percentuais terminados em 5 arredondam como no Python (6,25% → 6,2%).
+
+### Testes
+- Teste de paridade: o mesmo arquivo passa pelo Python e pelo JS (Node) e os resultados são comparados campo a campo, inclusive em empates e casos de borda. O CI do Python roda com Node 22.
+
 ## [1.4.0] — 2026-11-09
 
 Wrapped novo no app do navegador: stories com capas, fotos e trilha sonora, e um pôster para compartilhar.

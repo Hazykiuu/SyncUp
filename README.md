@@ -1,4 +1,4 @@
-# SyncUp v1.4
+# SyncUp v1.5
 
 Compare o seu histórico do Spotify com o dos amigos e descubra com quem você está em sintonia. Tudo roda **no seu computador**: sem conta, sem servidor e sem anúncios. Projeto de ciência de dados, **código aberto** ([licença MIT](LICENSE)).
 
@@ -142,6 +142,7 @@ O CI roda os mesmos comandos no GitHub, em Python 3.10 e 3.12. O cache Parquet �
 | `wrapped.py`, `arquetipos.py`, `stories.py`, `cartao.py` | Wrapped, stories e PNGs |
 | `festa.py`, `exportacoes.py`, `privacidade.py` | Playlist da festa, CSV protegido e "Meus dados" |
 | `ui/`, `componentes.py`, `syncup.js`, `styles.css` | Interface Gradio 6 no tema Spotify |
+| `site/app/js/historico.js`, `calculo.js` | Wrapped do app no navegador em JavaScript, com as regras do Python (teste de paridade em `tests/test_paridade_wrapped.py`) |
 
 ```python
 from app import ConfiguracaoCarga, comparar

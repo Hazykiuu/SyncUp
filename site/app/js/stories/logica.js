@@ -38,8 +38,9 @@ export const pausado = (estado) => estado.fim || estado.motivos.length > 0;
 /* ---------- Formatação (mesmas regras de formatacao.py / wrapped.py) ---------- */
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
+// Metade vai para o par, como o format do Python (12,25 → 12,2); navegador antigo ignora e arredonda para cima.
 export function fmtNum(valor, casas = 0) {
-  return Number(valor).toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+  return Number(valor).toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas, roundingMode: 'halfEven' });
 }
 export const fmtPct = (fracao, casas = 0) => `${fmtNum(fracao * 100, casas)}%`;
 

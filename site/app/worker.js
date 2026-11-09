@@ -29,8 +29,8 @@ function mensagem(erro) {
   return m ? m[1] : 'Algo deu errado ao processar os arquivos. Confira se são ZIPs do Histórico Estendido.';
 }
 
-// Pacotes sob demanda: o Wrapped não usa plotly (9,9 MB) nem Pillow (1 MB); só baixa quem precisa.
-const PRECISA = { comparar_dupla: ['plotly'], cartao_dupla: ['pillow'], cartao_sintonia: ['pillow'], cartao_wrapped: ['pillow'] };
+// Pacotes sob demanda: plotly (9,9 MB) só na comparação e Pillow (1 MB) só nos PNG da Dupla.
+const PRECISA = { comparar_dupla: ['plotly'], cartao_dupla: ['pillow'], cartao_sintonia: ['pillow'] };
 const extras = {};
 const baixar = {
   plotly: async () => { await py.loadPackage('micropip'); await py.pyimport('micropip').install(PLOTLY); },

@@ -18,6 +18,7 @@ DESTINO = RAIZ / 'site' / 'app' / 'syncup-core.zip'
 ENTRADAS = ('web/ponte.py', 'tools/gerar_dados_falsos.py')
 PROIBIDOS = {'gradio', 'fastapi', 'httpx', 'uvicorn', 'starlette'}
 EXTRAS = ('fontes/Figtree.ttf', 'fontes/OFL.txt', 'web/__init__.py')
+DEMO_WRAPPED = 'demo-wrapped.zip'
 
 
 def _imports(arquivo: Path) -> set[str]:
@@ -76,10 +77,16 @@ def empacotar(destino: Path = DESTINO) -> Path:
     # syncup.js é uma função solta (o Gradio a executa); no app ela é chamada direto.
     js = (RAIZ / 'syncup.js').read_text(encoding='utf-8').strip()
     (destino.parent / 'componentes.js').write_text(f'({js})();\n', encoding='utf-8')
+    # Demo do Wrapped, que roda em JS (sem Python no navegador): o histórico fictício da Ana,
+    # o mesmo de ponte.arquivos_demo.
+    from tools.gerar_dados_falsos import Configuracao, gerar_zip
+
+    gerar_zip(destino.parent / DEMO_WRAPPED, Configuracao(linhas=40_000, artistas=250, seed=41))
     return destino
 
 
 if __name__ == '__main__':
+    sys.path.insert(0, str(RAIZ))  # como script, o Python só enxerga tools/
     saida = empacotar(Path(sys.argv[1]) if len(sys.argv) > 1 else DESTINO)
     with zipfile.ZipFile(saida) as pacote:
         nomes = pacote.namelist()

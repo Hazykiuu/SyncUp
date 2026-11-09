@@ -1,5 +1,5 @@
 // App do SyncUp no navegador: casca (topo, motor) e a tela Dupla.
-import { html, render, useEffect, useState } from 'preact-htm';
+import { html, render, useEffect, useRef, useState } from 'preact-htm';
 import { aoProgredir, executar, iniciar } from './motor.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
@@ -80,10 +80,14 @@ function App() {
     addEventListener('hashchange', mudar);
     return () => removeEventListener('hashchange', mudar);
   }, []);
+  // O Python (Pyodide) só baixa quando a Dupla abre: o Wrapped roda em JavaScript.
+  const iniciado = useRef(false);
   useEffect(() => {
+    if (modo !== 'dupla' || iniciado.current) return;
+    iniciado.current = true;
     aoProgredir(({ etapa, fracao }) => setMotor((m) => ({ ...m, etapa, fracao })));
     iniciar().then(() => setMotor((m) => ({ ...m, pronto: true }))).catch((e) => setMotor((m) => ({ ...m, erro: e.message })));
-  }, []);
+  }, [modo]);
   return html`
     <header class="app-topo shell">
       <a class="marca vivo" href="../" aria-label="SyncUp, voltar ao site"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>SyncUp</a>
@@ -98,11 +102,14 @@ function App() {
         <span class="etiqueta">${modo === 'wrapped' ? 'Wrapped' : 'Dupla'} · 100% no seu aparelho</span>
         <h1>${modo === 'wrapped' ? 'Seu Wrapped da vida toda' : 'Compare dois históricos'}</h1>
         <p class="sub">${modo === 'wrapped' ? 'Envie o seu Histórico Estendido do Spotify e veja a sua vida musical em stories.' : 'Envie o Histórico Estendido do Spotify de duas pessoas.'} Nada é enviado para nenhum servidor.</p>
-        <${Motor} estado=${motor} />
+        <${Motor} estado=${modo === 'wrapped' ? { pronto: true } : motor} />
       </div>
       <div hidden=${modo !== 'dupla'}><${Dupla} pronto=${motor.pronto} /></div>
-      <div hidden=${modo !== 'wrapped'}><${Wrapped} pronto=${motor.pronto} /></div>
+      <div hidden=${modo !== 'wrapped'}><${Wrapped} /></div>
     </main>`;
 }
 
-render(html`<${App} />`, document.getElementById('app'));
+// O aviso "Carregando o SyncUp…" do index.html sai: o render do Preact não apaga o que ele não criou.
+const raiz = document.getElementById('app');
+raiz.replaceChildren();
+render(html`<${App} />`, raiz);

@@ -40,4 +40,4 @@ jobs:
       - name: Sintaxe do app
         run: for f in site/app/*.js site/app/js/*.js site/app/js/stories/*.js; do node --check "$f"; done
       - name: Testes da lógica dos stories
-        run: node --test tests/js
+        run: node --test tests/js/*.test.mjs

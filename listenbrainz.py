@@ -32,22 +32,36 @@ USUARIO_VALIDO = re.compile(r'^[\w.\- ]{1,64}$')
 LISTENS_POR_CHAMADA = 1000  # máximo que a API entrega por chamada
 LIMITE_ESCUTAS = 5000  # 5 chamadas por pessoa: meses de escuta sem travar um Match grande
 ESPERA_MAXIMA_S = 10  # a cota do ListenBrainz é de 30 chamadas a cada 10 s
+TENTATIVAS_429 = 3  # quem leva 429 tenta de novo antes de desistir
+
+
+def _espera(resposta: httpx.Response, padrao: int) -> int:
+    """Segundos que o servidor pede (Reset-In ou Retry-After), com teto; senão o padrão."""
+    for cabecalho in ('X-RateLimit-Reset-In', 'Retry-After'):
+        valor = resposta.headers.get(cabecalho, '')
+        if valor.isdigit():
+            return min(int(valor), ESPERA_MAXIMA_S)
+    return padrao
 
 
 def _get(cliente: httpx.Client, caminho: str, **params) -> dict:
-    resposta = cliente.get(f'{URL_API}{caminho}', params=params)
+    for tentativa in range(TENTATIVAS_429):
+        resposta = cliente.get(f'{URL_API}{caminho}', params=params)
+        if resposta.status_code != 429:
+            break
+        if tentativa < TENTATIVAS_429 - 1:
+            time.sleep(_espera(resposta, 2**tentativa))  # sem cabeçalho: 1 s, depois 2 s
+    else:
+        raise ValueError('O ListenBrainz está ocupado agora. Tente de novo em instantes.')
     if resposta.headers.get('X-RateLimit-Remaining') == '0':
         # Cota acabou: espera ela voltar antes da próxima chamada, em vez de levar um 429.
-        espera = resposta.headers.get('X-RateLimit-Reset-In', '')
-        time.sleep(min(int(espera), ESPERA_MAXIMA_S) if espera.isdigit() else 1)
+        time.sleep(_espera(resposta, 1))
     if resposta.status_code == 404:
         raise ValueError(
             'Usuário não encontrado no ListenBrainz. Confira o nome (é o do perfil público).'
         )
     if resposta.status_code == 204:
         return {}
-    if resposta.status_code == 429:
-        raise ValueError('O ListenBrainz está ocupado agora. Tente de novo em instantes.')
     resposta.raise_for_status()
     return resposta.json().get('payload') or {}
 

@@ -141,7 +141,38 @@ def test_usuario_com_problema_fica_de_fora_com_aviso(monkeypatch) -> None:
     assert len(avisos) == 1 and 'errado: Usuário não encontrado' in avisos[0]
 
 
-def test_429_vira_mensagem_de_servico_ocupado() -> None:
-    ocupado = httpx.MockTransport(lambda p: httpx.Response(429))
+def test_429_tenta_de_novo_e_depois_vira_mensagem_de_servico_ocupado(monkeypatch) -> None:
+    esperas: list[int] = []
+    monkeypatch.setattr('listenbrainz.time.sleep', esperas.append)
+    pedidos: list[str] = []
+
+    def ocupado(pedido: httpx.Request) -> httpx.Response:
+        pedidos.append(pedido.url.path)
+        return httpx.Response(429)
+
     with pytest.raises(ValueError, match='ocupado'):
-        coletar_perfil_listenbrainz('nick', cliente=httpx.Client(transport=ocupado))
+        coletar_perfil_listenbrainz(
+            'nick', cliente=httpx.Client(transport=httpx.MockTransport(ocupado))
+        )
+    assert len(pedidos) == 3 and esperas == [1, 2]  # 3 tentativas, espera crescente
+
+
+def test_429_passageiro_respeita_a_espera_pedida(monkeypatch) -> None:
+    esperas: list[int] = []
+    monkeypatch.setattr('listenbrainz.time.sleep', esperas.append)
+    respostas = iter(
+        [
+            httpx.Response(429, headers={'Retry-After': '4'}),
+            httpx.Response(429, headers={'X-RateLimit-Reset-In': '99'}),  # teto de 10 s
+        ]
+    )
+    normal = _api([])
+
+    def responder(pedido: httpx.Request) -> httpx.Response:
+        return next(respostas, None) or normal.handle_request(pedido)
+
+    perfil = coletar_perfil_listenbrainz(
+        'nick', cliente=httpx.Client(transport=httpx.MockTransport(responder))
+    )
+    assert esperas[:2] == [4, 10]
+    assert perfil.top_artistas['long_term']

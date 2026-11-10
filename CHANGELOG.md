@@ -1,5 +1,22 @@
 # Changelog — SyncUp
 
+## [1.5.1] — 2026-11-10
+
+Correções de uma auditoria de segurança e resiliência.
+
+### Corrigido
+- **ListenBrainz**: um 429 (serviço ocupado) não derruba mais a coleta na hora; o SyncUp tenta de novo até 3 vezes, esperando o tempo que o servidor pede.
+- **App do navegador**: arquivo de mais de 64 MB dentro do ZIP é recusado com uma mensagem clara, em vez de fechar a aba no celular; a conferência de partes repetidas ficou 8× mais rápida.
+- **Perfis no Linux e no macOS**: um novo login de "ana" criava um segundo arquivo ao lado do "Ana.json"; agora substitui o da mesma pessoa, como no Windows.
+- Aviso de depreciação do NumPy no perfil de gosto.
+
+### Segurança
+- A página de resposta do login do Spotify escapa o texto sozinha, em vez de depender de cada chamada lembrar disso.
+
+### Documentação
+- `salvar_perfil()`: o nome é a identidade do perfil ("Ana" e "ana" são a mesma pessoa); a docstring prometia outra coisa.
+- README: como gerar os arquivos do app do navegador para rodar `site/` localmente.
+
 ## [1.5.0] — 2026-11-09
 
 Wrapped do app no navegador sem baixar o Python: monta em segundos, até em celular simples.

@@ -1,6 +1,6 @@
 [project]
 name = "syncup"
-version = "1.5.0"
+version = "1.5.1"
 description = "Comparador local de históricos do Spotify: Dupla, Match, Wrapped e Grupo."
 readme = "README.md"
 license = { text = "MIT" }

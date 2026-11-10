@@ -3,15 +3,15 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { deflateRawSync } from 'node:zlib';
 
-import { entradaIgnorada, familiaPlataforma, instanteUtc, lerHistorico, normalizarNome } from '../../site/app/js/historico.js';
+import { LIMITE_ENTRADA, entradaIgnorada, familiaPlataforma, instanteUtc, lerHistorico, normalizarNome } from '../../site/app/js/historico.js';
 
 // ZIP mínimo (sem CRC: o leitor não confere). `mentir` declara um tamanho menor que o real.
-function zip(arquivos, { metodo = 8, mentir = false } = {}) {
+function zip(arquivos, { metodo = 8, mentir = false, declarar } = {}) {
   const partes = [], diretorio = [];
   let pos = 0;
   for (const [nome, texto] of Object.entries(arquivos)) {
     const nomeB = Buffer.from(nome), dados = Buffer.from(texto), comp = metodo === 8 ? deflateRawSync(dados) : dados;
-    const tamanho = mentir ? Math.max(1, dados.length - 10) : dados.length;
+    const tamanho = declarar ?? (mentir ? Math.max(1, dados.length - 10) : dados.length);
     const local = Buffer.alloc(30);
     local.writeUInt32LE(0x04034b50, 0); local.writeUInt16LE(metodo, 8);
     local.writeUInt32LE(comp.length, 18); local.writeUInt32LE(tamanho, 22); local.writeUInt16LE(nomeB.length, 26);
@@ -97,6 +97,8 @@ test('erros com as mensagens do Python', async () => {
   const bom = zip({ 'a.json': json([ev('2024-01-01T12:00:00Z', 'Ana')]) });
   await assert.rejects(ler({ 'a.zip': bom.subarray(0, bom.length - 30) }), /ZIP está inválido/);
   await assert.rejects(ler({ 'a.zip': zip({ 'a.json': json([ev('2024-01-01T12:00:00Z', 'Ana', 'Uma música com nome comprido')]) }, { mentir: true }) }), /ZIP está inválido/);
+  // Entrada declarada acima do teto: recusada antes de alocar (sem precisar de 65 MB de verdade).
+  await assert.rejects(ler({ 'a.zip': zip({ 'a.json': '[]' }, { declarar: LIMITE_ENTRADA + 1 }) }), /grande demais para o navegador/);
   await assert.rejects(ler({ 'a.zip': zip({ 'a.json': '[{"ts": ' }) }), /JSON inválido/);
   await assert.rejects(ler({ 'a.json': new Uint8Array([0x5b, 0xff, 0x5d]) }), /UTF-8/);
   await assert.rejects(ler({ 'a.json': Buffer.from(json([{ ts: '2024-01-01T12:00:00Z', ms_played: 1 }])) }), /histórico estendido/);

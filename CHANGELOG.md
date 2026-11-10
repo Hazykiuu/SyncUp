@@ -7,6 +7,7 @@ Correções de uma auditoria de segurança e resiliência.
 ### Corrigido
 - **ListenBrainz**: um 429 (serviço ocupado) não derruba mais a coleta na hora; o SyncUp tenta de novo até 3 vezes, esperando o tempo que o servidor pede.
 - **App do navegador**: arquivo de mais de 64 MB dentro do ZIP é recusado com uma mensagem clara, em vez de fechar a aba no celular; a conferência de partes repetidas ficou 8× mais rápida.
+- **Perfis no Linux e no macOS**: um novo login de "ana" criava um segundo arquivo ao lado do "Ana.json"; agora substitui o da mesma pessoa, como no Windows.
 - Aviso de depreciação do NumPy no perfil de gosto.
 
 ### Segurança

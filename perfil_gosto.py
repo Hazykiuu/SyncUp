@@ -88,11 +88,15 @@ def salvar_perfil(perfil: PerfilGosto, pasta: str | Path) -> Path:
     pasta.mkdir(parents=True, exist_ok=True)
     seguro = ''.join(c if c.isalnum() or c in '-_' else '_' for c in perfil.nome.strip())[:60]
     base = seguro or 'perfil'
-    caminho = pasta / f'{base}.json'
+    # Busca sem diferenciar maiúsculas em todo sistema: no Linux, "ana" acharia "Ana.json".
+    existentes = {p.name.casefold(): p for p in pasta.glob('*.json')}
+    dono = perfil.nome.strip().casefold()
+    caminho = existentes.get(f'{base}.json'.casefold(), pasta / f'{base}.json')
     sufixo = 1
-    while caminho.exists() and _dono(caminho) != perfil.nome.strip().casefold():
+    while caminho.exists() and _dono(caminho) != dono:
         sufixo += 1
-        caminho = pasta / f'{base}-{sufixo}.json'
+        nome = f'{base}-{sufixo}.json'
+        caminho = existentes.get(nome.casefold(), pasta / nome)
     caminho.write_text(perfil.para_json(), encoding='utf-8')
     return caminho
 

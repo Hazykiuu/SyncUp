@@ -79,9 +79,10 @@ class PerfilGosto:
 def salvar_perfil(perfil: PerfilGosto, pasta: str | Path) -> Path:
     """Grava o perfil em ``pasta/<nome>.json`` (sem tokens, só rankings).
 
-    Um novo login da mesma pessoa substitui o arquivo dela. Se o nome seguro
-    coincidir com o de outra pessoa ("Ana Clara" e "Ana_Clara", ou "ana" e "Ana"
-    no Windows), o arquivo ganha um sufixo ``-2``, ``-3``… em vez de apagá-la.
+    O nome é a identidade do perfil, sem diferenciar maiúsculas: um novo login de
+    "Ana" ou "ana" substitui o arquivo da Ana. Se nomes diferentes derem o mesmo
+    nome de arquivo ("Ana Clara" e "Ana_Clara"), o segundo ganha um sufixo ``-2``,
+    ``-3``… em vez de apagar o primeiro.
     """
     pasta = Path(pasta)
     pasta.mkdir(parents=True, exist_ok=True)
@@ -147,7 +148,7 @@ def perfil_de_historico(dados: pd.DataFrame, nome: str) -> PerfilGosto:
     top_artistas: dict[str, list[str]] = {}
     top_musicas: dict[str, list[dict[str, str]]] = {}
     for periodo, dias in JANELAS_DIAS.items():
-        janela = plays[plays['data_utc'] > fim - pd.Timedelta(days=dias)]
+        janela = plays[plays['data_utc'] > fim - pd.Timedelta(dias, unit='D')]
         artistas = janela.groupby('artista', observed=True).size()
         top_artistas[periodo] = [linha[0] for linha in _ranking(artistas)]
         musicas = janela.groupby(['musica', 'artista'], observed=True).size()

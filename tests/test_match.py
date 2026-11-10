@@ -180,6 +180,14 @@ def test_salvar_perfil_nao_apaga_outra_pessoa_com_mesmo_nome_seguro(tmp_path: Pa
     assert len(list(tmp_path.glob('*.json'))) == 2
 
 
+def test_salvar_perfil_mesmo_nome_em_outra_caixa_e_a_mesma_pessoa(tmp_path: Path) -> None:
+    """O nome é a identidade: "ana" depois de "Ana" substitui, não cria Ana-2."""
+    primeiro = salvar_perfil(_perfil('Ana', ['A']), tmp_path)
+    assert salvar_perfil(_perfil(' ana ', ['B']), tmp_path) == primeiro
+    assert carregar_perfil(primeiro).top_artistas['long_term'] == ['B']
+    assert [p.name for p in tmp_path.glob('*.json')] == [primeiro.name]
+
+
 def _api_simulada(chamadas: list[str]) -> httpx.MockTransport:
     def responder(req: httpx.Request) -> httpx.Response:
         chamadas.append(f'{req.method} {req.url.path}')

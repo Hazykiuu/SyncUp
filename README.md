@@ -130,7 +130,9 @@ python -m ruff check .
 python -m ruff format --check .
 ```
 
-O CI roda os mesmos comandos no GitHub, em Python 3.10 e 3.12. O cache Parquet é opcional: `python -m pip install -r requirements-parquet.txt`.
+O CI roda os mesmos comandos no GitHub, em Python 3.10 e 3.12, mais `node --test tests/js/*.test.mjs` para o app do navegador. O cache Parquet é opcional: `python -m pip install -r requirements-parquet.txt`.
+
+**App do navegador (`site/`) num servidor local:** rode antes `python tools/empacotar_web.py`. Ele gera em `site/app/` os arquivos que não ficam no Git (`syncup-core.zip`, `componentes.css`, `componentes.js` e `demo-wrapped.zip`); sem eles a Dupla e a demo do Wrapped não abrem. Depois de mexer no Python do núcleo, rode de novo.
 
 | Módulo | Papel |
 |---|---|

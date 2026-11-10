@@ -201,13 +201,14 @@ def registrar_rotas(app, pasta: Path = PASTA_PERFIS, redirect_uri: str = REDIREC
     from fastapi.responses import HTMLResponse, RedirectResponse
 
     def pagina(titulo: str, texto: str, ok: bool) -> HTMLResponse:
+        # Título e texto são escapados aqui: nenhuma chamada precisa lembrar de escapar.
         cor = '#1ed760' if ok else '#ff6b6b'
         return HTMLResponse(
             f'<!doctype html><meta charset="utf-8"><title>SyncUp · Spotify</title>'
             f'<body style="background:#121212;color:#fff;font-family:Arial,sans-serif;'
             f'display:grid;place-items:center;min-height:100vh;margin:0">'
             f'<div style="max-width:520px;padding:32px;border-radius:20px;background:#181818">'
-            f'<h1 style="color:{cor}">{escape(titulo)}</h1><p style="line-height:1.6">{texto}</p>'
+            f'<h1 style="color:{cor}">{escape(titulo)}</h1><p style="line-height:1.6">{escape(texto)}</p>'
             f'<p style="color:#b3b3b3">Pode fechar esta aba e voltar ao SyncUp.</p></div>',
             status_code=200 if ok else 400,
         )
@@ -227,21 +228,21 @@ def registrar_rotas(app, pasta: Path = PASTA_PERFIS, redirect_uri: str = REDIREC
         try:
             return RedirectResponse(iniciar_login(nome, client_id, redirect_uri))
         except ValueError as erro:
-            return pagina('Não foi possível conectar', escape(str(erro)), False)
+            return pagina('Não foi possível conectar', str(erro), False)
 
     @app.get('/spotify/callback')
     def callback(code: str = '', state: str = '', error: str = ''):
         if error:
-            return pagina('Login cancelado', f'O Spotify respondeu: {escape(error)}.', False)
+            return pagina('Login cancelado', f'O Spotify respondeu: {error}.', False)
         try:
             perfil, _ = concluir_login(state, code, pasta)
         except (ValueError, PermissionError, httpx.HTTPError) as erro:
-            return pagina('Não foi possível coletar o perfil', escape(str(erro)), False)
+            return pagina('Não foi possível coletar o perfil', str(erro), False)
         n_art = sum(len(v) for v in perfil.top_artistas.values())
         return pagina(
             f'Perfil de {perfil.nome} salvo!',
             f'Coletamos {n_art} posições de rankings de artistas, {len(perfil.recentes)} músicas '
             f'recentes e {len(perfil.seguidos)} artistas seguidos. No SyncUp, clique em '
-            '<b>Atualizar lista</b> na aba Match.',
+            '"Atualizar lista" na aba Match.',
             True,
         )

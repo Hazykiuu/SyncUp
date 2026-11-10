@@ -282,6 +282,10 @@ def test_rotas_do_servidor(tmp_path: Path, monkeypatch) -> None:
         assert (tmp_path / 'Bia.json').is_file()
         ruim = cliente.get('/spotify/callback', params={'error': 'access_denied'})
         assert ruim.status_code == 400 and '<script' not in ruim.text
+        # O texto vindo da URL é escapado uma vez só (nem cru, nem &amp;lt;).
+        ataque = cliente.get('/spotify/callback', params={'error': '<script>x</script>'})
+        assert '&lt;script&gt;' in ataque.text and '<script>' not in ataque.text
+        assert '&amp;lt;' not in ataque.text
 
 
 def test_match_na_interface_mistura_zip_e_spotify(tmp_path: Path, monkeypatch) -> None:

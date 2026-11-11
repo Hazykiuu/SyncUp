@@ -61,6 +61,46 @@ def test_comparar_dupla_igual_ao_nucleo_e_vira_json(zips: tuple[str, str]) -> No
     assert r['tabelas']['playlist']['colunas']
 
 
+def test_contrato_json_da_dupla(zips: tuple[str, str], monkeypatch) -> None:
+    """``dupla`` alimenta os stories: JSON puro, sem calcular o Wrapped de ninguém."""
+    from datetime import datetime
+
+    import wrapped
+    from web import ponte
+
+    def proibido(*_args, **_kwargs):
+        raise AssertionError('a Dupla não deve calcular o Wrapped')
+
+    monkeypatch.setattr(wrapped, 'calcular_wrapped', proibido)
+    r = ponte.comparar_dupla([zips[0]], [zips[1]], 'Ana', 'Bia')
+    d = json.loads(json.dumps(r['dupla'], allow_nan=False))
+    assert {'a', 'b', 'inicio', 'fim', 'match', 'total_comuns', 'em_comum'} <= set(d)
+    assert {'favoritos', 'apresentar', 'sintonia', 'periodo_comum'} <= set(d)
+    assert d['match'] == pytest.approx(r['metricas']['cosseno'])
+    for pessoa, nome in ((d['a'], 'Ana'), (d['b'], 'Bia')):
+        assert pessoa['nome'] == nome and isinstance(pessoa['plays'], int)
+        assert (
+            len(pessoa['plays_por_hora']) == 24 and sum(pessoa['plays_por_hora']) == pessoa['plays']
+        )
+        assert pessoa['plays_por_hora'][pessoa['pico_hora']] == max(pessoa['plays_por_hora'])
+    datetime.fromisoformat(d['inicio'])
+    assert 1 <= len(d['em_comum']) <= 3 and d['total_comuns'] >= len(d['em_comum'])
+    assert all(c['plays_a'] > 0 and c['plays_b'] > 0 for c in d['em_comum'])
+    for i, favorito in enumerate(d['favoritos']):
+        # O nº 1 dos stories é o primeiro da lista "Top artistas" da mesma pessoa.
+        assert f'<b>{favorito["nome"]}</b>' in r['html']['listas'][i].split('</li>')[0]
+        assert favorito['posicao_no_outro'] is None or favorito['posicao_no_outro'] >= 1
+    assert len(d['apresentar']) <= 4 and all(
+        p['link'].startswith('https://') for p in d['apresentar']
+    )
+    s = d['sintonia']
+    assert s is not None and s['momentos'] >= 0 and s['minutos'] >= 0
+    if s['momentos']:
+        datetime.fromisoformat(s['primeira']['data'])
+        assert s['musica']['vezes'] >= 1 and s['por_mes'] and len(s['por_mes'][0]) == 2
+    assert len(r['tabelas']['playlist']['linhas']) <= 20
+
+
 def test_downloads_da_dupla(zips: tuple[str, str], tmp_path: Path, monkeypatch) -> None:
     from web import ponte
 
@@ -94,7 +134,9 @@ def test_nomes_maliciosos_nao_viram_html_ativo(zips: tuple[str, str]) -> None:
         for trecho in parte if isinstance(parte, list) else [parte]:
             Caçador().feed(trecho)
     assert not ativos
-    assert 'su-stories' in r['html']['wrapped']  # o Wrapped (calculado antes) continua saindo
+    assert 'wrapped' not in r['html']  # a Dupla não leva mais o Wrapped de cada um
+    # Nos dados dos stories os nomes vão crus: quem escapa é o Preact, ao desenhar.
+    assert r['dupla']['a']['nome'] == nome_a and r['dupla']['b']['nome'] == nome_b
     # Gráficos: < > escapados, aspas legíveis (o Plotly não decodifica &quot;).
     legendas = json.dumps(r['graficos']['artistas'])
     assert '&lt;img' in legendas and '&quot;' not in legendas and '&#x27;' not in legendas

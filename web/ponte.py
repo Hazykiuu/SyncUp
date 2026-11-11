@@ -7,7 +7,6 @@ Também roda no Python comum: os testes chamam as mesmas funções.
 
 from __future__ import annotations
 
-import gc
 import json
 import math
 from dataclasses import asdict
@@ -22,18 +21,17 @@ from analise import ResultadoComparacao, comparar
 from apresentacao import (
     _configuracao,
     _diversidade,
-    _wrapped_seguro,
     perfil_card,
     resumo_html,
     tabela_display,
     texto_periodo,
-    wrapped_dupla_html,
 )
 from exportacoes import exportar_playlist
 from formatacao import fmt_num
 from wrapped import wrapped_de_arquivos
 
 SAIDA = Path('/tmp/syncup-saida')
+LINHAS_TABELA = 20  # o app mostra uma amostra; a playlist inteira vai no CSV
 # shortcut: guarda só o último resultado (o app no navegador atende uma pessoa por aba);
 # trocar por um dicionário por id se um dia houver mais de uma comparação aberta.
 _ultimo: dict[str, Any] = {}
@@ -77,10 +75,6 @@ def comparar_dupla(
         bool(o.get('deduplicar', False)),
     )
     _ultimo.pop('dupla', None)  # o resultado anterior não fica vivo durante o novo pico
-    # Wrapped primeiro: o pico dele (histórico inteiro) não se soma ao da comparação (iOS ~350 MB).
-    wa = _wrapped_seguro(arquivos_a, (nome_a or '').strip() or 'Pessoa A', config)
-    wb = _wrapped_seguro(arquivos_b, (nome_b or '').strip() or 'Pessoa B', config)
-    gc.collect()
     r = comparar(
         arquivos_a,
         arquivos_b,
@@ -92,7 +86,7 @@ def comparar_dupla(
     )
     _ultimo['dupla'] = r
     a, b = r.perfil_a, r.perfil_b
-    contribuicoes = r.contribuicoes.head(100).copy()
+    contribuicoes = r.contribuicoes.head(LINHAS_TABELA).copy()
     contribuicoes['Contribuição ao cosseno'] = [
         fmt_num(float(x) * 100, 4) + ' p.p.' for x in contribuicoes['Contribuição ao cosseno']
     ]
@@ -101,6 +95,7 @@ def comparar_dupla(
         'nomes': [a.nome, b.nome],
         'periodo': texto_periodo(r),
         'aviso': r.aviso,
+        'dupla': _dupla_json(r),
         'metricas': {
             'cosseno': m.cosseno,
             'jaccard': m.jaccard,
@@ -109,7 +104,7 @@ def comparar_dupla(
         },
         'html': {
             'resumo': resumo_html(r),
-            'perfis': [perfil_card(a, 'green', wa), perfil_card(b, 'violet', wb)],
+            'perfis': [perfil_card(a, 'green'), perfil_card(b, 'violet')],
             'sintonia': componentes.sintonia_html(r),
             'corrida': componentes.corrida_html(r),
             'listas': [
@@ -122,7 +117,6 @@ def comparar_dupla(
                     b.musicas, componentes.ROXO, f'Top músicas · {b.nome}', musicas=True
                 ),
             ],
-            'wrapped': wrapped_dupla_html(wa, wb),
         },
         'quase': {
             'artistas': r.momentos_artistas.total_pares,
@@ -147,7 +141,7 @@ def comparar_dupla(
             )
         ],
         'tabelas': {
-            'playlist': _tabela(r.playlist.head(500)),
+            'playlist': _tabela(r.playlist.head(LINHAS_TABELA)),
             'contribuicoes': _tabela(contribuicoes),
             'diversidade': _tabela(_diversidade(r)),
             'estatisticas': _tabela(r.estatisticas),
@@ -155,6 +149,113 @@ def comparar_dupla(
             'quase_artistas': _tabela(r.momentos_artistas.exemplos),
             'quase_musicas': _tabela(r.momentos_musicas.exemplos),
         },
+    }
+
+
+def _dupla_json(r: ResultadoComparacao) -> dict:
+    """Contrato dos stories da Dupla no app web: só dados, textos crus (o Preact escapa).
+
+    Tudo sai do ``ResultadoComparacao``: quem são, o que têm em comum, o favorito de cada
+    um, sugestões da ponte, os relógios e a sintonia. Datas em ISO 8601 (hora local de A).
+    """
+    perfis = (r.perfil_a, r.perfil_b)
+    # Posição de cada artista no ranking da pessoa: plays e, no empate, ordem alfabética.
+    posicoes = [
+        {
+            artista: i
+            for i, (artista, _) in enumerate(
+                sorted(p.contagens_artistas.items(), key=lambda kv: (-kv[1], kv[0])), 1
+            )
+        }
+        for p in perfis
+    ]
+
+    def pessoa(p: Any) -> dict:
+        por_hora = p.horarios.groupby('hora')['Reproduções'].sum().reindex(range(24), fill_value=0)
+        return {
+            'nome': p.nome,
+            'plays': p.plays,
+            'horas': p.horas,
+            'artistas': p.quantidade_artistas,
+            'plays_por_hora': por_hora.tolist(),
+            'pico_hora': por_hora.idxmax(),  # empate: a hora mais cedo
+        }
+
+    def favorito(i: int) -> dict | None:
+        """Artista nº 1 de uma pessoa e a posição dele no ranking da outra (None se ausente)."""
+        if perfis[i].artistas.empty:
+            return None
+        nome, plays = perfis[i].artistas.iloc[0][['Artista', 'Reproduções']]
+        return {'nome': nome, 'plays': plays, 'posicao_no_outro': posicoes[1 - i].get(nome)}
+
+    apresentar: list[dict] = []
+    for de in (r.perfil_a.nome, r.perfil_b.nome):
+        linhas = r.ponte[r.ponte['De'] == de].head(2) if len(r.ponte) else r.ponte
+        apresentar += [
+            {'de': d, 'para': para, 'artista': artista, 'plays': plays, 'link': link}
+            for d, para, artista, plays, _participacao, link in linhas.itertuples(
+                index=False, name=None
+            )
+        ]
+    return _simples(
+        {
+            'a': pessoa(r.perfil_a),
+            'b': pessoa(r.perfil_b),
+            'inicio': r.periodo.inicio,
+            'fim': r.periodo.fim,
+            'periodo_comum': r.periodo.comum,
+            'match': r.metricas.cosseno,
+            'total_comuns': len(r.artistas_comuns),
+            'em_comum': [
+                {
+                    'nome': artista,
+                    'plays_a': r.perfil_a.contagens_artistas.get(artista, 0),
+                    'plays_b': r.perfil_b.contagens_artistas.get(artista, 0),
+                }
+                for artista in r.artistas_comuns[:3]
+            ],
+            'favoritos': [favorito(0), favorito(1)],
+            'apresentar': apresentar,
+            'sintonia': _sintonia_json(r),
+        }
+    )
+
+
+def _sintonia_json(r: ResultadoComparacao) -> dict | None:
+    """A mesma faixa tocando ao mesmo tempo para os dois; None se a sintonia não foi calculada."""
+    s = r.sintonia
+    if s is None:
+        return None
+
+    def momento(m: Any) -> dict | None:
+        if m is None:
+            return None
+        return {
+            'musica': m.musica,
+            'artista': m.artista,
+            'data': m.inicio_local.floor('s'),
+            'minutos': m.minutos,
+        }
+
+    por_mes: list[list] = []
+    if not s.por_mes.empty:
+        # Meses sem sintonia também entram (zero): o intervalo entre os encontros aparece.
+        meses = pd.period_range(s.por_mes.index[0], s.por_mes.index[-1], freq='M').strftime('%Y-%m')
+        por_mes = [[mes, valor] for mes, valor in s.por_mes.reindex(meses, fill_value=0.0).items()]
+    musica = None
+    if s.top_musicas:
+        nome, artista, vezes, minutos = s.top_musicas[0]
+        musica = {'nome': nome, 'artista': artista, 'vezes': vezes, 'minutos': minutos}
+    return {
+        'minutos': s.minutos,
+        'momentos': len(s.momentos),
+        'quase': r.momentos_musicas.total_pares if r.momentos_musicas else 0,
+        'primeira': momento(s.primeira),
+        'mais_longo': momento(s.mais_longo),
+        'musica': musica,
+        'hora_favorita': s.hora_favorita,
+        'dia_favorito': s.dia_favorito,
+        'por_mes': por_mes,
     }
 
 

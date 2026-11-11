@@ -56,7 +56,7 @@ function Compartilhar() {
     </div>`;
 }
 
-const ABAS = ['Resumo', 'Em sintonia', 'Rankings', 'Gráficos', 'Wrapped', 'Compartilhar', 'Detalhes técnicos'];
+const ABAS = ['Resumo', 'Em sintonia', 'Rankings', 'Gráficos', 'Compartilhar', 'Detalhes técnicos'];
 
 export function Resultado({ r }) {
   const [aba, setAba] = useState(0);
@@ -79,7 +79,6 @@ export function Resultado({ r }) {
     () => html`<div class="graficos">
       <${Grafico} figura=${g.artistas} titulo="Artistas mais ouvidos, lado a lado" /><${Grafico} figura=${g.horarios} titulo="Quando cada um ouve" />
       <${Grafico} figura=${g.tracos} titulo="Traços de escuta" /><${Grafico} figura=${g.rankings} titulo="Rankings comparados" /><${Grafico} figura=${g.meses} titulo="Horas por mês" /></div>`,
-    () => html`<${Html} conteudo=${h.wrapped} />`,
     () => html`<${Compartilhar} />`,
     () => html`<p class="nota">${r.aviso}</p>
       <${Tabela} titulo="Contribuição de cada artista ao cosseno" tabela=${t.contribuicoes} /><${Tabela} titulo="Diversidade" tabela=${t.diversidade} />

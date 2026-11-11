@@ -42,10 +42,10 @@ function Grafico({ figura, titulo }) {
 
 // Nomes como etiquetas: as 12 primeiras à vista, o resto atrás de "ver mais".
 const VISIVEIS = 12;
-function Lista({ titulo, itens }) {
+function Lista({ titulo, itens, vazio }) {
   const etiquetas = (nomes) => html`<ul class="dp-etiquetas">${nomes.map((n) => html`<li>${n}</li>`)}</ul>`;
   return html`<div class="conexao vidro"><h3>${titulo}</h3>
-    ${itens.length ? etiquetas(itens.slice(0, VISIVEIS)) : html`<p class="nota">Nenhum neste período.</p>`}
+    ${itens.length ? etiquetas(itens.slice(0, VISIVEIS)) : html`<p class="nota">${vazio}</p>`}
     ${itens.length > VISIVEIS && html`<details class="dp-mais"><summary>Ver mais ${itens.length - VISIVEIS}</summary>${etiquetas(itens.slice(VISIVEIS))}</details>`}
   </div>`;
 }
@@ -114,7 +114,9 @@ export function Resultado({ r }) {
   }), [r]);
   const paineis = [
     () => html`<${Rankings} nomes=${r.nomes} listas=${h.listas} />
-      <div class="grade-3"><${Lista} titulo="Artistas em comum" itens=${r.conexoes.comuns} /><${Lista} titulo=${`Só ${a}`} itens=${r.conexoes.so_a} /><${Lista} titulo=${`Só ${b}`} itens=${r.conexoes.so_b} /></div>
+      <div class="grade-3"><${Lista} titulo="Artistas em comum" itens=${r.conexoes.comuns} vazio="Nenhum artista aparece nos dois históricos neste período." />
+        <${Lista} titulo=${`Só ${a}`} itens=${r.conexoes.so_a} vazio=${`Todos os artistas de ${a} também aparecem para ${b}.`} />
+        <${Lista} titulo=${`Só ${b}`} itens=${r.conexoes.so_b} vazio=${`Todos os artistas de ${b} também aparecem para ${a}.`} /></div>
       ${r.ponte.length > 0 && html`<div class="vidro conexao"><h3>Ponte musical</h3><p class="nota">Sugestões de artistas ausentes no recorte do outro. Não são descobertas comprovadas.</p>
         <ul class="ponte">${r.ponte.map((p) => html`<li>${p.de} → ${p.para}: <a href=${p.link} target="_blank" rel="noopener">${p.artista}</a> · ${p.plays.toLocaleString('pt-BR')} plays</li>`)}</ul></div>`}`,
     () => html`<div class="graficos">

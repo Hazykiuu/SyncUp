@@ -94,7 +94,9 @@ export function Wrapped() {
   };
 
   // `ler` devolve [{ nome, bytes: ArrayBuffer }]; o tempo inclui ler os arquivos (é o que a pessoa espera).
+  const ultima = useRef(null); // a última tentativa, para o "Tentar de novo" do erro
   const rodar = async (ler, nomeUsado) => {
+    ultima.current = () => rodar(ler, nomeUsado);
     setFase({ tipo: 'processando', etapa: 'Lendo o histórico completo e montando os stories…' });
     try {
       const inicio = performance.now();
@@ -116,6 +118,8 @@ export function Wrapped() {
   };
   // Capas guardadas no navegador (só endereços): apaga tudo na hora.
   const apagarCapas = async () => {
+    // Ação que não tem volta: confirma antes (a busca refaz as capas, mas leva tempo e usa a rede).
+    if (!confirm('Apagar as capas e fotos guardadas neste navegador? Na próxima vez elas serão buscadas de novo.')) return;
     buscador ??= criarBuscador();
     await buscador.apagarTudo();
     setAviso('Capas guardadas apagadas deste navegador.');
@@ -145,7 +149,9 @@ export function Wrapped() {
     </div>
     <div aria-live="polite">
       ${ocupado && html`<p class="processando vidro"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
-      ${fase.tipo === 'erro' && html`<p class="erro vidro" role="alert"><b>Não deu certo.</b> ${fase.mensagem}</p>`}
+      ${fase.tipo === 'erro' && html`<div class="erro vidro" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
+        ${ultima.current && html`<button type="button" class="btn btn-borda vidro" onClick=${() => ultima.current()}>Tentar de novo</button>`}</div>`}
+      ${fase.tipo === 'resultado' && html`<p class="sr-only">Wrapped de ${fase.r.nome} pronto, logo abaixo.</p>`}
     </div>
     <div id="resultado-wrapped">${fase.tipo === 'resultado' && html`
       <section class="resultado" aria-label=${`Wrapped de ${fase.r.nome}`}>

@@ -3,7 +3,7 @@ body { background: var(--bg) !important; }
 footer { opacity: 1; }
 /* O app usa tamanhos fixos (a grade em vw do site encolhe demais formulários no celular).
    100% = 16 px por padrão, mas respeita quem aumentou a fonte no sistema. */
-html { font-size: 100% !important; }
+html { font-size: 100% !important; color-scheme: dark; } /* controles nativos (caixas, rolagem) já vêm escuros */
 
 /* Tokens do app. Espaço em escala de 4 px; raios aninhados (o de dentro = o de fora − o padding). */
 :root {
@@ -57,11 +57,11 @@ a.nav-item:hover { color: var(--texto); }
   .nav-app { inset: auto 0 0; padding: var(--e1) max(var(--e2), env(safe-area-inset-right, 0px)) max(var(--e1), env(safe-area-inset-bottom, 0px)) max(var(--e2), env(safe-area-inset-left, 0px)); border-top: 1px solid var(--linha); }
   .nav-app > .marca, .nav-selo, .nav-site { display: none; }
   .nav-app ul { justify-content: space-around; }
-  .nav-app li { flex: 1; }
+  .nav-app li { flex: 1; min-width: 0; } /* os 4 itens cabem em 320 px sem alargar a página */
   .nav-item { flex-direction: column; justify-content: center; gap: 2px; min-height: 56px; font-size: .75rem; text-align: center; }
   .nav-item small { margin-top: -2px; }
   /* Página atual com forma, não só cor: uma pílula atrás do ícone. */
-  .nav-item svg { box-sizing: content-box; padding: 2px var(--e4); border-radius: var(--pilula); }
+  .nav-item svg { box-sizing: content-box; padding: 2px var(--e3); border-radius: var(--pilula); }
   .nav-item[aria-current="page"] svg { color: var(--verde); background: rgb(30 215 96 / .16); }
   /* Folga para a barra: o fim da página (e o player) nunca fica embaixo dela. */
   .app-corpo { padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px)); }
@@ -103,7 +103,10 @@ a.nav-item:hover { color: var(--texto); }
 
 .pessoas { display: grid; gap: var(--vao); }
 @media (min-width: 900px) { .pessoas { grid-template-columns: 1fr 1fr; } }
-.pessoa { display: flex; flex-direction: column; gap: var(--e3); border-radius: var(--r-cartao); padding: var(--pad-cartao); }
+/* Cada cartão leva a cor da sua pessoa (verde = A, violeta = B) na borda e ao arrastar um arquivo. */
+.pessoa { --cor: var(--verde); display: flex; flex-direction: column; gap: var(--e3); border-radius: var(--r-cartao); padding: var(--pad-cartao); }
+.pessoa.roxo { --cor: var(--roxo); }
+.pessoa.vidro::before { background: linear-gradient(135deg, color-mix(in srgb, var(--cor) 70%, transparent), rgba(255, 255, 255, .14) 35%, rgba(255, 255, 255, .05)); }
 .pessoa-topo { display: flex; align-items: center; gap: var(--e3); }
 .pessoa-topo h2 { font-size: 1.3rem; font-weight: 800; }
 .avatar { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; font-weight: 900; color: #000; }
@@ -111,10 +114,17 @@ a.nav-item:hover { color: var(--texto); }
 .campo { display: flex; flex-direction: column; gap: var(--e1); font-size: .9rem; font-weight: 600; color: var(--sub); }
 .campo small, .marcar small { font-weight: 400; color: var(--fraco); }
 .entrada { width: 100%; min-height: 44px; border-radius: var(--r-campo); border: 1px solid var(--linha); background: rgba(0, 0, 0, .3); color: var(--texto); font: inherit; font-size: 1rem; padding: var(--e2) var(--e3); }
-.entrada:focus { outline: none; border-color: var(--verde); box-shadow: 0 0 0 3px rgba(30, 215, 96, .25); }
+.entrada::placeholder { color: var(--fraco); opacity: 1; }
+/* Contorno transparente em vez de nenhum: no alto contraste do sistema ele aparece; aqui fica o anel verde. */
+.entrada:focus { outline: 2px solid transparent; border-color: var(--verde); box-shadow: 0 0 0 3px rgba(30, 215, 96, .25); }
 textarea.entrada { resize: vertical; }
 .soltar { display: flex; flex-direction: column; align-items: center; gap: var(--e3); text-align: center; border: 1.5px dashed rgba(255, 255, 255, .22); border-radius: var(--r-campo); padding: var(--e5) var(--e4); transition: border-color .2s, background .2s; }
-.soltar.sobre { border-color: var(--verde); background: rgba(30, 215, 96, .07); }
+.soltar.sobre { border-color: var(--cor); background: color-mix(in srgb, var(--cor) 8%, transparent); }
+/* Com arquivos já escolhidos, a área encolhe para uma linha: a lista fala por ela. */
+.soltar.tem { flex-direction: row; justify-content: space-between; padding: var(--e3) var(--e4); text-align: left; }
+.soltar.tem > small { display: none; }
+.soltar.tem > p:not(.erro) { font-size: .9rem; }
+@media (max-width: 479px) { .soltar.tem > p:not(.erro) { display: none; } .soltar.tem { justify-content: center; } }
 .soltar p { color: var(--sub); text-wrap: balance; } .soltar small { color: var(--fraco); }
 .lista-arquivos { display: flex; flex-direction: column; gap: var(--e2); }
 .lista-arquivos li { display: flex; align-items: center; gap: var(--e2); padding: var(--e1) var(--e1) var(--e1) var(--e3); border-radius: var(--r-campo); background: rgba(255, 255, 255, .05); font-size: .9rem; }

@@ -245,5 +245,16 @@ textarea.entrada { resize: vertical; }
 .resultado .su-cover { background: rgba(255, 255, 255, .08); color: var(--sub); }
 .resultado .su-playicon { display: none; }
 .resultado .su-tracklist a:hover .su-num { opacity: 1; }
+/* Entrada no app vindo da página inicial ("Abrir o app"): o app se revela num círculo que nasce do ponto do clique
+   e cobre a tela; a página inicial recua ao fundo. Só com view transition entre páginas e sem "menos movimento". */
+@keyframes vt-revela {
+  from { clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%)); }
+  to { clip-path: circle(150vmax at var(--vt-x, 50%) var(--vt-y, 50%)); }
+}
+@keyframes vt-recua { to { transform: scale(.92); opacity: .35; } }
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-new(root) { animation: vt-revela .75s cubic-bezier(.65, 0, .35, 1) both; }
+  ::view-transition-old(root) { animation: vt-recua .75s cubic-bezier(.65, 0, .35, 1) both; }
+}
 /* O player dos stories segue o raio de painel do app. */
 .st-player.su-stories { border-radius: var(--r-painel); }

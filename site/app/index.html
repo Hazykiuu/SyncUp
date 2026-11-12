@@ -13,6 +13,14 @@
 <link rel="stylesheet" href="app.css">
 <link rel="stylesheet" href="stories.css">
 <script type="importmap">{ "imports": { "preact-htm": "https://unpkg.com/htm@3.1.1/preact/standalone.module.js" } }</script>
+<!-- Vindo de "Abrir o app": o círculo da transição nasce do ponto do clique (app.css). Antes do primeiro quadro. -->
+<script>
+try {
+  const p = JSON.parse(sessionStorage.getItem('syncup-entrada'));
+  sessionStorage.removeItem('syncup-entrada');
+  if (p) { document.documentElement.style.setProperty('--vt-x', p.x + 'px'); document.documentElement.style.setProperty('--vt-y', p.y + 'px'); }
+} catch { /* sem armazenamento: nasce do centro */ }
+</script>
 </head>
 <body class="js">
 <a class="pular" href="#principal">Pular para o conteúdo</a>

@@ -25,10 +25,18 @@ html { font-size: 100% !important; color-scheme: dark; } /* controles nativos (c
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
 .btn-borda.vidro { border-color: transparent; background: rgba(255, 255, 255, .07);
   -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); }
-.btn-borda.vidro:hover { background: rgba(255, 255, 255, .12); }
+.btn-borda.vidro:hover { background: rgba(255, 255, 255, .12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28); }
+/* No app a seta é "→": no hover ela anda para a frente (a da página inicial é ↗ e sobe). */
+@media (hover: hover) { .app-corpo .btn:hover:not(:disabled) .seta { transform: translateX(3px); } }
 @media (hover: hover) and (pointer: fine) { .vidro { -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%); } }
 .vidro .vidro { -webkit-backdrop-filter: none; backdrop-filter: none; }
 .bolhas.fixas i { animation: none; }
+/* Fundo com matéria, parado: as duas manchas (verde = A no alto, violeta = B embaixo) um pouco mais presentes
+   e um grão fino por cima, que o vidro deixa ver. Nada anima: não custa quadros no celular. */
+.bolhas.fixas { opacity: .3; }
+body::after { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .06; background-size: 160px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"); }
+@media (prefers-reduced-transparency: reduce) { body::after { display: none; } }
 @supports not ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
   .vidro::before { display: none; }
   .vidro { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14), inset 0 1px 0 rgba(255, 255, 255, .16), 0 24px 48px -28px rgba(0, 0, 0, .85); }
@@ -42,7 +50,7 @@ html { font-size: 100% !important; color-scheme: dark; } /* controles nativos (c
 .app-topo .marca, .nav-app .marca { font-size: 1.25rem; min-height: 44px; }
 .nav-app { position: fixed; z-index: 60; background: rgba(14, 14, 14, .82); -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%); }
 .nav-app ul { display: flex; }
-.nav-item { display: flex; align-items: center; gap: var(--e3); min-height: 44px; color: var(--sub); font-weight: 700; }
+.nav-item { display: flex; align-items: center; gap: var(--e3); min-height: 44px; color: var(--sub); font-weight: 700; transition: background .15s, color .15s; }
 .nav-item svg { font-size: 1.375rem; }
 .nav-item small { font-size: .625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--fraco); }
 a.nav-item:hover { color: var(--texto); }
@@ -156,10 +164,27 @@ textarea.entrada { resize: vertical; }
 .resultado { display: flex; flex-direction: column; gap: var(--e5); scroll-margin-top: 1rem; }
 .periodo { color: var(--sub); font-size: .95rem; }
 /* Sem barra de rolagem à vista: no celular desliza com o dedo; no teclado, setas. */
-.sub-abas { display: flex; gap: var(--e2); overflow-x: auto; padding-bottom: .25rem; scrollbar-width: none; }
+/* Abas numa linha só: quando não cabem, rolam (sem barra) e a borda com mais abas esmaece. */
+@property --fade-start { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --fade-end { syntax: '<length>'; inherits: false; initial-value: 0px; }
+.sub-abas { --fade-size: 2.5rem; display: flex; gap: var(--e2); overflow-x: auto; padding-bottom: .25rem; scrollbar-width: none; scroll-padding-inline: var(--fade-size);
+  mask: linear-gradient(#000, #000) no-clip subtract,
+    linear-gradient(to right, #000, transparent) 0 0 / var(--fade-start) 100% no-repeat no-clip,
+    linear-gradient(to right, transparent, #000) 100% 0 / var(--fade-end) 100% no-repeat no-clip;
+  animation: abas-inicio linear both, abas-fim linear both; animation-timeline: scroll(self inline);
+  animation-range: 0 var(--fade-size), calc(100% - var(--fade-size)) 100%; }
+@keyframes abas-inicio { to { --fade-start: var(--fade-size); } }
+@keyframes abas-fim { from { --fade-end: var(--fade-size); } }
+/* Sem animação por rolagem: o JS marca as bordas com mais abas (resultado.js). */
+.sub-abas.mais-inicio { --fade-start: var(--fade-size); } .sub-abas.mais-fim { --fade-end: var(--fade-size); }
 .sub-abas::-webkit-scrollbar { display: none; }
-.sub-abas button { flex: none; min-height: 44px; padding: 0 var(--e4); border-radius: var(--pilula); font-weight: 700; color: var(--sub); border: 1px solid var(--linha); }
+.sub-abas button, .dp-alternador button { transition: background .15s, color .15s, border-color .15s, scale .1s ease-out; }
+.sub-abas button:active, .dp-alternador button:active { scale: .97; }
+@media (hover: hover) { .sub-abas button:not([aria-selected="true"]):hover, .dp-alternador button:not([aria-pressed="true"]):hover { color: var(--texto); border-color: rgba(255, 255, 255, .28); } }
+.sub-abas button { position: relative; flex: none; min-height: 44px; padding: 0 var(--e4); border-radius: var(--pilula); font-weight: 700; color: var(--sub); border: 1px solid var(--linha); }
 .sub-abas button[aria-selected="true"] { background: var(--verde); color: #000; border-color: var(--verde); }
+/* Aba escolhida com forma, não só cor: um traço embaixo do nome (borda, que o alto contraste mantém). */
+.sub-abas button[aria-selected="true"]::after { content: ''; position: absolute; inset: auto var(--e4) 7px; border-bottom: 2px solid currentColor; }
 .painel-aba { display: flex; flex-direction: column; gap: var(--e5); }
 .grade-2 { display: grid; gap: var(--vao); }
 @media (min-width: 900px) { .grade-2 { grid-template-columns: 1fr 1fr; } }
@@ -177,7 +202,7 @@ textarea.entrada { resize: vertical; }
 .grafico { border-radius: var(--r-cartao); padding: var(--pad-cartao); overflow: hidden; }
 .grafico figcaption { font-weight: 800; margin-bottom: .5rem; }
 .grafico-area { min-height: 380px; width: 100%; }
-.tabela-rolagem { border-radius: var(--r-cartao); overflow-x: auto; padding: var(--e2); scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .25) transparent; }
+.tabela-rolagem { border-radius: var(--r-cartao); overflow-x: auto; padding: var(--e2); scrollbar-color: rgba(255, 255, 255, .25) transparent; }
 .tabela-rolagem table { width: 100%; border-collapse: collapse; font-size: .9rem; }
 .tabela-rolagem caption { text-align: left; font-weight: 800; padding: var(--e2); }
 .tabela-rolagem th, .tabela-rolagem td { padding: var(--e2) var(--e3); text-align: left; border-bottom: 1px solid var(--linha); white-space: nowrap; }
@@ -214,5 +239,11 @@ textarea.entrada { resize: vertical; }
 /* Erro com saída: a mensagem e o "Tentar de novo" lado a lado (no celular, um embaixo do outro). */
 .erro { flex-wrap: wrap; justify-content: space-between; }
 .erro p { flex: 1 1 18rem; }
+/* Rankings (HTML do núcleo, estilo playlist) no vidro do app: capa tipográfica neutra (sem arco-íris de
+   cores por nome) e sem o ▶ ao passar o mouse, que prometia tocar aqui; o link abre a busca no Spotify. */
+.resultado .su-tracklist-card { border-radius: var(--r-cartao); }
+.resultado .su-cover { background: rgba(255, 255, 255, .08); color: var(--sub); }
+.resultado .su-playicon { display: none; }
+.resultado .su-tracklist a:hover .su-num { opacity: 1; }
 /* O player dos stories segue o raio de painel do app. */
 .st-player.su-stories { border-radius: var(--r-painel); }

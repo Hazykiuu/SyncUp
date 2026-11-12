@@ -20,7 +20,8 @@
 .st-seg.feito { background: #fff; }
 .st-controles { position: absolute; z-index: 4; top: 8.5cqw; left: 3cqw; right: 3cqw; display: flex; align-items: center; gap: 2cqw; }
 .st-contador { margin-right: auto; font-size: 3cqw; font-weight: 800; opacity: .85; text-shadow: 0 1px 6px rgba(0, 0, 0, .5); }
-.st-botao { display: grid; place-items: center; width: 44px; height: 44px; min-height: 0 !important; border: 1px solid var(--vidro-borda); border-radius: 50%; color: #fff; font-size: 22px; cursor: pointer; }
+.st-botao { display: grid; place-items: center; width: 44px; height: 44px; min-height: 0 !important; border: 1px solid var(--vidro-borda); border-radius: 50%; color: #fff; font-size: 22px; cursor: pointer; transition: scale .1s ease-out, background .15s; }
+.st-botao:active { scale: .92; }
 /* Anterior/próximo existem para teclado e leitor de tela; na tela, o toque já faz isso. */
 .sr-only-foco:not(:focus-visible) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .st-pausa::before { content: ''; width: 12px; height: 14px; border-left: 4px solid #fff; border-right: 4px solid #fff; }

@@ -57,6 +57,15 @@ svg:not([width]) { width: 1em; height: 1em; flex: none; }
   .btn:hover .seta { transform: translate(2px, -2px); }
   .btn-borda:hover { background: rgba(255, 255, 255, .06); }
 }
+/* Resposta ao toque: o botão aperta (rápido, ao pressionar) e, ao passar o mouse, um brilho atravessa
+   o botão cheio uma vez. Só transform/translate/scale: não pesa. Sem movimento com "menos movimento". */
+.btn { position: relative; isolation: isolate; overflow: hidden; transition: transform .35s cubic-bezier(.2, .8, .2, 1), scale .1s ease-out, background .2s, box-shadow .2s; }
+.btn:active:not(:disabled) { scale: .97; }
+.btn-verde::after, .btn-claro::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; translate: -110% 0;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / .5) 50%, transparent 70%); }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .btn-verde:hover:not(:disabled)::after, .btn-claro:hover:not(:disabled)::after { translate: 110% 0; transition: translate .7s cubic-bezier(.2, .8, .2, 1); }
+}
 .etiqueta { display: inline-flex; align-items: center; gap: .5rem; font-size: .9rem; font-weight: 600; color: var(--sub); }
 .etiqueta::before { content: ''; width: .4rem; height: .4rem; border-radius: var(--pilula); background: var(--verde); }
 

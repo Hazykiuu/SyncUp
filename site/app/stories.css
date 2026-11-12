@@ -243,6 +243,19 @@
 .st-duo, .s-sintonia, .s-sintonia_musica { --passo: 270ms; }
 /* Wrapped: 13 s por story (pedido do Carlos: 10 s era rápido para ler). O player avança no fim da barra. */
 #resultado-wrapped { --dur-story: 13s; }
+/* Afinador da sintonia (cartão do % da Dupla): escala em cents, centro verde = afinados, agulha rosa = os dois. */
+.st-afinador { display: block; width: 100%; height: auto; margin-bottom: 1cqw; overflow: visible; }
+.st-afinador line { stroke: #fff; stroke-opacity: .3; stroke-width: 1.5; stroke-linecap: round; }
+.st-afinador line.longo { stroke-opacity: .6; stroke-width: 2.5; }
+.st-afinador line.centro { stroke: var(--verde); stroke-opacity: 1; stroke-width: 2.5; }
+.st-afinador .agulha { stroke: var(--rosa); stroke-opacity: 1; stroke-width: 3; transform-origin: 100px 100px; transform: rotate(var(--ang)); }
+.st-afinador .pivo { fill: var(--rosa); }
+.st-afinador text { fill: rgba(255, 255, 255, .72); font-size: 9px; font-weight: 700; letter-spacing: .06em; text-anchor: middle; }
+@keyframes st-agulha { from { transform: rotate(-90deg); } }
+.st-slot.ativo .st-afinador .agulha {
+  animation: st-agulha 1.2s ease-out both;
+  animation: st-agulha 1.2s linear(0, .22 8%, .62 20%, .93 32%, 1.07 43%, 1.1 50%, 1.07 58%, 1.01 70%, .99 80%, 1) both;
+  animation-delay: calc(350ms + var(--i, 0) * var(--passo)); }
 @keyframes st-encontro-a { from { opacity: 0; transform: translateX(-13cqw); } }
 @keyframes st-encontro-b { from { opacity: 0; transform: translateX(13cqw); } }
 @keyframes st-pop { from { opacity: 0; transform: scale(.92); } }
@@ -270,7 +283,7 @@
 /* 6. Acessibilidade e fallbacks */
 @media (prefers-reduced-motion: reduce) {
   .st-slot.ativo .entra, .st-slot.ativo .st-cartao.entra { animation: st-aparece .2s ease both; }
-  .st-slot.ativo .st-avatares span,
+  .st-slot.ativo .st-avatares span, .st-slot.ativo .st-afinador .agulha,
   .st-slot.ativo .st-barra-valor, .st-slot.ativo .desenha, .st-slot.ativo .st-colunas i,
   .st-slot.ativo .st-relogio line, .st-slot.ativo .st-anel .valor { animation: none; }
   .st-slot.ativo .desenha { stroke-dasharray: none; }

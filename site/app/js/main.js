@@ -6,14 +6,17 @@ import { Opcoes, PADRAO } from './opcoes.js';
 import { Resultado } from './resultado.js';
 import { Wrapped } from './wrapped.js';
 
+// Carregamento como equalizador: 24 barras de alturas fixas que se acendem conforme o progresso.
+const ALTURAS = [.35, .6, .45, .8, .55, 1, .7, .5, .85, .4, .65, .9, .5, .75, .45, .95, .6, .4, .7, .85, .5, .65, .35, .55];
+
 function Motor({ estado }) {
   if (estado.pronto) return html`<p class="motor ok" role="status"><span class="ponto" aria-hidden="true"></span>Pronto para comparar</p>`;
   if (estado.erro) return html`<p class="motor erro" role="alert">Não foi possível carregar o SyncUp: ${estado.erro} <button type="button" class="btn btn-borda vidro" onClick=${() => location.reload()}>Tentar de novo</button></p>`;
   return html`
     <div class="motor" role="status" aria-live="polite">
       <span>${estado.etapa}</span>
-      <div class="trilho" role="progressbar" aria-label="Carregando o SyncUp" aria-valuemin="0" aria-valuemax="100" aria-valuenow=${Math.round(estado.fracao * 100)}>
-        <i style=${`width:${Math.round(estado.fracao * 100)}%`}></i>
+      <div class="eq" role="progressbar" aria-label="Carregando o SyncUp" aria-valuemin="0" aria-valuemax="100" aria-valuenow=${Math.round(estado.fracao * 100)}>
+        ${ALTURAS.map((h, k) => html`<i class=${k < Math.round(estado.fracao * ALTURAS.length) ? 'aceso' : ''} style=${{ '--h': h }}></i>`)}
       </div>
       <small>Na primeira visita o navegador baixa o Python (~15 MB) e guarda. Nas próximas ele só carrega, em alguns segundos.</small>
     </div>`;

@@ -25,7 +25,7 @@ export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquiv
     <section class=${`pessoa vidro ${cor}`} aria-labelledby=${`titulo-${rotulo}`}>
       <div class="pessoa-topo">
         <span class=${`avatar ${cor}`} aria-hidden="true">${rotulo}</span>
-        <h2 id=${`titulo-${rotulo}`}>${titulo}</h2>
+        <div><h2 id=${`titulo-${rotulo}`}>${titulo}</h2>${(rotulo === 'A' || rotulo === 'B') && html`<small class="lado">Lado ${rotulo}</small>`}</div>
       </div>
       <label class="campo" for=${idNome}>Nome</label>
       <input id=${idNome} class="entrada" value=${nome} placeholder=${rotulo === 'A' ? 'Ex.: Ana' : 'Ex.: Bia'}

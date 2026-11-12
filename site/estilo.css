@@ -20,6 +20,7 @@ a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
 ul, ol { list-style: none; }
 img { display: block; max-width: 100%; }
+p { text-wrap: pretty; } /* sem palavra sozinha no fim do parágrafo */
 /* Ícones: 1em. SVG com tamanho próprio (os gráficos do Plotly) fica de fora, senão vira um quadrado de 16 px.
    :where() zera a especificidade: qualquer classe (ex.: .st-relogio { width: 100% }) vence esta regra. */
 :where(svg:not([width])) { width: 1em; height: 1em; flex: none; }
@@ -171,9 +172,33 @@ section[id] { scroll-margin-top: 6rem; }
 .passos ol { margin-top: 2.5rem; display: grid; gap: 1rem; counter-reset: passo; }
 @media (min-width: 1024px) { .passos ol { grid-template-columns: repeat(3, 1fr); } }
 .passos li { display: flex; flex-direction: column; gap: .75rem; padding: 1.75rem; border-radius: var(--cartao); border: 1px solid var(--linha); background: rgba(255, 255, 255, .03); }
-.passos .num { width: 2.5rem; height: 2.5rem; display: grid; place-items: center; border-radius: 50%; background: var(--verde); color: #000; font-weight: 900; }
+/* Linguagem de faixa: cada passo é uma faixa, com o tempo que leva (o histórico do Spotify chega em até 30 dias). */
+.passos .faixa { font-size: .875rem; color: var(--sub); font-variant-numeric: tabular-nums; }
+.passos .faixa b { color: var(--verde); font-weight: 800; }
 .passos h3 { font-size: 1.25rem; font-weight: 800; letter-spacing: -.01em; }
 .passos p { font-size: 1rem; line-height: 1.55; color: var(--sub); }
+
+/* Espectro de escuta: as 24 horas de Ana (verde) e Bruno (violeta). Sem Hz: hora de escuta não é frequência. */
+.espectro { padding-block: 5rem 1rem; }
+.espectro-cabeca { display: grid; gap: 1.5rem; align-items: end; }
+@media (min-width: 1024px) { .espectro-cabeca { grid-template-columns: 1fr 1fr; } }
+.espectro-cabeca p { max-width: 34rem; font-size: 1rem; line-height: 1.55; color: var(--sub); }
+.espectro-grafico { margin-top: 2.5rem; }
+.espectro-grafico ol { display: grid; grid-template-columns: repeat(24, 1fr); gap: clamp(2px, .5vw, 8px); height: clamp(9rem, 18vw, 14rem); align-items: end; }
+.espectro-grafico li { display: flex; gap: 2px; height: 100%; align-items: flex-end; }
+.espectro-grafico i { flex: 1; height: 100%; border-radius: 3px; transform-origin: bottom; transform: scaleY(var(--v)); }
+.espectro-grafico i.a { background: var(--verde); } .espectro-grafico i.b { background: var(--roxo); }
+.espectro-grafico figcaption { display: flex; justify-content: space-between; margin-top: .75rem; font-size: .8rem; color: var(--sub); font-variant-numeric: tabular-nums; }
+.espectro-legenda { display: flex; gap: 1.25rem; margin-top: 1rem; font-size: .9rem; font-weight: 700; }
+.espectro-legenda span::before { content: ''; display: inline-block; width: .7rem; height: .7rem; margin-right: .45rem; border-radius: 2px; vertical-align: -.05em; }
+.espectro-legenda .a::before { background: var(--verde); } .espectro-legenda .b::before { background: var(--roxo); }
+/* As barras sobem hora a hora quando o gráfico entra na tela (animação ligada à rolagem; sem suporte, ficam paradas). */
+@keyframes sobe-barra { from { transform: scaleY(.04); } }
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .espectro-grafico li i { animation: sobe-barra linear both; animation-timeline: view(); animation-range: entry calc(10% + var(--h) * 1%) cover calc(35% + var(--h) * 1%); }
+  }
+}
 
 /* Privacidade */
 .privacidade { padding-block: 5rem; }
@@ -187,7 +212,26 @@ section[id] { scroll-margin-top: 6rem; }
 /* Rodapé */
 .rodape { margin-top: 3rem; border-top: 1px solid var(--linha); background: #0a0a0a; }
 .rodape .shell { padding-top: 5rem; padding-bottom: 2.5rem; }
-.rodape-cta { display: flex; flex-direction: column; gap: 2rem; border-bottom: 1px solid var(--linha); padding-bottom: 4rem; }
+.rodape-cta { position: relative; display: flex; flex-direction: column; gap: 2rem; border-bottom: 1px solid var(--linha); padding-bottom: 4rem; }
+.rodape-cta > :not(.pauta) { position: relative; z-index: 1; }
+/* Pauta: 5 linhas finas atrás da chamada; as 4 barras do logo (verde → violeta) são as notas, sentadas na última linha. */
+.pauta { position: absolute; inset: auto 0 4.5rem; height: 89px; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, .1) 0 1px, transparent 1px 22px); }
+.pauta i { position: absolute; bottom: -3px; width: 10px; border-radius: 6px; }
+.pauta i:nth-child(1) { right: 96px; height: 48px; background: var(--verde); }
+.pauta i:nth-child(2) { right: 74px; height: 88px; background: color-mix(in srgb, var(--verde), var(--roxo) 33%); }
+.pauta i:nth-child(3) { right: 52px; height: 35px; background: color-mix(in srgb, var(--verde), var(--roxo) 67%); }
+.pauta i:nth-child(4) { right: 30px; height: 66px; background: var(--roxo); }
+@keyframes nota-cai { from { opacity: 0; transform: translateY(-60px); } }
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .pauta i { animation: nota-cai linear both; animation-timeline: view(); animation-range: entry 20% cover 45%; }
+    .pauta i:nth-child(2) { animation-range: entry 24% cover 49%; } .pauta i:nth-child(3) { animation-range: entry 28% cover 53%; } .pauta i:nth-child(4) { animation-range: entry 32% cover 57%; }
+  }
+}
+@media (max-width: 639px) { .pauta i { display: none; } }
+/* No computador a chamada e o botão ficam lado a lado: a pauta fica só sob a chamada, sem cruzar o botão. */
+@media (min-width: 1024px) { .pauta { right: 42%; } }
 @media (min-width: 1024px) { .rodape-cta { flex-direction: row; align-items: flex-end; justify-content: space-between; } }
 .rodape-cta h2 { max-width: 16ch; }
 .rodape-cta .lado { display: flex; flex-direction: column; gap: .9rem; align-items: flex-start; }

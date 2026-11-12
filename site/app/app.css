@@ -102,8 +102,10 @@ a.nav-item:hover { color: var(--texto); }
 .app-cabeca .sub { max-width: 46ch; color: var(--sub); font-size: 1.05rem; line-height: 1.5; }
 
 .motor { display: flex; flex-direction: column; gap: var(--e2); max-width: 28rem; font-size: .9rem; color: var(--sub); }
-.motor .trilho { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, .12); overflow: hidden; }
-.motor .trilho i { display: block; height: 100%; background: var(--verde); transition: width .4s var(--sai); }
+.motor .eq { display: flex; align-items: flex-end; gap: 3px; height: 1.5rem; }
+.motor .eq i { flex: 1; height: 100%; border-radius: 2px; background: rgba(255, 255, 255, .14); transform-origin: bottom; transform: scaleY(var(--h)); transition: background .3s; }
+.motor .eq i.aceso { background: var(--verde); animation: eq-barra 1.1s ease-in-out infinite alternate; animation-delay: calc(var(--h) * -1.1s); }
+@keyframes eq-barra { to { transform: scaleY(calc(var(--h) * .55)); } }
 .motor small { color: var(--fraco); }
 .motor.ok { flex-direction: row; align-items: center; gap: var(--e2); color: var(--texto); font-weight: 600; }
 .motor .ponto { width: .55rem; height: .55rem; border-radius: 50%; background: var(--verde); box-shadow: 0 0 10px var(--verde); }
@@ -117,6 +119,7 @@ a.nav-item:hover { color: var(--texto); }
 .pessoa.vidro::before { background: linear-gradient(135deg, color-mix(in srgb, var(--cor) 70%, transparent), rgba(255, 255, 255, .14) 35%, rgba(255, 255, 255, .05)); }
 .pessoa-topo { display: flex; align-items: center; gap: var(--e3); }
 .pessoa-topo h2 { font-size: 1.3rem; font-weight: 800; }
+.pessoa-topo .lado { font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--cor); }
 .avatar { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; font-weight: 900; color: #000; }
 .avatar.verde { background: var(--verde); } .avatar.roxo { background: var(--roxo); }
 .campo { display: flex; flex-direction: column; gap: var(--e1); font-size: .9rem; font-weight: 600; color: var(--sub); }

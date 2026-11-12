@@ -36,17 +36,61 @@ html { font-size: 100% !important; }
 @media (prefers-reduced-transparency: reduce) { .vidro, .btn-borda.vidro { background: #1c1c1c; -webkit-backdrop-filter: none; backdrop-filter: none; } }
 @media (prefers-contrast: more) { .vidro::before { background: #fff; } }
 
-.app-topo { display: flex; align-items: center; justify-content: space-between; gap: var(--vao); flex-wrap: wrap; padding-block: 1rem; }
-.app-topo .marca { font-size: 1.25rem; min-height: 44px; }
-.abas-app { display: flex; flex-wrap: wrap; gap: var(--e2); }
-.abas-app a, .abas-app span { display: inline-flex; align-items: center; gap: var(--e2); min-height: 44px; padding: 0 var(--e4); border-radius: var(--pilula); font-weight: 700; font-size: .95rem; }
-.abas-app a.ativa { background: var(--texto); color: #000; }
-.abas-app span { color: var(--fraco); border: 1px solid var(--linha); cursor: not-allowed; }
-.abas-app small { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+/* Casca de app de música: a navegação é uma só; no celular vira a barra de baixo, no computador a lateral.
+   Barras fixas em vidro escuro (fundo ≥ 72%): capa que passa por baixo não aparece borrada (regra do Spotify). */
+.app-topo { display: flex; align-items: center; padding-block: var(--e4) 0; }
+.app-topo .marca, .nav-app .marca { font-size: 1.25rem; min-height: 44px; }
+.nav-app { position: fixed; z-index: 60; background: rgba(14, 14, 14, .82); -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%); }
+.nav-app ul { display: flex; }
+.nav-item { display: flex; align-items: center; gap: var(--e3); min-height: 44px; color: var(--sub); font-weight: 700; }
+.nav-item svg { font-size: 1.375rem; }
+.nav-item small { font-size: .625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--fraco); }
+a.nav-item:hover { color: var(--texto); }
+.nav-item[aria-current="page"] { color: var(--texto); }
+.nav-item[aria-disabled="true"] { color: var(--fraco); cursor: not-allowed; }
+.nav-selo { display: flex; align-items: center; gap: var(--e2); font-size: .85rem; color: var(--sub); }
+.nav-selo .ponto { width: .5rem; height: .5rem; border-radius: 50%; background: var(--verde); }
+.nav-site { font-weight: 700; color: var(--sub); }
+.nav-site:hover { color: var(--texto); }
 
-.app-corpo { padding-bottom: 6rem; }
+@media (max-width: 899px) {
+  .nav-app { inset: auto 0 0; padding: var(--e1) max(var(--e2), env(safe-area-inset-right, 0px)) max(var(--e1), env(safe-area-inset-bottom, 0px)) max(var(--e2), env(safe-area-inset-left, 0px)); border-top: 1px solid var(--linha); }
+  .nav-app > .marca, .nav-selo, .nav-site { display: none; }
+  .nav-app ul { justify-content: space-around; }
+  .nav-app li { flex: 1; }
+  .nav-item { flex-direction: column; justify-content: center; gap: 2px; min-height: 56px; font-size: .75rem; text-align: center; }
+  .nav-item small { margin-top: -2px; }
+  /* Página atual com forma, não só cor: uma pílula atrás do ícone. */
+  .nav-item svg { box-sizing: content-box; padding: 2px var(--e4); border-radius: var(--pilula); }
+  .nav-item[aria-current="page"] svg { color: var(--verde); background: rgb(30 215 96 / .16); }
+  /* Folga para a barra: o fim da página (e o player) nunca fica embaixo dela. */
+  .app-corpo { padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px)); }
+}
+@media (min-width: 900px) {
+  :root { --lateral: 15rem; }
+  .app-topo { display: none; }
+  .nav-app { inset: 0 auto 0 0; width: var(--lateral); display: flex; flex-direction: column; gap: var(--e5); padding: var(--e5) var(--e4); border-right: 1px solid var(--linha); }
+  .nav-app > .marca { padding-inline: var(--e3); }
+  .nav-app ul { flex-direction: column; gap: var(--e1); }
+  .nav-item { padding: 0 var(--e3); border-radius: var(--r-campo); }
+  a.nav-item:hover { background: rgba(255, 255, 255, .06); }
+  .nav-item[aria-current="page"] { background: var(--texto); color: #000; }
+  .nav-item small { margin-left: auto; }
+  .nav-selo { margin-top: auto; padding-inline: var(--e3); }
+  .nav-site { padding: var(--e2) var(--e3); }
+  .app-corpo { margin-left: var(--lateral); padding-bottom: 6rem; }
+}
+@media (prefers-reduced-transparency: reduce) { .nav-app { background: #0e0e0e; -webkit-backdrop-filter: none; backdrop-filter: none; } }
+@media (forced-colors: active) { .nav-item[aria-current="page"] { outline: 2px solid CanvasText; outline-offset: -2px; } }
+
+/* Cabeçalho do modo: o degradê tem sentido (Dupla = as duas pessoas, verde e violeta; Wrapped = verde)
+   e se dissolve no fundo antes do conteúdo. */
+.app-corpo { background-repeat: no-repeat; background-size: 100% 28rem; }
+.app-corpo[data-modo="dupla"] { background-image: radial-gradient(60% 100% at 0% 0%, rgb(30 215 96 / .22), transparent 70%), radial-gradient(60% 100% at 100% 0%, rgb(196 183 255 / .2), transparent 70%); }
+.app-corpo[data-modo="wrapped"] { background-image: radial-gradient(80% 100% at 0% 0%, rgb(30 215 96 / .24), transparent 70%); }
 .app-cabeca { display: flex; flex-direction: column; gap: var(--e3); padding-block: 2rem 2.5rem; }
-.app-cabeca h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); font-weight: 900; letter-spacing: -.03em; line-height: 1; }
+@media (min-width: 900px) { .app-cabeca { padding-block: 4rem 3rem; } }
+.app-cabeca h1 { text-wrap: balance; font-size: clamp(2.2rem, 6vw, 3.6rem); font-weight: 900; letter-spacing: -.03em; line-height: 1; }
 .app-cabeca .sub { max-width: 46ch; color: var(--sub); font-size: 1.05rem; line-height: 1.5; }
 
 .motor { display: flex; flex-direction: column; gap: var(--e2); max-width: 28rem; font-size: .9rem; color: var(--sub); }
@@ -71,7 +115,7 @@ html { font-size: 100% !important; }
 textarea.entrada { resize: vertical; }
 .soltar { display: flex; flex-direction: column; align-items: center; gap: var(--e3); text-align: center; border: 1.5px dashed rgba(255, 255, 255, .22); border-radius: var(--r-campo); padding: var(--e5) var(--e4); transition: border-color .2s, background .2s; }
 .soltar.sobre { border-color: var(--verde); background: rgba(30, 215, 96, .07); }
-.soltar p { color: var(--sub); } .soltar small { color: var(--fraco); }
+.soltar p { color: var(--sub); text-wrap: balance; } .soltar small { color: var(--fraco); }
 .lista-arquivos { display: flex; flex-direction: column; gap: var(--e2); }
 .lista-arquivos li { display: flex; align-items: center; gap: var(--e2); padding: var(--e1) var(--e1) var(--e1) var(--e3); border-radius: var(--r-campo); background: rgba(255, 255, 255, .05); font-size: .9rem; }
 .nome-arquivo { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -91,6 +135,8 @@ textarea.entrada { resize: vertical; }
 .barra-acao { display: flex; flex-wrap: wrap; align-items: center; gap: var(--e3); margin-block: var(--e5); }
 .barra-acao small { color: var(--fraco); }
 .btn:disabled { opacity: .45; cursor: not-allowed; transform: none !important; }
+/* Um par de botões tem uma altura só: a do botão com a seta (2,4rem + .4rem de cada lado). */
+.btn { min-height: 3.2rem; justify-content: center; }
 .btn-verde .seta { font-weight: 900; }
 .processando, .erro { display: flex; align-items: center; gap: var(--e3); border-radius: var(--r-cartao); padding: var(--e4) var(--pad-cartao); margin-bottom: var(--e4); }
 .erro { color: #ffd0da; }

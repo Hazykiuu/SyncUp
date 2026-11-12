@@ -240,6 +240,8 @@
    lados opostos e se encontram com uma mola leve; o cartão do número surge com um "pop"; a barra de B
    sai 80 ms depois da de A (corrida). Mola = linear() com ~10% de passagem; ease-out antes, de reserva. */
 .st-duo, .s-sintonia, .s-sintonia_musica { --passo: 270ms; }
+/* Wrapped: 13 s por story (pedido do Carlos: 10 s era rápido para ler). O player avança no fim da barra. */
+#resultado-wrapped { --dur-story: 13s; }
 @keyframes st-encontro-a { from { opacity: 0; transform: translateX(-13cqw); } }
 @keyframes st-encontro-b { from { opacity: 0; transform: translateX(13cqw); } }
 @keyframes st-pop { from { opacity: 0; transform: scale(.92); } }

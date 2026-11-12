@@ -8,10 +8,10 @@ let py = null;
 const progresso = (etapa, fracao) => self.postMessage({ tipo: 'progresso', etapa, fracao });
 
 async function iniciar() {
-  progresso('Baixando o Python (só na primeira vez)', 0.05);
+  progresso('Carregando o Python', 0.05);
   const { loadPyodide } = await import(PYODIDE + 'pyodide.mjs');
   py = await loadPyodide({ indexURL: PYODIDE });
-  progresso('Baixando o pandas', 0.4);
+  progresso('Carregando o pandas', 0.4);
   await py.loadPackage(['pandas', 'tzdata']);
   progresso('Preparando o SyncUp', 0.9);
   const nucleo = await (await fetch('syncup-core.zip', { cache: 'no-cache' })).arrayBuffer();

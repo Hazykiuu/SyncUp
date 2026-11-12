@@ -15,7 +15,7 @@ function Motor({ estado }) {
       <div class="trilho" role="progressbar" aria-label="Carregando o SyncUp" aria-valuemin="0" aria-valuemax="100" aria-valuenow=${Math.round(estado.fracao * 100)}>
         <i style=${`width:${Math.round(estado.fracao * 100)}%`}></i>
       </div>
-      <small>Na primeira visita o navegador baixa o Python (~15 MB); depois fica guardado.</small>
+      <small>Na primeira visita o navegador baixa o Python (~15 MB) e guarda. Nas próximas ele só carrega, em alguns segundos.</small>
     </div>`;
 }
 

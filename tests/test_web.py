@@ -106,13 +106,8 @@ def test_downloads_da_dupla(zips: tuple[str, str], tmp_path: Path, monkeypatch) 
 
     monkeypatch.setattr(ponte, 'SAIDA', tmp_path)
     ponte.comparar_dupla([zips[0]], [zips[1]], 'Ana', 'Bia')
-    for gerar, sufixo in (
-        (ponte.cartao_dupla, '.png'),
-        (ponte.cartao_sintonia, '.png'),
-        (ponte.playlist_dupla, '.csv'),
-    ):
-        caminho = Path(gerar())
-        assert caminho.suffix == sufixo and caminho.stat().st_size > 0
+    caminho = Path(ponte.playlist_dupla())
+    assert caminho.suffix == '.csv' and caminho.stat().st_size > 0
 
 
 def test_nomes_maliciosos_nao_viram_html_ativo(zips: tuple[str, str]) -> None:
@@ -142,10 +137,9 @@ def test_nomes_maliciosos_nao_viram_html_ativo(zips: tuple[str, str]) -> None:
     assert '&lt;img' in legendas and '&quot;' not in legendas and '&#x27;' not in legendas
 
 
-def test_wrapped_e_cartao_no_navegador(zips: tuple[str, str], tmp_path: Path, monkeypatch) -> None:
+def test_wrapped_no_navegador(zips: tuple[str, str]) -> None:
     from web import ponte
 
-    monkeypatch.setattr(ponte, 'SAIDA', tmp_path)
     r = ponte.wrapped([zips[0]], ' <b>Ana</b> ')
     json.dumps(r)  # atravessa o Worker
     assert 'stories' not in r  # o app web desenha os stories a partir de `dados`
@@ -154,14 +148,10 @@ def test_wrapped_e_cartao_no_navegador(zips: tuple[str, str], tmp_path: Path, mo
     assert {'primeira', 'artista', 'top_musicas', 'recorde', 'fiel'} <= set(trilha['slides'])
     assert trilha['slides']['artista'] == [{'artista': trilha['slides']['artista'][0]['artista']}]
     assert trilha['fila'] and all(m['artista'] for m in trilha['fila'])
-    png = Path(ponte.cartao_wrapped())
-    assert png.suffix == '.png' and png.stat().st_size > 10_000
-    ponte.comparar_dupla([zips[0]], [zips[1]], 'Ana', 'Bia')
-    assert Path(ponte.cartao_wrapped()).is_file()  # a Dupla não apaga o Wrapped
 
 
 def test_wrapped_roda_sem_plotly_nem_pillow(zips: tuple[str, str]) -> None:
-    """O worker só baixa o plotly (9,9 MB) na Dupla e o Pillow no PNG: o Wrapped não pode precisar deles."""
+    """O worker só baixa o plotly (9,9 MB) na Dupla e nunca o Pillow: o Wrapped não pode precisar deles."""
     codigo = (
         'import sys\n'
         'class Bloqueio:\n'

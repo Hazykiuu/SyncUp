@@ -29,18 +29,17 @@ function mensagem(erro) {
   return m ? m[1] : 'Algo deu errado ao processar os arquivos. Confira se são ZIPs do Histórico Estendido.';
 }
 
-// Pacotes sob demanda: plotly (9,9 MB) só na comparação e Pillow (1 MB) só nos PNG da Dupla.
-const PRECISA = { comparar_dupla: ['plotly'], cartao_dupla: ['pillow'], cartao_sintonia: ['pillow'] };
+// Pacote sob demanda: plotly (9,9 MB) só na comparação. Os PNG são desenhados em Canvas (poster.js), sem Pillow.
+const PRECISA = { comparar_dupla: ['plotly'] };
 const extras = {};
 const baixar = {
   plotly: async () => { await py.loadPackage('micropip'); await py.pyimport('micropip').install(PLOTLY); },
-  pillow: () => py.loadPackage('pillow'),
 };
 const garantir = (pacote) => (extras[pacote] ??= baixar[pacote]().catch((e) => { delete extras[pacote]; throw e; }));
 
 async function acao({ id, nome, args = [], arquivos = [], saida = 'json' }) {
   try { await Promise.all((PRECISA[nome] || []).map(garantir)); } catch {
-    throw new Error('RuntimeError: Não deu para baixar uma parte do SyncUp (gráficos ou imagens). Confira a internet e tente de novo.');
+    throw new Error('RuntimeError: Não deu para baixar uma parte do SyncUp (os gráficos). Confira a internet e tente de novo.');
   }
   // Cada arquivo vai direto para o sistema de arquivos virtual, sem cópia extra.
   for (const { caminho, bytes } of arquivos) py.FS.writeFile(caminho, new Uint8Array(bytes));

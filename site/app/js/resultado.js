@@ -2,6 +2,7 @@
 // Nas abas, o HTML ainda vem pronto do núcleo (textos externos já escapados lá).
 import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { baixar, executar } from './motor.js';
+import { compartilhar, desenharPosterDupla } from './poster.js';
 import { SLIDES_DUPLA } from './stories/dupla.js';
 import { tiposDaDupla } from './stories/logica.js';
 import { Player } from './stories/player.js';
@@ -74,23 +75,35 @@ function Medidas({ metricas }) {
       <dd><b>${(metricas[chave] * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</b><span>${frase}</span></dd></div>`)}</dl>`;
 }
 
-function Compartilhar() {
+// Ações embaixo dos stories: pôster em PNG (Canvas, no aparelho), playlist em CSV e "ver de novo".
+const segundos = (ms) => (ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+function Acoes({ d, aoRepetir }) {
   const [ocupado, setOcupado] = useState('');
+  const [aviso, setAviso] = useState('');
   const [erro, setErro] = useState('');
-  const gerar = async (acao, rotulo) => {
-    setOcupado(rotulo); setErro('');
-    try { baixar(await executar(acao, [], { saida: 'arquivo' })); } catch (e) { setErro(e.message); } finally { setOcupado(''); }
+  const fazer = async (qual, tarefa) => {
+    setOcupado(qual); setAviso(''); setErro('');
+    try { await tarefa(); } catch (e) { setErro(e.message); } finally { setOcupado(''); }
   };
-  const botao = (acao, rotulo) => html`<button type="button" class="btn btn-borda vidro" disabled=${!!ocupado} onClick=${() => gerar(acao, rotulo)}>${ocupado === rotulo ? 'Gerando…' : rotulo}</button>`;
+  const poster = () => fazer('poster', async () => {
+    const inicio = performance.now();
+    const blob = await desenharPosterDupla(d);
+    const ms = performance.now() - inicio;
+    const como = await compartilhar(blob, 'syncup-dupla.png', 'Nossa sintonia no SyncUp');
+    setAviso(como === 'cancelado' ? '' : `Pôster pronto em ${segundos(ms)} s${como === 'baixado' ? ' (baixado como syncup-dupla.png)' : ''}.`);
+  });
+  const playlist = () => fazer('playlist', async () => baixar(await executar('playlist_dupla', [], { saida: 'arquivo' })));
   return html`
-    <div class="compartilhar">
-      <p>Tudo é gerado aqui no seu aparelho.</p>
-      <div class="acoes">${botao('cartao_dupla', 'Cartão da dupla · PNG')}${botao('cartao_sintonia', 'Story da sintonia · PNG')}${botao('playlist_dupla', 'Playlist comum · CSV')}</div>
-      ${erro && html`<p class="erro" role="alert">${erro}</p>`}
-    </div>`;
+    <div class="compartilhar"><div class="acoes">
+      <button type="button" class="btn btn-verde" onClick=${poster} disabled=${!!ocupado}>${ocupado === 'poster' ? 'Gerando…' : 'Compartilhar pôster'}</button>
+      <button type="button" class="btn btn-borda vidro" onClick=${playlist} disabled=${!!ocupado}>${ocupado === 'playlist' ? 'Gerando…' : 'Playlist comum · CSV'}</button>
+      <button type="button" class="btn btn-borda vidro" onClick=${aoRepetir}>↺ Ver de novo</button>
+    </div>
+    ${aviso && html`<p class="nota" role="status">${aviso}</p>`}
+    ${erro && html`<p class="erro vidro" role="alert">Não deu certo: ${erro}</p>`}</div>`;
 }
 
-const ABAS = ['Rankings', 'Gráficos', 'Compartilhar', 'Detalhes técnicos'];
+const ABAS = ['Rankings', 'Gráficos', 'Detalhes técnicos'];
 
 export function Resultado({ r }) {
   const [aba, setAba] = useState(0);
@@ -123,14 +136,13 @@ export function Resultado({ r }) {
       <${Grafico} figura=${g.artistas} titulo="Artistas mais ouvidos, lado a lado" /><${Grafico} figura=${g.horarios} titulo="Quando cada um ouve" />
       <${Grafico} figura=${g.tracos} titulo="Traços de escuta" /><${Grafico} figura=${g.rankings} titulo="Rankings comparados" /><${Grafico} figura=${g.meses} titulo="Horas por mês" /></div>
       <${Html} conteudo=${h.corrida} />`,
-    () => html`<${Compartilhar} />`,
     () => html`<${Medidas} metricas=${r.metricas} />
       <p class="nota">${r.aviso}</p>
       <p class="nota">Quase juntos (até 1 h de distância): <b>${r.quase.artistas.toLocaleString('pt-BR')}</b> pares com o mesmo artista e <b>${r.quase.musicas.toLocaleString('pt-BR')}</b> com a mesma música.</p>
       <details class="vidro detalhe"><summary>Exemplos de quase juntos</summary><${Tabela} titulo="Mesmo artista" tabela=${t.quase_artistas} /><${Tabela} titulo="Mesma música" tabela=${t.quase_musicas} /></details>
       <${Tabela} titulo="Contribuição de cada artista ao cosseno" tabela=${t.contribuicoes} /><${Tabela} titulo="Diversidade" tabela=${t.diversidade} />
       <${Tabela} titulo="Minutos por execução" tabela=${t.estatisticas} /><${Tabela} titulo="Diagnóstico dos arquivos" tabela=${t.diagnostico} /><${Tabela} titulo="Playlist comum" tabela=${t.playlist} />
-      <p class="nota">As tabelas mostram as 20 primeiras linhas. A playlist inteira está em Compartilhar, no CSV.</p>`,
+      <p class="nota">As tabelas mostram as 20 primeiras linhas. A playlist inteira está no botão “Playlist comum · CSV”, logo abaixo dos stories.</p>`,
   ];
   return html`
     <section class="resultado" aria-labelledby="titulo-resultado">
@@ -139,9 +151,7 @@ export function Resultado({ r }) {
       <div ref=${stories} class="nucleo">
         <${Player} key=${r} slides=${slides} rotulo=${`Dupla de ${a} e ${b}`} />
       </div>
-      <div class="compartilhar"><div class="acoes">
-        <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
-      </div></div>
+      <${Acoes} d=${r.dupla} aoRepetir=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))} />
       <div class="sub-abas" role="tablist" aria-label="Partes do resultado" onKeyDown=${teclar}>
         ${ABAS.map((rotulo, i) => html`<button ref=${(el) => (botoes.current[i] = el)} role="tab" id=${`aba-${i}`} aria-selected=${aba === i} aria-controls=${`painel-${i}`} tabindex=${aba === i ? 0 : -1} onClick=${() => setAba(i)}>${rotulo}</button>`)}
       </div>

@@ -140,12 +140,107 @@ export async function desenharPoster(d, capas) {
   return new Promise((ok, falha) => canvas.toBlob((blob) => (blob ? ok(blob) : falha(new Error('Não deu para gerar a imagem.'))), 'image/png'));
 }
 
+// Pôster da Dupla (último story): mesmo layout do story, sem capas. Verde = A, violeta = B, rosa = juntos.
+const VIOLETA = '#c4b7ff', ROSA = '#f573a0';
+export async function desenharPosterDupla(d) {
+  await Promise.all([FONTE(900, 64), FONTE(800, 36), FONTE(400, 36)].map((f) => document.fonts.load(f).catch(() => null)));
+  const canvas = Object.assign(document.createElement('canvas'), { width: L, height: A });
+  const ctx = canvas.getContext('2d');
+  const s = d.sintonia;
+
+  // Fundo: preto com o degradê da dupla (verde no alto, violeta embaixo) e o véu.
+  ctx.fillStyle = '#0b0b0c'; ctx.fillRect(0, 0, L, A);
+  for (const [cx, cy, raio, cor] of [[L * 0.1, 0, A * 0.8, 'rgba(30,215,96,.75)'], [L, A, A * 0.8, 'rgba(196,183,255,.6)']]) {
+    const m = ctx.createRadialGradient(cx, cy, 0, cx, cy, raio);
+    m.addColorStop(0, cor); m.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = m; ctx.fillRect(0, 0, L, A);
+  }
+  const veu = ctx.createLinearGradient(0, 0, 0, A * 0.7);
+  veu.addColorStop(0, 'rgba(0,0,0,.5)'); veu.addColorStop(1, 'rgba(0,0,0,.75)');
+  ctx.fillStyle = veu; ctx.fillRect(0, 0, L, A);
+
+  // Topo: as 4 barras do SyncUp + período.
+  [0.55, 1, 0.4, 0.75].forEach((h, k) => { ctx.fillStyle = VERDE; retangulo(ctx, M + k * 16, 150 - 48 * h, 10, 48 * h, 5); ctx.fill(); });
+  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 48); ctx.fillText('SyncUp', M + 78, 150);
+  ctx.font = FONTE(400, 34); ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.textAlign = 'right';
+  ctx.fillText(`${mesAno(d.inicio)} → ${mesAno(d.fim)}`, L - M, 148); ctx.textAlign = 'left';
+
+  // Avatares sobrepostos com as iniciais (A na frente, como no story).
+  const inicial = (nome) => (nome.trim()[0] || '?').toUpperCase();
+  [[d.b, VIOLETA, M + 150], [d.a, VERDE, M + 60]].forEach(([p, cor, cx]) => {
+    ctx.beginPath(); ctx.arc(cx, 300, 60, 0, 2 * Math.PI); ctx.fillStyle = cor; ctx.fill();
+    ctx.lineWidth = 6; ctx.strokeStyle = '#0b0b0c'; ctx.stroke();
+    ctx.fillStyle = '#000'; ctx.font = FONTE(900, 56); ctx.textAlign = 'center'; ctx.fillText(inicial(p.nome), cx, 320); ctx.textAlign = 'left';
+  });
+
+  // "Ana + Bruno" numa linha (a fonte encolhe até 88 px); se não couber, "Ana +" / "Bruno" em duas.
+  const largura = (px) => { ctx.font = FONTE(900, px); return ctx.measureText(`${d.a.nome} + ${d.b.nome}`).width; };
+  let px = 120;
+  while (px > 88 && largura(px) > UTIL) px -= 4;
+  const umaLinha = largura(px) <= UTIL;
+  if (!umaLinha) ctx.font = FONTE(900, (px = 100));
+  const nomeA = umaLinha ? d.a.nome : cortar(ctx, d.a.nome, UTIL - ctx.measureText(' +').width);
+  ctx.fillStyle = VERDE; ctx.fillText(nomeA, M, 520);
+  ctx.fillStyle = '#fff'; ctx.fillText(' +', M + ctx.measureText(nomeA).width, 520);
+  const dy = umaLinha ? 0 : 110; // tudo abaixo desce uma linha
+  ctx.fillStyle = VIOLETA;
+  if (umaLinha) ctx.fillText(d.b.nome, M + ctx.measureText(`${nomeA} + `).width, 520);
+  else ctx.fillText(cortar(ctx, d.b.nome, UTIL), M, 520 + dy);
+
+  // Escuta em comum.
+  const pct = `${fmtNum(Math.round(d.match * 100))}%`;
+  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 200); ctx.fillText(pct, M, 750 + dy);
+  const xp = M + ctx.measureText(pct).width + 28;
+  ctx.font = FONTE(800, 40); ctx.fillText('de escuta', xp, 680 + dy); ctx.fillText('em comum', xp, 730 + dy);
+  ctx.font = FONTE(400, 38); ctx.fillStyle = 'rgba(255,255,255,.85)';
+  ctx.fillText(`${fmtNum(d.total_comuns)} ${d.total_comuns === 1 ? 'artista' : 'artistas'} em comum`, M, 820 + dy);
+
+  // Em sintonia (rosa): só quando houve música ao mesmo tempo.
+  let y = 880 + dy;
+  if (s?.momentos > 0) {
+    const h = s.musica ? 250 : 190;
+    retangulo(ctx, M, y, UTIL, h, 40);
+    ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(245,115,160,.8)'; ctx.lineWidth = 4; ctx.stroke();
+    ctx.fillStyle = ROSA; ctx.font = FONTE(800, 30); ctx.fillText('EM SINTONIA', M + 48, y + 70);
+    ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 60); ctx.fillText(cortar(ctx, `${fmtNum(s.minutos)} min ouvindo juntos`, UTIL - 96), M + 48, y + 145);
+    if (s.musica) { ctx.font = FONTE(400, 36); ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillText(cortar(ctx, `A música de vocês: ${s.musica.nome}`, UTIL - 96), M + 48, y + 210); }
+    y += h + 50;
+  }
+
+  // Artistas em comum em pílulas (quebram de linha; o que não cabe em 2 linhas fica de fora).
+  let xc = M, linhas = 1;
+  for (const c of d.em_comum) {
+    ctx.font = FONTE(800, 36);
+    const nome = cortar(ctx, c.nome, UTIL - 64);
+    const w = ctx.measureText(nome).width + 64;
+    if (xc + w > L - M) { if (++linhas > 2) break; xc = M; y += 96; }
+    xc = pilula(ctx, nome, xc, y);
+  }
+  if (d.em_comum.length) y += 96 + 40;
+
+  // Convite: o gancho para quem vê o story abrir o SyncUp.
+  const yK = Math.max(y, 1380), hK = 300;
+  retangulo(ctx, M, yK, UTIL, hK, 48);
+  ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(30,215,96,.75)'; ctx.lineWidth = 4; ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 66); ctx.fillText('Qual é a nossa sintonia?', M + 56, yK + 110);
+  ctx.fillStyle = VERDE; ctx.font = FONTE(800, 46); ctx.fillText('Compare comigo →', M + 56, yK + 185);
+  ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.font = FONTE(400, 40); ctx.fillText('hazykiuu.github.io/SyncUp', M + 56, yK + 250);
+
+  // Regra de ética do projeto: o número fala da escuta, não das pessoas.
+  ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.font = FONTE(400, 30);
+  ctx.fillText('Mede a escuta neste período, não afinidade entre pessoas.', M, Math.min(yK + hK + 90, A - 80));
+
+  return new Promise((ok, falha) => canvas.toBlob((blob) => (blob ? ok(blob) : falha(new Error('Não deu para gerar a imagem.'))), 'image/png'));
+}
+
 // Celular: abre a folha de compartilhar (Instagram, WhatsApp…). Sem suporte: baixa o PNG.
-export async function compartilhar(blob) {
-  const arquivo = new File([blob], 'syncup-wrapped.png', { type: 'image/png' });
+export async function compartilhar(blob, nome = 'syncup-wrapped.png', titulo = 'Meu SyncUp Wrapped') {
+  const arquivo = new File([blob], nome, { type: 'image/png' });
   if (navigator.canShare?.({ files: [arquivo] })) {
     try {
-      await navigator.share({ files: [arquivo], title: 'Meu SyncUp Wrapped', text: 'Qual é a nossa sintonia? hazykiuu.github.io/SyncUp' });
+      await navigator.share({ files: [arquivo], title: titulo, text: 'Qual é a nossa sintonia? hazykiuu.github.io/SyncUp' });
       return 'compartilhado';
     } catch (e) { if (e.name === 'AbortError') return 'cancelado'; }
   }

@@ -265,22 +265,6 @@ def _resultado() -> ResultadoComparacao:
     return _ultimo['dupla']
 
 
-def cartao_dupla() -> str:
-    """Ação ``gerar_cartao``: PNG do resultado da Dupla; devolve o caminho no sistema virtual."""
-    from cartao import gerar_cartao  # Pillow sob demanda
-
-    SAIDA.mkdir(parents=True, exist_ok=True)
-    return str(gerar_cartao(_resultado(), SAIDA / 'SyncUp_cartao.png'))
-
-
-def cartao_sintonia() -> str:
-    """Ação ``baixar_sintonia``: story PNG da sintonia da Dupla."""
-    from cartao import gerar_cartao_sintonia  # Pillow sob demanda
-
-    SAIDA.mkdir(parents=True, exist_ok=True)
-    return str(gerar_cartao_sintonia(_resultado(), SAIDA / 'SyncUp_sintonia.png'))
-
-
 def playlist_dupla() -> str:
     """Ação ``exportar_playlist``: CSV protegido da playlist comum."""
     SAIDA.mkdir(parents=True, exist_ok=True)
@@ -298,9 +282,7 @@ def wrapped(arquivos: list[str], nome: str, opcoes: dict | None = None) -> dict:
         False,  # sem cache em disco no navegador
         bool(o.get('deduplicar', False)),
     )
-    _ultimo.pop('wrapped', None)  # o anterior não fica vivo durante o novo pico
     w = wrapped_de_arquivos(arquivos, (nome or '').strip() or 'Você', config)
-    _ultimo['wrapped'] = w
     return {
         'nome': w.nome,
         'arquetipos': stories.arquetipos_detalhe_html(w),
@@ -371,16 +353,6 @@ def _trilha(w: Any) -> dict:
         # Acabaram as mais ouvidas? Seguem as mais famosas dos top artistas, sem repetir.
         'fila': [m for m in tops[:10] if m] + lista(*(artista(a.nome) for a in w.top_artistas[:5])),
     }
-
-
-def cartao_wrapped() -> str:
-    """Ação ``baixar_wrapped``: story PNG 1080×1920 do Wrapped."""
-    from cartao import gerar_cartao_wrapped  # Pillow sob demanda
-
-    if 'wrapped' not in _ultimo:
-        raise ValueError('Monte o Wrapped antes de baixar.')
-    SAIDA.mkdir(parents=True, exist_ok=True)
-    return str(gerar_cartao_wrapped(_ultimo['wrapped'], SAIDA / 'SyncUp_wrapped.png'))
 
 
 def arquivos_demo(pasta: str = '/tmp/syncup-demo') -> dict:

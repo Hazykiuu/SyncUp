@@ -106,3 +106,23 @@ test('slides condicionais', async () => {
   assert.equal(comCapas[comCapas.indexOf('top_musicas') + 1], 'trilha');
   assert.ok(!tiposDoWrapped({ ...base, top_musicas: [{}] }, { capas: true }).includes('trilha'));
 });
+
+test('stories da dupla: quais entram e as frases', async () => {
+  const { fraseEmComum, frasePosicao, fraseRelogios, tiposDaDupla } = await import('../../site/app/js/stories/logica.js');
+  const musica = { nome: 'Hit', artista: 'Ana', vezes: 2, minutos: 5 };
+  const cheia = { em_comum: [{}], favoritos: [{}, {}], apresentar: [{}], sintonia: { momentos: 3, musica } };
+  assert.deepEqual(tiposDaDupla(cheia), ['abertura', 'em_comum', 'frente', 'apresentar', 'relogios', 'sintonia', 'sintonia_musica', 'poster']);
+  // Sem nada em comum, sem ponte e sem sintonia calculada: fica o esqueleto.
+  assert.deepEqual(tiposDaDupla({ em_comum: [], favoritos: [{}, null], apresentar: [], sintonia: null }), ['abertura', 'relogios', 'poster']);
+  // Sintonia calculada, mas nenhuma música ao mesmo tempo: só a tela dos "quase juntos".
+  const quase = tiposDaDupla({ ...cheia, sintonia: { momentos: 0, musica: null } });
+  assert.ok(quase.includes('sintonia') && !quase.includes('sintonia_musica'));
+
+  assert.deepEqual([0.05, 0.1, 0.3, 0.6].map(fraseEmComum), ['Cada um no seu som.', 'Alguns pontos em comum.', 'Bastante coisa em comum.', 'Quase a mesma trilha.']);
+  assert.equal(frasePosicao(14, 'Bruno'), 'No ranking de Bruno, é o 14º.');
+  assert.equal(frasePosicao(1, 'Bruno'), 'Também é o nº 1 de Bruno.');
+  assert.equal(frasePosicao(null, 'Bruno'), 'Não aparece no ranking de Bruno.');
+  assert.equal(fraseRelogios(23, 0), 'Vocês ouvem no mesmo horário.'); // dá a volta no relógio
+  assert.equal(fraseRelogios(9, 13), 'Horários parecidos.');
+  assert.equal(fraseRelogios(9, 22), 'Cada um no seu turno.');
+});

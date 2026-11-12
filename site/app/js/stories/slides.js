@@ -30,7 +30,7 @@ const Marca = ({ link }) => html`<div class="st-marca">
 </div>`;
 
 // Contador que sobe até o valor (menos movimento: valor final direto).
-function Contador({ valor, casas = 0, ativo }) {
+export function Contador({ valor, casas = 0, ativo }) {
   const [v, setV] = useState(ativo ? 0 : valor);
   useEffect(() => {
     if (!ativo || matchMedia('(prefers-reduced-motion: reduce)').matches) { setV(valor); return undefined; }
@@ -43,9 +43,10 @@ function Contador({ valor, casas = 0, ativo }) {
 }
 
 // Moldura comum: fundo em gradiente com a cor média da capa (--capa), lida de uma cópia escondida.
-function Slide({ tipo, i, capa, link, children }) {
+// `cor` fixa a cor de partida (a Dupla usa rosa na sintonia) e `classe` acrescenta um tema (st-duo).
+export function Slide({ tipo, i, capa, link, cor: corInicial, classe = '', children }) {
   const raiz = useRef(null);
-  const [cor, setCor] = useState(corReserva(i));
+  const [cor, setCor] = useState(corInicial || corReserva(i));
   const lerCor = (e) => {
     try {
       const c = Object.assign(document.createElement('canvas'), { width: 16, height: 16 }).getContext('2d', { willReadFrequently: true });
@@ -57,7 +58,7 @@ function Slide({ tipo, i, capa, link, children }) {
     } catch { /* imagem sem CORS: fica a cor de reserva */ }
   };
   return html`
-    <section ref=${raiz} class=${`su-story ativo st s-${tipo}`} style=${{ '--capa': cor.join(' ') }}>
+    <section ref=${raiz} class=${`su-story ativo st s-${tipo} ${classe}`} style=${{ '--capa': cor.join(' ') }}>
       <div class="st-fundo" aria-hidden="true">${capa && html`<img src=${capa} alt="" crossorigin="anonymous" onLoad=${lerCor} />`}</div>
       <div class="st-veu" aria-hidden="true"></div>
       <div class="st-conteudo">${children}${doSpotify(capa) && html`<${Marca} link=${link} />`}</div>
@@ -72,7 +73,7 @@ function Capa({ item, tipo, classe = '' }) {
     : html`<span class=${`st-capa st-capa-tipo ${classe}`} style=${{ '--hue': hashNome(nome) % 360 }} aria-hidden="true">${nome.slice(0, 1).toUpperCase()}</span>`;
 }
 
-const Entra = ({ i, tag = 'div', classe = '', children }) => html`<${tag} class=${`entra ${classe}`} style=${{ '--i': i }}>${children}<//>`;
+export const Entra = ({ i, tag = 'div', classe = '', children }) => html`<${tag} class=${`entra ${classe}`} style=${{ '--i': i }}>${children}<//>`;
 
 export function Intro({ d, ativo, i }) {
   const dias = d.horas / 24;
@@ -103,7 +104,7 @@ export function Artista({ d, ativo, i }) {
   <//>`;
 }
 
-const Kicker = ({ i = 0, children }) => html`<${Entra} i=${i} tag="span" classe="st-kicker">${children}<//>`;
+export const Kicker = ({ i = 0, children }) => html`<${Entra} i=${i} tag="span" classe="st-kicker">${children}<//>`;
 const hora = (iso) => iso.slice(11, 16);
 
 export function Primeira({ d, i }) {

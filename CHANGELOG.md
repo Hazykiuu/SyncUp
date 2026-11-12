@@ -1,5 +1,19 @@
 # Changelog — SyncUp
 
+## [1.6.0] — 2026-11-12
+
+Dupla do app no navegador em stories: uma história no topo e os detalhes embaixo.
+
+### Mudado
+- **Dupla "stories primeiro"**: 7 stories no mesmo player do Wrapped (abertura com o % de escuta em comum, o que une vocês, frente a frente, para apresentar, relógios, em sintonia e o pôster). Verde = pessoa A, violeta = pessoa B, rosa = os dois juntos; todo valor tem o nome ao lado.
+- **3 abas em vez de 7**: Rankings (no celular, uma pessoa por vez), Gráficos (com a corrida de artistas) e Detalhes técnicos (as 4 medidas, cada uma com uma frase dizendo o que mede).
+- **Pôster da dupla em PNG desenhado no navegador** (Canvas), com "Compartilhar pôster" no celular; "Playlist comum · CSV" e "Ver de novo" embaixo dos stories. O app web não baixa mais o Pillow.
+- A Dupla não calcula mais o Wrapped de cada pessoa: a comparação ficou mais leve.
+- Vidro "Sintonia" no app: borda em degradê verde → violeta, painéis sem blur (mais leve no celular), espaços e cantos em uma escala só.
+
+### Corrigido
+- Erros com "Tentar de novo", estados vazios que explicam o que falta, anúncio do resultado para leitor de tela e confirmação antes de apagar as capas guardadas.
+
 ## [1.5.1] — 2026-11-10
 
 Correções de uma auditoria de segurança e resiliência.

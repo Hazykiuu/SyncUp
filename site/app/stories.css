@@ -176,6 +176,58 @@
 .st-spotify:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .st-replay { justify-self: start; min-height: 44px !important; padding: 0 5cqw; border-radius: var(--raio-chip); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
 
+/* Dupla: verde = pessoa A, violeta = pessoa B, rosa = os dois juntos (a cor vem do slide). */
+.st-duo .st-fundo { background: radial-gradient(120% 80% at 8% 0%, rgb(30 215 96 / .9), transparent 58%),
+  radial-gradient(120% 90% at 100% 100%, rgb(196 183 255 / .78), transparent 55%), #0b0b0c; }
+/* Véu mais leve que o do Wrapped: o violeta de B, embaixo, precisa aparecer (o texto segue acima de 9:1). */
+.st-duo .st-veu { background: linear-gradient(180deg, rgba(0, 0, 0, .5) 0%, rgba(0, 0, 0, .64) 70%); }
+.st-duo .st-vidro { border-color: rgba(255, 255, 255, .28); }
+.st-a { color: var(--verde, #1ed760); } .st-b { color: #c4b7ff; }
+.st-quebra { overflow-wrap: anywhere; }
+.st-avatares { display: flex; }
+.st-avatares span { display: grid; place-items: center; width: 18cqw; aspect-ratio: 1; border-radius: 50%; font-size: 8cqw; font-weight: 900; color: #000;
+  background: var(--verde, #1ed760); box-shadow: 0 2cqw 6cqw rgba(0, 0, 0, .4); }
+.st-avatares span + span { margin-left: -4cqw; background: #c4b7ff; }
+.st-comuns { list-style: none; margin: 2cqw 0; padding: 0; display: grid; gap: 6cqw; }
+.st-comuns li { display: grid; gap: 1.8cqw; }
+.st-comuns b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 5.6cqw; font-weight: 900; }
+.st-par { display: grid; grid-template-columns: 25cqw minmax(0, 1fr) 14cqw; gap: 2.4cqw; align-items: center; font-size: 3.4cqw; }
+.st-par small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: rgba(255, 255, 255, .78); }
+.st-par em { font-style: normal; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+.st-par .st-barra-valor { height: 3.4cqw; }
+.st-barra-valor.a { background: var(--verde, #1ed760); } .st-barra-valor.b { background: #c4b7ff; }
+.st-frente { display: grid; gap: 3cqw; }
+.st-frente { margin: 1cqw 0; }
+.st-frente > div { display: grid; gap: 1.6cqw; padding: 5cqw; border-radius: var(--raio-cartao); }
+.st-frente b { font-size: 8cqw; font-weight: 900; line-height: 1.02; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.st-frente small { font-size: 3.5cqw; color: rgba(255, 255, 255, .82); }
+.st-frente small.st-a, .st-frente small.st-b { font-weight: 800; letter-spacing: .04em; }
+.st-frente small.st-a { color: var(--verde, #1ed760); } .st-frente small.st-b { color: #c4b7ff; }
+.st-duo .st-lado-a { border-color: rgba(30, 215, 96, .6); } .st-duo .st-lado-b { border-color: rgba(196, 183, 255, .65); }
+.st-pontes { list-style: none; margin: 0; padding: 0; display: grid; gap: 2.4cqw; }
+.st-pontes li { display: grid; gap: .6cqw; padding: 3cqw 4cqw; border-radius: 4cqw; }
+.st-pontes small { font-size: 3cqw; color: rgba(255, 255, 255, .75); }
+.st-pontes a { display: inline-flex; align-items: center; min-height: 44px; color: #fff; font-size: 5cqw; font-weight: 900; text-decoration: underline; text-underline-offset: .2em; overflow-wrap: anywhere; }
+.st-pontes a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.st-relogio-duplo line { stroke-width: 2.6; }
+.st-relogio-duplo line.a { stroke: rgba(30, 215, 96, .78); } .st-relogio-duplo line.b { stroke: rgba(196, 183, 255, .82); }
+.st-relogio-duplo line.a.pico { stroke: var(--verde, #1ed760); stroke-width: 4.4; } .st-relogio-duplo line.b.pico { stroke: #fff; stroke-width: 4.4; }
+.st-nome-xxl.st-nome-medio { font-size: 9.5cqw; text-transform: none; line-height: 1; }
+.st-meses { display: grid; gap: 1.6cqw; }
+.st-meses small { font-size: 3cqw; font-weight: 700; color: rgba(255, 255, 255, .78); }
+.st-meses .st-colunas { height: 20cqw; gap: .8cqw; }
+/* Linha de base: os meses sem sintonia aparecem como um traço, não como um vazio. */
+.st-meses .st-colunas span { display: none; }
+.st-meses .st-colunas > div { grid-template-rows: 1fr auto; }
+.st-meses .st-colunas i { box-shadow: 0 2px 0 rgba(255, 255, 255, .28); min-height: 2px; }
+.st-meses .st-colunas em { min-height: 3.4cqw; }
+.st-poster-sintonia { display: grid; gap: 1cqw; padding: 4cqw; border-color: rgba(245, 115, 160, .7) !important; }
+.st-poster-sintonia b { font-size: 5.6cqw; font-weight: 900; line-height: 1.05; }
+.st-poster-sintonia small { font-size: 3.2cqw; color: rgba(255, 255, 255, .8); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.s-poster .st-conteudo { gap: 3cqw; }
+.s-poster .st-avatares span { width: 15cqw; font-size: 6.6cqw; }
+.s-poster .st-poster-fatos span { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display: inline-block; }
+
 /* 5. Movimento: só opacity e transform; só o slide ativo anima */
 @keyframes st-progresso { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes st-entra { from { opacity: 0; transform: translateY(16px); } }

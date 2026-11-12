@@ -161,3 +161,39 @@ export function descobertasCurta(medida) {
   const n = Math.max(1, Math.round(1 / medida));
   return { n, frase: medida >= 0.06 ? 'Você vive caçando som novo.' : 'Você sabe do que gosta.' };
 }
+
+/* ---------- Stories da Dupla (dados: `dupla` da ponte) ---------- */
+// Quais stories entram, na ordem. A sintonia tem 2 telas quando houve música ao mesmo tempo.
+export function tiposDaDupla(d) {
+  const s = d.sintonia;
+  return [
+    'abertura',
+    d.em_comum.length > 0 && 'em_comum',
+    d.favoritos.every(Boolean) && 'frente',
+    d.apresentar.length > 0 && 'apresentar',
+    'relogios',
+    s && 'sintonia',
+    s && s.momentos > 0 && s.musica && 'sintonia_musica',
+    'poster',
+  ].filter(Boolean);
+}
+
+// Frases neutras: falam da escuta no período, nunca de afinidade entre as pessoas.
+export function fraseEmComum(match) {
+  if (match >= 0.6) return 'Quase a mesma trilha.';
+  if (match >= 0.3) return 'Bastante coisa em comum.';
+  if (match >= 0.1) return 'Alguns pontos em comum.';
+  return 'Cada um no seu som.';
+}
+export function frasePosicao(posicao, nome) {
+  if (posicao == null) return `Não aparece no ranking de ${nome}.`;
+  if (posicao === 1) return `Também é o nº 1 de ${nome}.`;
+  return `No ranking de ${nome}, é o ${posicao}º.`;
+}
+// Distância entre as horas de pico, dando a volta no relógio (23h e 1h ficam a 2 h).
+export function fraseRelogios(picoA, picoB) {
+  const distancia = Math.min(Math.abs(picoA - picoB), 24 - Math.abs(picoA - picoB));
+  if (distancia <= 1) return 'Vocês ouvem no mesmo horário.';
+  if (distancia <= 4) return 'Horários parecidos.';
+  return 'Cada um no seu turno.';
+}

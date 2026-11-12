@@ -1,5 +1,27 @@
 # Changelog — SyncUp
 
+## [1.7.0] — 2026-11-12
+
+Visual novo no site e no app do navegador, com vidro, movimento e detalhes musicais.
+
+### Mudado
+- **Página inicial nova**: os stories de verdade da Dupla no topo (com dados fictícios), recursos com prévias ao vivo, "Quando cada um ouve" (as 24 horas de duas pessoas), passos como faixas de um disco e uma pauta no rodapé.
+- **App do navegador**: barra de modos embaixo no celular e na lateral no computador; Match e Grupo marcados como "em breve"; cartões "Lado A" e "Lado B"; carregamento em forma de equalizador.
+- **Vidro**: desfoque real só no computador; no celular, painéis sem desfoque para manter a rolagem leve.
+- **Afinador da sintonia**: na abertura da Dupla, o % de escuta em comum aparece num afinador (100% = afinados, A4 · 440 Hz; abaixo disso, desvio em cents).
+- **Transição ao abrir o app**: um círculo que se abre a partir do clique (navegadores com View Transitions; com "menos movimento", sem animação).
+- **Stories** com coreografia de entrada; no Wrapped, cada story dura 13 s (antes 10 s).
+- **Wrapped começa sempre com capas e som**: o toque em "Montar meu Wrapped" já libera o áudio. A nota do que vai para a internet fica sempre visível.
+- **Pôsteres**: a pessoa em destaque (nome, horas e artista maiores); o convite virou uma linha discreta no pé.
+- README e imagens atualizados: o app do navegador vem primeiro.
+
+### Corrigido
+- Gráficos da Dupla que não apareciam e o relógio do Wrapped encolhido (regra de ícones larga demais).
+- Texto encostado na borda dos botões.
+- Rolagem lateral no celular de 390 px.
+- No Wrapped, o topo dizia "Nada é enviado para nenhum servidor"; agora diz que o histórico não sai do aparelho.
+- Som bloqueado pelo navegador leva de volta ao botão "Ligar capas e som".
+
 ## [1.6.0] — 2026-11-12
 
 Dupla do app no navegador em stories: uma história no topo e os detalhes embaixo.

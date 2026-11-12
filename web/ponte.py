@@ -21,8 +21,6 @@ from analise import ResultadoComparacao, comparar
 from apresentacao import (
     _configuracao,
     _diversidade,
-    perfil_card,
-    resumo_html,
     tabela_display,
     texto_periodo,
 )
@@ -103,9 +101,6 @@ def comparar_dupla(
             'ruzicka': m.jaccard_ponderado,
         },
         'html': {
-            'resumo': resumo_html(r),
-            'perfis': [perfil_card(a, 'green'), perfil_card(b, 'violet')],
-            'sintonia': componentes.sintonia_html(r),
             'corrida': componentes.corrida_html(r),
             'listas': [
                 componentes.lista_top(a.artistas, componentes.VERDE, f'Top artistas · {a.nome}'),

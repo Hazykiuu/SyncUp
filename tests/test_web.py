@@ -57,7 +57,7 @@ def test_comparar_dupla_igual_ao_nucleo_e_vira_json(zips: tuple[str, str]) -> No
     referencia = comparar(a, b, 'Ana', 'Bia', configuracao=ConfiguracaoCarga(), ponderacao='raiz')
     assert r['metricas']['cosseno'] == pytest.approx(referencia.metricas.cosseno)
     assert set(r['graficos']) == {'artistas', 'horarios', 'tracos', 'rankings', 'meses'}
-    assert r['html']['resumo'] and len(r['html']['perfis']) == 2
+    assert set(r['html']) == {'corrida', 'listas'}  # o resto vem em `dupla` (JSON) e o app desenha
     assert r['tabelas']['playlist']['colunas']
 
 

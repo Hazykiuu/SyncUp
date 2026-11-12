@@ -167,11 +167,7 @@ function Poster({ d, ativo, i }) {
       ${s.musica && html`<small>A música de vocês: ${s.musica.nome}</small>`}
     <//>`}
     ${d.em_comum.length > 0 && html`<${Entra} i=${5} classe="st-poster-fatos">${d.em_comum.map((c) => html`<span class="st-vidro">${c.nome}</span>`)}<//>`}
-    <${Entra} i=${6} classe="st-poster-convite st-vidro">
-      <b>Qual é a nossa sintonia?</b>
-      <span>Compare comigo →</span>
-      <small>hazykiuu.github.io/SyncUp</small>
-    <//>
+    <${Entra} i=${6} tag="p" classe="st-poster-pe">Compare a sua sintonia comigo · <b>hazykiuu.github.io/SyncUp</b><//>
   <//>`;
 }
 

@@ -134,18 +134,18 @@
 .st-player .st-barra, .st-player .st-controles { transition: opacity .4s ease; }
 .st-player.limpo .st-barra, .st-player.limpo .st-controles { opacity: 0; }
 /* Pôster (último story): é o print que vai para o Instagram. Fotos e capas nítidas, texto só ao lado. */
-.s-resumo .st-conteudo { gap: 3cqw; }
+.s-resumo .st-conteudo, .s-poster .st-conteudo { gap: 2.6cqw; padding-top: 15cqw; padding-bottom: 6cqw; }
 .st-poster-topo { display: flex; align-items: center; justify-content: space-between; }
 .st-poster-topo .marca { font-size: 4.6cqw; }
 .st-poster-topo small { font-size: 3cqw; color: rgba(255, 255, 255, .7); }
 .st-poster-nome { display: grid; gap: 1cqw; }
-.st-poster-nome .st-nome-xxl { font-size: 11cqw; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.st-poster-nome .st-nome-xxl { font-size: 12.5cqw; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .st-poster-nome p { font-size: 3.4cqw; }
-.st-poster-horas { font-size: 6cqw; font-weight: 900; color: var(--verde); font-variant-numeric: tabular-nums; }
+.st-poster-horas { font-size: 8cqw; font-weight: 900; color: var(--verde); font-variant-numeric: tabular-nums; }
 .st-poster-artista { display: grid; grid-template-columns: 30cqw minmax(0, 1fr); gap: 4cqw; align-items: center; }
 .st-poster-artista .st-capa { font-size: 14cqw; }
 .st-poster-artista div { display: grid; gap: 1cqw; min-width: 0; }
-.st-poster-artista b { font-size: 6.4cqw; font-weight: 900; line-height: 1; overflow-wrap: anywhere; }
+.st-poster-artista b { font-size: 7cqw; font-weight: 900; line-height: 1; overflow-wrap: anywhere; }
 .st-poster-artista small { font-size: 3.2cqw; color: rgba(255, 255, 255, .7); }
 .st-poster-capas { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.6cqw; }
 .st-poster-capas .st-capa { width: 100%; font-size: 6cqw; box-shadow: none; }
@@ -153,10 +153,11 @@
 .st-poster-musicas p b { color: var(--verde); }
 .st-poster-fatos { display: flex; flex-wrap: wrap; gap: 2cqw; }
 .st-poster-fatos span { display: inline-flex; align-items: center; gap: 1.4cqw; padding: 2cqw max(3.4cqw, 12px); border-radius: var(--raio-chip); font-size: 3.4cqw; font-weight: 800; }
-.st-poster-convite { display: grid; gap: .8cqw; padding: 4cqw; border-radius: var(--raio-cartao); border-color: rgba(30, 215, 96, .7) !important; }
-.st-poster-convite b { font-size: 5.6cqw; font-weight: 900; line-height: 1.05; }
-.st-poster-convite span { font-size: 3.8cqw; font-weight: 800; color: var(--verde); }
-.st-poster-convite small { font-size: 3.2cqw; color: rgba(255, 255, 255, .8); letter-spacing: .02em; }
+/* O convite é um pé discreto: a ênfase do pôster é a pessoa (ou a dupla), não o site. */
+.st-poster-pe { margin-top: auto !important; padding-top: 2.6cqw; border-top: 1px solid rgba(255, 255, 255, .16); font-size: 3.2cqw; color: rgba(255, 255, 255, .72) !important; }
+.st-poster-pe b { color: #fff; font-weight: 800; }
+/* O bloco da pessoa fica no meio: o espaço livre se divide entre o topo e o pé. */
+.st-poster-topo + * { margin-top: auto !important; }
 .st-capa.pequena { width: 14cqw; font-size: 7cqw; border-radius: 50%; }
 /* "Sua trilha": a nº 1 em 2×2 e as outras 8 em volta; nomes fora das capas (regras do Spotify). */
 .st-mosaico { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.6cqw; }
@@ -225,8 +226,8 @@
 .st-poster-sintonia { display: grid; gap: 1cqw; padding: 4cqw; border-color: color-mix(in srgb, var(--rosa) 70%, transparent) !important; }
 .st-poster-sintonia b { font-size: 5.6cqw; font-weight: 900; line-height: 1.05; }
 .st-poster-sintonia small { font-size: 3.2cqw; color: rgba(255, 255, 255, .8); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.s-poster .st-conteudo { gap: 3cqw; }
 .s-poster .st-avatares span { width: 15cqw; font-size: 6.6cqw; }
+.s-poster .st-titulo.menor { font-size: 9.5cqw; }
 .s-poster .st-poster-fatos span { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display: inline-block; }
 
 /* 5. Movimento: só opacity e transform; só o slide ativo anima */

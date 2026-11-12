@@ -179,6 +179,10 @@ export function tiposDaDupla(d) {
 }
 
 // Frases neutras: falam da escuta no período, nunca de afinidade entre as pessoas.
+// Sintonia como afinação: 100% de escuta em comum = afinados (0 cents); 0% = −50 cents.
+export const centsDe = (match) => -Math.round((1 - match) * 50) || 0; // arredonda o desvio (13,5 → 14); || 0 evita "−0"
+export const textoCents = (match) => { const c = centsDe(match); return c === 0 ? 'afinados' : `${String(c).replace('-', '−')} cents`; };
+
 export function fraseEmComum(match) {
   if (match >= 0.6) return 'Quase a mesma trilha.';
   if (match >= 0.3) return 'Bastante coisa em comum.';

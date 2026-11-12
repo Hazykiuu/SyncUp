@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { ajustarCor, dataBr, fmtNum, fmtPct, hashNome, inicial, mesAno, pausado, player } from '../../site/app/js/stories/logica.js';
+import { ajustarCor, centsDe, dataBr, fmtNum, fmtPct, hashNome, inicial, mesAno, pausado, player, textoCents } from '../../site/app/js/stories/logica.js';
 
 test('avança, volta e para no fim', () => {
   let e = inicial(3);
@@ -125,4 +125,13 @@ test('stories da dupla: quais entram e as frases', async () => {
   assert.equal(fraseRelogios(23, 0), 'Vocês ouvem no mesmo horário.'); // dá a volta no relógio
   assert.equal(fraseRelogios(9, 13), 'Horários parecidos.');
   assert.equal(fraseRelogios(9, 22), 'Cada um no seu turno.');
+});
+
+// O 73% da página inicial (index.html) mostra "−14 cents": o mesmo número sai daqui.
+test('cents da sintonia', () => {
+  assert.equal(centsDe(1), 0);
+  assert.equal(centsDe(0), -50);
+  assert.equal(centsDe(0.73), -14);
+  assert.equal(textoCents(0.73), '−14 cents');
+  assert.equal(textoCents(0.995), 'afinados');
 });

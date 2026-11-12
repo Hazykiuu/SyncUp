@@ -1,7 +1,7 @@
 // Stories da Dupla, desenhados a partir de `dupla` (JSON da ponte), na moldura do Wrapped.
 // Cor com significado fixo: verde = pessoa A, violeta = pessoa B, rosa = os dois juntos (sintonia).
 import { html } from 'preact-htm';
-import { dataBr, fmtNum, fraseEmComum, frasePosicao, fraseRelogios, mesAno } from './logica.js';
+import { dataBr, fmtNum, fraseEmComum, frasePosicao, fraseRelogios, mesAno, textoCents } from './logica.js';
 import { Contador, Entra, Kicker, Slide } from './slides.js';
 
 const ROSA = [245, 115, 160];
@@ -10,9 +10,7 @@ const Avatares = ({ d }) => html`<div class="st-avatares" aria-hidden="true"><sp
 const Nomes = ({ d }) => html`<span class="st-a">${d.a.nome}</span> + <span class="st-b">${d.b.nome}</span>`;
 const plural = (n, um, varios) => `${fmtNum(n)} ${n === 1 ? um : varios}`;
 
-// Sintonia como afinação: 100% de escuta em comum = afinados (0 cents, A4 = 440 Hz); 0% = −50 cents.
-// A agulha (rosa = os dois juntos) gira até o valor; a escala vai de −50 a +50 cents.
-export const centsDe = (match) => Math.round(-(1 - match) * 50);
+// Afinador da sintonia (cents em logica.js): a agulha (rosa = os dois juntos) gira até o valor; escala de −50 a +50 cents, A4 = 440 Hz.
 const TRACOS = Array.from({ length: 21 }, (_, k) => (k - 10) * 5);
 function Afinador({ match }) {
   const ponto = (c, r) => { const a = (c / 50) * (Math.PI / 2); return [100 + r * Math.sin(a), 100 - r * Math.cos(a)]; };
@@ -23,7 +21,6 @@ function Afinador({ match }) {
     <text x="100" y="116">A4 · 440 Hz</text>
   </svg>`;
 }
-const textoCents = (match) => { const c = centsDe(match); return c === 0 ? 'afinados' : `${String(c).replace('-', '−')} cents`; };
 
 function Abertura({ d, ativo, i }) {
   return html`<${Slide} tipo="abertura" classe="st-duo" i=${i}>

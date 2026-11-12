@@ -46,15 +46,17 @@ async function famosas(nome) {
 }
 const resolver = (c) => (c.faixa ? buscar(c) : famosas(c.artista)).catch(() => []);
 
-// 0,2 s de silêncio em WAV: o play() dentro do toque desbloqueia o elemento.
+// 0,2 s de silêncio em WAV: o play() dentro do toque desbloqueia o elemento. Criado uma vez só.
+let urlSilencio = null;
 function silencio() {
+  if (urlSilencio) return urlSilencio;
   const n = 1600, b = new DataView(new ArrayBuffer(44 + n));
   const txt = (o, s) => [...s].forEach((c, i) => b.setUint8(o + i, c.charCodeAt(0)));
   txt(0, 'RIFF'); b.setUint32(4, 36 + n, true); txt(8, 'WAVEfmt '); b.setUint32(16, 16, true);
   b.setUint16(20, 1, true); b.setUint16(22, 1, true); b.setUint32(24, 8000, true); b.setUint32(28, 8000, true);
   b.setUint16(32, 1, true); b.setUint16(34, 8, true); txt(36, 'data'); b.setUint32(40, n, true);
   for (let i = 0; i < n; i++) b.setUint8(44 + i, 128);
-  return URL.createObjectURL(new Blob([b], { type: 'audio/wav' }));
+  return (urlSilencio = URL.createObjectURL(new Blob([b], { type: 'audio/wav' })));
 }
 
 // Um só <audio> e um só AudioContext para a página toda: o iOS limita os contextos e
@@ -98,17 +100,15 @@ export function SomStories({ trilha, alvo, aoLigar }) {
     m.ganho.gain.linearRampToValueAtTime(valor, t + segundos);
   };
   // play() rejeita com AbortError quando o slide troca rápido: não é falha de som.
-  const tocar = (el) => el.play().catch((e) => { if (e.name !== 'AbortError') setAviso('O navegador bloqueou o som. Toque em “Ligar som” para tentar de novo.'); });
+  // Bloqueado: volta para "sem", cujo botão "Ligar capas e som" destrava de novo dentro de um toque.
+  const tocar = (el) => el.play().catch((e) => { if (e.name !== 'AbortError') { setEstado('sem'); setAviso('O navegador bloqueou o som. Toque em “Ligar capas e som” para tentar de novo.'); } });
 
   // Qualquer erro na busca vira "sem som", nunca um "Buscando…" eterno.
   // Um toque só: liga as capas (opt-in) e desbloqueia o áudio.
   const comecar = () => { aoLigar?.(); return iniciarSom().catch(() => { setEstado('sem'); setAviso('Não deu para preparar o som. Os stories seguem sem som.'); }); };
   useEffect(() => { comecar(); }, []); // começa sozinho: o áudio já foi destravado no toque em "Montar"
   const iniciarSom = async () => {
-    const { el, ctx, ganho } = prepararSom();
-    ganho.gain.cancelScheduledValues(ctx.currentTime); ganho.gain.value = 0;
-    el.src = silencio(); tocar(el); // dentro do toque, antes de qualquer await
-    ctx.resume();
+    destravarSom(); // no botão "Ligar", dentro do toque e antes de qualquer await
     setEstado('carregando'); setAviso('');
     const porSlide = Object.fromEntries(await Promise.all(Object.entries(trilha.slides).map(
       async ([tipo, candidatas]) => [tipo, (await Promise.all(candidatas.map(resolver))).flat()])));

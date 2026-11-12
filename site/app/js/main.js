@@ -111,7 +111,7 @@ function App() {
       <div class="shell">
         <div class="app-cabeca">
           <h1>${modo === 'wrapped' ? 'Seu Wrapped da vida toda' : 'Compare dois históricos'}</h1>
-          <p class="sub">${modo === 'wrapped' ? 'Envie o seu Histórico Estendido do Spotify e veja a sua vida musical em stories.' : 'Envie o Histórico Estendido do Spotify de duas pessoas.'} Nada é enviado para nenhum servidor.</p>
+          <p class="sub">${modo === 'wrapped' ? 'Envie o seu Histórico Estendido do Spotify e veja a sua vida musical em stories. O histórico não sai do seu aparelho.' : 'Envie o Histórico Estendido do Spotify de duas pessoas. Nada é enviado para nenhum servidor.'}</p>
           ${modo === 'dupla' && html`<${Motor} estado=${motor} />`}
         </div>
         <div hidden=${modo !== 'dupla'}><${Dupla} pronto=${motor.pronto} /></div>

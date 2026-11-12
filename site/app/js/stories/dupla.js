@@ -1,7 +1,7 @@
 // Stories da Dupla, desenhados a partir de `dupla` (JSON da ponte), na moldura do Wrapped.
 // Cor com significado fixo: verde = pessoa A, violeta = pessoa B, rosa = os dois juntos (sintonia).
 import { html } from 'preact-htm';
-import { dataBr, fmtNum, fraseEmComum, frasePosicao, fraseRelogios, mesAno } from './logica.js';
+import { dataBr, fmtNum, fraseEmComum, frasePosicao, fraseRelogios, mesAno, textoCents } from './logica.js';
 import { Contador, Entra, Kicker, Slide } from './slides.js';
 
 const ROSA = [245, 115, 160];
@@ -10,14 +10,27 @@ const Avatares = ({ d }) => html`<div class="st-avatares" aria-hidden="true"><sp
 const Nomes = ({ d }) => html`<span class="st-a">${d.a.nome}</span> + <span class="st-b">${d.b.nome}</span>`;
 const plural = (n, um, varios) => `${fmtNum(n)} ${n === 1 ? um : varios}`;
 
+// Afinador da sintonia (cents em logica.js): a agulha (rosa = os dois juntos) gira até o valor; escala de −50 a +50 cents, A4 = 440 Hz.
+const TRACOS = Array.from({ length: 21 }, (_, k) => (k - 10) * 5);
+function Afinador({ match }) {
+  const ponto = (c, r) => { const a = (c / 50) * (Math.PI / 2); return [100 + r * Math.sin(a), 100 - r * Math.cos(a)]; };
+  return html`<svg class="st-afinador" viewBox="0 0 200 118" aria-hidden="true" style=${{ '--ang': `${(-(1 - match) * 90).toFixed(1)}deg` }}>
+    ${TRACOS.map((c) => { const longo = c % 25 === 0, [x1, y1] = ponto(c, 90), [x2, y2] = ponto(c, longo ? 76 : 82);
+      return html`<line class=${Math.abs(c) <= 5 ? 'centro' : longo ? 'longo' : ''} x1=${x1.toFixed(1)} y1=${y1.toFixed(1)} x2=${x2.toFixed(1)} y2=${y2.toFixed(1)} />`; })}
+    <line class="agulha" x1="100" y1="100" x2="100" y2="22" /><circle class="pivo" cx="100" cy="100" r="5" />
+    <text x="100" y="116">A4 · 440 Hz</text>
+  </svg>`;
+}
+
 function Abertura({ d, ativo, i }) {
   return html`<${Slide} tipo="abertura" classe="st-duo" i=${i}>
     <${Kicker}>SyncUp · Dupla<//>
     <${Entra} i=${1}><${Avatares} d=${d} /><//>
     <${Entra} i=${2} tag="h2" classe="st-titulo menor st-quebra"><${Nomes} d=${d} /><//>
     <${Entra} i=${3} classe="st-cartao st-vidro">
+      <${Afinador} match=${d.match} />
       <div class="st-mega"><${Contador} valor=${d.match * 100} ativo=${ativo} />%</div>
-      <span class="st-rotulo">de escuta em comum</span>
+      <span class="st-rotulo">de escuta em comum · ${textoCents(d.match)}</span>
     <//>
     <${Entra} i=${4} tag="p" classe="st-destaque">${fraseEmComum(d.match)}<//>
     <${Entra} i=${5} tag="p">${plural(d.total_comuns, 'artista', 'artistas')} em comum · ${mesAno(d.inicio)} → ${mesAno(d.fim)}<//>
@@ -167,11 +180,7 @@ function Poster({ d, ativo, i }) {
       ${s.musica && html`<small>A música de vocês: ${s.musica.nome}</small>`}
     <//>`}
     ${d.em_comum.length > 0 && html`<${Entra} i=${5} classe="st-poster-fatos">${d.em_comum.map((c) => html`<span class="st-vidro">${c.nome}</span>`)}<//>`}
-    <${Entra} i=${6} classe="st-poster-convite st-vidro">
-      <b>Qual é a nossa sintonia?</b>
-      <span>Compare comigo →</span>
-      <small>hazykiuu.github.io/SyncUp</small>
-    <//>
+    <${Entra} i=${6} tag="p" classe="st-poster-pe">Compare a sua sintonia comigo · <b>hazykiuu.github.io/SyncUp</b><//>
   <//>`;
 }
 

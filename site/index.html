@@ -3,222 +3,184 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SyncUp: descubra com quem você está em sintonia</title>
-<meta name="description" content="Compare o seu histórico do Spotify com o dos amigos e descubra com quem você está em sintonia. Grátis, de código aberto e tudo roda no seu navegador.">
+<title>SyncUp: compare o seu histórico do Spotify com o dos amigos</title>
+<meta name="description" content="Compare o seu histórico do Spotify com o dos amigos e veja com quem você está em sintonia, em stories. Grátis, de código aberto e tudo roda no seu navegador.">
 <meta name="theme-color" content="#121212">
 <meta property="og:type" content="website">
-<meta property="og:title" content="SyncUp: descubra com quem você está em sintonia">
-<meta property="og:description" content="Compare o seu histórico do Spotify com o dos amigos. Grátis, de código aberto e tudo roda no seu navegador.">
+<meta property="og:title" content="SyncUp: compare o seu histórico do Spotify com o dos amigos">
+<meta property="og:description" content="Veja com quem você está em sintonia, em stories. Grátis, de código aberto e tudo roda no seu navegador.">
 <meta property="og:image" content="assets/inicio.jpg">
 <meta property="og:locale" content="pt_BR">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="assets/Figtree.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="stylesheet" href="estilo.css">
+<!-- Os stories do topo e dos recursos usam o mesmo CSS dos stories do app. -->
+<link rel="stylesheet" href="app/stories.css">
 </head>
 <body>
 <a class="pular" href="#principal">Pular para o conteúdo</a>
-<div class="bolhas fixas" aria-hidden="true"><i></i><i></i><i></i></div>
-
-<div class="loader" id="loader" aria-hidden="true">
-  <div class="loader-centro">
-    <span class="marca vivo"><span class="logo"><i></i><i></i><i></i><i></i></span>SyncUp</span>
-    <p>Descubra com quem você está em sintonia.</p>
-  </div>
-  <div class="progresso">
-    <div class="trilho"><i id="barra"></i></div>
-    <div><span>Carregando</span><b id="contador">000</b></div>
-  </div>
-</div>
+<div class="bolhas" aria-hidden="true"><i></i><i></i><i></i></div>
 
 <header class="topo">
-  <div class="shell rev" style="--y:-14px" data-entrada="150">
-    <a class="marca vivo" href="#inicio" aria-label="SyncUp, início"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>SyncUp</a>
+  <div class="topo-barra">
+    <a class="marca vivo" href="#principal" aria-label="SyncUp, início"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>SyncUp</a>
     <nav aria-label="Principal">
       <ul class="nav-principal">
         <li><a href="#recursos">Recursos</a></li>
-        <li><a href="#como-funciona">Como funciona</a></li>
+        <li><a href="#como-usar">Como usar</a></li>
         <li><a href="#privacidade">Privacidade</a></li>
         <li><a href="https://github.com/Hazykiuu/SyncUp" target="_blank" rel="noopener">GitHub</a></li>
       </ul>
     </nav>
     <div class="topo-dir">
-      <span class="chip vidro" aria-live="off"><span>Agora</span><b id="hora">--:--</b><span aria-hidden="true">•</span><b id="data">hoje</b></span>
-      <button class="menu-btn vidro" id="abrir-menu" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Menu</span></button>
+      <a class="btn btn-verde" href="app/">Abrir o app <span class="seta" aria-hidden="true">→</span></a>
+      <button class="menu-btn" id="abrir-menu" aria-expanded="false" aria-controls="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Menu</span></button>
     </div>
   </div>
 </header>
 
 <main id="principal">
-  <section class="hero" id="inicio">
-    <div class="revela" id="revela">
-      <img src="assets/hero-a.jpg" alt="" width="1920" height="1080" fetchpriority="high">
-      <canvas aria-hidden="true"></canvas>
-    </div>
-    <div class="bolhas" aria-hidden="true"><i></i><i></i><i></i></div>
-    <div class="veu"></div>
-    <div class="marca-agua rev" data-entrada="300" aria-hidden="true">SYNCUP</div>
-
-    <div class="shell hero-grade">
-      <div class="hero-esq">
-        <span class="etiqueta rev" style="--y:10px" data-entrada="200">Grátis · código aberto · 100% no navegador</span>
-        <h1 class="rev-linhas" data-entrada="250" data-passo="120"><span class="linha"><span>Descubra com quem</span></span><span class="linha"><span>você está</span></span><span class="linha"><span><em>em sintonia.</em></span></span></h1>
-        <p class="hero-sub rev" style="--y:12px" data-entrada="550">Compare o seu histórico do Spotify com o dos amigos. Tudo roda no seu navegador, sem instalar nada.</p>
-        <p class="ao-vivo rev" style="--y:10px" data-entrada="620"><span class="marca vivo" aria-hidden="true"><span class="logo"><i></i><i></i><i></i><i></i></span></span>Testado a cada mudança · licença MIT</p>
-        <div class="hero-ctas rev" style="--y:12px" data-entrada="700">
-          <a class="btn btn-verde" href="app/">Abrir o app <span class="seta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></span></a>
+  <section class="hero" aria-labelledby="titulo">
+    <div class="shell">
+      <div class="hero-texto">
+        <span class="etiqueta" style="--d:150ms;--dy:12px">Grátis · código aberto · roda no navegador</span>
+        <h1 id="titulo" style="--d:300ms;--dy:28px">Compare o seu histórico do Spotify e veja com quem você está <em>em sintonia.</em></h1>
+        <p class="hero-sub" style="--d:600ms">Envie o Histórico Estendido de duas pessoas e veja a história de vocês em stories: o que une, quem apresenta o quê e quando ouviram juntos. Nada sai do seu aparelho.</p>
+        <div class="hero-ctas" style="--d:750ms;--dy:14px">
+          <a class="btn btn-verde" href="app/">Abrir o app <span class="seta" aria-hidden="true">→</span></a>
           <a class="btn btn-borda vidro" href="https://github.com/Hazykiuu/SyncUp" target="_blank" rel="noopener">Ver no GitHub</a>
         </div>
+        <p class="hero-fato" style="--d:900ms;--dy:10px">Licença MIT · 287 testes automatizados · computador e celular</p>
       </div>
 
-      <div class="hero-dir">
-        <div class="cartao-hero vidro rev" style="--y:16px;--s:.96" data-entrada="400">
-          <div>
-            <div class="cartao-ico" aria-hidden="true"><span class="marca"><span class="logo"><i></i><i></i><i></i><i></i></span></span></div>
-            <div class="cartao-painel">
-              <div class="slot" id="slot" aria-live="polite"></div>
-              <div class="cartao-pe">
-                <div class="pontos" id="pontos" aria-hidden="true"></div>
-                <div class="setas">
-                  <button class="vidro" id="ant" aria-label="Recurso anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(180deg)" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-                  <button class="vidro" id="prox" aria-label="Próximo recurso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-                </div>
-              </div>
+      <!-- O produto: stories da Dupla com o mesmo HTML/CSS do app. Dados fictícios (Ana e Bruno). -->
+      <div class="pilha" role="img" aria-label="Exemplo de story da Dupla, com dados fictícios: Ana e Bruno têm 73% de escuta em comum.">
+        <div class="mock tras" aria-hidden="true">
+          <div class="st-slot ativo"><section class="su-story ativo st s-em_comum st-duo">
+            <div class="st-fundo"></div><div class="st-veu"></div>
+            <div class="st-conteudo">
+              <span class="entra st-kicker" style="--i:0">O que une vocês</span>
+              <div class="entra st-titulo menor" style="--i:1">3 artistas em comum</div>
+              <ol class="st-comuns">
+                <li class="entra" style="--i:2"><b>Legião Urbana</b><div class="st-par"><small>Ana</small><i class="st-barra-valor a" style="--valor:1;--i:2"></i><em>412</em></div><div class="st-par"><small>Bruno</small><i class="st-barra-valor b" style="--valor:.944;--i:2"></i><em>389</em></div></li>
+                <li class="entra" style="--i:3"><b>Djavan</b><div class="st-par"><small>Ana</small><i class="st-barra-valor a" style="--valor:.728;--i:3"></i><em>300</em></div><div class="st-par"><small>Bruno</small><i class="st-barra-valor b" style="--valor:.291;--i:3"></i><em>120</em></div></li>
+              </ol>
             </div>
-          </div>
+          </section></div>
         </div>
-        <div class="fontes rev" style="--y:14px" data-entrada="550">
-          <p>Fontes aceitas</p>
-          <ul>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg>Histórico ZIP</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg>ListenBrainz</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg>Convite por código</li>
-          </ul>
+        <div class="mock frente" aria-hidden="true">
+          <div class="st-barra vidro-ctrl"><span class="st-seg"><i></i></span><span class="st-seg"></span><span class="st-seg"></span><span class="st-seg"></span><span class="st-seg"></span><span class="st-seg"></span><span class="st-seg"></span></div>
+          <div class="st-controles"><span class="st-contador">1/7</span></div>
+          <div class="st-slot ativo"><section class="su-story ativo st s-abertura st-duo">
+            <div class="st-fundo"></div><div class="st-veu"></div>
+            <div class="st-conteudo">
+              <span class="entra st-kicker" style="--i:0">SyncUp · Dupla</span>
+              <div class="entra" style="--i:1"><div class="st-avatares"><span>A</span><span>B</span></div></div>
+              <div class="entra st-titulo menor st-quebra" style="--i:2"><span class="st-a">Ana</span> + <span class="st-b">Bruno</span></div>
+              <div class="entra st-cartao st-vidro" style="--i:3"><svg class="st-afinador" viewBox="0 0 200 118" style="--ang:-24.3deg"><line class="longo" x1="10.0" y1="100.0" x2="24.0" y2="100.0"/><line x1="11.1" y1="85.9" x2="19.0" y2="87.2"/><line x1="14.4" y1="72.2" x2="22.0" y2="74.7"/><line x1="19.8" y1="59.1" x2="26.9" y2="62.8"/><line x1="27.2" y1="47.1" x2="33.7" y2="51.8"/><line class="longo" x1="36.4" y1="36.4" x2="46.3" y2="46.3"/><line x1="47.1" y1="27.2" x2="51.8" y2="33.7"/><line x1="59.1" y1="19.8" x2="62.8" y2="26.9"/><line x1="72.2" y1="14.4" x2="74.7" y2="22.0"/><line class="centro" x1="85.9" y1="11.1" x2="87.2" y2="19.0"/><line class="centro" x1="100.0" y1="10.0" x2="100.0" y2="24.0"/><line class="centro" x1="114.1" y1="11.1" x2="112.8" y2="19.0"/><line x1="127.8" y1="14.4" x2="125.3" y2="22.0"/><line x1="140.9" y1="19.8" x2="137.2" y2="26.9"/><line x1="152.9" y1="27.2" x2="148.2" y2="33.7"/><line class="longo" x1="163.6" y1="36.4" x2="153.7" y2="46.3"/><line x1="172.8" y1="47.1" x2="166.3" y2="51.8"/><line x1="180.2" y1="59.1" x2="173.1" y2="62.8"/><line x1="185.6" y1="72.2" x2="178.0" y2="74.7"/><line x1="188.9" y1="85.9" x2="181.0" y2="87.2"/><line class="longo" x1="190.0" y1="100.0" x2="176.0" y2="100.0"/><line class="agulha" x1="100" y1="100" x2="100" y2="22"/><circle class="pivo" cx="100" cy="100" r="5"/><text x="100" y="116">A4 · 440 Hz</text></svg><div class="st-mega">73%</div><span class="st-rotulo">de escuta em comum · −14 cents</span></div>
+              <p class="entra st-destaque" style="--i:4">Bastante coisa em comum.</p>
+              <p class="entra" style="--i:5">251 artistas em comum · dez/2019 → out/2020</p>
+              <p class="entra st-nota" style="--i:6">Mede a escuta neste período, não afinidade entre pessoas.</p>
+            </div>
+          </section></div>
         </div>
       </div>
-    </div>
-    <div class="shell hero-pe rev" style="--y:0px" data-entrada="900">
-      <span>Computador e celular</span><span class="meio">Seus dados não saem do aparelho</span><span>Role para explorar ↓</span>
     </div>
   </section>
 
-  <section class="letreiro" aria-label="Recursos do SyncUp"><div><span class="vidro">Dupla</span><span class="vidro">Em sintonia</span><span class="vidro">Match</span><span class="vidro">Playlist da festa</span><span class="vidro">Wrapped</span><span class="vidro">Grupo</span><span class="vidro">Convite por código</span><span class="vidro">Stories 1080×1920</span><span class="vidro" aria-hidden="true">Dupla</span><span class="vidro" aria-hidden="true">Em sintonia</span><span class="vidro" aria-hidden="true">Match</span><span class="vidro" aria-hidden="true">Playlist da festa</span><span class="vidro" aria-hidden="true">Wrapped</span><span class="vidro" aria-hidden="true">Grupo</span><span class="vidro" aria-hidden="true">Convite por código</span><span class="vidro" aria-hidden="true">Stories 1080×1920</span></div></section>
 
-  <section class="sobre" aria-labelledby="sobre-titulo">
+  <section class="espectro" aria-labelledby="espectro-titulo">
     <div class="shell">
-      <div class="sobre-esq">
-        <svg class="fundo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>
-        <span class="etiqueta" style="position:relative">O que é</span>
-        <p class="nota rev" style="--y:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Sem conta, sem servidor e sem anúncios.</span></p>
-      </div>
-      <div>
-        <h2 id="sobre-titulo" class="rev-palavras">Um app de código aberto que compara históricos do Spotify entre amigos e mostra <span class="apagado">com quem você está em sintonia, sem que nada saia do seu aparelho.</span></h2>
-        <div class="sobre-pe rev" style="--y:12px" data-atraso="200">
-          <div>
-            <p>Acompanhe o projeto</p>
-            <div class="sociais">
-              <a href="https://github.com/Hazykiuu/SyncUp" target="_blank" rel="noopener" aria-label="SyncUp no GitHub"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.2 19.5c.5.1.7-.2.7-.5v-1.7c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.3 1.1 2.9.8.1-.6.3-1.1.6-1.3-2.2-.3-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.7-4.6 5 .4.3.7.9.7 1.8V21c0 .3.2.6.7.5A10 10 0 0 0 12 2z"/></svg></a>
-              <a href="https://x.com/HazyKiuu" target="_blank" rel="noopener" aria-label="@HazyKiuu no X"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4l16 16M20 4 4 20"/></svg></a>
-            </div>
-          </div>
-          <a class="btn btn-borda vidro" href="#recursos">Ver os recursos</a>
+      <div class="espectro-cabeca">
+        <div>
+          <span class="etiqueta">Espectro de escuta · 0h–23h</span>
+          <h2 id="espectro-titulo" class="titulo-secao" style="margin-top:1.25rem">Quando cada um ouve</h2>
         </div>
+        <p>Exemplo com dados fictícios: Ana ouve de manhã e no começo da noite; Bruno, de madrugada e tarde da noite. Na Dupla, isso vira o story dos relógios.</p>
       </div>
+      <figure class="espectro-grafico" role="img" aria-label="Plays por hora de Ana e Bruno, dados fictícios: Ana tem picos às 8h e às 19h; Bruno, às 20h e de madrugada.">
+        <ol aria-hidden="true"><li style="--h:0"><i class="a" style="--v:0.17"></i><i class="b" style="--v:0.42"></i></li><li style="--h:1"><i class="a" style="--v:0.08"></i><i class="b" style="--v:0.33"></i></li><li style="--h:2"><i class="a" style="--v:0.08"></i><i class="b" style="--v:0.25"></i></li><li style="--h:3"><i class="a" style="--v:0.04"></i><i class="b" style="--v:0.17"></i></li><li style="--h:4"><i class="a" style="--v:0.04"></i><i class="b" style="--v:0.08"></i></li><li style="--h:5"><i class="a" style="--v:0.08"></i><i class="b" style="--v:0.08"></i></li><li style="--h:6"><i class="a" style="--v:0.25"></i><i class="b" style="--v:0.08"></i></li><li style="--h:7"><i class="a" style="--v:0.50"></i><i class="b" style="--v:0.17"></i></li><li style="--h:8"><i class="a" style="--v:0.75"></i><i class="b" style="--v:0.25"></i></li><li style="--h:9"><i class="a" style="--v:0.58"></i><i class="b" style="--v:0.33"></i></li><li style="--h:10"><i class="a" style="--v:0.50"></i><i class="b" style="--v:0.42"></i></li><li style="--h:11"><i class="a" style="--v:0.42"></i><i class="b" style="--v:0.42"></i></li><li style="--h:12"><i class="a" style="--v:0.50"></i><i class="b" style="--v:0.50"></i></li><li style="--h:13"><i class="a" style="--v:0.58"></i><i class="b" style="--v:0.50"></i></li><li style="--h:14"><i class="a" style="--v:0.50"></i><i class="b" style="--v:0.58"></i></li><li style="--h:15"><i class="a" style="--v:0.42"></i><i class="b" style="--v:0.58"></i></li><li style="--h:16"><i class="a" style="--v:0.50"></i><i class="b" style="--v:0.67"></i></li><li style="--h:17"><i class="a" style="--v:0.67"></i><i class="b" style="--v:0.75"></i></li><li style="--h:18"><i class="a" style="--v:0.75"></i><i class="b" style="--v:0.83"></i></li><li style="--h:19"><i class="a" style="--v:0.83"></i><i class="b" style="--v:0.92"></i></li><li style="--h:20"><i class="a" style="--v:0.75"></i><i class="b" style="--v:1.00"></i></li><li style="--h:21"><i class="a" style="--v:0.67"></i><i class="b" style="--v:0.92"></i></li><li style="--h:22"><i class="a" style="--v:0.50"></i><i class="b" style="--v:0.75"></i></li><li style="--h:23"><i class="a" style="--v:0.33"></i><i class="b" style="--v:0.58"></i></li></ol>
+        <figcaption aria-hidden="true"><span>0h</span><span>6h</span><span>12h</span><span>18h</span><span>23h</span></figcaption>
+      </figure>
+      <p class="espectro-legenda"><span class="a">Ana</span><span class="b">Bruno</span></p>
     </div>
-  </section>
-
-  <section class="faixa" aria-label="Ouça, compare, sintonize">
-    <ul class="shell">
-      <li class="rev" style="--y:28px" data-atraso="0"><div class="f1 vidro">Ouça</div></li>
-      <li class="rev" style="--y:28px" data-atraso="120"><div class="f2">Compare</div></li>
-      <li class="rev" style="--y:28px" data-atraso="240"><div class="f3" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div></li>
-      <li class="rev" style="--y:28px" data-atraso="360"><div class="f4 vidro">Sintonize</div></li>
-    </ul>
   </section>
 
   <section class="recursos" id="recursos" aria-labelledby="recursos-titulo">
     <div class="shell">
       <div class="cabeca">
-        <span class="etiqueta pilula-etq rev">O que dá para fazer</span>
-        <h2 id="recursos-titulo" class="titulo-secao rev-linhas" data-atraso="120"><span class="linha"><span>Quatro jeitos de comparar</span></span></h2>
+        <span class="etiqueta">No navegador, sem instalar</span>
+        <h2 id="recursos-titulo" class="titulo-secao">Dupla e Wrapped, em stories</h2>
       </div>
-      <ul class="cartoes">
-        <li class="rev" style="--y:48px" data-atraso="0">
-          <article class="cartao vidro">
-            <div class="meta"><span>Duas pessoas</span><span class="badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></div>
+      <div class="destaques">
+        <article class="recurso vidro">
+          <div>
             <h3>Dupla</h3>
-            <p>Duas pessoas lado a lado: blend, identidade musical, rankings e os momentos em que vocês ouviram a mesma música ao mesmo tempo.</p>
-            <div class="tags"><span>Blend</span><span>Em sintonia</span><span>Story PNG</span></div>
-            <div class="foto"><img src="assets/dupla.jpg" alt="Tela da Dupla: Ana e Bia com o blend e as métricas de similaridade" width="800" height="450" loading="lazy"></div>
-          </article>
-        </li>
-        <li class="rev" style="--y:48px" data-atraso="90">
-          <article class="cartao vidro">
-            <div class="meta"><span>A galera toda</span><span class="badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></div>
-            <h3>Match</h3>
-            <p>Junte a galera. O SyncUp compara todos com todos, forma as duplas que mais combinam e mostra a dupla mais sincronizada.</p>
-            <div class="tags"><span>Até 16 pessoas</span><span>Playlist da festa</span><span>Pôsteres</span></div>
-            <div class="foto"><img src="assets/match.jpg" alt="Tela do Match com as duplas formadas e a dupla mais sincronizada" width="800" height="406" loading="lazy"></div>
-          </article>
-        </li>
-        <li class="rev" style="--y:48px" data-atraso="180">
-          <article class="cartao story vidro">
-            <div class="meta"><span>Só você</span><span class="badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></div>
+            <p>Duas pessoas, sete stories: o quanto a escuta se parece, o que une vocês, quem apresenta o quê e os minutos em que ouviram a mesma música ao mesmo tempo.</p>
+            <div class="tags"><span>7 stories</span><span>Pôster para o Instagram</span><span>Playlist em comum</span></div>
+          </div>
+          <div class="mock" aria-hidden="true">
+            <div class="st-slot ativo"><section class="su-story ativo st s-em_comum st-duo">
+              <div class="st-fundo"></div><div class="st-veu"></div>
+              <div class="st-conteudo">
+                <span class="entra st-kicker" style="--i:0">O que une vocês</span>
+                <div class="entra st-titulo menor" style="--i:1">3 artistas em comum</div>
+                <ol class="st-comuns">
+                  <li class="entra" style="--i:2"><b>Legião Urbana</b><div class="st-par"><small>Ana</small><i class="st-barra-valor a" style="--valor:1;--i:2"></i><em>412</em></div><div class="st-par"><small>Bruno</small><i class="st-barra-valor b" style="--valor:.944;--i:2"></i><em>389</em></div></li>
+                  <li class="entra" style="--i:3"><b>Djavan</b><div class="st-par"><small>Ana</small><i class="st-barra-valor a" style="--valor:.728;--i:3"></i><em>300</em></div><div class="st-par"><small>Bruno</small><i class="st-barra-valor b" style="--valor:.291;--i:3"></i><em>120</em></div></li>
+                  <li class="entra" style="--i:4"><b>Marisa Monte</b><div class="st-par"><small>Ana</small><i class="st-barra-valor a" style="--valor:.194;--i:4"></i><em>80</em></div><div class="st-par"><small>Bruno</small><i class="st-barra-valor b" style="--valor:.631;--i:4"></i><em>260</em></div></li>
+                </ol>
+              </div>
+            </section></div>
+          </div>
+        </article>
+        <article class="recurso wrapped vidro">
+          <div>
             <h3>Wrapped</h3>
-            <p>A sua vida inteira no Spotify, em stories prontos para postar.</p>
-            <div class="tags"><span>Vida toda</span><span>Arquétipos</span><span>1080×1920</span></div>
-            <div class="foto"><img src="assets/wrapped.jpg" alt="Story do Wrapped com horas de música, top artistas e arquétipo de escuta, com dados fictícios" width="432" height="768" loading="lazy"></div>
-          </article>
-        </li>
-        <li class="rev" style="--y:48px" data-atraso="270">
-          <article class="cartao vidro">
-            <div class="meta"><span>3 a 6 pessoas</span><span class="badge" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></div>
-            <h3>Grupo</h3>
-            <p>De 3 a 6 pessoas numa matriz de compatibilidade, com os perfis e os arquétipos de cada um.</p>
-            <div class="tags"><span>Matriz</span><span>Arquétipos</span></div>
-            <div class="grande" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="7" cy="9" r="3"/><circle cx="17" cy="9" r="3"/><circle cx="12" cy="17" r="3"/></svg></div>
-          </article>
-        </li>
+            <p>A sua vida inteira no Spotify, em stories com capas e trilha, e um pôster para postar.</p>
+            <div class="tags"><span>Vida toda</span><span>Arquétipos</span><span>Pôster 1080×1920</span></div>
+          </div>
+          <div class="mock" aria-hidden="true">
+            <div class="st-slot ativo"><section class="su-story ativo st s-intro" style="--capa: 30 215 96">
+              <div class="st-fundo"></div><div class="st-veu"></div>
+              <div class="st-conteudo">
+                <span class="entra st-kicker" style="--i:0">SyncUp Wrapped · vida toda</span>
+                <div class="entra st-titulo" style="--i:1">Ana,<br>sua vida no Spotify</div>
+                <p class="entra st-sub" style="--i:2">dez/2019 → out/2025</p>
+                <div class="entra st-cartao st-vidro" style="--i:3"><div class="st-mega">1.764</div><span class="st-rotulo">horas de música</span></div>
+                <p class="entra" style="--i:4">Isso dá <strong>73,5 dias inteiros</strong> sem parar.</p>
+              </div>
+            </section></div>
+          </div>
+        </article>
+      </div>
+      <ul class="no-pc">
+        <li><span class="selo">Em breve no navegador · já no app para PC</span><h3>Match</h3><p>Junte até 16 pessoas e veja as duplas que mais combinam, com a playlist da festa.</p></li>
+        <li><span class="selo">Em breve no navegador · já no app para PC</span><h3>Grupo</h3><p>De 3 a 6 pessoas numa matriz de compatibilidade, com os perfis de cada um.</p><a href="https://github.com/Hazykiuu/SyncUp/releases/latest" target="_blank" rel="noopener">Baixar o app para PC</a></li>
       </ul>
     </div>
   </section>
 
-  <section class="passos" id="como-funciona" aria-labelledby="passos-titulo">
+  <section class="passos" id="como-usar" aria-labelledby="passos-titulo">
     <div class="shell">
-      <span class="etiqueta rev">Como funciona</span>
-      <h2 id="passos-titulo" class="titulo-secao rev-linhas" data-atraso="120"><span class="linha"><span>Três passos</span></span></h2>
+      <span class="etiqueta">Em três passos</span>
+      <h2 id="passos-titulo" class="titulo-secao" style="margin-top:1.25rem">Como usar o SyncUp</h2>
       <ol>
-        <li class="rev" data-atraso="0"><div class="linha-passo"><span class="num">01</span><h3>Peça o seu histórico ao Spotify</h3><p class="desc">Em Conta → Privacidade, marque "Histórico estendido de streaming". O ZIP chega por e-mail.</p><span class="badge-passo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></li>
-        <li class="rev" data-atraso="80"><div class="linha-passo"><span class="num">02</span><h3>Abra o app e envie o ZIP</h3><p class="desc">Direto no navegador, sem instalar nada. Não precisa extrair o arquivo.</p><span class="badge-passo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></li>
-        <li class="rev" data-atraso="160"><div class="linha-passo"><span class="num">03</span><h3>Veja o resultado e poste o story</h3><p class="desc">Blend, duplas, Wrapped e stories em PNG 1080×1920, prontos para o Instagram.</p><span class="badge-passo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div></li>
+        <li><span class="faixa"><b>Faixa 1</b> · até 30 dias</span><h3>Peça o seu histórico ao Spotify</h3><p>Em Conta → Privacidade, marque "Histórico estendido de streaming". O ZIP chega por e-mail.</p></li>
+        <li><span class="faixa"><b>Faixa 2</b> · 1 min</span><h3>Abra o app e envie o ZIP</h3><p>Direto no navegador, sem instalar nada. Não precisa extrair o arquivo.</p></li>
+        <li><span class="faixa"><b>Faixa 3</b> · 2 min</span><h3>Assista aos stories e compartilhe</h3><p>Stories da Dupla e do Wrapped, com um pôster em PNG pronto para o Instagram.</p></li>
       </ol>
     </div>
   </section>
 
-  <section class="painel-wrap" aria-labelledby="numeros-titulo">
+  <section class="privacidade" id="privacidade" aria-labelledby="privacidade-titulo">
     <div class="shell">
-      <div class="painel vidro rev" style="--y:40px;--s:.99">
-        <span class="etiqueta">Em números</span>
-        <h2 id="numeros-titulo">Feito com cuidado, testado de verdade.</h2>
-        <ul class="numeros">
-          <li class="rev" style="--y:20px" data-atraso="0"><b data-conta="246">0</b><span>testes automatizados</span></li>
-          <li class="rev" style="--y:20px" data-atraso="90"><b data-conta="16">0</b><span>pessoas num Match</span></li>
-          <li class="rev" style="--y:20px" data-atraso="180"><b data-conta="4">0</b><span>jeitos de comparar</span></li>
-          <li class="rev" style="--y:20px" data-atraso="270"><b data-conta="100" data-sufixo="%">0</b><span>no seu aparelho</span></li>
-        </ul>
-      </div>
-    </div>
-  </section>
-
-  <section class="painel-wrap" id="privacidade" aria-labelledby="privacidade-titulo">
-    <div class="shell">
-      <div class="painel vidro rev" style="--y:40px;--s:.99">
-        <span class="etiqueta">Privacidade</span>
-        <h2 id="privacidade-titulo">Seus dados ficam com você.</h2>
-        <div class="colunas">
-          <div class="vidro rev" style="--y:20px" data-atraso="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg><h3>Fica no seu aparelho</h3><p>Os históricos são lidos no próprio navegador e nunca vão para um servidor. Fechou a página, sumiu.</p></div>
-          <div class="vidro rev" style="--y:20px" data-atraso="90"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3c2.6 2.3 4 5.6 4 9s-1.4 6.7-4 9c-2.6-2.3-4-5.6-4-9s1.4-6.7 4-9zM3 12h18"/></svg><h3>Vai para a internet só se você pedir</h3><p>O ListenBrainz, quando você digita um usuário, e o MusicBrainz, se marcar a caixa de estilo. No Wrapped, só se tocar em “Começar com capas e som”: os códigos das suas músicas mais ouvidas vão para o Spotify, os nomes dos artistas para o MusicBrainz e os das músicas para a Apple, com o seu IP. O histórico nunca sai do aparelho.</p></div>
-          <div class="vidro rev" style="--y:20px" data-atraso="180"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg><h3>Nunca é guardado</h3><p>O seu IP, o modelo do aparelho e qualquer senha: o SyncUp não pede login.</p></div>
-        </div>
+      <span class="etiqueta">Privacidade</span>
+      <h2 id="privacidade-titulo" class="titulo-secao" style="margin-top:1.25rem">Seus dados ficam com você</h2>
+      <div class="colunas">
+        <div class="vidro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg><h3>Fica no seu aparelho</h3><p>Os históricos são lidos no próprio navegador e nunca vão para um servidor. Fechou a página, sumiu.</p></div>
+        <div class="vidro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3c2.6 2.3 4 5.6 4 9s-1.4 6.7-4 9c-2.6-2.3-4-5.6-4-9s1.4-6.7 4-9zM3 12h18"/></svg><h3>O que vai para a internet</h3><p>Só no Wrapped, para mostrar as capas e tocar os trechos: os códigos das suas músicas mais ouvidas vão para o Spotify, os nomes dos artistas para o MusicBrainz e os das músicas para a Apple, com o seu IP. O histórico nunca sai do aparelho.</p></div>
+        <div class="vidro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6l8-3z"/><path d="M9 12l2 2 4-4"/></svg><h3>Nunca é guardado</h3><p>O seu IP, o modelo do aparelho e qualquer senha: o SyncUp não pede login.</p></div>
       </div>
     </div>
   </section>
@@ -227,16 +189,18 @@
 <footer class="rodape">
   <div class="shell">
     <div class="rodape-cta">
-      <h2 class="rev-linhas" data-passo="100"><span class="linha"><span>Pronto para descobrir</span></span><span class="linha"><span>a sua sintonia?</span></span></h2>
-      <div class="lado rev">
-        <a class="btn btn-claro" href="app/">Abrir o app <span class="seta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg></span></a>
+      <!-- Pauta: as 4 barras do logo sentam nela como notas. Único lugar com pauta. -->
+      <div class="pauta" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <h2 class="titulo-secao">Pronto para descobrir a sua sintonia?</h2>
+      <div class="lado">
+        <a class="btn btn-verde" href="app/">Abrir o app <span class="seta" aria-hidden="true">→</span></a>
         <small>Grátis e de código aberto. No navegador do computador ou do celular.</small>
       </div>
     </div>
     <div class="cols">
       <div>
         <span class="marca"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>SyncUp</span>
-        <p class="tag">Compare históricos do Spotify entre amigos e descubra com quem você está em sintonia.</p>
+        <p class="tag">Compare históricos do Spotify entre amigos e veja com quem você está em sintonia.</p>
       </div>
       <div>
         <h3>Projeto</h3>
@@ -257,7 +221,6 @@
     </div>
     <div class="legal"><span>SyncUp · código aberto (MIT)</span><span>Não é afiliado ao Spotify.</span></div>
   </div>
-  <div class="marca-agua" aria-hidden="true">SYNCUP</div>
 </footer>
 
 <div class="menu" id="menu" role="dialog" aria-modal="true" aria-label="Menu">
@@ -266,132 +229,38 @@
     <button class="fechar" id="fechar-menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 4l16 16M20 4 4 20"/></svg>Fechar</button>
   </div>
   <nav class="shell" aria-label="Menu">
-    <a href="#inicio" style="--d:80ms"><small>01</small>Início</a>
-    <a href="#recursos" style="--d:125ms"><small>02</small>Recursos</a>
-    <a href="#como-funciona" style="--d:170ms"><small>03</small>Como funciona</a>
-    <a href="#privacidade" style="--d:215ms"><small>04</small>Privacidade</a>
-    <a href="app/" style="--d:260ms"><small>05</small>Abrir o app</a>
+    <a href="#recursos">Recursos</a>
+    <a href="#como-usar">Como usar</a>
+    <a href="#privacidade">Privacidade</a>
+    <a href="app/">Abrir o app</a>
   </nav>
 </div>
 
 <script type="importmap">{ "imports": { "lenis": "https://unpkg.com/lenis@1.3.23/dist/lenis.mjs" } }</script>
 <script type="module">
-document.documentElement.classList.add('js');
 const calmo = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Rolagem suave (Lenis, MIT); sem ela, a rolagem nativa continua funcionando.
-// Sem await: a página não espera o CDN; a Lenis entra quando chegar.
+// Sem await: a página não espera o CDN; a Lenis entra quando chegar. O desvio é a altura do topo fixo.
 let lenis = null, travado = false;
 const travar = (sim) => { travado = sim; if (lenis) sim ? lenis.stop() : lenis.start(); document.documentElement.style.overflow = sim ? 'hidden' : ''; };
 if (!calmo) {
   import('lenis').then(({ default: Lenis }) => {
-    lenis = new Lenis({ smoothWheel: true, anchors: true });
+    lenis = new Lenis({ smoothWheel: true, anchors: { offset: -96 } });
     if (travado) lenis.stop();
     const quadro = (t) => { lenis.raf(t); requestAnimationFrame(quadro); };
     requestAnimationFrame(quadro);
   }).catch(() => { /* sem rede: segue com a rolagem do navegador */ });
 }
 
-// Divide os títulos em palavras para a revelação.
-for (const el of document.querySelectorAll('.rev-palavras')) {
-  let i = 0;
-  const partir = (no) => {
-    for (const filho of [...no.childNodes]) {
-      if (filho.nodeType === 3) {
-        const frag = document.createDocumentFragment();
-        for (const p of filho.textContent.split(/(\s+)/)) {
-          if (!p.trim()) { frag.append(p); continue; }
-          const s = document.createElement('span'); s.className = 'palavra'; s.textContent = p; s.style.setProperty('--d', `${i++ * 35}ms`); frag.append(s);
-        }
-        filho.replaceWith(frag);
-      } else partir(filho);
-    }
-  };
-  partir(el);
-}
-for (const el of document.querySelectorAll('.rev-linhas')) {
-  const passo = +(el.dataset.passo || 120), base = +(el.dataset.entrada || el.dataset.atraso || 0);
-  el.querySelectorAll('.linha > span').forEach((s, i) => s.style.setProperty('--d', `${base + i * passo}ms`));
-}
-document.querySelectorAll('[data-atraso]').forEach((el) => el.style.setProperty('--d', `${el.dataset.atraso}ms`));
+// "Abrir o app": guarda de onde veio o clique; o app revela a tela num círculo que nasce daí (app.css).
+document.querySelectorAll('a[href="app/"]').forEach((a) => a.addEventListener('click', (e) => {
+  const r = a.getBoundingClientRect(), x = e.clientX || r.left + r.width / 2, y = e.clientY || r.top + r.height / 2;
+  try { sessionStorage.setItem('syncup-entrada', JSON.stringify({ x: Math.round(x), y: Math.round(y) })); } catch { /* sem armazenamento: nasce do centro */ }
+}));
 
-const ligar = (el) => el.classList.add('on');
-const observador = new IntersectionObserver((itens) => {
-  for (const it of itens) if (it.isIntersecting) { ligar(it.target); observador.unobserve(it.target); }
-}, { threshold: 0.15, rootMargin: '0px 0px -5% 0px' });
-const rolaveis = [...document.querySelectorAll('.rev, .rev-linhas, .rev-palavras')].filter((el) => !el.dataset.entrada);
-const entradas = [...document.querySelectorAll('[data-entrada]')];
-
-function comecar() {
-  entradas.forEach((el) => { el.style.setProperty('--d', `${el.dataset.entrada}ms`); ligar(el); });
-  rolaveis.forEach((el) => observador.observe(el));
-}
-
-// Tela de carregamento: 000 → 100 e sobe. Pulada com "menos movimento".
-const loader = document.getElementById('loader');
-if (calmo) { loader.remove(); comecar(); }
-else {
-  travar(true);
-  const barra = document.getElementById('barra'), contador = document.getElementById('contador');
-  const t0 = performance.now(), DURA = 1300, ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
-  // Relógio + setTimeout (não requestAnimationFrame, que pausa em aba de fundo e travava a página).
-  let saiu = false;
-  const sair = () => {
-    if (saiu) return;
-    saiu = true;
-    barra.style.width = '100%'; contador.textContent = '100';
-    loader.classList.add('sai'); // pointer-events: none já na subida: os cliques passam.
-    setTimeout(() => { loader.remove(); travar(false); comecar(); }, 800);
-  };
-  const passo = () => {
-    if (saiu) return;
-    const t = Math.min((performance.now() - t0) / DURA, 1), p = Math.round(ease(t) * 100);
-    barra.style.width = p + '%'; contador.textContent = String(p).padStart(3, '0');
-    if (t < 1) setTimeout(passo, 16); else sair();
-  };
-  passo();
-  setTimeout(sair, 2500); // Trava de segurança: a tela sai de qualquer jeito.
-}
-
-// Cartão do hero: recursos em carrossel.
-const itens = [
-  ['Dupla', 'Duas pessoas lado a lado.'], ['Em sintonia', 'A mesma música, na mesma hora.'],
-  ['Match', 'Quem combina com quem.'], ['Wrapped', 'A sua vida no Spotify.'], ['Grupo', 'Até 6 numa matriz.'],
-];
-const slot = document.getElementById('slot'), pontos = document.getElementById('pontos');
-pontos.innerHTML = itens.map(() => '<i></i>').join('');
-let atual = -1;
-function mostrar(n, dir = 1) {
-  n = (n + itens.length) % itens.length;
-  const velho = slot.querySelector('p');
-  if (velho) { velho.style.transform = `translateY(${-14 * dir}px)`; velho.classList.add('fora'); setTimeout(() => velho.remove(), 400); }
-  const p = document.createElement('p'); p.className = 'fora'; p.style.transform = `translateY(${14 * dir}px)`;
-  p.innerHTML = `<small>${itens[n][0]}</small><span>${itens[n][1]}</span>`;
-  slot.append(p); requestAnimationFrame(() => requestAnimationFrame(() => { p.classList.remove('fora'); p.style.transform = ''; }));
-  [...pontos.children].forEach((d, i) => d.classList.toggle('ativo', i === n));
-  atual = n;
-}
-mostrar(0);
-document.getElementById('prox').onclick = () => mostrar(atual + 1, 1);
-document.getElementById('ant').onclick = () => mostrar(atual - 1, -1);
-
-// Números contam conforme a rolagem (do topo da tela até o centro).
-const contas = [...document.querySelectorAll('[data-conta]')];
-function contar() {
-  const h = innerHeight;
-  for (const el of contas) {
-    const r = el.getBoundingClientRect();
-    const p = calmo ? 1 : Math.min(Math.max((h - r.top) / (h - (h / 2 - r.height / 2)), 0), 1);
-    el.textContent = Math.round(p * +el.dataset.conta) + (el.dataset.sufixo || '');
-  }
-}
-let espera = 0;
-addEventListener('scroll', () => { if (!espera) espera = setTimeout(() => { espera = 0; contar(); }, 30); }, { passive: true });
-contar();
-
-// Menu em tela cheia (celular).
+// Menu em tela cheia (celular). inert no fundo: com o menu aberto, o Tab e o leitor de tela ficam só nele.
 const menu = document.getElementById('menu'), abrir = document.getElementById('abrir-menu');
-// inert no fundo: com o menu aberto, o Tab e o leitor de tela ficam só nele.
 const fundo = document.querySelectorAll('body > header, body > main, body > footer');
 const inerte = (sim) => fundo.forEach((el) => { el.inert = sim; });
 const fecharMenu = () => { menu.classList.remove('aberto'); abrir.setAttribute('aria-expanded', 'false'); inerte(false); travar(false); abrir.focus(); };
@@ -399,89 +268,6 @@ abrir.onclick = () => { menu.classList.add('aberto'); abrir.setAttribute('aria-e
 document.getElementById('fechar-menu').onclick = fecharMenu;
 menu.querySelectorAll('nav a').forEach((a) => a.addEventListener('click', () => fecharMenu()));
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu.classList.contains('aberto')) fecharMenu(); });
-
-// Relógio ao vivo no topo, como no Lumora.
-const hora = document.getElementById('hora'), data = document.getElementById('data');
-const fHora = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
-const fData = new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long' });
-const relogio = () => { const d = new Date(); hora.textContent = fHora.format(d); data.textContent = fData.format(d); };
-relogio(); setInterval(relogio, 1000);
-
-if (!calmo && matchMedia('(hover: hover)').matches) {
-  // Vidro: o reflexo acompanha o cursor dentro de cada superfície.
-  addEventListener('pointermove', (e) => {
-    const v = e.target.closest?.('.vidro');
-    if (v) { const r = v.getBoundingClientRect(); v.style.setProperty('--mx', `${e.clientX - r.left}px`); v.style.setProperty('--my', `${e.clientY - r.top}px`); }
-    const c = e.target.closest?.('.cartao');
-    if (c) { const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
-      c.style.setProperty('--ry', `${x * 6}deg`); c.style.setProperty('--rx', `${-y * 6}deg`); }
-  }, { passive: true });
-  document.querySelectorAll('.cartao').forEach((c) => c.addEventListener('pointerleave', () => { c.style.setProperty('--rx', '0deg'); c.style.setProperty('--ry', '0deg'); }));
-
-  // Parallax leve no hero: o conteúdo sobe mais devagar que a página e a marca d'água desce.
-  const grade = document.querySelector('.hero-grade'), agua = document.querySelector('.hero .marca-agua');
-  let pedido = 0;
-  addEventListener('scroll', () => {
-    if (pedido) return;
-    pedido = requestAnimationFrame(() => {
-      pedido = 0; const y = Math.min(scrollY, innerHeight);
-      grade.style.transform = `translateY(${y * 0.12}px)`; grade.style.opacity = String(1 - y / innerHeight * 0.6);
-      if (agua.classList.contains('on')) agua.style.transform = `translateY(${y * -0.08}px)`;
-    });
-  }, { passive: true });
-}
-
-// Hero: o cursor pinta a "segunda pessoa" (roxo) sobre a primeira (verde).
-if (!calmo && matchMedia('(hover: hover)').matches) {
-  const caixa = document.getElementById('revela'), canvas = caixa.querySelector('canvas'), ctx = canvas.getContext('2d');
-  const img = new Image(); img.src = 'assets/hero-b.jpg';
-  const dpr = Math.min(devicePixelRatio || 1, 2), RAIO = 143, DECAI = 0.016;
-  let capa, pincel, raio, pontosT = [], ultimo = null, ocioso = 0, rodando = false;
-  function medir() {
-    const r = caixa.getBoundingClientRect();
-    canvas.width = Math.round(r.width * dpr); canvas.height = Math.round(r.height * dpr);
-    raio = RAIO * dpr;
-    capa = document.createElement('canvas'); capa.width = canvas.width; capa.height = canvas.height;
-    if (img.complete && img.naturalWidth) {
-      const s = Math.max(capa.width / img.naturalWidth, capa.height / img.naturalHeight);
-      const w = img.naturalWidth * s, h = img.naturalHeight * s;
-      capa.getContext('2d').drawImage(img, (capa.width - w) / 2, (capa.height - h) / 2, w, h);
-    }
-    pincel = document.createElement('canvas'); pincel.width = pincel.height = Math.ceil(raio * 2);
-  }
-  function carimbo(x, y) {
-    const b = pincel.getContext('2d'), d = pincel.width, c = d / 2;
-    b.globalCompositeOperation = 'source-over'; b.clearRect(0, 0, d, d);
-    const g = b.createRadialGradient(c, c, 0, c, c, c);
-    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.55, 'rgba(255,255,255,.82)'); g.addColorStop(1, 'rgba(255,255,255,0)');
-    b.fillStyle = g; b.fillRect(0, 0, d, d);
-    b.globalCompositeOperation = 'source-in'; b.drawImage(capa, x - c, y - c, d, d, 0, 0, d, d);
-    ctx.globalCompositeOperation = 'source-over'; ctx.drawImage(pincel, x - c, y - c);
-  }
-  function tique() {
-    const desenhando = pontosT.length > 0;
-    ocioso = desenhando ? 0 : ocioso + 1;
-    if (ocioso > 120) { ctx.clearRect(0, 0, canvas.width, canvas.height); rodando = false; return; }
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.fillStyle = `rgba(0,0,0,${desenhando ? DECAI : Math.min(DECAI + ocioso * 0.004, 0.5)})`;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    if (desenhando) { pontosT.forEach(([x, y]) => carimbo(x, y)); pontosT = []; }
-    requestAnimationFrame(tique);
-  }
-  addEventListener('pointermove', (e) => {
-    const r = canvas.getBoundingClientRect();
-    const x = (e.clientX - r.left) * dpr, y = (e.clientY - r.top) * dpr;
-    if (x < -raio || y < -raio || x > canvas.width + raio || y > canvas.height + raio) { ultimo = null; return; }
-    if (ultimo) {
-      const dx = x - ultimo[0], dy = y - ultimo[1], dist = Math.hypot(dx, dy), n = Math.min(Math.ceil(dist / Math.max(raio * 0.3, 1)), 60);
-      for (let i = 1; i <= n; i++) pontosT.push([ultimo[0] + (dx * i) / n, ultimo[1] + (dy * i) / n]);
-    } else pontosT.push([x, y]);
-    ultimo = [x, y];
-    if (!rodando) { rodando = true; requestAnimationFrame(tique); }
-  });
-  new ResizeObserver(medir).observe(caixa);
-  img.onload = medir;
-}
 </script>
 </body>
 </html>

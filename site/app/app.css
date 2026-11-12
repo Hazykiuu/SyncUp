@@ -3,7 +3,7 @@ body { background: var(--bg) !important; }
 footer { opacity: 1; }
 /* O app usa tamanhos fixos (a grade em vw do site encolhe demais formulários no celular).
    100% = 16 px por padrão, mas respeita quem aumentou a fonte no sistema. */
-html { font-size: 100% !important; }
+html { font-size: 100% !important; color-scheme: dark; } /* controles nativos (caixas, rolagem) já vêm escuros */
 
 /* Tokens do app. Espaço em escala de 4 px; raios aninhados (o de dentro = o de fora − o padding). */
 :root {
@@ -14,8 +14,8 @@ html { font-size: 100% !important; }
 @media (min-width: 900px) { :root { --r-cartao: 24px; --r-painel: 28px; --pad-cartao: var(--e5); --vao: var(--e4); } }
 
 /* Vidro "Sintonia": a borda é um degradê verde → branco → violeta, as duas pessoas na beirada.
-   Painéis usam vidro falso (sem backdrop-filter): as bolhas do fundo já são desfocadas, e o blur real
-   em ~15 painéis sobre bolhas animadas custa quadros no celular. Blur real só nos controles pequenos. */
+   Vidro real só no computador: no Redmi o blur em ~15 painéis caiu de 85–90 para 30–40 fps (12/11).
+   No celular os painéis são vidro falso. Fundo parado e um nível de blur só (vidro dentro de vidro não borra). */
 .vidro { background: linear-gradient(160deg, rgba(255, 255, 255, .085), rgba(255, 255, 255, .02) 45%, rgba(255, 255, 255, .045));
   -webkit-backdrop-filter: none; backdrop-filter: none;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 24px 48px -28px rgba(0, 0, 0, .85); }
@@ -25,7 +25,18 @@ html { font-size: 100% !important; }
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
 .btn-borda.vidro { border-color: transparent; background: rgba(255, 255, 255, .07);
   -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); }
-.btn-borda.vidro:hover { background: rgba(255, 255, 255, .12); }
+.btn-borda.vidro:hover { background: rgba(255, 255, 255, .12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28); }
+/* No app a seta é "→": no hover ela anda para a frente (a da página inicial é ↗ e sobe). */
+@media (hover: hover) { .app-corpo .btn:hover:not(:disabled) .seta { transform: translateX(3px); } }
+@media (hover: hover) and (pointer: fine) { .vidro { -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%); } }
+.vidro .vidro { -webkit-backdrop-filter: none; backdrop-filter: none; }
+.bolhas.fixas i { animation: none; }
+/* Fundo com matéria, parado: as duas manchas (verde = A no alto, violeta = B embaixo) um pouco mais presentes
+   e um grão fino por cima, que o vidro deixa ver. Nada anima: não custa quadros no celular. */
+.bolhas.fixas { opacity: .3; }
+body::after { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .06; background-size: 160px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"); }
+@media (prefers-reduced-transparency: reduce) { body::after { display: none; } }
 @supports not ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
   .vidro::before { display: none; }
   .vidro { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14), inset 0 1px 0 rgba(255, 255, 255, .16), 0 24px 48px -28px rgba(0, 0, 0, .85); }
@@ -33,22 +44,68 @@ html { font-size: 100% !important; }
 @media (prefers-reduced-transparency: reduce) { .vidro, .btn-borda.vidro { background: #1c1c1c; -webkit-backdrop-filter: none; backdrop-filter: none; } }
 @media (prefers-contrast: more) { .vidro::before { background: #fff; } }
 
-.app-topo { display: flex; align-items: center; justify-content: space-between; gap: var(--vao); flex-wrap: wrap; padding-block: 1rem; }
-.app-topo .marca { font-size: 1.25rem; min-height: 44px; }
-.abas-app { display: flex; flex-wrap: wrap; gap: var(--e2); }
-.abas-app a, .abas-app span { display: inline-flex; align-items: center; gap: var(--e2); min-height: 44px; padding: 0 var(--e4); border-radius: var(--pilula); font-weight: 700; font-size: .95rem; }
-.abas-app a.ativa { background: var(--texto); color: #000; }
-.abas-app span { color: var(--fraco); border: 1px solid var(--linha); cursor: not-allowed; }
-.abas-app small { font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+/* Casca de app de música: a navegação é uma só; no celular vira a barra de baixo, no computador a lateral.
+   Barras fixas em vidro escuro (fundo ≥ 72%): capa que passa por baixo não aparece borrada (regra do Spotify). */
+.app-topo { display: flex; align-items: center; padding-block: var(--e4) 0; }
+.app-topo .marca, .nav-app .marca { font-size: 1.25rem; min-height: 44px; }
+.nav-app { position: fixed; z-index: 60; background: rgba(14, 14, 14, .82); -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%); }
+.nav-app ul { display: flex; }
+.nav-item { display: flex; align-items: center; gap: var(--e3); min-height: 44px; color: var(--sub); font-weight: 700; transition: background .15s, color .15s; }
+.nav-item svg { font-size: 1.375rem; }
+.nav-item small { font-size: .625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--fraco); }
+a.nav-item:hover { color: var(--texto); }
+.nav-item[aria-current="page"] { color: var(--texto); }
+.nav-item[aria-disabled="true"] { color: var(--fraco); cursor: not-allowed; }
+.nav-selo { display: flex; align-items: center; gap: var(--e2); font-size: .85rem; color: var(--sub); }
+.nav-selo .ponto { width: .5rem; height: .5rem; border-radius: 50%; background: var(--verde); }
+.nav-site { font-weight: 700; color: var(--sub); }
+.nav-site:hover { color: var(--texto); }
 
-.app-corpo { padding-bottom: 6rem; }
+@media (max-width: 899px) {
+  .nav-app { inset: auto 0 0; padding: var(--e1) max(var(--e2), env(safe-area-inset-right, 0px)) max(var(--e1), env(safe-area-inset-bottom, 0px)) max(var(--e2), env(safe-area-inset-left, 0px)); border-top: 1px solid var(--linha); }
+  .nav-app > .marca, .nav-selo, .nav-site { display: none; }
+  .nav-app ul { justify-content: space-around; }
+  .nav-app li { flex: 1; min-width: 0; } /* os 4 itens cabem em 320 px sem alargar a página */
+  .nav-item { flex-direction: column; justify-content: center; gap: 2px; min-height: 56px; font-size: .75rem; text-align: center; }
+  .nav-item small { margin-top: -2px; }
+  /* Página atual com forma, não só cor: uma pílula atrás do ícone. */
+  .nav-item svg { box-sizing: content-box; padding: 2px var(--e3); border-radius: var(--pilula); }
+  .nav-item[aria-current="page"] svg { color: var(--verde); background: rgb(30 215 96 / .16); }
+  /* Folga para a barra: o fim da página (e o player) nunca fica embaixo dela. */
+  .app-corpo { padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px)); }
+}
+@media (min-width: 900px) {
+  :root { --lateral: 15rem; }
+  .app-topo { display: none; }
+  .nav-app { inset: 0 auto 0 0; width: var(--lateral); display: flex; flex-direction: column; gap: var(--e5); padding: var(--e5) var(--e4); border-right: 1px solid var(--linha); }
+  .nav-app > .marca { padding-inline: var(--e3); }
+  .nav-app ul { flex-direction: column; gap: var(--e1); }
+  .nav-item { padding: 0 var(--e3); border-radius: var(--r-campo); }
+  a.nav-item:hover { background: rgba(255, 255, 255, .06); }
+  .nav-item[aria-current="page"] { background: var(--texto); color: #000; }
+  .nav-item small { margin-left: auto; }
+  .nav-selo { margin-top: auto; padding-inline: var(--e3); }
+  .nav-site { padding: var(--e2) var(--e3); }
+  .app-corpo { margin-left: var(--lateral); padding-bottom: 6rem; }
+}
+@media (prefers-reduced-transparency: reduce) { .nav-app { background: #0e0e0e; -webkit-backdrop-filter: none; backdrop-filter: none; } }
+@media (forced-colors: active) { .nav-item[aria-current="page"] { outline: 2px solid CanvasText; outline-offset: -2px; } }
+
+/* Cabeçalho do modo: o degradê tem sentido (Dupla = as duas pessoas, verde e violeta; Wrapped = verde)
+   e se dissolve no fundo antes do conteúdo. */
+.app-corpo { background-repeat: no-repeat; background-size: 100% 28rem; }
+.app-corpo[data-modo="dupla"] { background-image: radial-gradient(60% 100% at 0% 0%, rgb(30 215 96 / .22), transparent 70%), radial-gradient(60% 100% at 100% 0%, rgb(196 183 255 / .2), transparent 70%); }
+.app-corpo[data-modo="wrapped"] { background-image: radial-gradient(80% 100% at 0% 0%, rgb(30 215 96 / .24), transparent 70%); }
 .app-cabeca { display: flex; flex-direction: column; gap: var(--e3); padding-block: 2rem 2.5rem; }
-.app-cabeca h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); font-weight: 900; letter-spacing: -.03em; line-height: 1; }
+@media (min-width: 900px) { .app-cabeca { padding-block: 4rem 3rem; } }
+.app-cabeca h1 { text-wrap: balance; font-size: clamp(2.2rem, 6vw, 3.6rem); font-weight: 900; letter-spacing: -.03em; line-height: 1; }
 .app-cabeca .sub { max-width: 46ch; color: var(--sub); font-size: 1.05rem; line-height: 1.5; }
 
 .motor { display: flex; flex-direction: column; gap: var(--e2); max-width: 28rem; font-size: .9rem; color: var(--sub); }
-.motor .trilho { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, .12); overflow: hidden; }
-.motor .trilho i { display: block; height: 100%; background: var(--verde); transition: width .4s var(--sai); }
+.motor .eq { display: flex; align-items: flex-end; gap: 3px; height: 1.5rem; }
+.motor .eq i { flex: 1; height: 100%; border-radius: 2px; background: rgba(255, 255, 255, .14); transform-origin: bottom; transform: scaleY(var(--h)); transition: background .3s; }
+.motor .eq i.aceso { background: var(--verde); animation: eq-barra 1.1s ease-in-out infinite alternate; animation-delay: calc(var(--h) * -1.1s); }
+@keyframes eq-barra { to { transform: scaleY(calc(var(--h) * .55)); } }
 .motor small { color: var(--fraco); }
 .motor.ok { flex-direction: row; align-items: center; gap: var(--e2); color: var(--texto); font-weight: 600; }
 .motor .ponto { width: .55rem; height: .55rem; border-radius: 50%; background: var(--verde); box-shadow: 0 0 10px var(--verde); }
@@ -56,19 +113,30 @@ html { font-size: 100% !important; }
 
 .pessoas { display: grid; gap: var(--vao); }
 @media (min-width: 900px) { .pessoas { grid-template-columns: 1fr 1fr; } }
-.pessoa { display: flex; flex-direction: column; gap: var(--e3); border-radius: var(--r-cartao); padding: var(--pad-cartao); }
+/* Cada cartão leva a cor da sua pessoa (verde = A, violeta = B) na borda e ao arrastar um arquivo. */
+.pessoa { --cor: var(--verde); display: flex; flex-direction: column; gap: var(--e3); border-radius: var(--r-cartao); padding: var(--pad-cartao); }
+.pessoa.roxo { --cor: var(--roxo); }
+.pessoa.vidro::before { background: linear-gradient(135deg, color-mix(in srgb, var(--cor) 70%, transparent), rgba(255, 255, 255, .14) 35%, rgba(255, 255, 255, .05)); }
 .pessoa-topo { display: flex; align-items: center; gap: var(--e3); }
 .pessoa-topo h2 { font-size: 1.3rem; font-weight: 800; }
+.pessoa-topo .lado { font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--cor); }
 .avatar { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; font-weight: 900; color: #000; }
 .avatar.verde { background: var(--verde); } .avatar.roxo { background: var(--roxo); }
 .campo { display: flex; flex-direction: column; gap: var(--e1); font-size: .9rem; font-weight: 600; color: var(--sub); }
 .campo small, .marcar small { font-weight: 400; color: var(--fraco); }
 .entrada { width: 100%; min-height: 44px; border-radius: var(--r-campo); border: 1px solid var(--linha); background: rgba(0, 0, 0, .3); color: var(--texto); font: inherit; font-size: 1rem; padding: var(--e2) var(--e3); }
-.entrada:focus { outline: none; border-color: var(--verde); box-shadow: 0 0 0 3px rgba(30, 215, 96, .25); }
+.entrada::placeholder { color: var(--fraco); opacity: 1; }
+/* Contorno transparente em vez de nenhum: no alto contraste do sistema ele aparece; aqui fica o anel verde. */
+.entrada:focus { outline: 2px solid transparent; border-color: var(--verde); box-shadow: 0 0 0 3px rgba(30, 215, 96, .25); }
 textarea.entrada { resize: vertical; }
 .soltar { display: flex; flex-direction: column; align-items: center; gap: var(--e3); text-align: center; border: 1.5px dashed rgba(255, 255, 255, .22); border-radius: var(--r-campo); padding: var(--e5) var(--e4); transition: border-color .2s, background .2s; }
-.soltar.sobre { border-color: var(--verde); background: rgba(30, 215, 96, .07); }
-.soltar p { color: var(--sub); } .soltar small { color: var(--fraco); }
+.soltar.sobre { border-color: var(--cor); background: color-mix(in srgb, var(--cor) 8%, transparent); }
+/* Com arquivos já escolhidos, a área encolhe para uma linha: a lista fala por ela. */
+.soltar.tem { flex-direction: row; justify-content: space-between; padding: var(--e3) var(--e4); text-align: left; }
+.soltar.tem > small { display: none; }
+.soltar.tem > p:not(.erro) { font-size: .9rem; }
+@media (max-width: 479px) { .soltar.tem > p:not(.erro) { display: none; } .soltar.tem { justify-content: center; } }
+.soltar p { color: var(--sub); text-wrap: balance; } .soltar small { color: var(--fraco); }
 .lista-arquivos { display: flex; flex-direction: column; gap: var(--e2); }
 .lista-arquivos li { display: flex; align-items: center; gap: var(--e2); padding: var(--e1) var(--e1) var(--e1) var(--e3); border-radius: var(--r-campo); background: rgba(255, 255, 255, .05); font-size: .9rem; }
 .nome-arquivo { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -88,6 +156,8 @@ textarea.entrada { resize: vertical; }
 .barra-acao { display: flex; flex-wrap: wrap; align-items: center; gap: var(--e3); margin-block: var(--e5); }
 .barra-acao small { color: var(--fraco); }
 .btn:disabled { opacity: .45; cursor: not-allowed; transform: none !important; }
+/* Um par de botões tem uma altura só: a do botão com a seta (2,4rem + .4rem de cada lado). */
+.btn { min-height: 3.2rem; justify-content: center; }
 .btn-verde .seta { font-weight: 900; }
 .processando, .erro { display: flex; align-items: center; gap: var(--e3); border-radius: var(--r-cartao); padding: var(--e4) var(--pad-cartao); margin-bottom: var(--e4); }
 .erro { color: #ffd0da; }
@@ -97,10 +167,27 @@ textarea.entrada { resize: vertical; }
 .resultado { display: flex; flex-direction: column; gap: var(--e5); scroll-margin-top: 1rem; }
 .periodo { color: var(--sub); font-size: .95rem; }
 /* Sem barra de rolagem à vista: no celular desliza com o dedo; no teclado, setas. */
-.sub-abas { display: flex; gap: var(--e2); overflow-x: auto; padding-bottom: .25rem; scrollbar-width: none; }
+/* Abas numa linha só: quando não cabem, rolam (sem barra) e a borda com mais abas esmaece. */
+@property --fade-start { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --fade-end { syntax: '<length>'; inherits: false; initial-value: 0px; }
+.sub-abas { --fade-size: 2.5rem; display: flex; gap: var(--e2); overflow-x: auto; padding-bottom: .25rem; scrollbar-width: none; scroll-padding-inline: var(--fade-size);
+  mask: linear-gradient(#000, #000) no-clip subtract,
+    linear-gradient(to right, #000, transparent) 0 0 / var(--fade-start) 100% no-repeat no-clip,
+    linear-gradient(to right, transparent, #000) 100% 0 / var(--fade-end) 100% no-repeat no-clip;
+  animation: abas-inicio linear both, abas-fim linear both; animation-timeline: scroll(self inline);
+  animation-range: 0 var(--fade-size), calc(100% - var(--fade-size)) 100%; }
+@keyframes abas-inicio { to { --fade-start: var(--fade-size); } }
+@keyframes abas-fim { from { --fade-end: var(--fade-size); } }
+/* Sem animação por rolagem: o JS marca as bordas com mais abas (resultado.js). */
+.sub-abas.mais-inicio { --fade-start: var(--fade-size); } .sub-abas.mais-fim { --fade-end: var(--fade-size); }
 .sub-abas::-webkit-scrollbar { display: none; }
-.sub-abas button { flex: none; min-height: 44px; padding: 0 var(--e4); border-radius: var(--pilula); font-weight: 700; color: var(--sub); border: 1px solid var(--linha); }
+.sub-abas button, .dp-alternador button { transition: background .15s, color .15s, border-color .15s, scale .1s ease-out; }
+.sub-abas button:active, .dp-alternador button:active { scale: .97; }
+@media (hover: hover) { .sub-abas button:not([aria-selected="true"]):hover, .dp-alternador button:not([aria-pressed="true"]):hover { color: var(--texto); border-color: rgba(255, 255, 255, .28); } }
+.sub-abas button { position: relative; flex: none; min-height: 44px; padding: 0 var(--e4); border-radius: var(--pilula); font-weight: 700; color: var(--sub); border: 1px solid var(--linha); }
 .sub-abas button[aria-selected="true"] { background: var(--verde); color: #000; border-color: var(--verde); }
+/* Aba escolhida com forma, não só cor: um traço embaixo do nome (borda, que o alto contraste mantém). */
+.sub-abas button[aria-selected="true"]::after { content: ''; position: absolute; inset: auto var(--e4) 7px; border-bottom: 2px solid currentColor; }
 .painel-aba { display: flex; flex-direction: column; gap: var(--e5); }
 .grade-2 { display: grid; gap: var(--vao); }
 @media (min-width: 900px) { .grade-2 { grid-template-columns: 1fr 1fr; } }
@@ -118,7 +205,7 @@ textarea.entrada { resize: vertical; }
 .grafico { border-radius: var(--r-cartao); padding: var(--pad-cartao); overflow: hidden; }
 .grafico figcaption { font-weight: 800; margin-bottom: .5rem; }
 .grafico-area { min-height: 380px; width: 100%; }
-.tabela-rolagem { border-radius: var(--r-cartao); overflow-x: auto; padding: var(--e2); scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .25) transparent; }
+.tabela-rolagem { border-radius: var(--r-cartao); overflow-x: auto; padding: var(--e2); scrollbar-color: rgba(255, 255, 255, .25) transparent; }
 .tabela-rolagem table { width: 100%; border-collapse: collapse; font-size: .9rem; }
 .tabela-rolagem caption { text-align: left; font-weight: 800; padding: var(--e2); }
 .tabela-rolagem th, .tabela-rolagem td { padding: var(--e2) var(--e3); text-align: left; border-bottom: 1px solid var(--linha); white-space: nowrap; }
@@ -131,7 +218,7 @@ textarea.entrada { resize: vertical; }
 .dp-alternador { display: flex; gap: var(--e2); }
 .dp-alternador button { flex: 1; min-width: 0; min-height: 44px; padding: 0 var(--e4); border-radius: var(--pilula); border: 1px solid var(--linha); color: var(--sub); font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .dp-alternador button[aria-pressed="true"] { color: #000; border-color: transparent; background: var(--verde); }
-.dp-alternador button.b[aria-pressed="true"] { background: #c4b7ff; }
+.dp-alternador button.b[aria-pressed="true"] { background: var(--roxo); }
 @media (max-width: 899px) { .dp-ranks[data-quem="0"] .dp-lado-1, .dp-ranks[data-quem="1"] .dp-lado-0 { display: none; } }
 @media (min-width: 900px) { .dp-alternador { display: none; } }
 .dp-etiquetas { display: flex; flex-wrap: wrap; gap: var(--e2); }
@@ -155,5 +242,22 @@ textarea.entrada { resize: vertical; }
 /* Erro com saída: a mensagem e o "Tentar de novo" lado a lado (no celular, um embaixo do outro). */
 .erro { flex-wrap: wrap; justify-content: space-between; }
 .erro p { flex: 1 1 18rem; }
+/* Rankings (HTML do núcleo, estilo playlist) no vidro do app: capa tipográfica neutra (sem arco-íris de
+   cores por nome) e sem o ▶ ao passar o mouse, que prometia tocar aqui; o link abre a busca no Spotify. */
+.resultado .su-tracklist-card { border-radius: var(--r-cartao); }
+.resultado .su-cover { background: rgba(255, 255, 255, .08); color: var(--sub); }
+.resultado .su-playicon { display: none; }
+.resultado .su-tracklist a:hover .su-num { opacity: 1; }
+/* Entrada no app vindo da página inicial ("Abrir o app"): o app se revela num círculo que nasce do ponto do clique
+   e cobre a tela; a página inicial recua ao fundo. Só com view transition entre páginas e sem "menos movimento". */
+@keyframes vt-revela {
+  from { clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%)); }
+  to { clip-path: circle(150vmax at var(--vt-x, 50%) var(--vt-y, 50%)); }
+}
+@keyframes vt-recua { to { transform: scale(.92); opacity: .35; } }
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-new(root) { animation: vt-revela .75s cubic-bezier(.65, 0, .35, 1) both; }
+  ::view-transition-old(root) { animation: vt-recua .75s cubic-bezier(.65, 0, .35, 1) both; }
+}
 /* O player dos stories segue o raio de painel do app. */
 .st-player.su-stories { border-radius: var(--r-painel); }

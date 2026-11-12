@@ -32,7 +32,9 @@ function Grafico({ figura, titulo }) {
   const [falhou, setFalhou] = useState(false);
   useEffect(() => {
     let vivo = true;
-    carregarPlotly().then((P) => vivo && P.newPlot(alvo.current, figura.data, { ...figura.layout, autosize: true }, { responsive: true, displaylogo: false }))
+    // Fundo transparente (o gráfico fica no vidro do cartão) e sem o título do Plotly: o <figcaption> já dá o nome.
+    const layout = { ...figura.layout, autosize: true, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', title: { text: '' }, margin: { ...figura.layout.margin, t: 24 } };
+    carregarPlotly().then((P) => vivo && P.newPlot(alvo.current, figura.data, layout, { responsive: true, displaylogo: false }))
       .catch(() => vivo && setFalhou(true));
     return () => { vivo = false; window.Plotly?.purge(alvo.current); };
   }, [figura]);
@@ -58,7 +60,7 @@ function Rankings({ nomes, listas }) {
     <div class="dp-alternador" role="group" aria-label="De quem são os rankings">
       ${nomes.map((n, i) => html`<button type="button" class=${i ? 'b' : 'a'} aria-pressed=${quem === i} onClick=${() => setQuem(i)}>${n}</button>`)}
     </div>
-    <div class="grade-2">${listas.map((l, i) => html`<${Html} conteudo=${l} classe=${`dp-lado-${i % 2}`} />`)}</div>
+    <div class="grade-2">${listas.map((l, i) => html`<${Html} conteudo=${l.replace('class="su-tracklist-card"', 'class="su-tracklist-card vidro"')} classe=${`dp-lado-${i % 2}`} />`)}</div>
   </div>`;
 }
 
@@ -112,8 +114,20 @@ export function Resultado({ r }) {
   const primeira = useRef(true);
   useEffect(() => {
     if (primeira.current) { primeira.current = false; return; }
-    botoes.current[aba]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    botoes.current[aba]?.scrollIntoView({ block: 'nearest', inline: 'nearest', container: 'nearest' });
   }, [aba]);
+  // Esmaecido das bordas das abas sem animação por rolagem (Safari antigo): marca o lado que tem mais abas.
+  const lista = useRef(null);
+  useEffect(() => {
+    const el = lista.current;
+    if (!el || CSS.supports('animation-timeline', 'scroll()')) return undefined;
+    const [primeira, ultima] = [el.firstElementChild, el.lastElementChild];
+    const obs = new IntersectionObserver((itens) => {
+      for (const { target, intersectionRatio } of itens) el.classList.toggle(target === primeira ? 'mais-inicio' : 'mais-fim', intersectionRatio < 1);
+    }, { root: el, threshold: 1, rootMargin: '1px' });
+    obs.observe(primeira); obs.observe(ultima);
+    return () => obs.disconnect();
+  }, []);
   const teclar = (e) => {
     const passo = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
     if (passo) { const n = (aba + passo + ABAS.length) % ABAS.length; setAba(n); botoes.current[n]?.focus(); e.preventDefault(); }
@@ -152,8 +166,8 @@ export function Resultado({ r }) {
         <${Player} key=${r} slides=${slides} rotulo=${`Dupla de ${a} e ${b}`} />
       </div>
       <${Acoes} d=${r.dupla} aoRepetir=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))} />
-      <div class="sub-abas" role="tablist" aria-label="Partes do resultado" onKeyDown=${teclar}>
-        ${ABAS.map((rotulo, i) => html`<button ref=${(el) => (botoes.current[i] = el)} role="tab" id=${`aba-${i}`} aria-selected=${aba === i} aria-controls=${`painel-${i}`} tabindex=${aba === i ? 0 : -1} onClick=${() => setAba(i)}>${rotulo}</button>`)}
+      <div ref=${lista} class="sub-abas" role="tablist" aria-label="Partes do resultado" onKeyDown=${teclar}>
+        ${ABAS.map((rotulo, i) => html`<button ref=${(el) => (botoes.current[i] = el)} role="tab" id=${`aba-${i}`} aria-selected=${aba === i} tabindex=${aba === i ? 0 : -1} onClick=${() => setAba(i)}>${rotulo}</button>`)}
       </div>
       <div class="painel-aba" role="tabpanel" id=${`painel-${aba}`} aria-labelledby=${`aba-${aba}`} tabindex="0">${paineis[aba]()}</div>
     </section>`;

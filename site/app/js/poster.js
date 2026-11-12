@@ -53,6 +53,22 @@ function capa(ctx, img, nome, x, y, lado, raio) {
   ctx.restore();
 }
 
+// Topo dos pôsteres: as 4 barras do SyncUp, em degradê verde → violeta como no site, e o período.
+const BARRAS = ['#1ed760', '#55cc94', '#8dc2cb', '#c4b7ff']; // = color-mix do estilo.css (0, 33, 67 e 100%)
+function topo(ctx, d) {
+  [0.55, 1, 0.4, 0.75].forEach((h, k) => { ctx.fillStyle = BARRAS[k]; retangulo(ctx, M + k * 16, 150 - 48 * h, 10, 48 * h, 5); ctx.fill(); });
+  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 48); ctx.fillText('SyncUp', M + 78, 150);
+  ctx.font = FONTE(400, 34); ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.textAlign = 'right';
+  ctx.fillText(`${mesAno(d.inicio)} → ${mesAno(d.fim)}`, L - M, 148); ctx.textAlign = 'left';
+}
+
+// Pé dos pôsteres: o convite em duas linhas discretas, separadas por um fio. A ênfase é a pessoa, não o site.
+function pe(ctx) {
+  ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.fillRect(M, A - 220, UTIL, 2);
+  ctx.fillStyle = '#fff'; ctx.font = FONTE(800, 36); ctx.fillText('Compare a sua sintonia comigo', M, A - 150);
+  ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = FONTE(400, 32); ctx.fillText('hazykiuu.github.io/SyncUp', M, A - 100);
+}
+
 function pilula(ctx, texto, x, y) {
   ctx.font = FONTE(800, 36);
   const w = ctx.measureText(texto).width + 64;
@@ -86,37 +102,34 @@ export async function desenharPoster(d, capas) {
   veu.addColorStop(0, 'rgba(0,0,0,.55)'); veu.addColorStop(1, 'rgba(0,0,0,.78)');
   ctx.fillStyle = veu; ctx.fillRect(0, 0, L, A);
 
-  // Topo: as 4 barras do SyncUp + período.
-  [0.55, 1, 0.4, 0.75].forEach((h, k) => { ctx.fillStyle = VERDE; retangulo(ctx, M + k * 16, 150 - 48 * h, 10, 48 * h, 5); ctx.fill(); });
-  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 48); ctx.fillText('SyncUp', M + 78, 150);
-  ctx.font = FONTE(400, 34); ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.textAlign = 'right';
-  ctx.fillText(`${mesAno(d.inicio)} → ${mesAno(d.fim)}`, L - M, 148); ctx.textAlign = 'left';
+  topo(ctx, d);
 
   // Nome e horas.
-  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 132);
-  ctx.fillText(cortar(ctx, d.nome.toUpperCase(), UTIL), M, 330);
-  ctx.font = FONTE(900, 76); ctx.fillStyle = VERDE;
+  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 150);
+  ctx.fillText(cortar(ctx, d.nome.toUpperCase(), UTIL), M, 345);
+  ctx.font = FONTE(900, 112); ctx.fillStyle = VERDE;
   const horas = fmtNum(d.horas);
-  ctx.fillText(horas, M, 430);
-  const xh = M + ctx.measureText(horas).width + 18;
+  ctx.fillText(horas, M, 485);
+  const xh = M + ctx.measureText(horas).width + 20;
   ctx.font = FONTE(400, 38); ctx.fillStyle = 'rgba(255,255,255,.88)';
-  ctx.fillText(cortar(ctx, `horas de música · ${fmtNum(d.horas / 24)} dias sem parar`, L - M - xh), xh, 428);
+  ctx.fillText(cortar(ctx, 'horas de música', L - M - xh), xh, 440);
+  ctx.fillText(cortar(ctx, `${fmtNum(d.horas / 24)} dias sem parar`, L - M - xh), xh, 485);
 
   // Artista da vida: foto à esquerda, texto ao lado (nunca por cima).
-  const yA = 500, lado = 360;
+  const yA = 570, lado = 380;
   capa(ctx, foto, a.nome, M, yA, lado, 16);
   const xt = M + lado + 48, wt = L - M - xt;
   ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = FONTE(800, 30); ctx.fillText('ARTISTA DA VIDA', xt, yA + 110);
-  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 70);
+  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 78);
   const palavras = a.nome.split(' '); let linha = '', linhas = [];
   for (const w of palavras) { const t = linha ? `${linha} ${w}` : w; if (ctx.measureText(t).width > wt && linha) { linhas.push(linha); linha = w; } else linha = t; }
   linhas.push(linha); linhas = linhas.slice(0, 2);
-  linhas.forEach((l, k) => ctx.fillText(cortar(ctx, l, wt), xt, yA + 190 + k * 76));
+  linhas.forEach((l, k) => ctx.fillText(cortar(ctx, l, wt), xt, yA + 195 + k * 84));
   ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = FONTE(400, 36);
-  ctx.fillText(`${fmtNum(a.plays)} plays`, xt, yA + 190 + linhas.length * 76 + 10);
+  ctx.fillText(`${fmtNum(a.plays)} plays`, xt, yA + 195 + linhas.length * 84 + 10);
 
   // Top 5 músicas: capas lado a lado + legenda numerada.
-  const yC = 940, gap = 24, lc = (UTIL - 4 * gap) / 5;
+  const yC = 1040, gap = 24, lc = (UTIL - 4 * gap) / 5;
   top.forEach((m, k) => capa(ctx, capasTop[k], m.nome, M + k * (lc + gap), yC, lc, 10));
   ctx.font = FONTE(400, 32); ctx.fillStyle = 'rgba(255,255,255,.88)';
   ctx.fillText(cortar(ctx, top.map((m, k) => `${k + 1} ${m.nome}`).join(' · '), UTIL), M, yC + lc + 56);
@@ -125,17 +138,10 @@ export async function desenharPoster(d, capas) {
   const yP = yC + lc + 110;
   pilula(ctx, `pico às ${d.pico_hora}h`, pilula(ctx, p.nome, M, yP), yP);
 
-  // Convite: o gancho para quem vê o story abrir o SyncUp.
-  const yK = yP + 130, hK = 300;
-  retangulo(ctx, M, yK, UTIL, hK, 48);
-  ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.fill();
-  ctx.strokeStyle = 'rgba(30,215,96,.75)'; ctx.lineWidth = 4; ctx.stroke();
-  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 66); ctx.fillText('Qual é a nossa sintonia?', M + 56, yK + 110);
-  ctx.fillStyle = VERDE; ctx.font = FONTE(800, 46); ctx.fillText('Compare comigo →', M + 56, yK + 185);
-  ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.font = FONTE(400, 40); ctx.fillText('hazykiuu.github.io/SyncUp', M + 56, yK + 250);
-
   // Logo do Spotify (regra das capas), só se alguma capa veio dele.
-  if (logo) ctx.drawImage(logo, M, yK + hK + 70, 240, 240 * (225.25 / 823.46));
+  if (logo) ctx.drawImage(logo, M, yP + 140, 240, 240 * (225.25 / 823.46));
+
+  pe(ctx);
 
   return new Promise((ok, falha) => canvas.toBlob((blob) => (blob ? ok(blob) : falha(new Error('Não deu para gerar a imagem.'))), 'image/png'));
 }
@@ -159,11 +165,7 @@ export async function desenharPosterDupla(d) {
   veu.addColorStop(0, 'rgba(0,0,0,.5)'); veu.addColorStop(1, 'rgba(0,0,0,.75)');
   ctx.fillStyle = veu; ctx.fillRect(0, 0, L, A);
 
-  // Topo: as 4 barras do SyncUp + período.
-  [0.55, 1, 0.4, 0.75].forEach((h, k) => { ctx.fillStyle = VERDE; retangulo(ctx, M + k * 16, 150 - 48 * h, 10, 48 * h, 5); ctx.fill(); });
-  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 48); ctx.fillText('SyncUp', M + 78, 150);
-  ctx.font = FONTE(400, 34); ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.textAlign = 'right';
-  ctx.fillText(`${mesAno(d.inicio)} → ${mesAno(d.fim)}`, L - M, 148); ctx.textAlign = 'left';
+  topo(ctx, d);
 
   // Avatares sobrepostos com as iniciais (A na frente, como no story).
   const inicial = (nome) => (nome.trim()[0] || '?').toUpperCase();
@@ -175,7 +177,7 @@ export async function desenharPosterDupla(d) {
 
   // "Ana + Bruno" numa linha (a fonte encolhe até 88 px); se não couber, "Ana +" / "Bruno" em duas.
   const largura = (px) => { ctx.font = FONTE(900, px); return ctx.measureText(`${d.a.nome} + ${d.b.nome}`).width; };
-  let px = 120;
+  let px = 140;
   while (px > 88 && largura(px) > UTIL) px -= 4;
   const umaLinha = largura(px) <= UTIL;
   if (!umaLinha) ctx.font = FONTE(900, (px = 100));
@@ -189,14 +191,14 @@ export async function desenharPosterDupla(d) {
 
   // Escuta em comum.
   const pct = `${fmtNum(Math.round(d.match * 100))}%`;
-  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 200); ctx.fillText(pct, M, 750 + dy);
+  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 240); ctx.fillText(pct, M, 790 + dy);
   const xp = M + ctx.measureText(pct).width + 28;
-  ctx.font = FONTE(800, 40); ctx.fillText('de escuta', xp, 680 + dy); ctx.fillText('em comum', xp, 730 + dy);
+  ctx.font = FONTE(800, 44); ctx.fillText('de escuta', xp, 712 + dy); ctx.fillText('em comum', xp, 768 + dy);
   ctx.font = FONTE(400, 38); ctx.fillStyle = 'rgba(255,255,255,.85)';
-  ctx.fillText(`${fmtNum(d.total_comuns)} ${d.total_comuns === 1 ? 'artista' : 'artistas'} em comum`, M, 820 + dy);
+  ctx.fillText(`${fmtNum(d.total_comuns)} ${d.total_comuns === 1 ? 'artista' : 'artistas'} em comum`, M, 860 + dy);
 
   // Em sintonia (rosa): só quando houve música ao mesmo tempo.
-  let y = 880 + dy;
+  let y = 920 + dy;
   if (s?.momentos > 0) {
     const h = s.musica ? 250 : 190;
     retangulo(ctx, M, y, UTIL, h, 40);
@@ -219,18 +221,11 @@ export async function desenharPosterDupla(d) {
   }
   if (d.em_comum.length) y += 96 + 40;
 
-  // Convite: o gancho para quem vê o story abrir o SyncUp.
-  const yK = Math.max(y, 1380), hK = 300;
-  retangulo(ctx, M, yK, UTIL, hK, 48);
-  ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.fill();
-  ctx.strokeStyle = 'rgba(30,215,96,.75)'; ctx.lineWidth = 4; ctx.stroke();
-  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 66); ctx.fillText('Qual é a nossa sintonia?', M + 56, yK + 110);
-  ctx.fillStyle = VERDE; ctx.font = FONTE(800, 46); ctx.fillText('Compare comigo →', M + 56, yK + 185);
-  ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.font = FONTE(400, 40); ctx.fillText('hazykiuu.github.io/SyncUp', M + 56, yK + 250);
-
   // Regra de ética do projeto: o número fala da escuta, não das pessoas.
   ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.font = FONTE(400, 30);
-  ctx.fillText('Mede a escuta neste período, não afinidade entre pessoas.', M, Math.min(yK + hK + 90, A - 80));
+  ctx.fillText('Mede a escuta neste período, não afinidade entre pessoas.', M, A - 270);
+
+  pe(ctx);
 
   return new Promise((ok, falha) => canvas.toBlob((blob) => (blob ? ok(blob) : falha(new Error('Não deu para gerar a imagem.'))), 'image/png'));
 }

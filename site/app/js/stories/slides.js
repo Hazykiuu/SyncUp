@@ -340,11 +340,7 @@ export function Resumo({ d, ativo, i }) {
       <span class="st-vidro"><${Icone} id=${p.chave} classe="mini" /> ${p.nome}</span>
       <span class="st-vidro">pico às <b>${d.pico_hora}h</b></span>
     <//>
-    <${Entra} i=${5} classe="st-poster-convite st-vidro">
-      <b>Qual é a nossa sintonia?</b>
-      <span>Compare comigo →</span>
-      <small>hazykiuu.github.io/SyncUp</small>
-    <//>
+    <${Entra} i=${5} tag="p" classe="st-poster-pe">Compare a sua sintonia comigo · <b>hazykiuu.github.io/SyncUp</b><//>
   <//>`;
 }
 

@@ -6,14 +6,17 @@ import { Opcoes, PADRAO } from './opcoes.js';
 import { Resultado } from './resultado.js';
 import { Wrapped } from './wrapped.js';
 
+// Carregamento como equalizador: 24 barras de alturas fixas que se acendem conforme o progresso.
+const ALTURAS = [.35, .6, .45, .8, .55, 1, .7, .5, .85, .4, .65, .9, .5, .75, .45, .95, .6, .4, .7, .85, .5, .65, .35, .55];
+
 function Motor({ estado }) {
-  if (estado.pronto) return html`<p class="motor ok" role="status"><span class="ponto" aria-hidden="true"></span>Pronto · tudo roda no seu aparelho</p>`;
+  if (estado.pronto) return html`<p class="motor ok" role="status"><span class="ponto" aria-hidden="true"></span>Pronto para comparar</p>`;
   if (estado.erro) return html`<p class="motor erro" role="alert">Não foi possível carregar o SyncUp: ${estado.erro} <button type="button" class="btn btn-borda vidro" onClick=${() => location.reload()}>Tentar de novo</button></p>`;
   return html`
     <div class="motor" role="status" aria-live="polite">
       <span>${estado.etapa}</span>
-      <div class="trilho" role="progressbar" aria-label="Carregando o SyncUp" aria-valuemin="0" aria-valuemax="100" aria-valuenow=${Math.round(estado.fracao * 100)}>
-        <i style=${`width:${Math.round(estado.fracao * 100)}%`}></i>
+      <div class="eq" role="progressbar" aria-label="Carregando o SyncUp" aria-valuemin="0" aria-valuemax="100" aria-valuenow=${Math.round(estado.fracao * 100)}>
+        ${ALTURAS.map((h, k) => html`<i class=${k < Math.round(estado.fracao * ALTURAS.length) ? 'aceso' : ''} style=${{ '--h': h }}></i>`)}
       </div>
       <small>Na primeira visita o navegador baixa o Python (~15 MB) e guarda. Nas próximas ele só carrega, em alguns segundos.</small>
     </div>`;
@@ -93,26 +96,38 @@ function App() {
     aoProgredir(({ etapa, fracao }) => setMotor((m) => ({ ...m, etapa, fracao })));
     iniciar().then(() => setMotor((m) => ({ ...m, pronto: true }))).catch((e) => setMotor((m) => ({ ...m, erro: e.message })));
   }, [modo]);
+  const marca = html`<a class="marca vivo" href="../" aria-label="SyncUp, voltar ao site"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>SyncUp</a>`;
   return html`
-    <header class="app-topo shell">
-      <a class="marca vivo" href="../" aria-label="SyncUp, voltar ao site"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>SyncUp</a>
-      <nav class="abas-app" aria-label="Modos">
-        ${[['dupla', 'Dupla'], ['wrapped', 'Wrapped']].map(([id, rotulo]) => html`<a class=${modo === id ? 'ativa' : ''} href=${`#${id}`} aria-current=${modo === id ? 'page' : null}>${rotulo}</a>`)}
-        <span aria-disabled="true">Match <small>em breve</small></span>
-        <span aria-disabled="true">Grupo <small>em breve</small></span>
-      </nav>
-    </header>
-    <main id="principal" class="shell app-corpo">
-      <div class="app-cabeca">
-        <span class="etiqueta">${modo === 'wrapped' ? 'Wrapped' : 'Dupla'} · 100% no seu aparelho</span>
-        <h1>${modo === 'wrapped' ? 'Seu Wrapped da vida toda' : 'Compare dois históricos'}</h1>
-        <p class="sub">${modo === 'wrapped' ? 'Envie o seu Histórico Estendido do Spotify e veja a sua vida musical em stories.' : 'Envie o Histórico Estendido do Spotify de duas pessoas.'} Nada é enviado para nenhum servidor.</p>
-        <${Motor} estado=${modo === 'wrapped' ? { pronto: true } : motor} />
+    <header class="app-topo shell">${marca}</header>
+    <nav class="nav-app" aria-label="Modos">
+      ${marca}
+      <ul>${MODOS.map(([id, rotulo, icone, breve]) => html`<li>${breve
+        ? html`<span class="nav-item" aria-disabled="true">${icone}<span>${rotulo}</span> <small>em breve</small></span>`
+        : html`<a class="nav-item" href=${`#${id}`} aria-current=${modo === id ? 'page' : null}>${icone}<span>${rotulo}</span></a>`}</li>`)}</ul>
+      <p class="nav-selo"><span class="ponto" aria-hidden="true"></span>Tudo roda no seu aparelho</p>
+      <a class="nav-site" href="../">← Voltar ao site</a>
+    </nav>
+    <main id="principal" class="app-corpo" data-modo=${modo}>
+      <div class="shell">
+        <div class="app-cabeca">
+          <h1>${modo === 'wrapped' ? 'Seu Wrapped da vida toda' : 'Compare dois históricos'}</h1>
+          <p class="sub">${modo === 'wrapped' ? 'Envie o seu Histórico Estendido do Spotify e veja a sua vida musical em stories. O histórico não sai do seu aparelho.' : 'Envie o Histórico Estendido do Spotify de duas pessoas. Nada é enviado para nenhum servidor.'}</p>
+          ${modo === 'dupla' && html`<${Motor} estado=${motor} />`}
+        </div>
+        <div hidden=${modo !== 'dupla'}><${Dupla} pronto=${motor.pronto} /></div>
+        <div hidden=${modo !== 'wrapped'}><${Wrapped} /></div>
       </div>
-      <div hidden=${modo !== 'dupla'}><${Dupla} pronto=${motor.pronto} /></div>
-      <div hidden=${modo !== 'wrapped'}><${Wrapped} /></div>
     </main>`;
 }
+
+// Ícones dos modos: traço de 2 px, pontas redondas, como os da página inicial.
+const icone = (corpo) => html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${corpo}</svg>`;
+const MODOS = [
+  ['dupla', 'Dupla', icone(html`<circle cx="9" cy="12" r="6" /><circle cx="15" cy="12" r="6" />`)],
+  ['wrapped', 'Wrapped', icone(html`<rect x="6" y="2.5" width="12" height="19" rx="2.5" /><path d="M9 6h6" />`)],
+  ['match', 'Match', icone(html`<path d="M4 8h13l-3-3M20 16H7l3 3" />`), true],
+  ['grupo', 'Grupo', icone(html`<circle cx="12" cy="7.5" r="3.5" /><circle cx="6" cy="16.5" r="3.5" /><circle cx="18" cy="16.5" r="3.5" />`), true],
+];
 
 // O aviso "Carregando o SyncUp…" do index.html sai: o render do Preact não apaga o que ele não criou.
 const raiz = document.getElementById('app');

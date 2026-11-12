@@ -1,6 +1,6 @@
-# SyncUp v1.6
+# SyncUp v1.7
 
-Compare o seu histórico do Spotify com o dos amigos e descubra com quem você está em sintonia. Tudo roda **no seu computador**: sem conta, sem servidor e sem anúncios. Projeto de ciência de dados, **código aberto** ([licença MIT](LICENSE)).
+Compare o seu histórico do Spotify com o dos amigos e veja com quem você está em sintonia, em stories. **Use direto no navegador**, no computador ou no celular: sem instalar, sem conta, sem anúncios, e o histórico não sai do seu aparelho. Há também um app para PC com o Match e o Grupo. Projeto de ciência de dados, **código aberto** ([licença MIT](LICENSE)).
 
 [![Testes](https://github.com/Hazykiuu/SyncUp/actions/workflows/testes.yml/badge.svg)](https://github.com/Hazykiuu/SyncUp/actions/workflows/testes.yml)
 [![Lint](https://github.com/Hazykiuu/SyncUp/actions/workflows/lint.yml/badge.svg)](https://github.com/Hazykiuu/SyncUp/actions/workflows/lint.yml)
@@ -8,11 +8,19 @@ Compare o seu histórico do Spotify com o dos amigos e descubra com quem você e
 [![Licença](https://img.shields.io/github/license/Hazykiuu/SyncUp?label=licen%C3%A7a)](LICENSE)
 ![Python](https://img.shields.io/badge/python-3.10%20a%203.14-3776AB?logo=python&logoColor=white)
 
-**Site:** <https://hazykiuu.github.io/SyncUp/>
+**Site:** <https://hazykiuu.github.io/SyncUp/> · **App no navegador:** <https://hazykiuu.github.io/SyncUp/app/>
 
 ![Início do SyncUp](docs/img/inicio.jpg)
 
 > **Aviso:** as métricas descrevem o recorte de escuta enviado. Elas não medem personalidade nem afinidade amorosa.
+
+## Usar no navegador
+
+1. Peça o seu histórico ao Spotify (veja o passo 4, abaixo).
+2. Abra <https://hazykiuu.github.io/SyncUp/app/> no computador ou no celular.
+3. Envie o ZIP: na **Dupla**, o de duas pessoas; no **Wrapped**, o seu. Não precisa extrair.
+
+Sem histórico ainda? Use **"Testar com dados fictícios"**. O Match e o Grupo, por enquanto, só existem no app para PC.
 
 ## Como rodar o SyncUp na sua máquina
 
@@ -67,13 +75,13 @@ Feche a janela preta (o terminal) que o `iniciar.bat` abriu, ou aperte `Ctrl+C` 
 
 ## O que dá para fazer
 
-### Dupla: duas pessoas lado a lado
+### Dupla: a história de duas pessoas, em stories
 
-Envie o histórico de duas pessoas e veja o Blend, a identidade musical de cada um, os rankings, os gráficos e **Em sintonia**: os momentos em que vocês ouviram a mesma música ao mesmo tempo. Dá para baixar um story PNG e uma playlist em CSV.
+No navegador, a Dupla vira 7 stories: o quanto a escuta se parece (num afinador: 100% é "afinados", a 440 Hz), o que une vocês, o favorito de cada um, um som de cada um para o outro, os relógios de escuta e **Em sintonia**, os minutos em que vocês ouviram a mesma música ao mesmo tempo. Depois vêm os rankings, os gráficos, os detalhes técnicos, um pôster para o Instagram e a playlist em comum em CSV. No app para PC, a Dupla mostra também o Blend e a identidade musical de cada um.
 
-![Dupla](docs/img/dupla.jpg)
+![Dupla e Wrapped no navegador](docs/img/recursos.jpg)
 
-### Match: quem combina com quem
+### Match: quem combina com quem (app para PC)
 
 Junte a galera por qualquer fonte. O SyncUp compara todos com todos, forma as duplas que mais combinam (com número ímpar, uma vira trio), mostra a **dupla mais sincronizada** e gera pôsteres e uma playlist da festa.
 
@@ -88,11 +96,9 @@ Fontes aceitas, que podem ser misturadas:
 
 ### Wrapped: a sua vida toda no Spotify
 
-Envie o seu histórico completo e veja, em stories, o artista e a música da vida, os anos, os recordes, o relógio musical e o seu arquétipo de escuta. Baixe o story em PNG 1080×1920 para postar.
+Envie o seu histórico completo e veja, em stories com as capas e trechos das suas músicas, o artista e a música da vida, os anos, os recordes, o relógio musical e o seu arquétipo de escuta. No fim, um pôster em PNG 1080×1920 para postar.
 
-<img src="docs/img/wrapped.jpg" alt="Story do Wrapped com dados fictícios" width="300">
-
-### Grupo: de 3 a 6 pessoas
+### Grupo: de 3 a 6 pessoas (app para PC)
 
 Um arquivo por pessoa. Mostra uma matriz de compatibilidade de todos com todos, os perfis e os arquétipos. As regras técnicas ficam em "Detalhes técnicos".
 
@@ -109,7 +115,7 @@ O Spotify só libera o login, em apps pessoais, para **no máximo 5 contas cadas
 
 - **Fica no computador:** os históricos enviados (apagados em até 1 hora), os perfis do Spotify (só rankings) e o cache. Para ver e apagar, abra *Opções de dados → Meus dados*.
 - **Vai para a internet só se você pedir:** o Spotify (ao conectar a conta), o ListenBrainz (o nome de usuário digitado) e o MusicBrainz (nomes de artistas, só com a caixa de estilo marcada).
-- **App no navegador, Wrapped com "Começar com capas e som" (opcional):** só depois do toque, o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify (capas e fotos), o nome dos seus artistas para o MusicBrainz e os nomes das músicas para a Apple/iTunes (trechos de 30 s), além do seu endereço IP. O histórico e o seu nome não saem do aparelho. O navegador guarda só os endereços das capas, por até 30 dias; o botão "Apagar capas guardadas" limpa na hora.
+- **App no navegador, Wrapped:** para as capas e o som (o Wrapped começa com eles), o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify (capas e fotos), o nome dos seus artistas para o MusicBrainz e os nomes das músicas para a Apple/iTunes (trechos de 30 s), além do seu endereço IP. O histórico e o seu nome não saem do aparelho. O navegador guarda só os endereços das capas, por até 30 dias; o botão "Apagar capas guardadas" limpa na hora.
 - **Nunca é guardado:** o token do Spotify, o IP e o modelo do aparelho.
 
 **Créditos:** capas e fotos de artistas vêm do Spotify; o logo do Spotify é marca da Spotify AB, usado conforme as [diretrizes de design](https://developer.spotify.com/documentation/design) e fora da licença MIT. Trechos de áudio: iTunes (Apple). Dados de artistas: MusicBrainz.
@@ -143,7 +149,8 @@ O CI roda os mesmos comandos no GitHub, em Python 3.10 e 3.12, mais `node --test
 | `spotify_api.py`, `listenbrainz.py`, `generos.py` | Login PKCE, ListenBrainz e MusicBrainz |
 | `wrapped.py`, `arquetipos.py`, `stories.py`, `cartao.py` | Wrapped, stories e PNGs |
 | `festa.py`, `exportacoes.py`, `privacidade.py` | Playlist da festa, CSV protegido e "Meus dados" |
-| `ui/`, `componentes.py`, `syncup.js`, `styles.css` | Interface Gradio 6 no tema Spotify |
+| `ui/`, `componentes.py`, `syncup.js`, `styles.css` | Interface Gradio 6 do app para PC |
+| `site/` | Página inicial e app no navegador (Preact + htm, sem build); a Dupla roda o núcleo Python no Pyodide |
 | `site/app/js/historico.js`, `calculo.js` | Wrapped do app no navegador em JavaScript, com as regras do Python (teste de paridade em `tests/test_paridade_wrapped.py`) |
 
 ```python
@@ -156,7 +163,7 @@ print(r.metricas.cosseno)
 
 **Benchmark:** `python tools/gerar_dados_falsos.py a.zip --seed 41` gera um histórico fictício de ~300 mil eventos, e `python medir_desempenho.py a.zip b.zip --repeticoes 3 --somente-nucleo --saida benchmark/meu_pc` mede os tempos.
 
-**Dependências**, todas abertas (`tests/test_licencas.py` confere): Gradio e orjson (Apache-2.0), FastAPI e Plotly (MIT), httpx e pandas (BSD-3-Clause), Pillow (MIT-CMU), pytest e Ruff (MIT) e a fonte Figtree (SIL OFL 1.1). O site (`site/`) usa a Lenis (MIT), com o visual adaptado do modelo Lumora do GetLayers.
+**Dependências**, todas abertas (`tests/test_licencas.py` confere): Gradio e orjson (Apache-2.0), FastAPI e Plotly (MIT), httpx e pandas (BSD-3-Clause), Pillow (MIT-CMU), pytest e Ruff (MIT) e a fonte Figtree (SIL OFL 1.1). O site (`site/`) usa a Lenis (MIT) e o Preact com htm (MIT).
 
 **Contribuir:** abra uma *issue* ou um *pull request*. Nunca envie históricos reais nem a pasta `perfis_spotify/`: são dados pessoais. O histórico de cada versão está no [CHANGELOG](CHANGELOG.md).
 

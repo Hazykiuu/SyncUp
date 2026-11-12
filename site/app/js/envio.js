@@ -25,22 +25,22 @@ export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquiv
     <section class=${`pessoa vidro ${cor}`} aria-labelledby=${`titulo-${rotulo}`}>
       <div class="pessoa-topo">
         <span class=${`avatar ${cor}`} aria-hidden="true">${rotulo}</span>
-        <h2 id=${`titulo-${rotulo}`}>${titulo}</h2>
+        <div><h2 id=${`titulo-${rotulo}`}>${titulo}</h2>${(rotulo === 'A' || rotulo === 'B') && html`<small class="lado">Lado ${rotulo}</small>`}</div>
       </div>
       <label class="campo" for=${idNome}>Nome</label>
       <input id=${idNome} class="entrada" value=${nome} placeholder=${rotulo === 'A' ? 'Ex.: Ana' : 'Ex.: Bia'}
         onInput=${(e) => aoMudarNome(e.target.value)} disabled=${desabilitado} autocomplete="off" />
-      <div class=${`soltar ${arrastando ? 'sobre' : ''}`}
+      <div class=${`soltar${arrastando ? ' sobre' : ''}${arquivos.length ? ' tem' : ''}`}
         onDragOver=${(e) => { e.preventDefault(); setArrastando(true); }}
         onDragLeave=${() => setArrastando(false)}
         onDrop=${(e) => { e.preventDefault(); setArrastando(false); if (!desabilitado) somar(e.dataTransfer.files); }}>
-        <p><b>Arraste o ZIP do Histórico Estendido</b> ou</p>
+        <p>${arquivos.length ? 'Arraste mais partes aqui ou' : html`<b>Arraste o ZIP do Histórico Estendido</b> ou`}</p>
         <button type="button" class="btn btn-borda vidro" onClick=${() => entrada.current.click()} disabled=${desabilitado}>
           ${arquivos.length ? '+ Adicionar mais arquivos' : 'Escolher arquivos'}
         </button>
         <input ref=${entrada} type="file" accept=".zip,.json" multiple hidden
           onChange=${(e) => { somar(e.target.files); e.target.value = ''; }} />
-        <small>Pode enviar várias partes. Os arquivos não saem do seu aparelho.</small>
+        <small>Pode enviar várias partes, em ZIP ou JSON.</small>
         ${aviso && html`<p class="erro" role="alert">${aviso}</p>`}
       </div>
       ${arquivos.length > 0 && html`

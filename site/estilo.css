@@ -3,7 +3,13 @@
 @font-face { font-family: 'Figtree'; src: url('assets/Figtree.ttf') format('truetype'); font-weight: 300 900; font-display: swap; }
 :root {
   --bg: #121212; --s1: #181818; --s2: #242424; --texto: #ffffff; --sub: #b3b3b3; --fraco: #8a8a8a;
-  --linha: rgba(255, 255, 255, .1); --verde: #1ed760; --roxo: #c4b7ff;
+  --linha: rgba(255, 255, 255, .1);
+  /* Cor com sentido fixo: verde = pessoa A, violeta = pessoa B, rosa = os dois juntos. */
+  --verde: #1ed760; --roxo: #c4b7ff; --rosa: #f573a0;
+  /* Vidro (painéis, stories) e véu sobre o fundo. */
+  --vidro-1: rgba(255, 255, 255, .06); --vidro-2: rgba(255, 255, 255, .10); --vidro-3: rgba(255, 255, 255, .16);
+  --vidro-borda: rgba(255, 255, 255, .18); --vidro-brilho: rgba(255, 255, 255, .14);
+  --veu-a: rgba(0, 0, 0, .55); --veu-b: rgba(0, 0, 0, .78);
   --pilula: 999px; --cartao: 20px; --img: 16px;
   --sai: cubic-bezier(.22, 1, .36, 1); --linhas: cubic-bezier(.215, .61, .355, 1); --palavras: cubic-bezier(.165, .84, .44, 1);
 }
@@ -62,7 +68,9 @@ svg:not([width]) { width: 1em; height: 1em; flex: none; }
 .marca { display: inline-flex; align-items: center; gap: .6rem; font-weight: 900; letter-spacing: -.02em; }
 .marca .logo { display: inline-flex; align-items: flex-end; gap: .14em; height: 1em; }
 .marca .logo i { width: .16em; border-radius: 1em; background: var(--verde); }
-.marca .logo i:nth-child(1) { height: 55%; } .marca .logo i:nth-child(2) { height: 100%; } .marca .logo i:nth-child(3) { height: 40%; } .marca .logo i:nth-child(4) { height: 75%; }
+/* Logo em degradê "Sintonia": as barras vão do verde (A) ao violeta (B). Não lembra o logo do Spotify. */
+.marca .logo i:nth-child(1) { height: 55%; } .marca .logo i:nth-child(2) { height: 100%; background: color-mix(in srgb, var(--verde), var(--roxo) 33%); }
+.marca .logo i:nth-child(3) { height: 40%; background: color-mix(in srgb, var(--verde), var(--roxo) 67%); } .marca .logo i:nth-child(4) { height: 75%; background: var(--roxo); }
 .loader .marca { font-size: 1.875rem; }
 .loader p { max-width: 26ch; font-size: .95rem; color: rgba(255, 255, 255, .6); }
 .progresso { width: min(22rem, 72vw); display: flex; flex-direction: column; gap: .75rem; }

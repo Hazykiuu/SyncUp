@@ -53,6 +53,15 @@ function capa(ctx, img, nome, x, y, lado, raio) {
   ctx.restore();
 }
 
+// Topo dos pôsteres: as 4 barras do SyncUp, em degradê verde → violeta como no site, e o período.
+const BARRAS = ['#1ed760', '#55cc94', '#8dc2cb', '#c4b7ff']; // = color-mix do estilo.css (0, 33, 67 e 100%)
+function topo(ctx, d) {
+  [0.55, 1, 0.4, 0.75].forEach((h, k) => { ctx.fillStyle = BARRAS[k]; retangulo(ctx, M + k * 16, 150 - 48 * h, 10, 48 * h, 5); ctx.fill(); });
+  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 48); ctx.fillText('SyncUp', M + 78, 150);
+  ctx.font = FONTE(400, 34); ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.textAlign = 'right';
+  ctx.fillText(`${mesAno(d.inicio)} → ${mesAno(d.fim)}`, L - M, 148); ctx.textAlign = 'left';
+}
+
 function pilula(ctx, texto, x, y) {
   ctx.font = FONTE(800, 36);
   const w = ctx.measureText(texto).width + 64;
@@ -86,11 +95,7 @@ export async function desenharPoster(d, capas) {
   veu.addColorStop(0, 'rgba(0,0,0,.55)'); veu.addColorStop(1, 'rgba(0,0,0,.78)');
   ctx.fillStyle = veu; ctx.fillRect(0, 0, L, A);
 
-  // Topo: as 4 barras do SyncUp + período.
-  [0.55, 1, 0.4, 0.75].forEach((h, k) => { ctx.fillStyle = VERDE; retangulo(ctx, M + k * 16, 150 - 48 * h, 10, 48 * h, 5); ctx.fill(); });
-  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 48); ctx.fillText('SyncUp', M + 78, 150);
-  ctx.font = FONTE(400, 34); ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.textAlign = 'right';
-  ctx.fillText(`${mesAno(d.inicio)} → ${mesAno(d.fim)}`, L - M, 148); ctx.textAlign = 'left';
+  topo(ctx, d);
 
   // Nome e horas.
   ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 132);
@@ -159,11 +164,7 @@ export async function desenharPosterDupla(d) {
   veu.addColorStop(0, 'rgba(0,0,0,.5)'); veu.addColorStop(1, 'rgba(0,0,0,.75)');
   ctx.fillStyle = veu; ctx.fillRect(0, 0, L, A);
 
-  // Topo: as 4 barras do SyncUp + período.
-  [0.55, 1, 0.4, 0.75].forEach((h, k) => { ctx.fillStyle = VERDE; retangulo(ctx, M + k * 16, 150 - 48 * h, 10, 48 * h, 5); ctx.fill(); });
-  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 48); ctx.fillText('SyncUp', M + 78, 150);
-  ctx.font = FONTE(400, 34); ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.textAlign = 'right';
-  ctx.fillText(`${mesAno(d.inicio)} → ${mesAno(d.fim)}`, L - M, 148); ctx.textAlign = 'left';
+  topo(ctx, d);
 
   // Avatares sobrepostos com as iniciais (A na frente, como no story).
   const inicial = (nome) => (nome.trim()[0] || '?').toUpperCase();

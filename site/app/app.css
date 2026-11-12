@@ -134,7 +134,7 @@ textarea.entrada { resize: vertical; }
 .dp-alternador { display: flex; gap: var(--e2); }
 .dp-alternador button { flex: 1; min-width: 0; min-height: 44px; padding: 0 var(--e4); border-radius: var(--pilula); border: 1px solid var(--linha); color: var(--sub); font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .dp-alternador button[aria-pressed="true"] { color: #000; border-color: transparent; background: var(--verde); }
-.dp-alternador button.b[aria-pressed="true"] { background: #c4b7ff; }
+.dp-alternador button.b[aria-pressed="true"] { background: var(--roxo); }
 @media (max-width: 899px) { .dp-ranks[data-quem="0"] .dp-lado-1, .dp-ranks[data-quem="1"] .dp-lado-0 { display: none; } }
 @media (min-width: 900px) { .dp-alternador { display: none; } }
 .dp-etiquetas { display: flex; flex-wrap: wrap; gap: var(--e2); }

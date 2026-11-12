@@ -1,4 +1,4 @@
-// Capas e fotos do Wrapped, só depois do opt-in ("Começar com capas e som").
+// Capas e fotos do Wrapped: o Wrapped começa sempre com capas e som (pedido do Carlos, 12/11).
 // Capa da música: oEmbed público do Spotify pelo ID que veio no ZIP (exata, sem casar nomes).
 // Foto do artista: MusicBrainz (nome → link do Spotify) → oEmbed do artista.
 // Tudo com CORS * e sem chave. Guarda só a URL (IndexedDB, 30 dias), nunca a imagem.

@@ -72,10 +72,19 @@ function prepararSom() {
   return som;
 }
 
+// Chamado dentro do toque em "Montar meu Wrapped" (antes de qualquer await): o iPhone só deixa tocar
+// som que foi destravado por um toque. Depois, os stories começam com capas e som sem pedir outro toque.
+export function destravarSom() {
+  const { el, ctx, ganho } = prepararSom();
+  ganho.gain.cancelScheduledValues(ctx.currentTime); ganho.gain.value = 0;
+  el.src = silencio(); el.play().catch(() => { /* bloqueado: a busca segue e o botão "Ligar" aparece se falhar */ });
+  ctx.resume();
+}
+
 export function SomStories({ trilha, alvo, aoLigar }) {
   const trilhaPronta = useRef(null);
   const [status, setStatus] = useState('');
-  const [estado, setEstado] = useState('escolher'); // escolher | carregando | tocando | sem
+  const [estado, setEstado] = useState('carregando'); // carregando | tocando | sem (o Wrapped começa sempre com capas e som)
   const [mudo, setMudo] = useState(false);
   const mudoAgora = useRef(false); // lido pelos ouvintes do player, que não re-renderizam
   mudoAgora.current = mudo;
@@ -94,6 +103,7 @@ export function SomStories({ trilha, alvo, aoLigar }) {
   // Qualquer erro na busca vira "sem som", nunca um "Buscando…" eterno.
   // Um toque só: liga as capas (opt-in) e desbloqueia o áudio.
   const comecar = () => { aoLigar?.(); return iniciarSom().catch(() => { setEstado('sem'); setAviso('Não deu para preparar o som. Os stories seguem sem som.'); }); };
+  useEffect(() => { comecar(); }, []); // começa sozinho: o áudio já foi destravado no toque em "Montar"
   const iniciarSom = async () => {
     const { el, ctx, ganho } = prepararSom();
     ganho.gain.cancelScheduledValues(ctx.currentTime); ganho.gain.value = 0;
@@ -175,16 +185,12 @@ export function SomStories({ trilha, alvo, aoLigar }) {
 
   return html`
     <div class="som-stories vidro">
-      ${estado === 'escolher' || estado === 'sem' ? html`
-        <div class="acoes">
-          <button type="button" class="btn btn-verde" onClick=${comecar}>${estado === 'escolher' ? '♪ Começar com capas e som' : '♪ Ligar capas e som'}</button>
-          ${estado === 'escolher' && html`<button type="button" class="btn btn-borda vidro" onClick=${() => setEstado('sem')}>Começar sem</button>`}
-        </div>
-        <p class="nota">Com capas e som, o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify, o nome dos seus artistas para o MusicBrainz e os nomes das músicas para a Apple (iTunes), além do seu endereço IP, para buscar capas, fotos e trechos de 30 s. O histórico e o seu nome não saem do aparelho. Capas e fotos: Spotify · Trechos: iTunes.</p>` : html`
-        <div class="acoes">
-          <button type="button" class="btn btn-borda vidro" aria-pressed=${mudo} disabled=${estado !== 'tocando'} onClick=${() => setMudo((m) => !m)}>
-            ${estado === 'carregando' ? 'Buscando os trechos…' : mudo ? '🔇 Ligar som' : '🔊 Silenciar'}</button>
-        </div>`}
+      <div class="acoes">${estado === 'sem'
+        ? html`<button type="button" class="btn btn-verde" onClick=${comecar}>♪ Ligar capas e som</button>`
+        : html`<button type="button" class="btn btn-borda vidro" aria-pressed=${mudo} disabled=${estado !== 'tocando'} onClick=${() => setMudo((m) => !m)}>
+            ${estado === 'carregando' ? 'Buscando capas e trechos…' : mudo ? '🔇 Ligar som' : '🔊 Silenciar'}</button>`}
+      </div>
+      <p class="nota">Para as capas e o som, o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify, o nome dos seus artistas para o MusicBrainz e os nomes das músicas para a Apple (iTunes), além do seu endereço IP. O histórico e o seu nome não saem do aparelho. Capas e fotos: Spotify · Trechos: iTunes.</p>
       ${aviso && html`<p class="nota" role="status">${aviso}</p>`}
       ${estado === 'tocando' && status && html`<p class="nota">${status}</p>`}
     </div>`;

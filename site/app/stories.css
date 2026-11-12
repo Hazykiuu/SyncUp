@@ -56,7 +56,7 @@
 .st-rotulo { display: block; margin-top: 1cqw; font-size: 3.6cqw; font-weight: 700; color: rgba(255, 255, 255, .8); }
 .st-nome-xxl { margin: 0; font-size: 12.5cqw; line-height: .95; font-weight: 900; letter-spacing: -.04em; text-transform: uppercase; overflow-wrap: anywhere; }
 .st-chips { display: flex; flex-wrap: wrap; gap: 2cqw; }
-.st-chips span { padding: 2cqw 3.4cqw; border-radius: var(--raio-chip); font-size: 3.4cqw; }
+.st-chips span { padding: 2cqw max(3.4cqw, 12px); border-radius: var(--raio-chip); font-size: 3.4cqw; }
 .st-chips b { font-size: 4.4cqw; font-weight: 900; font-variant-numeric: tabular-nums; }
 /* Capa nítida e inteira (cover num quadrado não corta: as capas já são quadradas); cantos de 4 px, 8 px na grande. */
 .st-capa { display: block; aspect-ratio: 1; object-fit: cover; border-radius: 4px; box-shadow: 0 3cqw 8cqw rgba(0, 0, 0, .45); }
@@ -152,7 +152,7 @@
 .st-poster-musicas p { margin-top: 1.6cqw !important; font-size: 2.9cqw; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .st-poster-musicas p b { color: var(--verde); }
 .st-poster-fatos { display: flex; flex-wrap: wrap; gap: 2cqw; }
-.st-poster-fatos span { display: inline-flex; align-items: center; gap: 1.4cqw; padding: 2cqw 3.4cqw; border-radius: var(--raio-chip); font-size: 3.4cqw; font-weight: 800; }
+.st-poster-fatos span { display: inline-flex; align-items: center; gap: 1.4cqw; padding: 2cqw max(3.4cqw, 12px); border-radius: var(--raio-chip); font-size: 3.4cqw; font-weight: 800; }
 .st-poster-convite { display: grid; gap: .8cqw; padding: 4cqw; border-radius: var(--raio-cartao); border-color: rgba(30, 215, 96, .7) !important; }
 .st-poster-convite b { font-size: 5.6cqw; font-weight: 900; line-height: 1.05; }
 .st-poster-convite span { font-size: 3.8cqw; font-weight: 800; color: var(--verde); }

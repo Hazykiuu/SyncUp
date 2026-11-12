@@ -30,11 +30,13 @@ img { display: block; max-width: 100%; }
 .shell { max-width: 80rem; margin-inline: auto; padding-inline: clamp(1.25rem, 4vw, 3rem); }
 
 /* Botões em pílula */
-.btn { display: inline-flex; align-items: center; gap: .75rem; min-height: 44px; border-radius: var(--pilula); font-size: .95rem; font-weight: 700; padding: .4rem .4rem .4rem 1.5rem; }
+.btn { display: inline-flex; align-items: center; gap: .75rem; min-height: 44px; border-radius: var(--pilula); font-size: .95rem; font-weight: 700; padding: .4rem 1.5rem; }
+/* Só o botão com a seta redonda encosta à direita: a seta ocupa esse espaço. */
+.btn:has(.seta) { padding-right: .4rem; }
 .btn .seta { display: grid; place-items: center; width: 2.4rem; height: 2.4rem; min-width: 36px; min-height: 36px; border-radius: var(--pilula); font-size: 1rem; transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
 .btn-verde { background: var(--verde); color: #000; }
 .btn-verde .seta { background: #000; color: var(--verde); }
-.btn-borda { border: 1px solid rgba(255, 255, 255, .25); color: var(--texto); padding: .875rem 1.75rem; }
+.btn-borda { border: 1px solid rgba(255, 255, 255, .25); color: var(--texto); padding: .875rem 1.5rem; }
 @media (hover: hover) {
   .btn:hover { transform: scale(1.04); }
   .btn:hover .seta { transform: translate(2px, -2px); }
@@ -161,7 +163,7 @@ section[id] { scroll-margin-top: 6rem; }
 .no-pc li { display: flex; flex-direction: column; gap: .5rem; padding: 1.5rem; border-radius: var(--cartao); border: 1px solid var(--linha); background: rgba(255, 255, 255, .03); }
 .no-pc h3 { font-size: 1.25rem; font-weight: 800; }
 .no-pc p { font-size: 1rem; line-height: 1.5; color: var(--sub); }
-.selo { width: fit-content; padding: .25rem .65rem; border-radius: var(--pilula); background: rgba(196, 183, 255, .14); color: var(--roxo); font-size: .75rem; font-weight: 700; }
+.selo { width: fit-content; padding: .25rem .75rem; border-radius: var(--pilula); background: rgba(196, 183, 255, .14); color: var(--roxo); font-size: .75rem; font-weight: 700; }
 .no-pc a { width: fit-content; min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; color: var(--texto); text-decoration: underline; text-underline-offset: .2em; }
 
 /* Como usar: três passos em ordem */

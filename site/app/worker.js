@@ -41,11 +41,13 @@ async function acao({ id, nome, args = [], arquivos = [], saida = 'json' }) {
   try { await Promise.all((PRECISA[nome] || []).map(garantir)); } catch {
     throw new Error('RuntimeError: Não deu para baixar uma parte do SyncUp (os gráficos). Confira a internet e tente de novo.');
   }
-  // Cada arquivo vai direto para o sistema de arquivos virtual, sem cópia extra.
-  for (const { caminho, bytes } of arquivos) py.FS.writeFile(caminho, new Uint8Array(bytes));
   let resultado;
+  const proxies = []; // listas e opções convertidas para o Python: destruídas no fim, senão acumulam a cada comparação
   try {
-    resultado = py.pyimport('web.ponte')[nome](...args.map((a) => py.toPy(a)));
+    // Cada arquivo vai direto para o sistema de arquivos virtual, sem cópia extra. Dentro do try: se faltar
+    // memória no meio, o finally apaga os que já entraram.
+    for (const { caminho, bytes } of arquivos) py.FS.writeFile(caminho, new Uint8Array(bytes));
+    resultado = py.pyimport('web.ponte')[nome](...args.map((a) => { const p = py.toPy(a); if (p?.destroy) proxies.push(p); return p; }));
     if (saida === 'arquivo') {
       const conteudo = py.FS.readFile(resultado);
       self.postMessage({ tipo: 'resposta', id, ok: true, dados: { nome: resultado.split('/').pop(), bytes: conteudo.buffer } }, [conteudo.buffer]);
@@ -55,6 +57,7 @@ async function acao({ id, nome, args = [], arquivos = [], saida = 'json' }) {
     }
   } finally {
     if (resultado && resultado.destroy) resultado.destroy();
+    for (const p of proxies) p.destroy();
     // Os históricos já foram lidos: sai do sistema virtual para não pesar na memória.
     for (const { caminho } of arquivos) { try { py.FS.unlink(caminho); } catch { /* já saiu */ } }
   }

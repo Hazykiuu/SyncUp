@@ -122,7 +122,10 @@ export function SomStories({ trilha, alvo, aoLigar }) {
   // Qualquer erro na busca vira "sem som", nunca um "Buscando…" eterno.
   // Começa sozinho (o áudio foi destravado no toque em "Montar"); o botão "Ligar" repete isto num toque.
   const comecar = () => { aoLigar?.(); return iniciarSom().catch(() => { setEstado('sem'); setAviso('Não deu para preparar o som. Os stories seguem sem som.'); }); };
-  useEffect(() => { comecar(); }, []); // começa sozinho: o áudio já foi destravado no toque em "Montar"
+  // Começa sozinho: o áudio já foi destravado no toque em "Montar". `vivo`: um resultado novo desmonta este;
+  // a busca antiga, se terminar depois, não pode reiniciar nem rolar até o player do resultado novo.
+  const vivo = useRef(true);
+  useEffect(() => { comecar(); return () => { vivo.current = false; }; }, []);
   const iniciarSom = async () => {
     destravarSom(); // no botão "Ligar", dentro do toque e antes de qualquer await
     if (!som) throw new Error('sem Web Audio'); // vira "sem som" no catch de comecar
@@ -136,6 +139,7 @@ export function SomStories({ trilha, alvo, aoLigar }) {
       fila = (await Promise.all(EXEMPLO.map(resolver))).flat();
       if (fila.length) setAviso('Não achamos estas músicas no iTunes (histórico fictício?). Tocando trechos de exemplo.');
     }
+    if (!vivo.current) return;
     if (!fila.length && !Object.values(porSlide).some((l) => l.length)) { setEstado('sem'); setAviso('Não deu para buscar os trechos (sem internet?). Os stories seguem sem som.'); return; }
     trilhaPronta.current = { fila, porSlide };
     setEstado('tocando');

@@ -18,8 +18,9 @@ export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquiv
     const existentes = new Set(arquivos.map(chave));
     const lista = [...arquivos, ...novos.filter((f) => !existentes.has(chave(f)))];
     if (lista.reduce((t, f) => t + f.size, 0) > TETO) { setAviso('Passou de 50 MB para esta pessoa. Envie só o Histórico Estendido (o ZIP do Spotify costuma ter bem menos).'); return; }
-    setAviso('');
-    aoMudarArquivos(lista);
+    // Arrastar ignora o accept do campo: o que não é .zip nem .json sai com aviso, nunca em silêncio.
+    setAviso(novos.length < escolhidos.length ? 'Só aceitamos .zip ou .json (o ZIP do Histórico Estendido do Spotify).' : '');
+    if (lista.length > arquivos.length) aoMudarArquivos(lista); // nada novo: a lista (e o aviso) ficam como estão
   };
   const idNome = `nome-${rotulo}`;
   return html`

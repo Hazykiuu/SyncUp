@@ -19,8 +19,6 @@ from typing import Any
 
 import pandas as pd
 
-TETO_MS = 86_400_000  # 24 h: o maior play aceito (igual a site/app/js/historico.js)
-
 from configuracao import ConfiguracaoCarga, normalizar_nome
 
 try:  # Leitor JSON opcional e muito mais rápido; o padrão continua funcionando sem ele.
@@ -74,6 +72,8 @@ CAMPOS_HABITOS = {
 }
 CAMPOS_BOOLEANOS = ('pulada', 'aleatorio', 'offline')
 ChaveArquivo = tuple[str, int, int, int, int]
+
+TETO_MS = 86_400_000  # 24 h: o maior play aceito (igual a site/app/js/historico.js)
 
 
 @dataclass(frozen=True)

@@ -90,7 +90,13 @@ a.nav-item:hover { color: var(--texto); }
   .app-corpo { margin-left: var(--lateral); padding-bottom: 6rem; }
 }
 @media (prefers-reduced-transparency: reduce) { .nav-app { background: #0e0e0e; -webkit-backdrop-filter: none; backdrop-filter: none; } }
-@media (forced-colors: active) { .nav-item[aria-current="page"] { outline: 2px solid CanvasText; outline-offset: -2px; } }
+/* Alto contraste do Windows: o sistema troca os fundos por uma cor só e as peças feitas só de fundo somem.
+   Gráficos e barras mantêm as cores (são o dado); seleção ganha contorno, não só cor. */
+@media (forced-colors: active) {
+  .nav-item[aria-current="page"] { outline: 2px solid CanvasText; outline-offset: -2px; }
+  .dp-alternador button[aria-pressed="true"] { outline: 2px solid CanvasText; outline-offset: -4px; }
+  .st-barra-valor, .motor .eq i, .motor .ponto, .nav-selo .ponto { forced-color-adjust: none; }
+}
 
 /* Cabeçalho do modo: o degradê tem sentido (Dupla = as duas pessoas, verde e violeta; Wrapped = verde)
    e se dissolve no fundo antes do conteúdo. */
@@ -171,7 +177,7 @@ textarea.entrada { resize: vertical; }
 /* Abas numa linha só: quando não cabem, rolam (sem barra) e a borda com mais abas esmaece. */
 @property --fade-start { syntax: '<length>'; inherits: false; initial-value: 0px; }
 @property --fade-end { syntax: '<length>'; inherits: false; initial-value: 0px; }
-.sub-abas { --fade-size: 2.5rem; display: flex; gap: var(--e2); overflow-x: auto; padding-bottom: .25rem; scrollbar-width: none; scroll-padding-inline: var(--fade-size);
+.sub-abas { --fade-size: 2.5rem; display: flex; gap: var(--e2); overflow-x: auto; padding: .375rem; margin: -.375rem -.375rem -.125rem; /* folga para o anel de foco, que a rolagem recortaria */ scrollbar-width: none; scroll-padding-inline: var(--fade-size);
   mask: linear-gradient(#000, #000) no-clip subtract,
     linear-gradient(to right, #000, transparent) 0 0 / var(--fade-start) 100% no-repeat no-clip,
     linear-gradient(to right, transparent, #000) 100% 0 / var(--fade-end) 100% no-repeat no-clip;

@@ -3,6 +3,7 @@
 // troca de src sozinho. Volume por Web Audio: no iOS o audio.volume é ignorado.
 import { html, useEffect, useRef, useState } from 'preact-htm';
 import { HOSTS_AUDIO, urlSegura } from './capas.js';
+import { chegarPouco } from './chegada.js';
 import { normalizar } from './stories/logica.js';
 
 const VOLUME = 0.2;
@@ -191,7 +192,7 @@ export function SomStories({ trilha, alvo, aoLigar }) {
             ${estado === 'carregando' ? 'Buscando capas e trechos…' : mudo ? '🔇 Ligar som' : '🔊 Silenciar'}</button>`}
       </div>
       <p class="nota">Para as capas e o som, o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify, o nome dos seus artistas para o MusicBrainz e os nomes das músicas para a Apple (iTunes), além do seu endereço IP. O histórico e o seu nome não saem do aparelho. Capas e fotos: Spotify · Trechos: iTunes.</p>
-      ${aviso && html`<p class="nota" role="status">${aviso}</p>`}
+      ${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
       ${estado === 'tocando' && status && html`<p class="nota">${status}</p>`}
     </div>`;
 }

@@ -1,5 +1,6 @@
 // Cartão de uma pessoa: nome + arquivos do histórico (vários, por clique ou arrastando).
 import { html, useEffect, useRef, useState } from 'preact-htm';
+import { chegarLista } from './chegada.js';
 
 const ACEITOS = /\.(zip|json)$/i;
 // Acima disso o celular (iPhone ~350 MB por aba) corre risco de fechar a página no meio da conta.
@@ -46,7 +47,7 @@ export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquiv
       ${arquivos.length > 0 && html`
         <ul class="lista-arquivos" aria-label=${`Arquivos: ${titulo}`}>
           ${arquivos.map((f, i) => html`
-            <li key=${f.name + f.size}>
+            <li key=${f.name + f.size} ref=${chegarLista}>
               <span class="nome-arquivo">${f.name}</span><span class="peso">${tamanho(f.size)}</span>
               <button type="button" class="tirar" aria-label=${`Tirar ${f.name}`} disabled=${desabilitado}
                 onClick=${() => aoMudarArquivos(arquivos.filter((_, j) => j !== i))}>×</button>

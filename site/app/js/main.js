@@ -83,6 +83,20 @@ function Dupla({ pronto }) {
     <div id="resultado">${fase.tipo === 'resultado' && html`<${Resultado} r=${fase.r} />`}</div>`;
 }
 
+// Clique do fader na troca de modo: um toque de 40 ms, bem baixo. Para o Wrapped sobe (sol, 1568 Hz);
+// para a Dupla desce (ré, 1175 Hz), uma quinta abaixo: os dois lados do crossfader. Um por troca.
+let audio = null;
+function cliqueFader(paraWrapped) {
+  try {
+    audio ||= new (window.AudioContext || window.webkitAudioContext)();
+    audio.resume();
+    const t = audio.currentTime, o = audio.createOscillator(), g = audio.createGain();
+    o.frequency.value = paraWrapped ? 1568 : 1175;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.028, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+    o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 0.05);
+  } catch { /* sem áudio: só a animação */ }
+}
+
 function App() {
   const [motor, setMotor] = useState({ etapa: 'Preparando…', fracao: 0, pronto: false, erro: '' });
   // As duas telas ficam montadas (hidden): trocar de aba não perde o resultado.
@@ -98,6 +112,7 @@ function App() {
       if (novo === modoAtual.current) return;
       modoAtual.current = novo;
       if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) { setModo(novo); return; }
+      cliqueFader(novo === 'wrapped');
       const update = async () => { setModo(novo); await new Promise((r) => setTimeout(r)); }; // espera o Preact desenhar
       let vt;
       try { vt = document.startViewTransition({ update, types: ['modo', `para-${novo}`] }); } catch { vt = document.startViewTransition(update); } // navegador sem tipos: fade simples

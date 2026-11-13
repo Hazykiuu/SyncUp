@@ -1,15 +1,15 @@
 /* Estilo compartilhado pela página inicial (index.html) e pelo app (app/). */
 @font-face { font-family: 'Figtree'; src: url('assets/Figtree.ttf') format('truetype'); font-weight: 300 900; font-display: swap; }
 :root {
-  --bg: #121212; --s1: #181818; --s2: #242424; --texto: #ffffff; --sub: #b3b3b3; --fraco: #8a8a8a;
+  --bg: #121212; --texto: #ffffff; --sub: #b3b3b3; --fraco: #8a8a8a;
   --linha: rgba(255, 255, 255, .1);
   /* Cor com sentido fixo: verde = pessoa A, violeta = pessoa B, rosa = os dois juntos. */
   --verde: #1ed760; --roxo: #c4b7ff; --rosa: #f573a0;
   /* Vidro (painéis, stories) e véu sobre o fundo. */
-  --vidro-1: rgba(255, 255, 255, .06); --vidro-2: rgba(255, 255, 255, .10); --vidro-3: rgba(255, 255, 255, .16);
+  --vidro-1: rgba(255, 255, 255, .06); --vidro-2: rgba(255, 255, 255, .10);
   --vidro-borda: rgba(255, 255, 255, .18); --vidro-brilho: rgba(255, 255, 255, .14);
   --veu-a: rgba(0, 0, 0, .55); --veu-b: rgba(0, 0, 0, .78);
-  --pilula: 999px; --cartao: 24px; --img: 16px;
+  --pilula: 999px; --cartao: 24px;
   --sai: cubic-bezier(.22, 1, .36, 1);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }

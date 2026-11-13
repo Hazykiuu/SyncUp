@@ -48,7 +48,7 @@ body::after { content: ''; position: fixed; inset: 0; z-index: -1; pointer-event
 .nav-item { display: flex; align-items: center; gap: var(--e3); min-height: 44px; color: var(--sub); font-weight: 700; transition: background .15s, color .15s; }
 .nav-item svg { font-size: 1.375rem; transition: scale .1s ease-out; }
 a.nav-item:active svg { scale: .92; }
-.nav-item small { font-size: .625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--fraco); }
+.nav-item small { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--fraco); }
 a.nav-item:hover { color: var(--texto); }
 .nav-item[aria-current="page"] { color: var(--texto); }
 .nav-item[aria-disabled="true"] { color: var(--fraco); cursor: not-allowed; }

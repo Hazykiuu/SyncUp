@@ -60,14 +60,24 @@ function silencio() {
   return (urlSilencio = URL.createObjectURL(new Blob([b], { type: 'audio/wav' })));
 }
 
-// Um só <audio> e um só AudioContext para a página toda: o iOS limita os contextos e
-// um elemento novo precisaria de outro toque. Criados no primeiro "Começar com som".
+// Um só AudioContext para a página toda (o iOS limita os contextos): o dos stories e o do clique
+// do fader na troca de modo (main.js) são o mesmo. Sem Web Audio no navegador: null, e tudo segue mudo.
+let contexto = null;
+export function audioCtx() {
+  try { contexto ||= new (window.AudioContext || window.webkitAudioContext)(); } catch { return null; }
+  return contexto;
+}
+// "Silenciar" nos stories vale também para o clique do fader.
+export let silenciado = false;
+
+// Um só <audio>: um elemento novo precisaria de outro toque no iPhone. Criado no primeiro "Montar".
 let som = null;
 function prepararSom() {
   if (!som) {
+    const ctx = audioCtx();
+    if (!ctx) throw new Error('Este navegador não toca som pela página.');
     const el = new Audio();
     el.crossOrigin = 'anonymous'; // o iTunes manda CORS *: o Web Audio pode ler o trecho
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const ganho = ctx.createGain(); ganho.gain.value = 0;
     ctx.createMediaElementSource(el).connect(ganho).connect(ctx.destination);
     som = { el, ctx, ganho };
@@ -77,12 +87,19 @@ function prepararSom() {
 
 // Chamado dentro do toque em "Montar meu Wrapped" (antes de qualquer await): o iPhone só deixa tocar
 // som que foi destravado por um toque. Depois, os stories começam com capas e som sem pedir outro toque.
+// O som é opcional: se o navegador não tiver Web Audio, o Wrapped monta igual (sem som).
 export function destravarSom() {
-  const { el, ctx, ganho } = prepararSom();
-  ganho.gain.cancelScheduledValues(ctx.currentTime); ganho.gain.value = 0;
-  el.src = silencio(); el.play().catch(() => { /* bloqueado: a busca segue e o botão "Ligar" aparece se falhar */ });
-  ctx.resume();
+  try {
+    const { el, ctx, ganho } = prepararSom();
+    ganho.gain.cancelScheduledValues(ctx.currentTime); ganho.gain.value = 0;
+    el.src = silencio(); el.play().catch(() => { /* bloqueado: a busca segue e o botão "Ligar" aparece se falhar */ });
+    ctx.resume();
+  } catch { /* sem áudio: segue sem som */ }
 }
+
+// O Wrapped fica montado (escondido) quando a pessoa vai para a Dupla: a música para junto.
+// Ao voltar, o player retoma no próximo movimento do story.
+export function pausarSom() { som?.el.pause(); }
 
 export function SomStories({ trilha, alvo, aoLigar }) {
   const trilhaPronta = useRef(null);
@@ -110,6 +127,7 @@ export function SomStories({ trilha, alvo, aoLigar }) {
   useEffect(() => { comecar(); }, []); // começa sozinho: o áudio já foi destravado no toque em "Montar"
   const iniciarSom = async () => {
     destravarSom(); // no botão "Ligar", dentro do toque e antes de qualquer await
+    if (!som) throw new Error('sem Web Audio'); // vira "sem som" no catch de comecar
     setEstado('carregando'); setAviso('');
     const porSlide = Object.fromEntries(await Promise.all(Object.entries(trilha.slides).map(
       async ([tipo, candidatas]) => [tipo, (await Promise.all(candidatas.map(resolver))).flat()])));
@@ -182,7 +200,7 @@ export function SomStories({ trilha, alvo, aoLigar }) {
     };
   }, [estado]);
 
-  useEffect(() => { if (estado === 'tocando') rampa(mudo ? 0 : VOLUME); }, [mudo]);
+  useEffect(() => { silenciado = mudo; if (estado === 'tocando') rampa(mudo ? 0 : VOLUME); }, [mudo]);
 
   return html`
     <div class="som-stories vidro">

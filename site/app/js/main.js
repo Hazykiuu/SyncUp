@@ -2,6 +2,7 @@
 import { html, render, useEffect, useRef, useState } from 'preact-htm';
 import { chegarPouco, pulsar } from './chegada.js';
 import { aoProgredir, executar, iniciar } from './motor.js';
+import { audioCtx, pausarSom, silenciado } from './som.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { Resultado } from './resultado.js';
@@ -85,10 +86,11 @@ function Dupla({ pronto }) {
 
 // Clique do fader na troca de modo: um toque de 40 ms, bem baixo. Para o Wrapped sobe (sol, 1568 Hz);
 // para a Dupla desce (ré, 1175 Hz), uma quinta abaixo: os dois lados do crossfader. Um por troca.
-let audio = null;
+// Usa o mesmo AudioContext dos stories e respeita o "Silenciar" deles.
 function cliqueFader(paraWrapped) {
+  const audio = audioCtx();
+  if (!audio || silenciado) return;
   try {
-    audio ||= new (window.AudioContext || window.webkitAudioContext)();
     audio.resume();
     const t = audio.currentTime, o = audio.createOscillator(), g = audio.createGain();
     o.frequency.value = paraWrapped ? 1568 : 1175;
@@ -111,6 +113,7 @@ function App() {
       const novo = lerModo(modoAtual.current);
       if (novo === modoAtual.current) return;
       modoAtual.current = novo;
+      if (novo !== 'wrapped') pausarSom();
       if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) { setModo(novo); return; }
       cliqueFader(novo === 'wrapped');
       const update = async () => { setModo(novo); await new Promise((r) => setTimeout(r)); }; // espera o Preact desenhar

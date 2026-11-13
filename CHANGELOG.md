@@ -1,6 +1,6 @@
 # Changelog — SyncUp
 
-## [Não lançado]
+## [1.8.0] — 2026-11-13
 
 Transições com cara de música e chegadas suaves no site e no app do navegador.
 

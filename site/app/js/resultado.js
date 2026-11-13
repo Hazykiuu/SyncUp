@@ -1,6 +1,7 @@
 // Resultado da Dupla: os stories no topo (dados de `r.dupla`) e os detalhes em abas embaixo.
 // Nas abas, o HTML ainda vem pronto do núcleo (textos externos já escapados lá).
 import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
+import { chegar, chegarPouco } from './chegada.js';
 import { baixar, executar } from './motor.js';
 import { compartilhar, desenharPosterDupla } from './poster.js';
 import { SLIDES_DUPLA } from './stories/dupla.js';
@@ -101,8 +102,8 @@ function Acoes({ d, aoRepetir }) {
       <button type="button" class="btn btn-borda vidro" onClick=${playlist} disabled=${!!ocupado}>${ocupado === 'playlist' ? 'Gerando…' : 'Playlist comum · CSV'}</button>
       <button type="button" class="btn btn-borda vidro" onClick=${aoRepetir}>↺ Ver de novo</button>
     </div>
-    ${aviso && html`<p class="nota" role="status">${aviso}</p>`}
-    ${erro && html`<p class="erro vidro" role="alert">Não deu certo: ${erro}</p>`}</div>`;
+    ${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
+    ${erro && html`<p ref=${chegarPouco} class="erro vidro" role="alert">Não deu certo: ${erro}</p>`}</div>`;
 }
 
 const ABAS = ['Rankings', 'Gráficos', 'Detalhes técnicos'];
@@ -159,7 +160,7 @@ export function Resultado({ r }) {
       <p class="nota">As tabelas mostram as 20 primeiras linhas. A playlist inteira está no botão “Playlist comum · CSV”, logo abaixo dos stories.</p>`,
   ];
   return html`
-    <section class="resultado" aria-labelledby="titulo-resultado">
+    <section ref=${chegar} class="resultado" aria-labelledby="titulo-resultado">
       <h2 id="titulo-resultado" class="sr-only">Resultado de ${a} e ${b}</h2>
       <p class="periodo">${r.periodo}</p>
       <div ref=${stories} class="nucleo">

@@ -6,6 +6,8 @@
 <title>SyncUp: compare o seu histórico do Spotify com o dos amigos</title>
 <meta name="description" content="Compare o seu histórico do Spotify com o dos amigos e veja com quem você está em sintonia, em stories. Grátis, de código aberto e tudo roda no seu navegador.">
 <meta name="theme-color" content="#121212">
+<!-- Adianta o HTML do app: ele abre logo depois de a cortina do "Abrir o app" cobrir a tela. Sem prerender, que já baixaria o Python. -->
+<link rel="prefetch" href="app/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SyncUp: compare o seu histórico do Spotify com o dos amigos">
 <meta property="og:description" content="Veja com quem você está em sintonia, em stories. Grátis, de código aberto e tudo roda no seu navegador.">
@@ -253,11 +255,50 @@ if (!calmo) {
   }).catch(() => { /* sem rede: segue com a rolagem do navegador */ });
 }
 
-// "Abrir o app": guarda de onde veio o clique; o app revela a tela num círculo que nasce daí (app.css).
+// "Abrir o app": 12 barras de equalizador (verde → violeta, como o logo) sobem a partir da coluna do clique
+// e cobrem a tela, com um sopro baixo; o app abre coberto e as barras descem (app/index.html).
+const BARRAS = 12;
+let abrindo = false, audio = null;
+// Som da cortina, claro e baixo: um sopro de ar que sobe junto com as barras (ruído filtrado, 0,9 → 3,6 kHz)
+// e um toque de vidro bem curto no começo (lá agudo, 1760 Hz). Sem melodia; some em ~0,3 s.
+function sopro(ctx) {
+  const t = ctx.currentTime, n = Math.floor(ctx.sampleRate * 0.32), buffer = ctx.createBuffer(1, n, ctx.sampleRate), dados = buffer.getChannelData(0);
+  for (let k = 0; k < n; k++) dados[k] = Math.random() * 2 - 1;
+  const ruido = ctx.createBufferSource(), filtro = ctx.createBiquadFilter(), g = ctx.createGain();
+  ruido.buffer = buffer; filtro.type = 'bandpass'; filtro.Q.value = 0.9;
+  filtro.frequency.setValueAtTime(900, t); filtro.frequency.exponentialRampToValueAtTime(3600, t + 0.28);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.045, t + 0.12); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.31);
+  ruido.connect(filtro).connect(g).connect(ctx.destination); ruido.start(t);
+  const o = ctx.createOscillator(), go = ctx.createGain();
+  o.frequency.value = 1760;
+  go.gain.setValueAtTime(0.0001, t); go.gain.exponentialRampToValueAtTime(0.03, t + 0.006); go.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+  o.connect(go).connect(ctx.destination); o.start(t); o.stop(t + 0.15);
+}
 document.querySelectorAll('a[href="app/"]').forEach((a) => a.addEventListener('click', (e) => {
-  const r = a.getBoundingClientRect(), x = e.clientX || r.left + r.width / 2, y = e.clientY || r.top + r.height / 2;
-  try { sessionStorage.setItem('syncup-entrada', JSON.stringify({ x: Math.round(x), y: Math.round(y) })); } catch { /* sem armazenamento: nasce do centro */ }
+  // Sem efeito: nova aba (Ctrl, ⌘, Shift, Alt, botão do meio), "menos movimento" e o link do menu, que fecha no clique.
+  if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0 || calmo || a.closest('#menu')) return;
+  e.preventDefault();
+  if (abrindo) return;
+  abrindo = true;
+  const r = a.getBoundingClientRect(), x = (e.clientX || r.left + r.width / 2) / innerWidth;
+  const origem = Math.min(BARRAS - 1, Math.floor(x * BARRAS));
+  try { sessionStorage.setItem('syncup-entrada', String(origem)); } catch { /* sem armazenamento: o app abre sem as barras */ }
+  try { audio = new (window.AudioContext || window.webkitAudioContext)(); sopro(audio); } catch { /* sem áudio: só as barras */ }
+  const cortina = document.createElement('div');
+  cortina.className = 'cortina'; cortina.setAttribute('aria-hidden', 'true');
+  let fim = 0;
+  for (let k = 0; k < BARRAS; k++) {
+    const barra = cortina.appendChild(document.createElement('i')), delay = Math.abs(k - origem) * 14;
+    barra.style.setProperty('--k', k / (BARRAS - 1));
+    barra.animate([{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], { duration: 220, delay, easing: 'cubic-bezier(.22, 1, .36, 1)', fill: 'both' });
+    fim = Math.max(fim, delay + 220);
+  }
+  document.body.append(cortina);
+  setTimeout(() => { location.href = a.href; }, fim + 20);
 }));
+// Voltou pelo botão Voltar (página guardada pelo navegador): tira as barras e libera o clique.
+addEventListener('pageshow', () => { abrindo = false; document.querySelector('.cortina')?.remove(); });
+addEventListener('pagehide', () => { audio?.close(); audio = null; });
 
 // Menu em tela cheia (celular). inert no fundo: com o menu aberto, o Tab e o leitor de tela ficam só nele.
 const menu = document.getElementById('menu'), abrir = document.getElementById('abrir-menu');

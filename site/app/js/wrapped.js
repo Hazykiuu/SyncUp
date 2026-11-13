@@ -3,6 +3,7 @@
 import { html, useMemo, useRef, useState } from 'preact-htm';
 import { AVISO_ARQUETIPOS, formatarValor, REGRAS } from './calculo.js';
 import { criarBuscador } from './capas.js';
+import { chegar, chegarPouco } from './chegada.js';
 import { compartilhar, desenharPoster } from './poster.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
@@ -149,13 +150,13 @@ export function Wrapped() {
       <button type="button" class="btn btn-borda vidro" onClick=${demo} disabled=${ocupado}>Testar com dados fictícios</button>
     </div>
     <div aria-live="polite">
-      ${ocupado && html`<p class="processando vidro"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
-      ${fase.tipo === 'erro' && html`<div class="erro vidro" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
+      ${ocupado && html`<p ref=${chegarPouco} class="processando vidro"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
+      ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro vidro" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
         ${ultima.current && html`<button type="button" class="btn btn-borda vidro" onClick=${() => ultima.current()}>Tentar de novo</button>`}</div>`}
       ${fase.tipo === 'resultado' && html`<p class="sr-only">Wrapped de ${fase.r.nome} pronto, logo abaixo.</p>`}
     </div>
     <div id="resultado-wrapped">${fase.tipo === 'resultado' && html`
-      <section class="resultado" aria-label=${`Wrapped de ${fase.r.nome}`}>
+      <section ref=${chegar} class="resultado" aria-label=${`Wrapped de ${fase.r.nome}`}>
         <${SomStories} key=${fase.r} trilha=${fase.r.trilha} alvo=${stories} aoLigar=${() => ligarCapas(fase.r.dados)} />
         <div ref=${stories} class="nucleo">
           <${CapasCtx.Provider} value=${capas}>
@@ -168,7 +169,7 @@ export function Wrapped() {
           <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
           <button type="button" class="btn btn-borda vidro" onClick=${apagarCapas}>Apagar capas guardadas</button>
         </div>
-        ${aviso && html`<p class="nota" role="status">${aviso}</p>`}
+        ${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
         <p class="nota">Montado em ${segundos(fase.ms)} s, no seu aparelho.</p>
         <p class="nota">Dica: no último story, tire um print para postar nos stories e chamar os amigos para comparar.</p></div>
         <details class="vidro detalhe"><summary>Como o arquétipo foi calculado</summary><${ArquetiposDetalhe} arquetipos=${fase.r.dados.arquetipos} /></details>

@@ -51,7 +51,8 @@ body::after { content: ''; position: fixed; inset: 0; z-index: -1; pointer-event
 .nav-app { position: fixed; z-index: 60; background: rgba(14, 14, 14, .82); -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%); }
 .nav-app ul { display: flex; }
 .nav-item { display: flex; align-items: center; gap: var(--e3); min-height: 44px; color: var(--sub); font-weight: 700; transition: background .15s, color .15s; }
-.nav-item svg { font-size: 1.375rem; }
+.nav-item svg { font-size: 1.375rem; transition: scale .1s ease-out; }
+a.nav-item:active svg { scale: .92; }
 .nav-item small { font-size: .625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--fraco); }
 a.nav-item:hover { color: var(--texto); }
 .nav-item[aria-current="page"] { color: var(--texto); }
@@ -223,6 +224,12 @@ textarea.entrada { resize: vertical; }
 @media (min-width: 900px) { .dp-alternador { display: none; } }
 .dp-etiquetas { display: flex; flex-wrap: wrap; gap: var(--e2); }
 .dp-etiquetas li { padding: var(--e1) var(--e3); border-radius: var(--pilula); border: 1px solid var(--linha); color: var(--texto); font-size: .9rem; }
+/* "Ver mais" abre crescendo (só onde o navegador anima até a altura automática; nos outros, abre seco). */
+@supports (interpolate-size: allow-keywords) {
+  .dp-mais { interpolate-size: allow-keywords; }
+  .dp-mais::details-content { block-size: 0; overflow: clip; transition: block-size .25s var(--sai), content-visibility .25s allow-discrete; }
+  .dp-mais[open]::details-content { block-size: auto; }
+}
 .dp-mais summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--sub); font-weight: 700; }
 .dp-medidas { display: grid; gap: var(--vao); }
 @media (min-width: 900px) { .dp-medidas { grid-template-columns: 1fr 1fr; } }
@@ -248,16 +255,22 @@ textarea.entrada { resize: vertical; }
 .resultado .su-cover { background: rgba(255, 255, 255, .08); color: var(--sub); }
 .resultado .su-playicon { display: none; }
 .resultado .su-tracklist a:hover .su-num { opacity: 1; }
-/* Entrada no app vindo da página inicial ("Abrir o app"): o app se revela num círculo que nasce do ponto do clique
-   e cobre a tela; a página inicial recua ao fundo. Só com view transition entre páginas e sem "menos movimento". */
-@keyframes vt-revela {
-  from { clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%)); }
-  to { clip-path: circle(150vmax at var(--vt-x, 50%) var(--vt-y, 50%)); }
-}
-@keyframes vt-recua { to { transform: scale(.92); opacity: .35; } }
-@media (prefers-reduced-motion: no-preference) {
-  ::view-transition-new(root) { animation: vt-revela .75s cubic-bezier(.65, 0, .35, 1) both; }
-  ::view-transition-old(root) { animation: vt-recua .75s cubic-bezier(.65, 0, .35, 1) both; }
-}
+/* Troca de modo como crossfader de DJ (main.js). Os nomes só existem durante a troca (tipo "modo"), para não
+   entrarem na chegada em pulsos. Dupla fica à esquerda e Wrapped à direita: o conteúdo desliza 32 px entre os
+   dois lados, o destaque do modo ativo corre pela barra como o botão do fader, e a barra fica parada. */
+html:active-view-transition-type(modo) .app-corpo > .shell { view-transition-name: conteudo; }
+html:active-view-transition-type(modo) .nav-app { view-transition-name: barra; }
+@media (max-width: 899px) { html:active-view-transition-type(modo) .nav-item[aria-current="page"] svg { view-transition-name: fader; } }
+@media (min-width: 900px) { html:active-view-transition-type(modo) .nav-item[aria-current="page"] { view-transition-name: fader; } }
+html:active-view-transition-type(para-dupla) { --cf: -1; }
+@keyframes cf-sai { to { translate: calc(var(--cf, 1) * -32px) 0; opacity: 0; } }
+@keyframes cf-entra { from { translate: calc(var(--cf, 1) * 32px) 0; opacity: 0; } }
+html:active-view-transition-type(modo)::view-transition-old(conteudo) { animation: cf-sai .25s var(--sai) both; }
+html:active-view-transition-type(modo)::view-transition-new(conteudo) { animation: cf-entra .25s var(--sai) both; }
+html:active-view-transition-type(modo)::view-transition-group(conteudo) { animation-duration: .25s; }
+html:active-view-transition-type(modo)::view-transition-group(fader) { animation-duration: .25s; animation-timing-function: linear(0, .22 8%, .62 20%, .93 32%, 1.07 43%, 1.1 50%, 1.07 58%, 1.01 70%, .99 80%, 1); }
+/* Barra parada: só o quadro novo, sem fade (os dois quadros somados deixariam a barra mais clara). */
+html:active-view-transition-type(modo)::view-transition-old(barra) { display: none; }
+html:active-view-transition-type(modo)::view-transition-new(barra) { animation: none; }
 /* O player dos stories segue o raio de painel do app. */
 .st-player.su-stories { border-radius: var(--r-painel); }

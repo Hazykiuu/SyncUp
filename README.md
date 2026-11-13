@@ -1,4 +1,4 @@
-# SyncUp v1.7
+# SyncUp v1.8
 
 Compare o seu histórico do Spotify com o dos amigos e veja com quem você está em sintonia, em stories. **Use direto no navegador**, no computador ou no celular: sem instalar, sem conta, sem anúncios, e o histórico não sai do seu aparelho. Há também um app para PC com o Match e o Grupo. Projeto de ciência de dados, **código aberto** ([licença MIT](LICENSE)).
 

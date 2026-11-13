@@ -92,7 +92,6 @@ Fontes aceitas, que podem ser misturadas:
 - **Histórico ZIP:** sem limite de pessoas.
 - **ListenBrainz:** só o nome de usuário. A pessoa conecta o Spotify uma vez em [listenbrainz.org](https://listenbrainz.org).
 - **Convite por código:** o amigo gera um código no SyncUp dele (aba Match → "Criar o meu convite") e manda por mensagem. Só os rankings viajam.
-- **Login com Spotify:** até 5 pessoas, cadastradas pelo dono do app (veja "Configurar o login do Spotify", abaixo).
 
 ### Wrapped: a sua vida toda no Spotify
 
@@ -102,21 +101,12 @@ Envie o seu histórico completo e veja, em stories com as capas e trechos das su
 
 Um arquivo por pessoa. Mostra uma matriz de compatibilidade de todos com todos, os perfis e os arquétipos. As regras técnicas ficam em "Detalhes técnicos".
 
-### Configurar o login do Spotify (opcional, só para quem criou o app)
-
-O Spotify só libera o login, em apps pessoais, para **no máximo 5 contas cadastradas**, e o dono do app precisa de Premium. Por isso o ZIP, o ListenBrainz e o convite continuam sendo os caminhos sem limite.
-
-1. Em <https://developer.spotify.com/dashboard>, crie um app e marque **Web API**.
-2. Em **Redirect URIs**, cadastre exatamente `http://127.0.0.1:7860/spotify/callback`.
-3. Em **User Management**, adicione o nome e o e-mail do Spotify de cada amigo (até 5).
-4. Copie o **Client ID** e cole na aba Match, em "Configurar". Também dá para definir a variável `SPOTIFY_CLIENT_ID`. O secret não é necessário: o login usa PKCE.
-
 ## Privacidade
 
-- **Fica no computador:** os históricos enviados (apagados em até 1 hora), os perfis do Spotify (só rankings) e o cache. Para ver e apagar, abra *Opções de dados → Meus dados*.
-- **Vai para a internet só se você pedir:** o Spotify (ao conectar a conta), o ListenBrainz (o nome de usuário digitado) e o MusicBrainz (nomes de artistas, só com a caixa de estilo marcada).
+- **Fica no computador:** os históricos enviados (apagados em até 1 hora) e o cache. Para ver e apagar, abra *Opções de dados → Meus dados*.
+- **Vai para a internet só se você pedir:** o ListenBrainz (o nome de usuário digitado) e o MusicBrainz (nomes de artistas, só com a caixa de estilo marcada).
 - **App no navegador, Wrapped:** para as capas e o som (o Wrapped começa com eles), o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify (capas e fotos), o nome dos seus artistas para o MusicBrainz e para a Apple/iTunes, e os nomes das músicas para a Apple/iTunes (trechos de 30 s), além do seu endereço IP. O histórico e o seu nome não saem do aparelho. O navegador guarda só os endereços das capas, por até 30 dias; o botão "Apagar capas guardadas" limpa na hora.
-- **Nunca é guardado:** o token do Spotify, o IP e o modelo do aparelho.
+- **Nunca é guardado:** o IP e o modelo do aparelho.
 
 **Créditos:** capas e fotos de artistas vêm do Spotify; o logo do Spotify é marca da Spotify AB, usado conforme as [diretrizes de design](https://developer.spotify.com/documentation/design) e fora da licença MIT. Trechos de áudio: iTunes (Apple). Dados de artistas: MusicBrainz.
 
@@ -146,7 +136,7 @@ O CI roda os mesmos comandos no GitHub, em Python 3.10 e 3.12, mais `node --test
 | `metricas.py`, `perfis.py`, `analise.py` | Cosseno, Jaccard, diversidade, arquétipos, Dupla e Grupo |
 | `recursos.py` | Sintonia, momentos sincronizados e Ponte Musical |
 | `perfil_gosto.py`, `conciliacao.py`, `convite.py` | Perfil unificado, Match (emparelhamento ótimo) e convite por código |
-| `spotify_api.py`, `listenbrainz.py`, `generos.py` | Login PKCE, ListenBrainz e MusicBrainz |
+| `listenbrainz.py`, `generos.py` | ListenBrainz e MusicBrainz |
 | `wrapped.py`, `arquetipos.py`, `stories.py`, `cartao.py` | Wrapped, stories e PNGs |
 | `festa.py`, `exportacoes.py`, `privacidade.py` | Playlist da festa, CSV protegido e "Meus dados" |
 | `ui/`, `componentes.py`, `syncup.js`, `styles.css` | Interface Gradio 6 do app para PC |
@@ -164,7 +154,7 @@ print(r.metricas.cosseno)
 
 **Dependências**, todas abertas (`tests/test_licencas.py` confere): Gradio e orjson (Apache-2.0), FastAPI e Plotly (MIT), httpx e pandas (BSD-3-Clause), Pillow (MIT-CMU), pytest e Ruff (MIT) e a fonte Figtree (SIL OFL 1.1). O site (`site/`) usa a Lenis (MIT) e o Preact com htm (MIT).
 
-**Contribuir:** abra uma *issue* ou um *pull request*. Nunca envie históricos reais nem a pasta `perfis_spotify/`: são dados pessoais. O histórico de cada versão está no [CHANGELOG](CHANGELOG.md).
+**Contribuir:** abra uma *issue* ou um *pull request*. Nunca envie históricos reais: são dados pessoais. O histórico de cada versão está no [CHANGELOG](CHANGELOG.md).
 
 ## Rumo à 2.0
 

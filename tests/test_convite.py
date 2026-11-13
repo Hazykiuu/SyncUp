@@ -100,16 +100,13 @@ OPCOES = ['America/Sao_Paulo', '', '', 'manter', False, False]
 def test_convite_do_zip_entra_no_match_e_o_invalido_sai_com_aviso(tmp_path, monkeypatch) -> None:
     import ui
 
-    codigo = ui.match.gerar_meu_convite(
-        [_historico(tmp_path, 'bia', ['X', 'Y'])], 'Bia', None, *OPCOES
-    )
+    codigo = ui.match.gerar_meu_convite([_historico(tmp_path, 'bia', ['X', 'Y'])], 'Bia', *OPCOES)
     assert codigo.startswith(PREFIXO)
     avisos: list[str] = []
     monkeypatch.setattr(ui.gr, 'Warning', lambda m, **_: avisos.append(m))
     html, *_, estado, _ = ui.executar_match(
         [_historico(tmp_path, 'ana', ['X', 'Z'])],
         'Ana',
-        [],
         *OPCOES,
         False,
         '',
@@ -122,17 +119,12 @@ def test_convite_do_zip_entra_no_match_e_o_invalido_sai_com_aviso(tmp_path, monk
     assert ('Ana', 'Bia') not in estado['sintonias']  # convite não traz escuta
 
 
-def test_gerar_convite_de_perfil_salvo_so_pela_lista(tmp_path, monkeypatch) -> None:
+def test_gerar_convite_pede_zip_e_nome(tmp_path) -> None:
     from gradio.exceptions import Error
 
     import ui
-    from perfil_gosto import salvar_perfil
 
-    salvar_perfil(_perfil('Carlos'), tmp_path)
-    monkeypatch.setattr(ui.match, 'PASTA_PERFIS', tmp_path)
-    assert ler_convite(ui.match.gerar_meu_convite(None, '', 'Carlos', *OPCOES)).nome == 'Carlos'
-    for errado, mensagem in (('../app', 'não está mais salvo'), (None, 'Envie o seu ZIP')):
-        with pytest.raises(Error, match=mensagem):
-            ui.match.gerar_meu_convite(None, '', errado, *OPCOES)
+    with pytest.raises(Error, match='Envie o seu ZIP'):
+        ui.match.gerar_meu_convite(None, 'Bia', *OPCOES)
     with pytest.raises(Error, match='seu nome'):
-        ui.match.gerar_meu_convite([_historico(tmp_path, 'x', ['X'])], ' ', None, *OPCOES)
+        ui.match.gerar_meu_convite([_historico(tmp_path, 'x', ['X'])], ' ', *OPCOES)

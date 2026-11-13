@@ -1,4 +1,4 @@
-"""Aba Match: perfis salvos, conciliação, sintonia, festa e cartões."""
+"""Aba Match: conciliação, sintonia, festa e cartões."""
 
 from __future__ import annotations
 
@@ -28,14 +28,11 @@ from graficos import (
 )
 from listenbrainz import coletar_escutas_listenbrainz, coletar_perfil_listenbrainz
 from perfil_gosto import (
-    carregar_perfil,
     escutas_de_arquivos,
-    listar_perfis,
     perfil_de_arquivos,
     tem_perfil_em_cache,
 )
 from recursos import Escutas, Sintonia, escutas, sintonia_do_par, sintonia_entre
-from spotify_api import PASTA_PERFIS
 from ui.comum import (
     _configuracao,
     _em_pasta_temporaria,
@@ -43,21 +40,6 @@ from ui.comum import (
     aviso,
     falha,
 )
-
-
-def perfis_salvos() -> list[str]:
-    """Nomes dos perfis coletados via login do Spotify (pasta perfis_spotify)."""
-    return [p.stem for p in listar_perfis(PASTA_PERFIS)]
-
-
-def atualizar_perfis(
-    selecionados: list[str] | None, conhecidos: list[str] | None = None
-) -> tuple[Any, list[str]]:
-    """Recarrega a lista mantendo a seleção; quem acabou de logar já entra marcado."""
-    opcoes = perfis_salvos()
-    novos = [s for s in opcoes if s not in (conhecidos or [])]
-    marcados = [s for s in opcoes if s in (selecionados or []) or s in novos] or opcoes
-    return gr.CheckboxGroup(choices=opcoes, value=marcados), opcoes
 
 
 def _mais_em_sintonia(sintonias: dict[tuple[str, str], Sintonia], nome: str) -> str:
@@ -72,7 +54,6 @@ def _mais_em_sintonia(sintonias: dict[tuple[str, str], Sintonia], nome: str) -> 
 def executar_match(
     arquivos: list[str] | None,
     nomes: str,
-    selecionados: list[str] | None,
     fuso: str,
     musicas: str,
     artistas: str,
@@ -84,12 +65,17 @@ def executar_match(
     codigos_convite: str = '',
     progress: gr.Progress = gr.Progress(),
 ) -> list[Any]:
-    """Junta perfis de ZIP, ListenBrainz e Spotify, concilia todos e mostra os melhores pares."""
+    """Junta perfis de ZIP, ListenBrainz e convites, concilia todos e mostra os melhores pares."""
     try:
         arquivos = arquivos or []
         nomes_zip = list(_linhas(nomes))
         if arquivos and len(nomes_zip) != len(arquivos):
             raise ValueError('Informe um nome por arquivo ZIP, na mesma ordem dos arquivos.')
+        # Nome repetido acusa já, antes de ler históricos e chamar a rede (antes só acusava no fim).
+        usuarios = _linhas(usuarios_listenbrainz)
+        vistos = [n.strip().casefold() for n in [*nomes_zip, *usuarios]]
+        if len(set(vistos)) < len(vistos):
+            raise ValueError('Cada pessoa precisa de um nome diferente.')
         config = _configuracao(fuso, musicas, artistas, varios, disco, deduplicar)
         perfis, fontes = [], {}
         entradas = list(zip(arquivos, nomes_zip))
@@ -108,11 +94,6 @@ def executar_match(
             perfis.append(perfil)
             fontes[perfil.nome] = 'Histórico ZIP'
             escutas_por_nome[perfil.nome] = escutas_de_arquivos(arquivo, config)
-        for nome in selecionados or []:
-            perfil = carregar_perfil(PASTA_PERFIS / f'{nome}.json')
-            perfis.append(perfil)
-            fontes[perfil.nome] = f'Spotify · {perfil.coletado_em[:10]}'
-        usuarios = _linhas(usuarios_listenbrainz)
         fora: list[str] = []
         sem_sintonia: list[str] = []
         for i, usuario in enumerate(usuarios):
@@ -208,7 +189,6 @@ def executar_match(
 def gerar_meu_convite(
     arquivos: list[str] | None,
     nome: str,
-    perfil_salvo: str | None,
     fuso: str,
     musicas: str,
     artistas: str,
@@ -216,19 +196,14 @@ def gerar_meu_convite(
     disco: bool,
     deduplicar: bool,
 ) -> str:
-    """Código de convite a partir do ZIP da pessoa ou de um perfil salvo do Spotify."""
+    """Código de convite a partir do ZIP da pessoa."""
     try:
-        if arquivos:
-            if not (nome or '').strip():
-                raise ValueError('Escreva o seu nome antes de gerar o código.')
-            config = _configuracao(fuso, musicas, artistas, varios, disco, deduplicar)
-            perfil = perfil_de_arquivos(list(arquivos), nome, config)
-        elif perfil_salvo:
-            if perfil_salvo not in perfis_salvos():  # nunca monta caminho com texto de fora
-                raise ValueError('Esse perfil não está mais salvo. Clique em Atualizar lista.')
-            perfil = carregar_perfil(PASTA_PERFIS / f'{perfil_salvo}.json')
-        else:
-            raise ValueError('Envie o seu ZIP ou escolha um perfil salvo do Spotify.')
+        if not arquivos:
+            raise ValueError('Envie o seu ZIP do Histórico Estendido.')
+        if not (nome or '').strip():
+            raise ValueError('Escreva o seu nome antes de gerar o código.')
+        config = _configuracao(fuso, musicas, artistas, varios, disco, deduplicar)
+        perfil = perfil_de_arquivos(list(arquivos), nome, config)
         return gerar_convite(perfil)
     except ValueError as erro:
         raise falha(str(erro)) from erro

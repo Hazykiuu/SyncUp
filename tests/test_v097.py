@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 
 import dados
-import spotify_api
 from configuracao import VERSAO
 from dados import carregar_historico
 
@@ -62,33 +61,3 @@ def test_zip_grande_demais_e_recusado_antes_de_descompactar(tmp_path: Path, monk
     json_grande.write_text('[' + ' ' * 2000 + ']', encoding='utf-8')
     with pytest.raises(ValueError, match='descompactado'):
         carregar_historico(json_grande)
-
-
-@pytest.mark.parametrize(
-    ('origem', 'liberado'),
-    [
-        ('same-origin', True),
-        (None, True),
-        ('none', True),
-        ('cross-site', False),
-        ('same-site', False),
-    ],
-)
-def test_login_so_comeca_pelo_proprio_app(tmp_path: Path, origem, liberado: bool) -> None:
-    from fastapi import FastAPI
-    from fastapi.testclient import TestClient
-
-    servidor = FastAPI()
-    spotify_api.registrar_rotas(servidor, tmp_path)
-    cabecalhos = {'Sec-Fetch-Site': origem} if origem else {}
-    with TestClient(servidor) as cliente:
-        r = cliente.get(
-            '/spotify/login',
-            params={'nome': 'Bia', 'client_id': 'abc'},
-            headers=cabecalhos,
-            follow_redirects=False,
-        )
-    if liberado:
-        assert r.status_code in (302, 307)
-    else:
-        assert r.status_code == 400 and 'botão do SyncUp' in r.text

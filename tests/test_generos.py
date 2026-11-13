@@ -168,7 +168,6 @@ def test_match_na_tela_busca_generos_e_avisa_falha(tmp_path: Path, monkeypatch) 
     html, *_, estado, _ = ui.executar_match(
         zips,
         'Ana\nBia',
-        [],
         'America/Sao_Paulo',
         '',
         '',

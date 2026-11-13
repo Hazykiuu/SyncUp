@@ -22,11 +22,9 @@ from ui.dupla import (
 )
 from ui.layout import RECURSOS, TOPO, criar_interface
 from ui.match import (
-    atualizar_perfis,
     baixar_cartao_match,
     baixar_festa,
     executar_match,
-    perfis_salvos,
 )
 
 __all__ = [
@@ -35,7 +33,6 @@ __all__ = [
     'TOPO',
     '_limpar_exportacoes',
     'apresentar',
-    'atualizar_perfis',
     'baixar_cartao_match',
     'baixar_festa',
     'comum',
@@ -52,7 +49,6 @@ __all__ = [
     'meu_wrapped',
     'meus_dados',
     'perfil_card',
-    'perfis_salvos',
     'resumo_markdown',
     'tabela_display',
     'texto_conexoes',

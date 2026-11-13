@@ -1,5 +1,18 @@
 # Changelog — SyncUp
 
+## [Não lançado]
+
+Transições com cara de música e chegadas suaves no site e no app do navegador.
+
+### Mudado
+- **"Abrir o app"**: 12 barras de equalizador, do verde ao violeta, sobem a partir do clique e cobrem a tela, com um sopro baixo; o app nasce coberto e as barras descem. Substitui o círculo.
+- **Troca entre Dupla e Wrapped como crossfader**: o conteúdo desliza de um lado para o outro, o destaque corre pela barra como o botão de um fader e toca um clique curto (mais agudo para o Wrapped, mais grave para a Dupla).
+- **Chegadas**: o resultado, os avisos, os erros e os arquivos escolhidos entram com um movimento curto, uma vez só; "Ver mais" abre crescendo; o ponto verde pulsa quando o app fica pronto; o ícone da barra de modos responde ao toque.
+- Com "menos movimento" ligado, nada disso anima nem toca.
+
+### Corrigido
+- "Pular para o conteúdo" tirava a pessoa do Wrapped e levava para a Dupla.
+
 ## [1.7.0] — 2026-11-12
 
 Visual novo no site e no app do navegador, com vidro, movimento e detalhes musicais.

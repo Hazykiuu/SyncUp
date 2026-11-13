@@ -62,7 +62,7 @@ function pedidos(d) {
   return [...new Map(lista.map((p) => [chaveCapa(p.item, p.tipo), p])).values()];
 }
 
-// Criado só no opt-in: antes disso nem o IndexedDB é aberto.
+// Criado quando os stories ligam capas e som: antes disso nem o IndexedDB é aberto.
 let buscador = null;
 
 export function Wrapped() {
@@ -95,9 +95,10 @@ export function Wrapped() {
   };
 
   // `ler` devolve [{ nome, bytes: ArrayBuffer }]; o tempo inclui ler os arquivos (é o que a pessoa espera).
-  const ultima = useRef(null); // a última tentativa, para o "Tentar de novo" do erro
+  // Qual foi a última tentativa ("montar" ou "demo"): o "Tentar de novo" chama a função desta renderização,
+  // com os arquivos e opções que a tela mostra agora (não os da tentativa que falhou).
+  const ultima = useRef(null);
   const rodar = async (ler, nomeUsado) => {
-    ultima.current = () => rodar(ler, nomeUsado);
     setFase({ tipo: 'processando', etapa: 'Lendo o histórico completo e montando os stories…' });
     try {
       const inicio = performance.now();
@@ -108,8 +109,9 @@ export function Wrapped() {
       requestAnimationFrame(() => document.getElementById('resultado-wrapped')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     } catch (e) { setFase({ tipo: 'erro', mensagem: e.message }); }
   };
-  const montar = () => { destravarSom(); return rodar(() => Promise.all(arquivos.map(async (f) => ({ nome: f.name, bytes: await f.arrayBuffer() }))), nome || 'Você'); };
+  const montar = () => { ultima.current = 'montar'; destravarSom(); return rodar(() => Promise.all(arquivos.map(async (f) => ({ nome: f.name, bytes: await f.arrayBuffer() }))), nome || 'Você'); };
   const demo = () => {
+    ultima.current = 'demo';
     destravarSom();
     setNome(DEMO); setArquivos([]);
     rodar(async () => {
@@ -152,7 +154,7 @@ export function Wrapped() {
     <div aria-live="polite">
       ${ocupado && html`<p ref=${chegarPouco} class="processando vidro"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
       ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro vidro" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
-        ${ultima.current && html`<button type="button" class="btn btn-borda vidro" onClick=${() => ultima.current()}>Tentar de novo</button>`}</div>`}
+        ${ultima.current && html`<button type="button" class="btn btn-borda vidro" onClick=${ultima.current === 'demo' ? demo : montar}>Tentar de novo</button>`}</div>`}
       ${fase.tipo === 'resultado' && html`<p class="sr-only">Wrapped de ${fase.r.nome} pronto, logo abaixo.</p>`}
     </div>
     <div id="resultado-wrapped">${fase.tipo === 'resultado' && html`

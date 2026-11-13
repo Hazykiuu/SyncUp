@@ -1,5 +1,32 @@
 # Changelog — SyncUp
 
+## [1.9.0] — 2026-11-13
+
+Auditoria completa: correções de experiência, privacidade e paridade, e cortes do que não se pagava.
+
+### Corrigido
+- **Som do Wrapped** para quando você troca para a Dupla; o clique do fader usa o mesmo áudio dos stories e respeita o "Silenciar"; sem Web Audio no navegador, o Wrapped monta igual.
+- **Rede ruim:** buscas de capas, trechos e imagens do pôster desistem em 8 s (antes podiam ficar em "Buscando…" para sempre); cada música é buscada uma vez só no iTunes.
+- **"Tentar de novo"** usa os arquivos e opções que estão na tela; se o motor cair por falta de memória, o erro pede para recarregar em vez de ficar em "Comparando…".
+- Foco das abas do resultado sem corte; no alto contraste do Windows, gráficos e barras não somem.
+- Arquivo de formato errado mostra aviso; uma busca de som antiga não reinicia um resultado novo; o Python do navegador libera a memória mesmo quando a leitura falha.
+- **Python e JS com a mesma regra:** data sem hora ou sem segundos entra; datas antes de 1970 e plays de mais de 24 h saem (arquivo corrompido).
+- "Pular para o conteúdo" não tira mais a pessoa do Wrapped.
+- Match (app para PC): nome repetido acusa logo no começo, antes de ler os históricos.
+
+### Mudado
+- Ponderação do cosseno no app do navegador começa em **Logaritmo (ln(1+x))**.
+- Rótulo "em breve" da barra em 12 px; no story "Fiel", o ano escolhido e o foco do teclado têm marcas diferentes; ícone na aba do navegador.
+- User-Agent do MusicBrainz e do ListenBrainz com a versão atual.
+
+### Segurança e privacidade
+- Scripts de CDN (htm, Lenis e Plotly) carregam com verificação de integridade.
+- Textos atualizados: o Wrapped começa com capas e som (sem "opt-in"), e os nomes dos artistas também vão à Apple para os trechos.
+
+### Removido
+- **Login do Spotify no app para PC** (só servia a 5 contas cadastradas à mão): o Match e o convite seguem com ZIP, ListenBrainz e convite. Saem os perfis salvos e o "Apagar perfil".
+- `medir_desempenho.py`, `docs/PASSO_3.md`, as fixtures `tests/fixtures/v05_passo1` e a função `arquetipo()` sem uso; regras de CSS e tokens mortos. Cerca de 1.800 linhas a menos.
+
 ## [1.8.0] — 2026-11-13
 
 Transições com cara de música e chegadas suaves no site e no app do navegador.

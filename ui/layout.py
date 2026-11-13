@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from zoneinfo import available_timezones
 
 import gradio as gr
@@ -12,9 +11,7 @@ from dados import (
     habilitar_leitura_paralela,
 )
 from formatacao import escape_html, fmt_pct
-from perfil_gosto import listar_perfis
 from perfis import AVISO_TRACOS, LIMIAR_FAVORITOS, LIMIAR_MADRUGADA, LIMIAR_REPEAT
-from spotify_api import PASTA_PERFIS, REDIRECT_PADRAO
 from ui.comum import (
     CONCORRENCIA,
     OPCOES_PONDERACAO,
@@ -29,18 +26,14 @@ from ui.dupla import (
     executar_grupo,
 )
 from ui.match import (
-    atualizar_perfis,
     baixar_cartao_match,
     baixar_festa,
     executar_match,
     gerar_meu_convite,
-    perfis_salvos,
 )
 from ui.meu_wrapped import baixar_wrapped, carregar_demo_wrapped, executar_wrapped
 from ui.meus_dados import (
     PRIVACIDADE,
-    apagar_perfil_salvo,
-    atualizar_meus_dados,
     limpar_cache,
     resumo_html,
 )
@@ -315,12 +308,6 @@ def criar_interface() -> gr.Blocks:
                     elem_classes='su-note',
                 )
                 meus_dados_html = gr.HTML(resumo_html())
-                perfil_apagar = gr.Dropdown(
-                    choices=[p.stem for p in listar_perfis(PASTA_PERFIS)],
-                    value=None,
-                    label='Perfil do Spotify salvo',
-                )
-                apagar_btn = gr.Button('Apagar este perfil', variant='stop')
                 limpar_btn = gr.Button('Limpar todo o cache', variant='stop')
                 # Recebe o resultado do confirm() do navegador: cancelar não apaga nada.
                 confirmado = gr.Checkbox(value=False, visible=False)
@@ -606,39 +593,6 @@ def criar_interface() -> gr.Blocks:
                             placeholder='nicollas\nbia_musica',
                         )
                 with gr.Row(equal_height=True, elem_classes='su-sources'):
-                    with gr.Column(elem_classes=['su-panel', 'b']):
-                        gr.HTML(
-                            '<div class="su-panel-title"><span class="su-avatar b">S</span>'
-                            'Login com Spotify<small>até 5 · cadastrados</small></div>'
-                        )
-                        nome_sp = gr.Textbox(
-                            label='Nome de quem vai entrar', placeholder='Ex.: Bia'
-                        )
-                        conectar = gr.Button('Conectar com Spotify', elem_classes='su-secondary')
-                        conhecidos = gr.State(value=perfis_salvos())
-                        salvos = gr.CheckboxGroup(
-                            choices=perfis_salvos(),
-                            value=perfis_salvos(),
-                            label='Perfis coletados pelo Spotify',
-                        )
-                        recarregar = gr.Button('Atualizar lista', elem_classes='su-secondary')
-                        with gr.Accordion('Configurar (só quem criou o app)', open=False):
-                            cid = gr.Textbox(
-                                value=os.environ.get('SPOTIFY_CLIENT_ID', ''),
-                                label='Client ID do app no Spotify',
-                                placeholder='Cole o Client ID do Developer Dashboard',
-                            )
-                            gr.HTML(
-                                '<ol class="su-steps">'
-                                '<li>Em <b>developer.spotify.com/dashboard</b>, com conta '
-                                '<b>Premium</b>, crie um app e marque só <b>Web API</b>.</li>'
-                                f'<li>Redirect URI: <code>{escape_html(REDIRECT_PADRAO)}</code></li>'
-                                '<li>Em <b>User Management</b>, cadastre o e-mail da conta '
-                                'Spotify de cada amigo (máx. 5).</li>'
-                                '<li>Cole o Client ID acima ou defina <code>SPOTIFY_CLIENT_ID</code>.'
-                                '</li></ol><p class="su-note">Regra do Spotify para apps pessoais. '
-                                'Sem cadastro, use o ListenBrainz ou o ZIP. O token nunca é salvo.</p>'
-                            )
                     with gr.Column(elem_classes=['su-panel', 'd']):
                         gr.HTML(
                             '<div class="su-panel-title"><span class="su-avatar d">C</span>'
@@ -665,11 +619,6 @@ def criar_interface() -> gr.Blocks:
                     )
                     _mais_arquivos('su-envio-convite')
                     nome_convite = gr.Textbox(label='O seu nome', placeholder='Ex.: Bia')
-                    perfil_convite = gr.Dropdown(
-                        choices=perfis_salvos(),
-                        value=None,
-                        label='Ou use um perfil salvo do Spotify',
-                    )
                     gerar_convite_btn = gr.Button('Gerar o meu código', elem_classes='su-secondary')
                     codigo_convite = gr.Textbox(
                         label='O seu código: copie e mande',
@@ -726,36 +675,9 @@ def criar_interface() -> gr.Blocks:
                             )
                             cartao_m_img = gr.Image(show_label=False, interactive=False)
                             cartao_m_arquivo = gr.File(label='Baixar cartão PNG', interactive=False)
-                conectar.click(
-                    None,
-                    [cid, nome_sp],
-                    None,
-                    js="(cid, nome) => { window.open('/spotify/login?client_id=' + "
-                    "encodeURIComponent(cid || '') + '&nome=' + encodeURIComponent(nome || ''), "
-                    "'_blank'); }",
-                    api_visibility='private',
-                )
-
-                # A lista do convite acompanha a do Match (login novo, perfil apagado).
-                def lista_convite() -> gr.Dropdown:
-                    return gr.Dropdown(choices=perfis_salvos(), value=None)
-
-                recarregar.click(
-                    atualizar_perfis,
-                    [salvos, conhecidos],
-                    [salvos, conhecidos],
-                    api_visibility='private',
-                ).then(lista_convite, None, perfil_convite, api_visibility='private')
-                # Cada aba nova do navegador vê os perfis salvos depois que o servidor subiu.
-                demo.load(
-                    atualizar_perfis,
-                    [salvos, conhecidos],
-                    [salvos, conhecidos],
-                    api_visibility='private',
-                ).then(lista_convite, None, perfil_convite, api_visibility='private')
                 buscar.click(
                     executar_match,
-                    [fm, nm, salvos, *opcoes, generos_mb, lb, convites],
+                    [fm, nm, *opcoes, generos_mb, lb, convites],
                     [
                         match_cartoes,
                         match_plot,
@@ -772,7 +694,7 @@ def criar_interface() -> gr.Blocks:
                 )
                 gerar_convite_btn.click(
                     gerar_meu_convite,
-                    [fc, nome_convite, perfil_convite, *opcoes],
+                    [fc, nome_convite, *opcoes],
                     codigo_convite,
                     api_name='gerar_convite',
                 )
@@ -931,26 +853,14 @@ def criar_interface() -> gr.Blocks:
                     [abas, sub_dupla],
                     api_visibility='private',
                 )
-        apagar_btn.click(
-            apagar_perfil_salvo,
-            perfil_apagar,
-            [meus_dados_html, perfil_apagar],
-            js="(nome) => nome && confirm('Apagar o perfil de ' + nome + '? Não dá para desfazer.')"
-            " ? nome : ''",
-            api_visibility='private',
-        ).then(
-            atualizar_perfis, [salvos, conhecidos], [salvos, conhecidos], api_visibility='private'
-        ).then(lista_convite, None, perfil_convite, api_visibility='private')
         limpar_btn.click(
             limpar_cache,
             confirmado,
-            [meus_dados_html, perfil_apagar],
+            meus_dados_html,
             js="() => confirm('Limpar todo o cache? Os históricos serão lidos de novo na próxima vez.')",
             api_visibility='private',
         )
-        demo.load(
-            atualizar_meus_dados, None, [meus_dados_html, perfil_apagar], api_visibility='private'
-        )
+        demo.load(resumo_html, None, meus_dados_html, api_visibility='private')
         gr.Markdown(
             'Plays: ≥30 segundos. Horas e describe(): todas as execuções válidas. '
             'O Ruzicka usa pesos absolutos e é sensível ao volume de escuta. ' + AVISO_TRACOS,

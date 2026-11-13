@@ -115,7 +115,7 @@
 .st-anos-chips [data-interativo] { display: flex; flex-wrap: wrap; gap: 1.8cqw; }
 .st-anos-chips button { min-width: 44px; min-height: 44px !important; padding: 0 3.4cqw; border-radius: var(--raio-chip); color: rgba(255, 255, 255, .62); font: inherit; font-size: 3.4cqw; font-weight: 800; cursor: pointer; }
 .st-anos-chips button.on { color: #000; background: var(--verde); border-color: transparent; }
-.st-anos-chips button[aria-pressed="true"] { outline: 3px solid #fff; outline-offset: 2px; }
+/* O ano escolhido é o verde (.on); o contorno branco fica só para o foco do teclado, sem confundir os dois. */
 .st-anos-chips button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 .st-painel-ano .st-vidro { display: grid; gap: 1.6cqw; padding: 3.6cqw 4cqw; border-radius: 4cqw; font-size: 3.6cqw; animation: st-entra .3s var(--sai-st) both; }
 .st-painel-ano ol { margin: 0; padding-left: 5cqw; }

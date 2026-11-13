@@ -118,8 +118,12 @@ export function familiaPlataforma(texto) {
   return FAMILIAS.find(([chaves]) => chaves.some((c) => t.includes(c)))?.[1] ?? 'Outro';
 }
 
+// Um play não passa de 24 h; acima disso é arquivo corrompido (igual a dados.py, TETO_MS).
+export const TETO_MS = 86_400_000;
+
 // Instante em ISO 8601 → milissegundos UTC. Sem fuso no texto, vale UTC (como o pandas com utc=True).
-const ISO = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?(Z|[+-]\d{2}:?\d{2})?$/;
+// Hora opcional (só a data = meia-noite UTC) e segundos opcionais, como o pandas aceita no Python.
+const ISO = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?)?(Z|[+-]\d{2}:?\d{2})?$/;
 export function instanteUtc(ts) {
   if (typeof ts !== 'string') return NaN;
   // Formato do Spotify ("2023-12-30T03:00:00Z"): caminho rápido pelo Date.parse nativo. Ele aceita
@@ -130,7 +134,7 @@ export function instanteUtc(ts) {
   }
   const m = ISO.exec(ts.trim());
   if (!m) return NaN;
-  const [ano, mes, dia, hora, min, seg = 0] = m.slice(1, 7).map(Number);
+  const [ano, mes, dia, hora, min, seg] = m.slice(1, 7).map((x) => Number(x ?? 0)); // grupo ausente = 0
   if (mes < 1 || mes > 12 || dia < 1 || hora > 23 || min > 59 || seg > 59) return NaN;
   const ms = Date.UTC(ano, mes - 1, dia, hora, min, seg) + Number(`0.${m[7] || 0}`) * 1000;
   if (new Date(ms).getUTCDate() !== dia) return NaN; // 30 de fevereiro e afins
@@ -213,9 +217,9 @@ export async function lerHistorico(arquivos, opcoes = {}) {
         if (e.episode_name || e.episode_show_name || e.spotify_episode_uri) continue; // podcast
         const msBruto = e.ms_played;
         const ms = typeof msBruto === 'number' ? msBruto : typeof msBruto === 'string' && msBruto.trim() ? Number(msBruto) : NaN;
-        if (!(ms >= 0 && ms < Infinity)) continue;
+        if (!(ms >= 0 && ms <= TETO_MS)) continue; // mais de 24 h num play só: arquivo corrompido ou adulterado
         const utc = instanteUtc(e.ts);
-        if (Number.isNaN(utc)) continue;
+        if (!(utc >= 0)) continue; // NaN ou antes de 1970 (relógio zerado): o cálculo por dia supõe dia ≥ 0
         const musica = typeof e.master_metadata_track_name === 'string' ? unico(e.master_metadata_track_name.trim()) : '';
         const artista = typeof e.master_metadata_album_artist_name === 'string' ? unico(e.master_metadata_album_artist_name.trim()) : '';
         if (!musica || !artista) continue;

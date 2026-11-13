@@ -1,29 +1,22 @@
-"""Perfil unificado, conciliação (pares ótimos) e login do Spotify com API simulada."""
+"""Perfil unificado, conciliação (pares ótimos) e o Match na interface."""
 
 from __future__ import annotations
 
-import base64
-import hashlib
 import json
 import random
 from itertools import combinations, permutations
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
 
-import httpx
 import pandas as pd
 import pytest
 from PIL import Image
 
-import spotify_api
 from conciliacao import comparar_perfis, conciliar, emparelhamento_otimo, nivel
 from dados import carregar_historico
 from perfil_gosto import (
     PerfilGosto,
-    carregar_perfil,
     perfil_de_historico,
     peso_posicao,
-    salvar_perfil,
     vetor_artistas,
 )
 
@@ -159,161 +152,19 @@ def test_conciliar_valida_e_monta_ranking() -> None:
         conciliar([perfis[0], _perfil('Ana', ['Q'])])
 
 
-def test_perfil_json_ida_e_volta(tmp_path: Path) -> None:
-    p = _perfil('Jô/../x', ['A'], [('m', 'A')])
-    caminho = salvar_perfil(p, tmp_path)
-    assert caminho.parent == tmp_path and '..' not in caminho.name
-    assert carregar_perfil(caminho).top_artistas == p.top_artistas
-    (tmp_path / 'ruim.json').write_text('{"nome": "Sem"}', encoding='utf-8')
-    with pytest.raises(ValueError):
-        carregar_perfil(tmp_path / 'ruim.json')
-
-
-def test_salvar_perfil_nao_apaga_outra_pessoa_com_mesmo_nome_seguro(tmp_path: Path) -> None:
-    ana_clara = salvar_perfil(_perfil('Ana Clara', ['A']), tmp_path)
-    outra = salvar_perfil(_perfil('Ana_Clara', ['B']), tmp_path)
-    assert ana_clara != outra and outra.name == 'Ana_Clara-2.json'
-    assert carregar_perfil(ana_clara).top_artistas['long_term'] == ['A']
-    # Novo login da mesma pessoa substitui o arquivo dela.
-    assert salvar_perfil(_perfil('Ana Clara', ['C']), tmp_path) == ana_clara
-    assert carregar_perfil(ana_clara).top_artistas['long_term'] == ['C']
-    assert len(list(tmp_path.glob('*.json'))) == 2
-
-
-def test_salvar_perfil_mesmo_nome_em_outra_caixa_e_a_mesma_pessoa(tmp_path: Path) -> None:
-    """O nome é a identidade: "ana" depois de "Ana" substitui, não cria Ana-2."""
-    primeiro = salvar_perfil(_perfil('Ana', ['A']), tmp_path)
-    assert salvar_perfil(_perfil(' ana ', ['B']), tmp_path) == primeiro
-    assert carregar_perfil(primeiro).top_artistas['long_term'] == ['B']
-    assert [p.name for p in tmp_path.glob('*.json')] == [primeiro.name]
-
-
-def _api_simulada(chamadas: list[str]) -> httpx.MockTransport:
-    def responder(req: httpx.Request) -> httpx.Response:
-        chamadas.append(f'{req.method} {req.url.path}')
-        if req.url.path == '/api/token':
-            corpo = parse_qs(req.content.decode())
-            assert corpo['grant_type'] == ['authorization_code'] and 'code_verifier' in corpo
-            assert 'client_secret' not in corpo
-            return httpx.Response(200, json={'access_token': 'tok', 'token_type': 'Bearer'})
-        assert req.headers['Authorization'] == 'Bearer tok'
-        periodo = req.url.params.get('time_range', '')
-        if req.url.path == '/v1/me/top/artists':
-            nomes = {
-                'short_term': ['Ado'],
-                'medium_term': ['Ado', 'Laufey'],
-                'long_term': ['Laufey'],
-            }
-            return httpx.Response(
-                200, json={'items': [{'name': n, 'genres': ['j-pop']} for n in nomes[periodo]]}
-            )
-        if req.url.path == '/v1/me/top/tracks':
-            return httpx.Response(
-                200, json={'items': [{'name': 'Usseewa', 'artists': [{'name': 'Ado'}]}]}
-            )
-        if req.url.path == '/v1/me/player/recently-played':
-            return httpx.Response(
-                200,
-                json={
-                    'items': [
-                        {
-                            'track': {'name': 'From the Start', 'artists': [{'name': 'Laufey'}]},
-                            'played_at': '2026-11-01T10:00:00Z',
-                        }
-                    ]
-                },
-            )
-        if req.url.path == '/v1/me/following':
-            depois = req.url.params.get('after')
-            itens = [{'name': 'Seguido 2'}] if depois else [{'name': 'Seguido 1'}]
-            cursor = None if depois else 'c1'
-            return httpx.Response(
-                200, json={'artists': {'items': itens, 'cursors': {'after': cursor}}}
-            )
-        return httpx.Response(404)
-
-    return httpx.MockTransport(responder)
-
-
-def test_login_pkce_coleta_e_salva_sem_token(tmp_path: Path) -> None:
-    url = spotify_api.iniciar_login('Bruno', 'cid123', 'http://127.0.0.1:7860/spotify/callback')
-    q = parse_qs(urlparse(url).query)
-    assert q['client_id'] == ['cid123'] and q['code_challenge_method'] == ['S256']
-    assert 'user-top-read' in q['scope'][0]
-    pendente = spotify_api._pendentes[q['state'][0]]
-    esperado = base64.urlsafe_b64encode(
-        hashlib.sha256(pendente.verificador.encode()).digest()
-    ).rstrip(b'=')
-    assert q['code_challenge'][0] == esperado.decode()
-    chamadas: list[str] = []
-    with httpx.Client(transport=_api_simulada(chamadas)) as cliente:
-        perfil, caminho = spotify_api.concluir_login(q['state'][0], 'codigo', tmp_path, cliente)
-    assert perfil.fonte == 'spotify_api' and perfil.nome == 'Bruno'
-    assert perfil.top_artistas['medium_term'] == ['Ado', 'Laufey']
-    assert (
-        perfil.seguidos == ['Seguido 1', 'Seguido 2'] and perfil.recentes[0]['artista'] == 'Laufey'
-    )
-    texto = caminho.read_text(encoding='utf-8')
-    assert 'tok' not in texto and 'access_token' not in texto
-    with pytest.raises(ValueError):  # estado usado só uma vez
-        spotify_api.concluir_login(q['state'][0], 'codigo', tmp_path, cliente)
-
-
-def test_login_exige_nome_e_client_id() -> None:
-    with pytest.raises(ValueError):
-        spotify_api.iniciar_login('', 'cid')
-    with pytest.raises(ValueError):
-        spotify_api.iniciar_login('Ana', ' ')
-
-
-def test_rotas_do_servidor(tmp_path: Path, monkeypatch) -> None:
-    """/spotify/login redireciona ao Spotify; /spotify/callback salva o perfil."""
-    from fastapi import FastAPI
-    from fastapi.testclient import TestClient
-
-    chamadas: list[str] = []
-    transporte = _api_simulada(chamadas)
-    original = httpx.Client
-    monkeypatch.setattr(spotify_api.httpx, 'Client', lambda **kw: original(transport=transporte))
-    app = FastAPI()
-    spotify_api.registrar_rotas(app, tmp_path, 'http://127.0.0.1:7860/spotify/callback')
-    with TestClient(app) as cliente:
-        r = cliente.get(
-            '/spotify/login', params={'nome': 'Bia', 'client_id': 'abc'}, follow_redirects=False
-        )
-        assert r.status_code in (302, 307) and r.headers['location'].startswith(
-            spotify_api.URL_AUTORIZAR
-        )
-        estado = parse_qs(urlparse(r.headers['location']).query)['state'][0]
-        ok = cliente.get('/spotify/callback', params={'code': 'c', 'state': estado})
-        assert ok.status_code == 200 and 'Perfil de Bia salvo' in ok.text
-        assert (tmp_path / 'Bia.json').is_file()
-        ruim = cliente.get('/spotify/callback', params={'error': 'access_denied'})
-        assert ruim.status_code == 400 and '<script' not in ruim.text
-        # O texto vindo da URL é escapado uma vez só (nem cru, nem &amp;lt;).
-        ataque = cliente.get('/spotify/callback', params={'error': '<script>x</script>'})
-        assert '&lt;script&gt;' in ataque.text and '<script>' not in ataque.text
-        assert '&amp;lt;' not in ataque.text
-
-
-def test_match_na_interface_mistura_zip_e_spotify(tmp_path: Path, monkeypatch) -> None:
+def test_match_na_interface_com_tres_zips(tmp_path: Path, monkeypatch) -> None:
     import ui
 
     zips = []
-    for nome, artistas in (('Ana', ['X', 'Y']), ('Bia', ['X', 'Z'])):
+    for nome, artistas in (('Ana', ['X', 'Y']), ('Bia', ['X', 'Z']), ('Caio', ['Y', 'Z'])):
         p = tmp_path / f'{nome}.json'
         p.write_text(
             json.dumps([_evento('2026-10-01T10:00:00Z', a) for a in artistas]), encoding='utf-8'
         )
         zips.append(str(p))
-    pasta = tmp_path / 'perfis'
-    salvar_perfil(_perfil('Caio', ['Y', 'Z']), pasta)
-    monkeypatch.setattr(ui.match, 'PASTA_PERFIS', pasta)
-    assert ui.perfis_salvos() == ['Caio']
     html, figura, ranking, _, revelacao, estado, dupla = ui.executar_match(
         zips,
-        'Ana\nBia',
-        ['Caio'],
+        'Ana\nBia\nCaio',
         'America/Sao_Paulo',
         '',
         '',
@@ -324,7 +175,7 @@ def test_match_na_interface_mistura_zip_e_spotify(tmp_path: Path, monkeypatch) -
     )
     assert 'O TRIO' in html and 'su-match-card' in html
     assert len(figura.data[0].z) == 3 and list(ranking['Pessoa']) == ['Ana', 'Bia', 'Caio']
-    assert ranking.loc[2, 'Fonte'].startswith('Spotify')
+    assert set(ranking['Fonte']) == {'Histórico ZIP'}
     assert 'data-stories' in revelacao and 'O TRIO' in revelacao
     assert len(dupla.choices) == 3  # os três pares internos do trio
     pastas: list[str] = []
@@ -353,42 +204,6 @@ def test_match_repetido_reusa_perfil_do_zip(tmp_path: Path, monkeypatch) -> None
     assert segundo.nome == 'Outra' and segundo.top_artistas == primeiro.top_artistas
 
 
-def test_perfil_novo_aparece_depois_de_atualizar_lista(tmp_path: Path, monkeypatch) -> None:
-    """Um amigo loga com o app aberto: Atualizar lista libera o perfil para o Match."""
-    import asyncio
-
-    from gradio.exceptions import Error
-    from gradio.state_holder import SessionState
-
-    import ui
-
-    monkeypatch.setattr(ui.match, 'PASTA_PERFIS', tmp_path)
-    demo = ui.criar_interface()  # sem perfis salvos ainda
-    funcoes = {f.fn.__name__: f for f in demo.fns.values() if f.fn}
-    salvar_perfil(_perfil('Caio', ['Y']), tmp_path)
-    salvar_perfil(_perfil('Dani', ['Y', 'Z']), tmp_path)
-    entradas = [None, '', ['Caio', 'Dani'], 'America/Sao_Paulo', '', '', 'manter', False, False]
-    entradas += [False, '', '']  # sem MusicBrainz, sem ListenBrainz e sem convites
-
-    async def fluxo() -> None:
-        sessao = SessionState(demo)
-        await demo.process_api(block_fn=funcoes['atualizar_perfis'], inputs=[[], []], state=sessao)
-        saida = await demo.process_api(
-            block_fn=funcoes['executar_match'], inputs=entradas, state=sessao
-        )
-        assert 'Caio' in saida['data'][0]
-        with pytest.raises(Error, match='not in the list of choices'):
-            await demo.process_api(
-                block_fn=funcoes['executar_match'], inputs=entradas, state=SessionState(demo)
-            )
-
-    asyncio.run(fluxo())
-    assert any(
-        d.fn is ui.atualizar_perfis and d.targets and d.targets[0][1] == 'load'
-        for d in demo.fns.values()
-    )
-
-
 def test_match_repetido_nao_precarrega_zips_com_perfil_em_cache(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -404,7 +219,7 @@ def test_match_repetido_nao_precarrega_zips_com_perfil_em_cache(
         p.write_text(json.dumps([_evento('2026-10-01T10:00:00Z', f'A{i}')]), encoding='utf-8')
         zips.append(str(p))
     nomes = '\n'.join(f'P{i}' for i in range(8))
-    args = (zips, nomes, [], 'America/Sao_Paulo', '', '', 'manter', False, False)
+    args = (zips, nomes, 'America/Sao_Paulo', '', '', 'manter', False, False)
     ui.executar_match(*args, progress=lambda *a, **k: None)
     assert [len(c) for c in chamadas] == [6, 2]
     chamadas.clear()
@@ -412,18 +227,20 @@ def test_match_repetido_nao_precarrega_zips_com_perfil_em_cache(
     assert chamadas == []
 
 
-def test_403_mostra_chamada_e_motivo_do_spotify() -> None:
-    corpo = {'error': {'status': 403, 'message': 'the user may not be registered'}}
-    cliente = httpx.Client(transport=httpx.MockTransport(lambda p: httpx.Response(403, json=corpo)))
-    with pytest.raises(PermissionError, match='/me/top/artists.*may not be registered'):
-        spotify_api.coletar_perfil('t', 'Nicollas', cliente)
+def test_nome_repetido_acusa_antes_de_ler_os_historicos(tmp_path: Path, monkeypatch) -> None:
+    """Dois nomes iguais (ZIP ou ListenBrainz) param na hora, sem ler histórico nem chamar a rede."""
+    from gradio.exceptions import Error
 
+    import ui
 
-def test_403_em_texto_puro_tambem_mostra_o_motivo() -> None:
-    cliente = httpx.Client(
-        transport=httpx.MockTransport(
-            lambda p: httpx.Response(403, text='user may not be registered')
+    lidos: list = []
+    monkeypatch.setattr(ui.match, 'perfil_de_arquivos', lambda *a, **k: lidos.append(a))
+    monkeypatch.setattr(ui.match, 'coletar_perfil_listenbrainz', lambda u: lidos.append(u))
+    opcoes = ('America/Sao_Paulo', '', '', 'manter', False, False, False)
+    with pytest.raises(Error, match='nome diferente'):
+        ui.executar_match(
+            ['a.json', 'b.json'], 'Ana\n ana ', *opcoes, '', progress=lambda *a, **k: None
         )
-    )
-    with pytest.raises(PermissionError, match='user may not be registered'):
-        spotify_api.coletar_perfil('t', 'Nicollas', cliente)
+    with pytest.raises(Error, match='nome diferente'):
+        ui.executar_match(['a.json'], 'Bia', *opcoes, 'bia', progress=lambda *a, **k: None)
+    assert lidos == []

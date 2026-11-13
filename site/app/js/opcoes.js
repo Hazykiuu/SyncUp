@@ -1,7 +1,7 @@
 // Opções de dados, recolhidas por padrão (os padrões servem para quase todo mundo).
 import { html } from 'preact-htm';
 
-export const PADRAO = { comum: true, ponderacao: 'bruta', fuso: 'America/Sao_Paulo', musicas: '', artistas: '', varios: 'manter', deduplicar: false };
+export const PADRAO = { comum: true, ponderacao: 'log1p', fuso: 'America/Sao_Paulo', musicas: '', artistas: '', varios: 'manter', deduplicar: false };
 
 const FUSOS = ['America/Sao_Paulo', 'America/Manaus', 'America/Fortaleza', 'America/Noronha', 'America/Rio_Branco', 'Europe/Lisbon', 'UTC'];
 

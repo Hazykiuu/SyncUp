@@ -73,6 +73,8 @@ CAMPOS_HABITOS = {
 CAMPOS_BOOLEANOS = ('pulada', 'aleatorio', 'offline')
 ChaveArquivo = tuple[str, int, int, int, int]
 
+TETO_MS = 86_400_000  # 24 h: o maior play aceito (igual a site/app/js/historico.js)
+
 
 @dataclass(frozen=True)
 class ContadoresCarga:
@@ -381,10 +383,13 @@ def _limpar(
     contagens['podcasts'] = int(podcasts.sum())
     dados = _filtrar(dados, ~podcasts)
     dados['ms_played'] = pd.to_numeric(dados['ms_played'], errors='coerce')
-    ms_validos = dados['ms_played'].ge(0) & dados['ms_played'].lt(float('inf'))
+    # Um play não passa de 24 h: acima disso é arquivo corrompido (e estouraria o int64 da sintonia).
+    ms_validos = dados['ms_played'].ge(0) & dados['ms_played'].le(TETO_MS)
     contagens['ms_invalidos'] = int((~ms_validos).sum())
     dados = _filtrar(dados, ms_validos)
     datas = pd.to_datetime(dados['ts'], utc=True, format='ISO8601', errors='coerce')
+    # Antes de 1970 é relógio zerado: o Spotify nem existia (e o JS calcula dias a partir de 1970).
+    datas = datas.where(datas >= pd.Timestamp(0, tz='UTC'))
     contagens['datas_invalidas'] = int(datas.isna().sum())
     dados['data_utc'] = datas
     dados = _filtrar(dados, dados['data_utc'].notna())

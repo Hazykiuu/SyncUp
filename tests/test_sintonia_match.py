@@ -181,7 +181,6 @@ def test_match_mostra_a_dupla_mais_sincronizada(tmp_path: Path) -> None:
     html, _, ranking, _, story, estado, _ = ui.executar_match(
         arquivos,
         'Ana\nBia\n<b>Caio</b>',
-        [],
         FUSO,
         '',
         '',

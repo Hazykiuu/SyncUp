@@ -27,7 +27,9 @@ def test_arquivos_locais_existem() -> None:
 
 def test_scripts_externos_so_da_lista_permitida() -> None:
     externos = re.findall(r'https?://[^"\'\s)]+\.m?js', HTML)
-    assert externos == ['https://unpkg.com/lenis@1.3.23/dist/lenis.mjs']
+    # A URL aparece duas vezes no importmap: no import e na chave de integridade (hash do arquivo).
+    assert sorted(set(externos)) == ['https://unpkg.com/lenis@1.3.23/dist/lenis.mjs']
+    assert '"integrity"' in HTML
     assert 'gsap' not in HTML.lower()
     assert not re.search(r'googletagmanager|google-analytics|gtag\(|facebook\.net', HTML)
 

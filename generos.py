@@ -24,11 +24,12 @@ from tempfile import NamedTemporaryFile
 
 import httpx
 
-from configuracao import ConfiguracaoCarga, normalizar_nome
+from configuracao import VERSAO, ConfiguracaoCarga, normalizar_nome
 from perfil_gosto import PERIODOS, PerfilGosto, vetor_artistas
 
 URL_MUSICBRAINZ = 'https://musicbrainz.org/ws/2/artist'
-USER_AGENT = 'SyncUp/0.9 ( https://github.com/Hazykiuu/SyncUp )'
+# O MetaBrainz usa o User-Agent para contato e limite de taxa: leva a versão atual do app.
+USER_AGENT = f'SyncUp/{VERSAO} ( https://github.com/Hazykiuu/SyncUp )'
 INTERVALO_S = 1.0  # Regra de uso do MusicBrainz para clientes anônimos.
 SCORE_MINIMO = 90
 MAXIMO_TAGS = 5

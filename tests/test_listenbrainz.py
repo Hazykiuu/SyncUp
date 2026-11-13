@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import httpx
 import pandas as pd
 import pytest
 
 import ui
 from listenbrainz import PERIODOS_API, coletar_perfil_listenbrainz
-from perfil_gosto import PerfilGosto, salvar_perfil
+from perfil_gosto import PerfilGosto
 
 
 def _api(pedidos: list[str], sem_mes: bool = True) -> httpx.MockTransport:
@@ -77,7 +75,6 @@ def test_match_aceita_usuarios_do_listenbrainz(monkeypatch) -> None:
     html, *_ = ui.executar_match(
         [],
         '',
-        [],
         'America/Sao_Paulo',
         '',
         '',
@@ -89,17 +86,6 @@ def test_match_aceita_usuarios_do_listenbrainz(monkeypatch) -> None:
         progress=lambda *a, **k: None,
     )
     assert 'nick' in html and 'bia' in html and 'ListenBrainz' in html
-
-
-def test_perfil_que_acabou_de_logar_entra_marcado(tmp_path: Path, monkeypatch) -> None:
-    monkeypatch.setattr(ui.match, 'PASTA_PERFIS', tmp_path)
-    for nome in ('Carlos', 'Bia'):
-        salvar_perfil(PerfilGosto(nome, 'spotify_api', '', {'long_term': ['X']}), tmp_path)
-    # Carlos já estava na lista e foi desmarcado; Bia acabou de logar.
-    lista, conhecidos = ui.atualizar_perfis([], ['Carlos'])
-    assert lista.value == ['Bia'] and conhecidos == ['Bia', 'Carlos']
-    lista, _ = ui.atualizar_perfis(['Carlos'], ['Bia', 'Carlos'])
-    assert lista.value == ['Carlos']  # desmarcar continua valendo
 
 
 def _sem_listens() -> pd.DataFrame:
@@ -126,7 +112,6 @@ def test_usuario_com_problema_fica_de_fora_com_aviso(monkeypatch) -> None:
     html, *_ = ui.executar_match(
         [],
         '',
-        [],
         'America/Sao_Paulo',
         '',
         '',

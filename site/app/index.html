@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SyncUp · app</title>
-<meta name="description" content="Compare históricos do Spotify direto no navegador. Nada sai do seu aparelho.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%23121212%27/%3E%3Crect x=%277%27 y=%2714%27 width=%273.5%27 height=%2711%27 rx=%271.75%27 fill=%27%231ed760%27/%3E%3Crect x=%2712.5%27 y=%277%27 width=%273.5%27 height=%2718%27 rx=%271.75%27 fill=%27%2355cc94%27/%3E%3Crect x=%2718%27 y=%2716%27 width=%273.5%27 height=%279%27 rx=%271.75%27 fill=%27%238dc2cb%27/%3E%3Crect x=%2723.5%27 y=%2711%27 width=%273.5%27 height=%2714%27 rx=%271.75%27 fill=%27%23c4b7ff%27/%3E%3C/svg%3E">
+<meta name="description" content="Compare históricos do Spotify direto no navegador. O histórico não sai do seu aparelho.">
 <meta name="theme-color" content="#121212">
 <link rel="preload" href="../assets/Figtree.ttf" as="font" type="font/ttf" crossorigin>
 <!-- Ordem: componentes do núcleo (Blend, stories) → estilo do site → ajustes do app. -->
@@ -12,7 +13,8 @@
 <link rel="stylesheet" href="../estilo.css">
 <link rel="stylesheet" href="app.css">
 <link rel="stylesheet" href="stories.css">
-<script type="importmap">{ "imports": { "preact-htm": "https://unpkg.com/htm@3.1.1/preact/standalone.module.js" } }</script>
+<!-- integrity: se o CDN trocar o arquivo, o navegador recusa (o código roda com acesso ao histórico). -->
+<script type="importmap">{ "imports": { "preact-htm": "https://unpkg.com/htm@3.1.1/preact/standalone.module.js" }, "integrity": { "https://unpkg.com/htm@3.1.1/preact/standalone.module.js": "sha384-StNNHifqKmppGEDNqrv+YtX8PD3mhAhLtNbioQ4QxbPNqaTnktcDjsIPGjcDoiKa" } }</script>
 </head>
 <body class="js">
 <!-- Vindo de "Abrir o app": a página nasce coberta pelas barras de equalizador da página inicial e elas descem,

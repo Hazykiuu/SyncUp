@@ -13,7 +13,6 @@ import json
 from collections import OrderedDict
 from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
-from pathlib import Path
 from threading import Lock
 
 import pandas as pd
@@ -54,7 +53,7 @@ class PerfilGosto:
     @property
     def rotulo_fonte(self) -> str:
         rotulos = {
-            'spotify_api': 'Spotify (login)',
+            'spotify_api': 'Spotify (login)',  # convites antigos, de quando o app tinha o login
             'listenbrainz': 'ListenBrainz',
             'convite': 'Convite',
         }
@@ -74,55 +73,6 @@ class PerfilGosto:
         if not any(perfil.top_artistas.get(p) for p in PERIODOS):
             raise ValueError(f'O perfil de {perfil.nome} não tem nenhum ranking de artistas.')
         return perfil
-
-
-def salvar_perfil(perfil: PerfilGosto, pasta: str | Path) -> Path:
-    """Grava o perfil em ``pasta/<nome>.json`` (sem tokens, só rankings).
-
-    O nome é a identidade do perfil, sem diferenciar maiúsculas: um novo login de
-    "Ana" ou "ana" substitui o arquivo da Ana. Se nomes diferentes derem o mesmo
-    nome de arquivo ("Ana Clara" e "Ana_Clara"), o segundo ganha um sufixo ``-2``,
-    ``-3``… em vez de apagar o primeiro.
-    """
-    pasta = Path(pasta)
-    pasta.mkdir(parents=True, exist_ok=True)
-    seguro = ''.join(c if c.isalnum() or c in '-_' else '_' for c in perfil.nome.strip())[:60]
-    base = seguro or 'perfil'
-    # Busca sem diferenciar maiúsculas em todo sistema: no Linux, "ana" acharia "Ana.json".
-    existentes = {p.name.casefold(): p for p in pasta.glob('*.json')}
-    dono = perfil.nome.strip().casefold()
-    caminho = existentes.get(f'{base}.json'.casefold(), pasta / f'{base}.json')
-    sufixo = 1
-    while caminho.exists() and _dono(caminho) != dono:
-        sufixo += 1
-        nome = f'{base}-{sufixo}.json'
-        caminho = existentes.get(nome.casefold(), pasta / nome)
-    caminho.write_text(perfil.para_json(), encoding='utf-8')
-    return caminho
-
-
-def _dono(caminho: Path) -> str | None:
-    """Nome (casefold) gravado num perfil existente; None se ilegível."""
-    try:
-        dados = json.loads(caminho.read_text(encoding='utf-8'))
-        return str(dados.get('nome', '')).strip().casefold()
-    except (OSError, ValueError, AttributeError):
-        return None
-
-
-def carregar_perfil(caminho: str | Path) -> PerfilGosto:
-    """Lê um perfil JSON salvo pelo SyncUp."""
-    try:
-        dados = json.loads(Path(caminho).read_text(encoding='utf-8'))
-    except (OSError, json.JSONDecodeError) as erro:
-        raise ValueError(f'Não foi possível ler o perfil {Path(caminho).name}.') from erro
-    return PerfilGosto.de_dict(dados)
-
-
-def listar_perfis(pasta: str | Path) -> list[Path]:
-    """Perfis JSON disponíveis numa pasta, em ordem alfabética."""
-    pasta = Path(pasta)
-    return sorted(pasta.glob('*.json')) if pasta.is_dir() else []
 
 
 def _ranking(contagem: pd.Series, limite: int = TAMANHO_RANKING) -> list:

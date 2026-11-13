@@ -79,6 +79,8 @@ O cache opcional em `.syncup_cache/` usa Parquet + manifesto JSON. A chave combi
 
 ## Medir antes/depois
 
+> Registro histórico da v0.5. O `medir_desempenho.py` e a cópia congelada `tests/fixtures/v05_passo1/` saíram na auditoria da 1.9; os resultados medidos continuam em `benchmark/300k.*`.
+
 A cópia congelada do Passo 1 está em `tests/fixtures/v05_passo1/` e é a referência padrão do benchmark. Gere os dois históricos fictícios:
 
 ```powershell

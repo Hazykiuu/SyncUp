@@ -8,7 +8,6 @@ from analise import EntradaPerfil, ResultadoComparacao, ResultadoGrupo, comparar
 from configuracao import ConfiguracaoCarga
 from dados import LIMITE_BYTES, carregar, limpar_cache
 from metricas import metricas
-from perfis import arquetipo
 
 if TYPE_CHECKING:
     import gradio as gr
@@ -21,7 +20,6 @@ __all__ = [
     'limpar_cache',
     'ResultadoComparacao',
     'ConfiguracaoCarga',
-    'arquetipo',
     'ResultadoGrupo',
     'EntradaPerfil',
     'comparar_grupo',

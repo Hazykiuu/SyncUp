@@ -6,10 +6,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from heapq import nlargest
 
-import pandas as pd
-
-from formatacao import fmt_pct
-
 AVISO_TRACOS = (
     'Arquétipos e traços são regras experimentais sobre este recorte de escuta. '
     'Não medem personalidade ou afinidade amorosa. Não são testes psicológicos.'
@@ -88,18 +84,4 @@ def classificar_proporcoes(
             'Reproduções entre 00h e 05h59, no fuso horário selecionado.',
             LIMIAR_MADRUGADA,
         ),
-    )
-
-
-def arquetipo(contagens: pd.Series) -> str:
-    """Preserva o texto do arquétipo inicial, disponível na v0.4."""
-    total = int(contagens.sum())
-    if total <= 0:
-        raise ValueError('Arquétipos exigem contagens positivas.')
-    concentracao = float(contagens.nlargest(QUANTIDADE_FAVORITOS).sum()) / total
-    nome = 'Fiel aos favoritos' if concentracao >= LIMIAR_FAVORITOS else 'Gosto distribuído'
-    return (
-        f'**{nome}** — seus dois artistas líderes representam **{fmt_pct(concentracao)}** '
-        f'das reproduções no recorte. Regra experimental: concentração ≥{LIMIAR_FAVORITOS:.0%} '
-        'recebe Fiel aos favoritos. ' + AVISO_TRACOS
     )

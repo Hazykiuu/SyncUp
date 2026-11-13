@@ -161,7 +161,6 @@ r = comparar('a.zip', 'b.zip', 'Pessoa A', 'Pessoa B',
 print(r.metricas.cosseno)
 ```
 
-**Benchmark:** `python tools/gerar_dados_falsos.py a.zip --seed 41` gera um histórico fictício de ~300 mil eventos, e `python medir_desempenho.py a.zip b.zip --repeticoes 3 --somente-nucleo --saida benchmark/meu_pc` mede os tempos.
 
 **Dependências**, todas abertas (`tests/test_licencas.py` confere): Gradio e orjson (Apache-2.0), FastAPI e Plotly (MIT), httpx e pandas (BSD-3-Clause), Pillow (MIT-CMU), pytest e Ruff (MIT) e a fonte Figtree (SIL OFL 1.1). O site (`site/`) usa a Lenis (MIT) e o Preact com htm (MIT).
 

@@ -1,9 +1,6 @@
 /* App do SyncUp: usa os tokens e o vidro do site (estilo.css); só o que é próprio do app fica aqui. */
 body { background: var(--bg) !important; }
 footer { opacity: 1; }
-/* O app usa tamanhos fixos (a grade em vw do site encolhe demais formulários no celular).
-   100% = 16 px por padrão, mas respeita quem aumentou a fonte no sistema. */
-html { font-size: 100% !important; color-scheme: dark; } /* controles nativos (caixas, rolagem) já vêm escuros */
 
 /* Tokens do app. Espaço em escala de 4 px; raios aninhados (o de dentro = o de fora − o padding). */
 :root {
@@ -30,10 +27,8 @@ html { font-size: 100% !important; color-scheme: dark; } /* controles nativos (c
 @media (hover: hover) { .app-corpo .btn:hover:not(:disabled) .seta { transform: translateX(3px); } }
 @media (hover: hover) and (pointer: fine) { .vidro { -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%); } }
 .vidro .vidro { -webkit-backdrop-filter: none; backdrop-filter: none; }
-.bolhas.fixas i { animation: none; }
 /* Fundo com matéria, parado: as duas manchas (verde = A no alto, violeta = B embaixo) um pouco mais presentes
    e um grão fino por cima, que o vidro deixa ver. Nada anima: não custa quadros no celular. */
-.bolhas.fixas { opacity: .3; }
 body::after { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .06; background-size: 160px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"); }
 @media (prefers-reduced-transparency: reduce) { body::after { display: none; } }

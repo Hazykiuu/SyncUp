@@ -197,12 +197,6 @@ class GoldenMasterTest(unittest.TestCase):
         """Detecta alterações no código que produziu a referência."""
         for nome, esperado in self.referencia['fontes_sha256'].items():
             self.assertEqual(hashlib.sha256((BASELINE / nome).read_bytes()).hexdigest(), esperado)
-        referencia_passo1 = RAIZ / 'tests/fixtures/v05_passo1'
-        hashes = json.loads((referencia_passo1 / 'fontes_sha256.json').read_text(encoding='utf-8'))
-        for nome, esperado in hashes.items():
-            self.assertEqual(
-                hashlib.sha256((referencia_passo1 / nome).read_bytes()).hexdigest(), esperado
-            )
 
 
 if __name__ == '__main__':

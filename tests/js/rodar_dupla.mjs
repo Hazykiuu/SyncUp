@@ -1,0 +1,18 @@
+// Roda a comparação da Dupla do app web no Node e escreve o JSON (teste de paridade com o Python).
+// Uso: node tests/js/rodar_dupla.mjs '<opções em JSON>' '<nome A>' '<nome B>' a:arquivo1.zip [a:…] b:arquivo2.zip [b:…]
+import { readFileSync } from 'node:fs';
+import { basename } from 'node:path';
+
+import { compararDupla } from '../../site/app/js/dupla.js';
+import { lerHistorico } from '../../site/app/js/historico.js';
+
+const [opcoesJson, nomeA, nomeB, ...caminhos] = process.argv.slice(2);
+const opcoes = JSON.parse(opcoesJson);
+const ler = (lado) => caminhos.filter((c) => c.startsWith(`${lado}:`)).map((c) => c.slice(2))
+  .map((c) => ({ nome: basename(c), bytes: new Uint8Array(readFileSync(c)) }));
+try {
+  const [ca, cb] = [await lerHistorico(ler('a'), opcoes), await lerHistorico(ler('b'), opcoes)];
+  process.stdout.write(JSON.stringify(compararDupla(ca, cb, nomeA, nomeB, opcoes)));
+} catch (e) {
+  process.stdout.write(JSON.stringify({ erro: e.message }));
+}

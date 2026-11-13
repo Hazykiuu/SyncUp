@@ -1,5 +1,6 @@
 // App do SyncUp no navegador: casca (topo, motor) e a tela Dupla.
 import { html, render, useEffect, useRef, useState } from 'preact-htm';
+import { chegarPouco, pulsar } from './chegada.js';
 import { aoProgredir, executar, iniciar } from './motor.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
@@ -9,8 +10,12 @@ import { Wrapped } from './wrapped.js';
 // Carregamento como equalizador: 24 barras de alturas fixas que se acendem conforme o progresso.
 const ALTURAS = [.35, .6, .45, .8, .55, 1, .7, .5, .85, .4, .65, .9, .5, .75, .45, .95, .6, .4, .7, .85, .5, .65, .35, .55];
 
+// O ponto verde só pulsa quando o motor acabou de ficar pronto, não a cada volta para a Dupla.
+let prontoEm = -Infinity;
+const pontoPronto = (el) => { if (performance.now() - prontoEm < 1000) pulsar(el); };
+
 function Motor({ estado }) {
-  if (estado.pronto) return html`<p class="motor ok" role="status"><span class="ponto" aria-hidden="true"></span>Pronto para comparar</p>`;
+  if (estado.pronto) return html`<p class="motor ok" role="status"><span ref=${pontoPronto} class="ponto" aria-hidden="true"></span>Pronto para comparar</p>`;
   if (estado.erro) return html`<p class="motor erro" role="alert">Não foi possível carregar o SyncUp: ${estado.erro} <button type="button" class="btn btn-borda vidro" onClick=${() => location.reload()}>Tentar de novo</button></p>`;
   return html`
     <div class="motor" role="status" aria-live="polite">
@@ -70,8 +75,8 @@ function Dupla({ pronto }) {
       <small id="dica-comparar">${!pronto ? 'Esperando o SyncUp terminar de carregar.' : arquivos[0].length && arquivos[1].length ? '' : 'Envie pelo menos um arquivo para cada pessoa.'}</small>
     </div>
     <div aria-live="polite">
-      ${fase.tipo === 'processando' && html`<p class="processando vidro"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
-      ${fase.tipo === 'erro' && html`<div class="erro vidro" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
+      ${fase.tipo === 'processando' && html`<p ref=${chegarPouco} class="processando vidro"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
+      ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro vidro" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
         ${ultima.current && html`<button type="button" class="btn btn-borda vidro" onClick=${() => ultima.current()}>Tentar de novo</button>`}</div>`}
       ${fase.tipo === 'resultado' && html`<p class="sr-only">Resultado de ${fase.r.nomes[0]} e ${fase.r.nomes[1]} pronto, logo abaixo.</p>`}
     </div>
@@ -94,7 +99,7 @@ function App() {
     if (modo !== 'dupla' || iniciado.current) return;
     iniciado.current = true;
     aoProgredir(({ etapa, fracao }) => setMotor((m) => ({ ...m, etapa, fracao })));
-    iniciar().then(() => setMotor((m) => ({ ...m, pronto: true }))).catch((e) => setMotor((m) => ({ ...m, erro: e.message })));
+    iniciar().then(() => { prontoEm = performance.now(); setMotor((m) => ({ ...m, pronto: true })); }).catch((e) => setMotor((m) => ({ ...m, erro: e.message })));
   }, [modo]);
   const marca = html`<a class="marca vivo" href="../" aria-label="SyncUp, voltar ao site"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>SyncUp</a>`;
   return html`
@@ -130,6 +135,8 @@ const MODOS = [
 ];
 
 // O aviso "Carregando o SyncUp…" do index.html sai: o render do Preact não apaga o que ele não criou.
+// O Safari do iOS só aplica :active (toque nos botões e na barra) se a página ouvir touchstart.
+document.addEventListener('touchstart', () => {}, { passive: true });
 const raiz = document.getElementById('app');
 raiz.replaceChildren();
 render(html`<${App} />`, raiz);

@@ -4,6 +4,7 @@ const pendentes = new Map();
 let proximoId = 0;
 let ouvinteProgresso = () => {};
 let prontoResolver, prontoRejeitar;
+let morto = null; // o erro que derrubou o Worker: depois dele, nenhuma ação é mandada para o nada
 export const pronto = new Promise((ok, erro) => { prontoResolver = ok; prontoRejeitar = erro; });
 
 worker.onmessage = ({ data }) => {
@@ -24,6 +25,7 @@ worker.onerror = (e) => {
   prontoRejeitar(erro);
   for (const { erro: rejeitar } of pendentes.values()) rejeitar(erro);
   pendentes.clear();
+  morto = erro;
 };
 
 export function aoProgredir(fn) { ouvinteProgresso = fn; }
@@ -33,6 +35,7 @@ export function iniciar() { worker.postMessage({ tipo: 'iniciar' }); return pron
 /** Lê os File do navegador e manda o ArrayBuffer ao Worker sem copiar (transferência). */
 export async function executar(nome, args = [], { arquivos = [], saida = 'json' } = {}) {
   await pronto;
+  if (morto) throw morto; // "Tentar de novo" depois da queda: erro com o pedido para recarregar, não "Comparando…" eterno
   const lidos = await Promise.all(arquivos.map(async ({ caminho, arquivo }) => ({ caminho, bytes: await arquivo.arrayBuffer() })));
   const id = ++proximoId;
   return new Promise((ok, erro) => {

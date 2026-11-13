@@ -35,7 +35,9 @@ function Dupla({ pronto }) {
   const [fase, setFase] = useState({ tipo: 'parado' });
   const ocupado = fase.tipo === 'processando';
   const pode = pronto && !ocupado && arquivos[0].length > 0 && arquivos[1].length > 0;
-  const ultima = useRef(null); // a última tentativa, para o "Tentar de novo" do erro
+  // Qual foi a última tentativa ("comparar" ou "demo"), para o "Tentar de novo" do erro. Guarda o tipo, não a
+  // função: o botão chama a da renderização atual, com os arquivos e opções que a tela mostra agora.
+  const ultima = useRef(null);
 
   const rodar = async (args, envio = []) => {
     setFase({ tipo: 'processando', etapa: 'Lendo os históricos e calculando a sintonia… (na primeira comparação o navegador também baixa os gráficos, ~10 MB)' });
@@ -48,11 +50,11 @@ function Dupla({ pronto }) {
   const comparar = () => {
     const envio = arquivos.flatMap((lista, p) => lista.map((arquivo, i) => ({ caminho: `/tmp/${p ? 'b' : 'a'}-${i}-${arquivo.name.replace(/[^\w.-]/g, '_')}`, arquivo })));
     const caminhos = [0, 1].map((p) => envio.filter((e) => e.caminho.startsWith(`/tmp/${p ? 'b' : 'a'}-`)).map((e) => e.caminho));
-    ultima.current = comparar;
+    ultima.current = 'comparar';
     rodar([caminhos[0], caminhos[1], nomes[0] || 'Pessoa A', nomes[1] || 'Pessoa B', opcoes], envio);
   };
   const demo = async () => {
-    ultima.current = demo;
+    ultima.current = 'demo';
     setFase({ tipo: 'processando', etapa: 'Gerando dois históricos fictícios no seu aparelho…' });
     try {
       const d = await executar('arquivos_demo');
@@ -78,7 +80,7 @@ function Dupla({ pronto }) {
     <div aria-live="polite">
       ${fase.tipo === 'processando' && html`<p ref=${chegarPouco} class="processando vidro"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
       ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro vidro" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
-        ${ultima.current && html`<button type="button" class="btn btn-borda vidro" onClick=${() => ultima.current()}>Tentar de novo</button>`}</div>`}
+        ${ultima.current && html`<button type="button" class="btn btn-borda vidro" onClick=${ultima.current === 'demo' ? demo : comparar}>Tentar de novo</button>`}</div>`}
       ${fase.tipo === 'resultado' && html`<p class="sr-only">Resultado de ${fase.r.nomes[0]} e ${fase.r.nomes[1]} pronto, logo abaixo.</p>`}
     </div>
     <div id="resultado">${fase.tipo === 'resultado' && html`<${Resultado} r=${fase.r} />`}</div>`;

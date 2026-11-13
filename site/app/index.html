@@ -18,7 +18,11 @@
 try {
   const p = JSON.parse(sessionStorage.getItem('syncup-entrada'));
   sessionStorage.removeItem('syncup-entrada');
-  if (p) { document.documentElement.style.setProperty('--vt-x', p.x + 'px'); document.documentElement.style.setProperty('--vt-y', p.y + 'px'); }
+  if (p) {
+    document.documentElement.style.setProperty('--vt-x', p.x + 'px'); document.documentElement.style.setProperty('--vt-y', p.y + 'px');
+    // Marca a transição como "entrada": os pulsos só valem vindo da página inicial, não na troca de modo.
+    addEventListener('pagereveal', (e) => e.viewTransition?.types.add('entrada'));
+  }
 } catch { /* sem armazenamento: nasce do centro */ }
 </script>
 </head>

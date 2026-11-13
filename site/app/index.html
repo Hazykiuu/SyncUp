@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>SyncUp · app</title>
-<meta name="description" content="Compare históricos do Spotify direto no navegador. Nada sai do seu aparelho.">
+<meta name="description" content="Compare históricos do Spotify direto no navegador. O histórico não sai do seu aparelho.">
 <meta name="theme-color" content="#121212">
 <link rel="preload" href="../assets/Figtree.ttf" as="font" type="font/ttf" crossorigin>
 <!-- Ordem: componentes do núcleo (Blend, stories) → estilo do site → ajustes do app. -->
@@ -12,7 +12,8 @@
 <link rel="stylesheet" href="../estilo.css">
 <link rel="stylesheet" href="app.css">
 <link rel="stylesheet" href="stories.css">
-<script type="importmap">{ "imports": { "preact-htm": "https://unpkg.com/htm@3.1.1/preact/standalone.module.js" } }</script>
+<!-- integrity: se o CDN trocar o arquivo, o navegador recusa (o código roda com acesso ao histórico). -->
+<script type="importmap">{ "imports": { "preact-htm": "https://unpkg.com/htm@3.1.1/preact/standalone.module.js" }, "integrity": { "https://unpkg.com/htm@3.1.1/preact/standalone.module.js": "sha384-StNNHifqKmppGEDNqrv+YtX8PD3mhAhLtNbioQ4QxbPNqaTnktcDjsIPGjcDoiKa" } }</script>
 </head>
 <body class="js">
 <!-- Vindo de "Abrir o app": a página nasce coberta pelas barras de equalizador da página inicial e elas descem,

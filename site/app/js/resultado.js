@@ -24,7 +24,8 @@ function Tabela({ titulo, tabela }) {
 // plotly.js só baixa quando a aba Gráficos abre (~5 MB).
 let plotly = null;
 const carregarPlotly = () => plotly ??= new Promise((ok, erro) => {
-  const s = Object.assign(document.createElement('script'), { src: 'https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.7.0/plotly.min.js', onload: () => ok(window.Plotly), onerror: () => { s.remove(); plotly = null; erro(); } });
+  const s = Object.assign(document.createElement('script'), { src: 'https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.7.0/plotly.min.js', integrity: 'sha384-l4G4qURPwALv583BKlynU/4LiUx0rk9jcTX58Aq+Jc+jgWb52zeH2geZkSS3UPPs', crossOrigin: 'anonymous', // se o CDN trocar o arquivo, o navegador recusa
+    onload: () => ok(window.Plotly), onerror: () => { s.remove(); plotly = null; erro(); } });
   document.head.append(s);
 });
 

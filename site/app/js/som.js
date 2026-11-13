@@ -120,7 +120,7 @@ export function SomStories({ trilha, alvo, aoLigar }) {
   const tocar = (el) => el.play().catch((e) => { if (e.name !== 'AbortError') { setEstado('sem'); setAviso('O navegador bloqueou o som. Toque em “Ligar capas e som” para tentar de novo.'); } });
 
   // Qualquer erro na busca vira "sem som", nunca um "Buscando…" eterno.
-  // Um toque só: liga as capas (opt-in) e desbloqueia o áudio.
+  // Começa sozinho (o áudio foi destravado no toque em "Montar"); o botão "Ligar" repete isto num toque.
   const comecar = () => { aoLigar?.(); return iniciarSom().catch(() => { setEstado('sem'); setAviso('Não deu para preparar o som. Os stories seguem sem som.'); }); };
   useEffect(() => { comecar(); }, []); // começa sozinho: o áudio já foi destravado no toque em "Montar"
   const iniciarSom = async () => {
@@ -207,7 +207,7 @@ export function SomStories({ trilha, alvo, aoLigar }) {
         : html`<button type="button" class="btn btn-borda vidro" aria-pressed=${mudo} disabled=${estado !== 'tocando'} onClick=${() => setMudo((m) => !m)}>
             ${estado === 'carregando' ? 'Buscando capas e trechos…' : mudo ? '🔇 Ligar som' : '🔊 Silenciar'}</button>`}
       </div>
-      <p class="nota">Para as capas e o som, o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify, o nome dos seus artistas para o MusicBrainz e os nomes das músicas para a Apple (iTunes), além do seu endereço IP. O histórico e o seu nome não saem do aparelho. Capas e fotos: Spotify · Trechos: iTunes.</p>
+      <p class="nota">Para as capas e o som, o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify, o nome dos seus artistas para o MusicBrainz e para a Apple (iTunes) e os nomes das músicas para a Apple, além do seu endereço IP. O histórico e o seu nome não saem do aparelho. Capas e fotos: Spotify · Trechos: iTunes.</p>
       ${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
       ${estado === 'tocando' && status && html`<p class="nota">${status}</p>`}
     </div>`;

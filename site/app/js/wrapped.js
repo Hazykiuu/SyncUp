@@ -62,7 +62,7 @@ function pedidos(d) {
   return [...new Map(lista.map((p) => [chaveCapa(p.item, p.tipo), p])).values()];
 }
 
-// Criado só no opt-in: antes disso nem o IndexedDB é aberto.
+// Criado quando os stories ligam capas e som: antes disso nem o IndexedDB é aberto.
 let buscador = null;
 
 export function Wrapped() {

@@ -1,5 +1,16 @@
 # Changelog — SyncUp
 
+## [1.10.0] — 2026-11-13
+
+Os stories da Dupla agora tocam as músicas que vocês dois têm em comum.
+
+### Mudado
+- **Som na Dupla:** cada story toca um trecho de 30 s ligado ao que ele mostra: a música em comum mais ouvida na abertura e no pôster, uma música dos artistas em comum, os favoritos de cada um, os artistas que um apresenta ao outro e, em "Em sintonia", a música que tocou para os dois ao mesmo tempo. Começa sozinho, como no Wrapped, com o mesmo botão "Silenciar".
+- Dupla e Wrapped dividem o mesmo áudio: trocar de modo pausa a música, e cada modo retoma a sua ao voltar.
+
+### Privacidade
+- Para o som da Dupla, só os nomes das músicas e dos artistas em comum das duas pessoas vão para a Apple (iTunes), com o endereço IP. Os históricos e os nomes não saem do aparelho. A nota no app, a página inicial e o README dizem isso.
+
 ## [1.9.0] — 2026-11-13
 
 Auditoria completa: correções de experiência, privacidade e paridade, e cortes do que não se pagava.

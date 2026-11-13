@@ -99,6 +99,25 @@ def test_contrato_json_da_dupla(zips: tuple[str, str], monkeypatch) -> None:
         datetime.fromisoformat(s['primeira']['data'])
         assert s['musica']['vezes'] >= 1 and s['por_mes'] and len(s['por_mes'][0]) == 2
     assert len(r['tabelas']['playlist']['linhas']) <= 20
+    # Trilha do som: mesmo formato da do Wrapped, só com músicas e artistas que os dois têm.
+    trilha = d['trilha']
+    assert set(trilha) == {'slides', 'fila'} and trilha['fila']
+    comuns = {(lin[1], lin[0]) for lin in r['tabelas']['playlist']['linhas']}
+    em_comum = {c['nome'] for c in d['em_comum']}
+    for c in trilha['fila']:
+        assert (c['faixa'], c['artista']) in comuns if 'faixa' in c else c['artista'] in em_comum
+    assert set(trilha['slides']) <= {
+        'abertura',
+        'em_comum',
+        'frente',
+        'apresentar',
+        'relogios',
+        'sintonia',
+        'sintonia_musica',
+        'poster',
+    }
+    assert trilha['slides']['abertura'] == trilha['fila'][:1]
+    assert len(trilha['fila']) <= 13
 
 
 def test_downloads_da_dupla(zips: tuple[str, str], tmp_path: Path, monkeypatch) -> None:

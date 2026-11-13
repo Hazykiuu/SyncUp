@@ -4,9 +4,13 @@ import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { chegar, chegarPouco } from './chegada.js';
 import { baixar, executar } from './motor.js';
 import { compartilhar, desenharPosterDupla } from './poster.js';
+import { SomStories } from './som.js';
 import { SLIDES_DUPLA } from './stories/dupla.js';
 import { tiposDaDupla } from './stories/logica.js';
 import { Player } from './stories/player.js';
+
+// O som da Dupla só busca trechos: nada de capas nem fotos (não vai nada ao Spotify nem ao MusicBrainz).
+const NOTA_DUPLA = 'Para o som, o SyncUp envia à Apple (iTunes) os nomes das músicas e dos artistas em comum de vocês dois, além do seu endereço IP. Os históricos e os nomes de vocês não saem do aparelho. Trechos: iTunes.';
 
 const Html = ({ conteudo, classe = '' }) => html`<div class=${`nucleo ${classe}`} dangerouslySetInnerHTML=${{ __html: conteudo }} />`;
 
@@ -164,6 +168,7 @@ export function Resultado({ r }) {
     <section ref=${chegar} class="resultado" aria-labelledby="titulo-resultado">
       <h2 id="titulo-resultado" class="sr-only">Resultado de ${a} e ${b}</h2>
       <p class="periodo">${r.periodo}</p>
+      ${r.dupla.trilha && html`<${SomStories} key=${r} trilha=${r.dupla.trilha} alvo=${stories} nota=${NOTA_DUPLA} />`}
       <div ref=${stories} class="nucleo">
         <${Player} key=${r} slides=${slides} rotulo=${`Dupla de ${a} e ${b}`} />
       </div>

@@ -212,8 +212,52 @@ def _dupla_json(r: ResultadoComparacao) -> dict:
             'favoritos': [favorito(0), favorito(1)],
             'apresentar': apresentar,
             'sintonia': _sintonia_json(r),
+            'trilha': _trilha_dupla(r, apresentar),
         }
     )
+
+
+def _trilha_dupla(r: ResultadoComparacao, apresentar: list[dict]) -> dict:
+    """Trilha dos stories da Dupla, no mesmo formato de ``_trilha`` (Wrapped): músicas em comum.
+
+    A fonte é a playlist comum (as faixas que os dois ouviram, da mais ouvida pelos dois para a
+    menos). Cada story pede a música ligada ao dado dele; a fila cobre o resto. São no máximo
+    ~12 buscas no iTunes, e só os nomes de músicas e artistas em comum saem do aparelho.
+    """
+    comuns = [
+        {'faixa': musica, 'artista': artista}
+        for artista, musica in r.playlist[['Artista', 'Música']]
+        .head(10)
+        .itertuples(index=False, name=None)
+    ]
+    em_comum = r.artistas_comuns[:3]
+    do_artista = [m for m in comuns if m['artista'] in em_comum]
+    favoritos = [
+        {'artista': p.artistas.iloc[0]['Artista']}
+        for p in (r.perfil_a, r.perfil_b)
+        if not p.artistas.empty
+    ]
+    s = r.sintonia
+    juntos = (
+        [{'faixa': s.top_musicas[0][0], 'artista': s.top_musicas[0][1]}]
+        if s is not None and s.top_musicas
+        else []
+    )
+    slides = {
+        'abertura': comuns[:1],
+        'em_comum': do_artista[:1] + [{'artista': a} for a in em_comum],
+        'frente': favoritos,
+        'apresentar': [{'artista': p['artista']} for p in apresentar],
+        'relogios': comuns[1:2],
+        'sintonia': juntos,
+        'sintonia_musica': juntos,
+        'poster': comuns[:1],
+    }
+    return {
+        'slides': {tipo: c for tipo, c in slides.items() if c},
+        # Acabaram as do story? Seguem as mais ouvidas em comum e, depois, os artistas em comum.
+        'fila': comuns + [{'artista': a} for a in em_comum],
+    }
 
 
 def _sintonia_json(r: ResultadoComparacao) -> dict | None:

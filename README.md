@@ -1,4 +1,4 @@
-# SyncUp v1.9
+# SyncUp v1.10
 
 Compare o seu histórico do Spotify com o dos amigos e veja com quem você está em sintonia, em stories. **Use direto no navegador**, no computador ou no celular: sem instalar, sem conta, sem anúncios, e o histórico não sai do seu aparelho. Há também um app para PC com o Match e o Grupo. Projeto de ciência de dados, **código aberto** ([licença MIT](LICENSE)).
 
@@ -106,6 +106,7 @@ Um arquivo por pessoa. Mostra uma matriz de compatibilidade de todos com todos, 
 - **Fica no computador:** os históricos enviados (apagados em até 1 hora) e o cache. Para ver e apagar, abra *Opções de dados → Meus dados*.
 - **Vai para a internet só se você pedir:** o ListenBrainz (o nome de usuário digitado) e o MusicBrainz (nomes de artistas, só com a caixa de estilo marcada).
 - **App no navegador, Wrapped:** para as capas e o som (o Wrapped começa com eles), o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify (capas e fotos), o nome dos seus artistas para o MusicBrainz e para a Apple/iTunes, e os nomes das músicas para a Apple/iTunes (trechos de 30 s), além do seu endereço IP. O histórico e o seu nome não saem do aparelho. O navegador guarda só os endereços das capas, por até 30 dias; o botão "Apagar capas guardadas" limpa na hora.
+- **App no navegador, Dupla:** para o som dos stories, o SyncUp envia à Apple/iTunes os nomes das músicas e dos artistas em comum das duas pessoas (trechos de 30 s), além do endereço IP. Os históricos e os nomes não saem do aparelho.
 - **Nunca é guardado:** o IP e o modelo do aparelho.
 
 **Créditos:** capas e fotos de artistas vêm do Spotify; o logo do Spotify é marca da Spotify AB, usado conforme as [diretrizes de design](https://developer.spotify.com/documentation/design) e fora da licença MIT. Trechos de áudio: iTunes (Apple). Dados de artistas: MusicBrainz.

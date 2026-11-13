@@ -13,20 +13,28 @@
 <link rel="stylesheet" href="app.css">
 <link rel="stylesheet" href="stories.css">
 <script type="importmap">{ "imports": { "preact-htm": "https://unpkg.com/htm@3.1.1/preact/standalone.module.js" } }</script>
-<!-- Vindo de "Abrir o app": o círculo da transição nasce do ponto do clique (app.css). Antes do primeiro quadro. -->
-<script>
-try {
-  const p = JSON.parse(sessionStorage.getItem('syncup-entrada'));
-  sessionStorage.removeItem('syncup-entrada');
-  if (p) {
-    document.documentElement.style.setProperty('--vt-x', p.x + 'px'); document.documentElement.style.setProperty('--vt-y', p.y + 'px');
-    // Marca a transição como "entrada": os pulsos só valem vindo da página inicial, não na troca de modo.
-    addEventListener('pagereveal', (e) => e.viewTransition?.types.add('entrada'));
-  }
-} catch { /* sem armazenamento: nasce do centro */ }
-</script>
 </head>
 <body class="js">
+<!-- Vindo de "Abrir o app": a página nasce coberta pelas barras de equalizador da página inicial e elas descem,
+     a partir da mesma coluna do clique. Antes do primeiro quadro; sem o aviso da página inicial, nada aparece. -->
+<script>
+try {
+  const origem = sessionStorage.getItem('syncup-entrada');
+  sessionStorage.removeItem('syncup-entrada');
+  if (origem !== null && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const BARRAS = 12, cortina = document.createElement('div');
+    cortina.className = 'cortina'; cortina.setAttribute('aria-hidden', 'true');
+    for (let k = 0; k < BARRAS; k++) {
+      const barra = cortina.appendChild(document.createElement('i'));
+      barra.style.setProperty('--k', k / (BARRAS - 1));
+      barra.animate([{ transform: 'scaleY(1)' }, { transform: 'scaleY(0)' }], { duration: 360, delay: 120 + Math.abs(k - origem) * 14, easing: 'cubic-bezier(.77, 0, .175, 1)', fill: 'both' });
+    }
+    document.body.prepend(cortina);
+    const tirar = () => cortina.remove();
+    Promise.all(cortina.getAnimations({ subtree: true }).map((an) => an.finished)).then(tirar, tirar);
+  }
+} catch { /* sem armazenamento: abre direto */ }
+</script>
 <a class="pular" href="#principal">Pular para o conteúdo</a>
 <div class="bolhas fixas" aria-hidden="true"><i></i><i></i><i></i></div>
 <div id="app"><p class="shell" style="padding-top:6rem">Carregando o SyncUp…</p></div>

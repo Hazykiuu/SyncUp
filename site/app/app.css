@@ -255,26 +255,6 @@ textarea.entrada { resize: vertical; }
 .resultado .su-cover { background: rgba(255, 255, 255, .08); color: var(--sub); }
 .resultado .su-playicon { display: none; }
 .resultado .su-tracklist a:hover .su-num { opacity: 1; }
-/* Entrada no app vindo da página inicial ("Abrir o app"): depois da contagem de dois bumbos, o app chega na
-   3ª batida e se revela em 3 pulsos, como o cone de um alto-falante, a partir do ponto do clique; a página
-   inicial recua junto. Só na transição marcada como "entrada" (app/index.html) e sem "menos movimento". */
-@keyframes vt-revela {
-  0% { clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 50%)); animation-timing-function: ease-out; }
-  14% { clip-path: circle(20vmax at var(--vt-x, 50%) var(--vt-y, 50%)); animation-timing-function: ease-in-out; }
-  24% { clip-path: circle(17vmax at var(--vt-x, 50%) var(--vt-y, 50%)); animation-timing-function: ease-out; }
-  46% { clip-path: circle(50vmax at var(--vt-x, 50%) var(--vt-y, 50%)); animation-timing-function: ease-in-out; }
-  56% { clip-path: circle(45vmax at var(--vt-x, 50%) var(--vt-y, 50%)); animation-timing-function: ease-out; }
-  100% { clip-path: circle(150vmax at var(--vt-x, 50%) var(--vt-y, 50%)); }
-}
-@keyframes vt-recua {
-  14%, 46% { transform: scale(.985); }
-  24%, 56% { transform: scale(1); opacity: .8; }
-  100% { transform: scale(.97); opacity: .35; }
-}
-@media (prefers-reduced-motion: no-preference) {
-  html:active-view-transition-type(entrada)::view-transition-new(root) { animation: vt-revela .65s both; }
-  html:active-view-transition-type(entrada)::view-transition-old(root) { animation: vt-recua .65s ease-out both; }
-}
 /* Troca de modo como crossfader de DJ (main.js). Os nomes só existem durante a troca (tipo "modo"), para não
    entrarem na chegada em pulsos. Dupla fica à esquerda e Wrapped à direita: o conteúdo desliza 32 px entre os
    dois lados, o destaque do modo ativo corre pela barra como o botão do fader, e a barra fica parada. */

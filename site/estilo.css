@@ -250,6 +250,11 @@ section[id] { scroll-margin-top: 6rem; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
-/* Transição entre a página inicial e o app (as duas páginas carregam este arquivo). O efeito de entrada no app
-   fica no app.css; quem não suporta navega normalmente. */
+/* "Abrir o app": cortina de 12 barras de equalizador, do verde ao violeta como o logo. Sobem na página inicial
+   e descem no app (os dois HTML animam por JS; as duas páginas carregam este arquivo). */
+.cortina { position: fixed; inset: 0; z-index: 200; display: flex; pointer-events: none; }
+.cortina i { flex: 1; margin-inline: -.5px; transform-origin: bottom; --c: color-mix(in srgb, var(--verde), var(--roxo) calc(var(--k, 0) * 100%));
+  background: linear-gradient(var(--c), color-mix(in srgb, var(--c) 22%, #0a0a0a) 55%, #0a0a0a); }
+/* Transição entre a página inicial e o app (as duas páginas carregam este arquivo). Com a cortina acima cobrindo as duas,
+   o fade entre elas não aparece; quem não suporta navega normalmente. */
 @media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }

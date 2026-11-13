@@ -86,10 +86,23 @@ function Dupla({ pronto }) {
 function App() {
   const [motor, setMotor] = useState({ etapa: 'Preparando…', fracao: 0, pronto: false, erro: '' });
   // As duas telas ficam montadas (hidden): trocar de aba não perde o resultado.
-  const lerModo = () => (location.hash === '#wrapped' ? 'wrapped' : 'dupla');
-  const [modo, setModo] = useState(lerModo);
+  // Só hash conhecido troca de modo: "Pular para o conteúdo" (#principal) fica onde a pessoa está.
+  const lerModo = (atual = 'dupla') => (location.hash === '#wrapped' ? 'wrapped' : location.hash === '#dupla' || location.hash === '' ? 'dupla' : atual);
+  const [modo, setModo] = useState(() => lerModo());
+  const modoAtual = useRef(modo); // o efeito abaixo roda uma vez só e não enxerga o `modo` novo
   useEffect(() => {
-    const mudar = () => setModo(lerModo());
+    // Troca de modo como crossfader de DJ (app.css): o conteúdo desliza de um lado para o outro e o
+    // destaque da barra corre como o botão do fader. Sem suporte ou com "menos movimento": troca seca.
+    const mudar = () => {
+      const novo = lerModo(modoAtual.current);
+      if (novo === modoAtual.current) return;
+      modoAtual.current = novo;
+      if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) { setModo(novo); return; }
+      const update = async () => { setModo(novo); await new Promise((r) => setTimeout(r)); }; // espera o Preact desenhar
+      let vt;
+      try { vt = document.startViewTransition({ update, types: ['modo', `para-${novo}`] }); } catch { vt = document.startViewTransition(update); } // navegador sem tipos: fade simples
+      vt.ready.catch(() => {}); // aba em segundo plano: o navegador pula a animação, a troca acontece igual
+    };
     addEventListener('hashchange', mudar);
     return () => removeEventListener('hashchange', mudar);
   }, []);

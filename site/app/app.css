@@ -275,5 +275,22 @@ textarea.entrada { resize: vertical; }
   html:active-view-transition-type(entrada)::view-transition-new(root) { animation: vt-revela .65s both; }
   html:active-view-transition-type(entrada)::view-transition-old(root) { animation: vt-recua .65s ease-out both; }
 }
+/* Troca de modo como crossfader de DJ (main.js). Os nomes só existem durante a troca (tipo "modo"), para não
+   entrarem na chegada em pulsos. Dupla fica à esquerda e Wrapped à direita: o conteúdo desliza 32 px entre os
+   dois lados, o destaque do modo ativo corre pela barra como o botão do fader, e a barra fica parada. */
+html:active-view-transition-type(modo) .app-corpo > .shell { view-transition-name: conteudo; }
+html:active-view-transition-type(modo) .nav-app { view-transition-name: barra; }
+@media (max-width: 899px) { html:active-view-transition-type(modo) .nav-item[aria-current="page"] svg { view-transition-name: fader; } }
+@media (min-width: 900px) { html:active-view-transition-type(modo) .nav-item[aria-current="page"] { view-transition-name: fader; } }
+html:active-view-transition-type(para-dupla) { --cf: -1; }
+@keyframes cf-sai { to { translate: calc(var(--cf, 1) * -32px) 0; opacity: 0; } }
+@keyframes cf-entra { from { translate: calc(var(--cf, 1) * 32px) 0; opacity: 0; } }
+html:active-view-transition-type(modo)::view-transition-old(conteudo) { animation: cf-sai .25s var(--sai) both; }
+html:active-view-transition-type(modo)::view-transition-new(conteudo) { animation: cf-entra .25s var(--sai) both; }
+html:active-view-transition-type(modo)::view-transition-group(conteudo) { animation-duration: .25s; }
+html:active-view-transition-type(modo)::view-transition-group(fader) { animation-duration: .25s; animation-timing-function: linear(0, .22 8%, .62 20%, .93 32%, 1.07 43%, 1.1 50%, 1.07 58%, 1.01 70%, .99 80%, 1); }
+/* Barra parada: só o quadro novo, sem fade (os dois quadros somados deixariam a barra mais clara). */
+html:active-view-transition-type(modo)::view-transition-old(barra) { display: none; }
+html:active-view-transition-type(modo)::view-transition-new(barra) { animation: none; }
 /* O player dos stories segue o raio de painel do app. */
 .st-player.su-stories { border-radius: var(--r-painel); }

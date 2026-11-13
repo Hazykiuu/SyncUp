@@ -15,6 +15,7 @@ function imagem(src) {
     img.crossOrigin = 'anonymous'; // CORS * no Spotify: o canvas continua exportável
     img.onload = () => ok(img);
     img.onerror = () => ok(null);
+    setTimeout(() => ok(null), 8000); // rede ruim: o pôster sai sem essa capa, nunca "Gerando…" para sempre
     img.src = src;
   });
 }

@@ -16,7 +16,7 @@ const cache = new Map();
 const chave = (m) => `${normalizar(m.artista)}|${normalizar(m.faixa)}`;
 
 async function itunes(params) {
-  const r = await fetch(`https://itunes.apple.com/search?${new URLSearchParams({ entity: 'song', country: 'BR', ...params })}`);
+  const r = await fetch(`https://itunes.apple.com/search?${new URLSearchParams({ entity: 'song', country: 'BR', ...params })}`, { signal: AbortSignal.timeout?.(8000) });
   if (!r.ok) throw new Error(`iTunes ${r.status}`);
   return (await r.json()).results || [];
 }
@@ -24,27 +24,25 @@ async function itunes(params) {
 const trecho = (x) => ({ url: urlSegura(x.previewUrl, HOSTS_AUDIO), id: `${normalizar(x.artistName)}|${normalizar(x.trackName)}` });
 const doArtista = (x, nome) => urlSegura(x.previewUrl, HOSTS_AUDIO) && normalizar(x.artistName).includes(normalizar(nome));
 
-// shortcut: casa só pelo artista; o casamento completo (faixa, remaster, feat.) vem na Fase 3.
-async function buscar(m) {
-  const k = `m:${chave(m)}`;
-  if (!cache.has(k)) {
-    const item = (await itunes({ term: `${m.artista} ${m.faixa}`, limit: '5' })).find((x) => doArtista(x, m.artista));
-    cache.set(k, item ? [trecho(item)] : []);
-  }
+// O cache guarda a promessa, não o resultado: a mesma música pedida por vários slides ao mesmo tempo
+// vira uma busca só (o iTunes limita por IP). Falhou: sai do cache para tentar de novo depois.
+const umaVez = (k, buscar) => {
+  if (!cache.has(k)) cache.set(k, buscar().catch((e) => { cache.delete(k); throw e; }));
   return cache.get(k);
-}
+};
+
+// shortcut: casa só pelo artista; o casamento completo (faixa, remaster, feat.) vem na Fase 3.
+const buscar = (m) => umaVez(`m:${chave(m)}`, async () => {
+  const item = (await itunes({ term: `${m.artista} ${m.faixa}`, limit: '5' })).find((x) => doArtista(x, m.artista));
+  return item ? [trecho(item)] : [];
+});
 
 // As mais famosas do artista, na ordem de relevância do iTunes, sem repetir a mesma faixa.
-async function famosas(nome) {
-  const k = `a:${normalizar(nome)}`;
-  if (!cache.has(k)) {
-    const vistos = new Set();
-    const lista = (await itunes({ term: nome, attribute: 'artistTerm', limit: '15' }))
-      .filter((x) => doArtista(x, nome)).map(trecho).filter((t) => !vistos.has(t.id) && vistos.add(t.id));
-    cache.set(k, lista);
-  }
-  return cache.get(k);
-}
+const famosas = (nome) => umaVez(`a:${normalizar(nome)}`, async () => {
+  const vistos = new Set();
+  return (await itunes({ term: nome, attribute: 'artistTerm', limit: '15' }))
+    .filter((x) => doArtista(x, nome)).map(trecho).filter((t) => !vistos.has(t.id) && vistos.add(t.id));
+});
 const resolver = (c) => (c.faixa ? buscar(c) : famosas(c.artista)).catch(() => []);
 
 // 0,2 s de silêncio em WAV: o play() dentro do toque desbloqueia o elemento. Criado uma vez só.

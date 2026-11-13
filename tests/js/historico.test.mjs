@@ -120,5 +120,7 @@ test('ajudantes: nomes, plataformas, entradas e datas', () => {
   assert.equal(instanteUtc('2024-02-29T10:00:00Z'), Date.UTC(2024, 1, 29, 10));
   assert.equal(instanteUtc('2024-01-01 10:00:00+01:00'), Date.UTC(2024, 0, 1, 9));
   assert.equal(instanteUtc('2024-01-01T10:00:00'), Date.UTC(2024, 0, 1, 10)); // sem fuso = UTC
+  assert.equal(instanteUtc('2024-01-01'), Date.UTC(2024, 0, 1)); // só a data = meia-noite
+  assert.equal(instanteUtc('2024-01-01T10:30'), Date.UTC(2024, 0, 1, 10, 30)); // sem segundos
   for (const ruim of ['2023-02-29T10:00:00Z', '2024-01-01T24:00:00Z', '2024-13-01T00:00:00Z', 'ontem', null]) assert.ok(Number.isNaN(instanteUtc(ruim)), ruim);
 });

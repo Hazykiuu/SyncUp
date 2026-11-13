@@ -81,6 +81,11 @@ def _eventos_borda() -> list:
         _ev('2020-03-01T17:00:00Z', 'Ana', '(Falsa) Esperança'),
         _ev('2020-03-01T18:00:00Z', 'Ana', 'Curta', 10_000),
         _ev('2021-07-04T23:59:59Z', '<b>Bia</b>', 'Ação & "aspas"', spotify_track_uri=URI_A),
+        # Auditoria 1.9: data sem hora e sem segundos entram; antes de 1970 e mais de 24 h saem.
+        _ev('2021-08-01', 'Ana', 'Só data'),
+        _ev('2021-08-02T10:30', 'Ana', 'Sem segundos'),
+        _ev('1969-12-31T12:00:00Z', 'Ana', 'Relógio zerado'),
+        _ev('2021-08-03T10:00:00Z', 'Ana', 'Infinita', 1e25),
         'não é um evento',
     ]
     return eventos

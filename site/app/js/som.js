@@ -83,6 +83,8 @@ function prepararSom() {
   return som;
 }
 
+const NOTA_WRAPPED = 'Para as capas e o som, o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify, o nome dos seus artistas para o MusicBrainz e para a Apple (iTunes) e os nomes das músicas para a Apple, além do seu endereço IP. O histórico e o seu nome não saem do aparelho. Capas e fotos: Spotify · Trechos: iTunes.';
+
 // Chamado dentro do toque em "Montar meu Wrapped" (antes de qualquer await): o iPhone só deixa tocar
 // som que foi destravado por um toque. Depois, os stories começam com capas e som sem pedir outro toque.
 // O som é opcional: se o navegador não tiver Web Audio, o Wrapped monta igual (sem som).
@@ -99,7 +101,8 @@ export function destravarSom() {
 // Ao voltar, o player retoma no próximo movimento do story.
 export function pausarSom() { som?.el.pause(); }
 
-export function SomStories({ trilha, alvo, aoLigar }) {
+// `nota`: o que sai do aparelho para o som. O Wrapped usa o texto padrão (capas e trechos); a Dupla, o dela.
+export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
   const trilhaPronta = useRef(null);
   const [status, setStatus] = useState('');
   const [estado, setEstado] = useState('carregando'); // carregando | tocando | sem (o Wrapped começa sempre com capas e som)
@@ -176,17 +179,25 @@ export function SomStories({ trilha, alvo, aoLigar }) {
       if (el.paused || el.src.startsWith('blob:')) comecarNova();
       else { rampa(0, SAI); setTimeout(comecarNova, SAI * 1000); }
     };
+    const escondido = () => stories.closest('[hidden]'); // os ouvintes do <audio> também valem só para o modo na tela
     const aoMudar = () => {
+      // Dupla e Wrapped ficam montados e dividem o mesmo <audio>: o player do modo escondido não mexe no som
+      // (a troca de modo já pausou). Sem isto, ele pausava a música do modo que está na tela.
+      if (escondido()) return;
       if (stories.classList.contains('pausado')) { el.pause(); return; }
       const i = slots.findIndex((sl) => sl.classList.contains('ativo'));
       if (i < 0) return;
-      if (i !== atual) { atual = i; trocar(musicas[i]); } else if (el.paused && !el.src.startsWith('blob:')) { tocar(el); rampa(volume()); }
+      if (i !== atual) { atual = i; trocar(musicas[i]); }
+      // Voltou para este modo no mesmo story: o <audio> pode estar com a música do outro modo.
+      else if (el.paused && el.src !== musicas[i]) trocar(musicas[i]);
+      else if (el.paused && !el.src.startsWith('blob:')) { tocar(el); rampa(volume()); }
     };
     // Fade out no fim do trecho de 30 s, em vez de cortar seco.
-    const fim = () => { if (el.duration && el.duration - el.currentTime < SAI + 0.3) rampa(0, SAI); };
+    const fim = () => { if (escondido()) return; if (el.duration && el.duration - el.currentTime < SAI + 0.3) rampa(0, SAI); };
     // Linha de status (diagnóstico no celular) e uma nova tentativa se o trecho falhar ao carregar.
     const tocando = () => setStatus(`♪ Story ${atual + 1} de ${slides.length}: tocando`);
     const erro = () => {
+      if (escondido()) return; // o trecho que falhou é do outro modo: não tenta de novo com a música deste
       if (!tentou && musicas[atual]) { tentou = true; el.src = musicas[atual]; tocar(el); setStatus(`Story ${atual + 1}: tentando de novo…`); }
       else setStatus(`Story ${atual + 1}: este trecho não carregou`);
     };
@@ -211,7 +222,7 @@ export function SomStories({ trilha, alvo, aoLigar }) {
         : html`<button type="button" class="btn btn-borda vidro" aria-pressed=${mudo} disabled=${estado !== 'tocando'} onClick=${() => setMudo((m) => !m)}>
             ${estado === 'carregando' ? 'Buscando capas e trechos…' : mudo ? '🔇 Ligar som' : '🔊 Silenciar'}</button>`}
       </div>
-      <p class="nota">Para as capas e o som, o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify, o nome dos seus artistas para o MusicBrainz e para a Apple (iTunes) e os nomes das músicas para a Apple, além do seu endereço IP. O histórico e o seu nome não saem do aparelho. Capas e fotos: Spotify · Trechos: iTunes.</p>
+      <p class="nota">${nota}</p>
       ${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
       ${estado === 'tocando' && status && html`<p class="nota">${status}</p>`}
     </div>`;

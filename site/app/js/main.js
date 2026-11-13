@@ -2,7 +2,7 @@
 import { html, render, useEffect, useRef, useState } from 'preact-htm';
 import { chegarPouco, pulsar } from './chegada.js';
 import { aoProgredir, executar, iniciar } from './motor.js';
-import { audioCtx, pausarSom, silenciado } from './som.js';
+import { audioCtx, destravarSom, pausarSom, silenciado } from './som.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { Resultado } from './resultado.js';
@@ -51,10 +51,12 @@ function Dupla({ pronto }) {
     const envio = arquivos.flatMap((lista, p) => lista.map((arquivo, i) => ({ caminho: `/tmp/${p ? 'b' : 'a'}-${i}-${arquivo.name.replace(/[^\w.-]/g, '_')}`, arquivo })));
     const caminhos = [0, 1].map((p) => envio.filter((e) => e.caminho.startsWith(`/tmp/${p ? 'b' : 'a'}-`)).map((e) => e.caminho));
     ultima.current = 'comparar';
+    destravarSom(); // dentro do clique, antes de qualquer espera: o iPhone só toca som destravado por um toque
     rodar([caminhos[0], caminhos[1], nomes[0] || 'Pessoa A', nomes[1] || 'Pessoa B', opcoes], envio);
   };
   const demo = async () => {
     ultima.current = 'demo';
+    destravarSom();
     setFase({ tipo: 'processando', etapa: 'Gerando dois históricos fictícios no seu aparelho…' });
     try {
       const d = await executar('arquivos_demo');
@@ -115,7 +117,7 @@ function App() {
       const novo = lerModo(modoAtual.current);
       if (novo === modoAtual.current) return;
       modoAtual.current = novo;
-      if (novo !== 'wrapped') pausarSom();
+      pausarSom(); // um só <audio> para os dois modos: troca de modo pausa, e quem voltar a andar retoma o seu
       if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) { setModo(novo); return; }
       cliqueFader(novo === 'wrapped');
       const update = async () => { setModo(novo); await new Promise((r) => setTimeout(r)); }; // espera o Preact desenhar

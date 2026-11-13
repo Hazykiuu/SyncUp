@@ -6,6 +6,8 @@
 <title>SyncUp: compare o seu histórico do Spotify com o dos amigos</title>
 <meta name="description" content="Compare o seu histórico do Spotify com o dos amigos e veja com quem você está em sintonia, em stories. Grátis, de código aberto e tudo roda no seu navegador.">
 <meta name="theme-color" content="#121212">
+<!-- Adianta o HTML do app: a página abre na "3ª batida" do Abrir o app. Sem prerender, que já baixaria o Python. -->
+<link rel="prefetch" href="app/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="SyncUp: compare o seu histórico do Spotify com o dos amigos">
 <meta property="og:description" content="Veja com quem você está em sintonia, em stories. Grátis, de código aberto e tudo roda no seu navegador.">
@@ -253,11 +255,40 @@ if (!calmo) {
   }).catch(() => { /* sem rede: segue com a rolagem do navegador */ });
 }
 
-// "Abrir o app": guarda de onde veio o clique; o app revela a tela num círculo que nasce daí (app.css).
+// "Abrir o app": guarda de onde veio o clique; o app revela a tela em pulsos que nascem daí (app.css).
+// Antes, uma contagem: dois bumbos (1, 2) com o botão e o logo pulando; o app abre na 3ª batida.
+let contando = false, audio = null;
+// Bumbo sintetizado (sem arquivo). Começa em 320 Hz: alto-falante de celular quase não toca abaixo de ~200 Hz.
+function bumbo(ctx, t) {
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.frequency.setValueAtTime(320, t); o.frequency.exponentialRampToValueAtTime(50, t + 0.12);
+  g.gain.setValueAtTime(0.22, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+  o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + 0.15);
+}
+// As barras do logo já animam transform (eq); o pulo vai em scale para uma animação não apagar a outra.
+const pulo = (a) => {
+  const tempo = { duration: 140, easing: 'ease-out' };
+  a.animate([{}, { scale: 1.06 }, {}], tempo);
+  document.querySelectorAll('.topo-barra .logo i').forEach((i) => i.animate([{}, { scale: '1 1.35' }, {}], tempo));
+};
 document.querySelectorAll('a[href="app/"]').forEach((a) => a.addEventListener('click', (e) => {
   const r = a.getBoundingClientRect(), x = e.clientX || r.left + r.width / 2, y = e.clientY || r.top + r.height / 2;
   try { sessionStorage.setItem('syncup-entrada', JSON.stringify({ x: Math.round(x), y: Math.round(y) })); } catch { /* sem armazenamento: nasce do centro */ }
+  // Sem contagem: nova aba (Ctrl, ⌘, Shift, Alt, botão do meio), "menos movimento" e o link do menu, que fecha no clique.
+  if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0 || calmo || a.closest('#menu')) return;
+  e.preventDefault();
+  if (contando) return;
+  contando = true;
+  try {
+    audio = new (window.AudioContext || window.webkitAudioContext)();
+    // Os dois bumbos no relógio do áudio: setTimeout atrasa no celular e tiraria o som do tempo.
+    bumbo(audio, audio.currentTime); bumbo(audio, audio.currentTime + 0.15);
+  } catch { /* sem áudio: só o pulo */ }
+  pulo(a); setTimeout(() => pulo(a), 150);
+  setTimeout(() => { location.href = a.href; }, 330); // o 2º bumbo acaba aos 290 ms
 }));
+addEventListener('pageshow', () => { contando = false; }); // voltou pelo botão Voltar: pode contar de novo
+addEventListener('pagehide', () => { audio?.close(); audio = null; });
 
 // Menu em tela cheia (celular). inert no fundo: com o menu aberto, o Tab e o leitor de tela ficam só nele.
 const menu = document.getElementById('menu'), abrir = document.getElementById('abrir-menu');

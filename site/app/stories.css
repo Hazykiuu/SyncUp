@@ -340,9 +340,9 @@
 .st-slot.ativo .sb-podio li > :not(.sb-bloco) { animation: st-entra .45s var(--sai-bt) both; animation-delay: calc(480ms + var(--k, 0) * 150ms); }
 /* Desenhos das rodadas: um por rodada (stories/batalha.js). */
 .sb-linhas { list-style: none; margin: 2cqw 0; padding: 0; display: grid; gap: 3cqw; }
-.sb-linhas li { display: grid; grid-template-columns: 7cqw 18cqw minmax(0, 1fr) 13cqw; align-items: center; gap: 2cqw; min-height: 10cqw; font-size: 3.8cqw; }
+.sb-linhas li { display: grid; grid-template-columns: 7cqw 18cqw minmax(0, 1fr) auto; align-items: center; gap: 2cqw; min-height: 10cqw; font-size: 3.8cqw; }
 .sb-linhas em, .sb-grade em, .sb-estante em { font-style: normal; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, .85); }
-.sb-linhas em { text-align: right; }
+.sb-linhas em { text-align: right; padding-left: 1cqw; }
 .sb-linhas .lider .sb-nome, .sb-linhas .lider em, .sb-grade .lider .sb-nome, .sb-grade .lider em, .sb-estante .lider em { color: #fff; font-weight: 800; }
 .sb-pista { position: relative; height: 5cqw; overflow: hidden; }
 .sb-pista::before { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 2px; background: repeating-linear-gradient(#fff 0 .8cqw, transparent .8cqw 1.6cqw); opacity: .6; }
@@ -350,7 +350,8 @@
   background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--lut) 60%, transparent)) left center / 100% 2px no-repeat; }
 .sb-corredor::after { content: ''; position: absolute; right: 0; top: 50%; width: 3.2cqw; aspect-ratio: 1; border-radius: 50%; background: var(--lut); transform: translateY(-50%); }
 .sb-pontos, .sb-corrente, .sb-casas, .sb-tally { display: flex; align-items: center; min-width: 0; }
-.sb-pontos { gap: .7cqw; } .sb-pontos i { flex: none; width: 1.9cqw; aspect-ratio: 1; border-radius: 50%; background: rgba(255, 255, 255, .14); }
+/* Os pontos encolhem no espaço que sobra: com números longos não invadem a coluna do valor. */
+.sb-pontos { gap: .5cqw; overflow: hidden; } .sb-pontos i { flex: 1 1 0; min-width: 0; max-width: 1.9cqw; aspect-ratio: 1; border-radius: 50%; background: rgba(255, 255, 255, .14); }
 .sb-corrente { gap: .5cqw; } .sb-corrente i { flex: 1; max-width: 2.6cqw; aspect-ratio: 1; border-radius: .6cqw; background: rgba(255, 255, 255, .12); }
 .sb-pontos .aceso, .sb-corrente .aceso { background: var(--lut); }
 .sb-casas { gap: .6cqw; } .sb-casas i { flex: 1; max-width: 2.8cqw; height: 4.4cqw; border-radius: .5cqw; border: 1px solid rgba(255, 255, 255, .3); }

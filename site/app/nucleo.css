@@ -1,0 +1,97 @@
+/* Núcleo do app web: só as regras do styles.css (app para PC) que o app no navegador usa.
+   Listas dos Rankings, corrida dos artistas, moldura dos stories e detalhe dos arquétipos.
+   Copiadas à mão do styles.css, na mesma ordem; o tests/test_web.py confere as classes su-. */
+:root { --su-card: #181818; --su-line: #2a2a2a; --su-sub: #b3b3b3; --su-green: #1ed760; --su-radius: 16px; }
+
+.su-race-progress:focus-visible { outline: 3px solid var(--su-green) !important; outline-offset: 3px; }
+.su-has-ripple { position: relative; overflow: hidden; }
+.su-ripple { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, .45); transform: scale(0); pointer-events: none; animation: su-ripple .6s ease-out forwards; }
+.su-note { color: var(--su-sub); font-size: 15px; line-height: 1.6; padding: 6px 0; }
+.su-tracklist-card { background: var(--su-card); border-radius: var(--su-radius); padding: 18px 14px 10px; --accent: var(--su-green); height: 100%; }
+.su-tracklist-card h3 { margin: 0 8px 10px; font-size: 20px; font-weight: 800; }
+.su-tracklist { list-style: none; margin: 0; padding: 0; }
+.su-tracklist li { animation: su-slide-in .5s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 45ms); }
+.su-tracklist a { display: grid; grid-template-columns: 30px 40px minmax(0, 1fr) 90px 64px; align-items: center; gap: 12px; padding: 6px 8px; border-radius: 8px; color: #fff !important; text-decoration: none !important; min-height: 52px; transition: background .18s; }
+.su-tracklist a:hover { background: rgba(255, 255, 255, .08); }
+.su-num { color: var(--su-sub); text-align: right; font-variant-numeric: tabular-nums; grid-column: 1; grid-row: 1; }
+.su-playicon { grid-column: 1; grid-row: 1; justify-self: end; width: 0; height: 0; opacity: 0; border-style: solid; border-width: 7px 0 7px 12px; border-color: transparent transparent transparent #fff; transition: opacity .15s; }
+.su-tracklist a:hover .su-num { opacity: 0; }
+.su-tracklist a:hover .su-playicon { opacity: 1; }
+.su-cover { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 4px; font-weight: 900; font-size: 14px; color: #fff; background: linear-gradient(135deg, hsl(var(--hue) 65% 45%), hsl(calc(var(--hue) + 50) 70% 25%)); }
+.su-meta { min-width: 0; display: flex; flex-direction: column; }
+.su-meta b, .su-meta small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.su-meta b { font-weight: 600; }
+.su-tracklist a:hover .su-meta b { color: var(--accent); }
+.su-meta small { color: var(--su-sub); font-size: 14px; }
+.su-mini { height: 4px; border-radius: 4px; background: #3e3e3e; overflow: hidden; }
+.su-mini i { display: block; height: 100%; width: var(--value); background: var(--accent); border-radius: inherit; animation: su-fill 1s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 45ms + 200ms); }
+.su-count { color: var(--su-sub); text-align: right; font-variant-numeric: tabular-nums; font-size: 14px; }
+.su-race { position: relative; background: var(--su-card); border-radius: 20px; padding: 22px 22px 14px; overflow: hidden; }
+.su-race-month { position: absolute; right: 26px; top: 12px; font-size: clamp(30px, 5vw, 64px); font-weight: 900; color: rgba(255, 255, 255, .08); letter-spacing: -.03em; pointer-events: none; font-variant-numeric: tabular-nums; }
+.su-race-lanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; position: relative; }
+.su-race-title { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; margin-bottom: 12px; }
+.su-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+.su-race.playing .su-dot { animation: su-beat .7s ease-in-out infinite; }
+.su-race-area { position: relative; }
+.su-race-row { position: absolute; left: 0; right: 0; top: 0; display: grid; grid-template-columns: 26px minmax(90px, 200px) minmax(0, 1fr); align-items: center; gap: 12px; transition: transform var(--race-step, 450ms) cubic-bezier(.2, .8, .2, 1), opacity .4s; will-change: transform; }
+.su-race-rank { color: var(--su-sub); font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
+.su-race-name { color: #fff; font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+.su-race-trackbar { display: flex; align-items: center; gap: 10px; height: 100%; min-width: 0; }
+.su-race-bar { height: 100%; border-radius: 6px; flex: none; background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #000)); box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 25%, transparent); transition: width var(--race-step, 450ms) linear; }
+.su-race-value { color: #fff; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.su-race-player { display: flex; align-items: center; gap: 14px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--su-line); }
+.su-race-play { position: relative; overflow: hidden; display: grid; place-items: center; flex: none; width: 48px; height: 48px; min-height: 48px; border-radius: 50%; border: none; background: #fff; cursor: pointer; transition: transform .15s cubic-bezier(.2, .8, .2, 1), background .2s; }
+.su-race-play:hover { transform: scale(1.08); background: var(--su-green); }
+.su-race-play:active { transform: scale(.94); }
+.su-icon-play { width: 0; height: 0; margin-left: 4px; border-style: solid; border-width: 9px 0 9px 15px; border-color: transparent transparent transparent #000; }
+.su-icon-pause { width: 14px; height: 18px; border-left: 5px solid #000; border-right: 5px solid #000; }
+.su-race-time { color: var(--su-sub); font-size: 13px; min-width: 64px; font-variant-numeric: tabular-nums; }
+.su-race-now { text-align: right; }
+.su-race-progress { position: relative; flex: 1; height: 6px; border-radius: 6px; background: #4d4d4d; cursor: pointer; touch-action: none; }
+.su-race-progress::before { content: ''; position: absolute; inset: -12px 0; }
+.su-race-fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: #fff; transition: width var(--race-step, 450ms) linear; }
+.su-race-knob { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff; opacity: 0; transition: left var(--race-step, 450ms) linear, opacity .2s; box-shadow: 0 2px 6px rgba(0, 0, 0, .5); }
+.su-race-progress:hover .su-race-fill { background: var(--su-green); }
+.su-race-progress:hover .su-race-knob, .su-race.playing .su-race-knob { opacity: 1; }
+.su-stories { position: relative; width: min(430px, 100%); aspect-ratio: 9 / 16; margin: 0 auto; border-radius: 22px; overflow: hidden; container-type: inline-size; background: #000; box-shadow: 0 30px 80px rgba(0, 0, 0, .6); outline: none; }
+.su-stories:not(.su-js) { aspect-ratio: auto; overflow: visible; background: none; box-shadow: none; }
+.su-stories:not(.su-js) .su-story { position: relative; aspect-ratio: 9 / 16; margin-bottom: 16px; border-radius: 22px; }
+.su-stories-frame { position: absolute; inset: 0; }
+.su-stories:not(.su-js) .su-stories-frame { position: static; }
+.su-story { position: absolute; inset: 0; display: flex; overflow: hidden; color: #fff; background: radial-gradient(120% 80% at 10% 0%, var(--bg1), transparent 60%), radial-gradient(120% 90% at 100% 100%, color-mix(in srgb, var(--bg1) 60%, #000), transparent 55%), var(--bg2); }
+.su-js .su-story { display: none; }
+.su-js .su-story.ativo { display: flex; animation: su-story-bg 12s ease-in-out infinite alternate; background-size: 140% 140%; }
+.su-story::before { content: ''; position: absolute; width: 70cqw; height: 70cqw; border-radius: 50%; right: -20cqw; top: 22%; background: color-mix(in srgb, var(--bg1) 70%, transparent); filter: blur(30px); opacity: .5; animation: su-float 9s ease-in-out infinite alternate; }
+.su-story h2 { margin: 0; font-size: 9.5cqw; line-height: 1.02; font-weight: 900; letter-spacing: -.03em; }
+.su-story h3 { margin: 0; font-size: 7cqw; line-height: 1.08; font-weight: 900; letter-spacing: -.02em; }
+.s-resumo { background: linear-gradient(180deg, #1ed760 0 22%, #121212 22%) !important; }
+.s-resumo::before { display: none; }
+.su-arch-detail { background: var(--su-card); border-radius: 20px; padding: 22px; flex: 1 1 420px; max-width: 640px; }
+.su-arch-detail h3 { margin: 0 0 4px; font-size: 22px; font-weight: 900; }
+.su-arch-detail ol { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 6px; }
+.su-arch-detail li { display: grid; grid-template-columns: 34px minmax(0, 1fr) 110px 86px; gap: 12px; align-items: center; padding: 8px; border-radius: 10px; animation: su-slide-in .5s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 50ms); transition: background .15s; }
+.su-arch-detail li:hover { background: rgba(255, 255, 255, .06); }
+.su-ad-ic { font-size: 24px; text-align: center; }
+.su-ad-name { min-width: 0; display: flex; flex-direction: column; }
+.su-ad-name b { font-weight: 800; }
+.su-ad-name small { color: var(--su-sub); font-size: 13px; line-height: 1.35; }
+.su-arch-detail li.on .su-ad-name b { color: var(--su-green); }
+.su-ad-bar { position: relative; height: 8px; border-radius: 8px; background: #3e3e3e; }
+.su-ad-bar i { position: absolute; inset: 0 auto 0 0; width: var(--value); border-radius: inherit; background: #8a8a8a; animation: su-fill 1.1s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 50ms + 200ms); }
+.su-arch-detail li.on .su-ad-bar i { background: var(--su-green); }
+.su-ad-bar u { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #fff; text-decoration: none; }
+.su-arch-detail em { font-style: normal; font-weight: 800; text-align: right; display: flex; flex-direction: column; }
+.su-arch-detail em small { font-weight: 500; color: var(--su-sub); font-size: 12px; }
+@media (max-width: 1000px) {
+  .su-race-lanes { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .su-tracklist a { grid-template-columns: 26px 40px minmax(0, 1fr) 54px; }
+  .su-mini { display: none; }
+}
+@keyframes su-slide-in {from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; }}
+@keyframes su-fill {from { width: 0; }}
+@keyframes su-beat {0%, 100% { transform: scale(1); } 50% { transform: scale(1.5); }}
+@keyframes su-ripple {to { transform: scale(1); opacity: 0; }}
+@keyframes su-story-bg {from { background-position: 0% 0%; } to { background-position: 100% 100%; }}
+@keyframes su-float {from { transform: translate(0, 0) scale(1); } to { transform: translate(-12cqw, 10cqw) scale(1.2); }}

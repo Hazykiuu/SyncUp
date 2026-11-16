@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 
 import { compararDupla, csvPlaylist, identificar, respostaDupla } from '../../site/app/js/dupla.js';
-import { graficosDupla } from '../../site/app/js/graficos-dupla.js';
+import { destaques, graficosDupla } from '../../site/app/js/graficos-dupla.js';
 import { lerHistorico } from '../../site/app/js/historico.js';
 
 const [opcoesJson, nomeA, nomeB, ...caminhos] = process.argv.slice(2);
@@ -15,9 +15,14 @@ try {
   const [ca, cb] = [await lerHistorico(ler('a'), opcoes), await lerHistorico(ler('b'), opcoes)];
   const ids = [await identificar(ler('a')), await identificar(ler('b'))];
   const r = compararDupla(ca, cb, nomeA, nomeB, opcoes, ids);
-  // opcoes._saida === 'resposta': o JSON que o app recebe; senão, o resultado bruto (sem os auxiliares).
+  // opcoes._saida: 'resposta' (o JSON que o app recebe, sem os gráficos), 'graficos' (números e títulos) ou 'csv';
+  // sem _saida, o resultado bruto (sem os auxiliares).
   if (opcoes._saida === 'csv') process.stdout.write(JSON.stringify({ csv: csvPlaylist(r) }));
-  else if (opcoes._saida === 'resposta') process.stdout.write(JSON.stringify({ ...respostaDupla(r), graficos: graficosDupla(r) }));
+  else if (opcoes._saida === 'resposta') process.stdout.write(JSON.stringify(respostaDupla(r)));
+  else if (opcoes._saida === 'graficos') {
+    const g = graficosDupla(r);
+    process.stdout.write(JSON.stringify({ graficos: g, destaques: destaques(g, [nomeA, nomeB]) }));
+  }
   else { delete r._bruto; delete r.fuso; delete r.ordem; process.stdout.write(JSON.stringify(r)); }
 } catch (e) {
   process.stdout.write(JSON.stringify({ erro: e.message }));

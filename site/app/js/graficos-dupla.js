@@ -1,191 +1,164 @@
-// Os 5 gráficos da Dupla no formato de figura do Plotly, iguais aos de graficos.py (o Python).
-// O plotly.js segue carregando só quando a aba Gráficos abre; aqui só se montam os dados.
-// Paridade da estrutura inteira em tests/test_paridade_dupla.py.
-import { fmtNum, ROXO, VERDE } from './dupla.js';
-import { TEMA } from './tema-plotly.js';
+// Números dos gráficos da Dupla no app web (desenhados em HTML por graficos.js, sem Plotly).
+// São os mesmos números das figuras de graficos.py (o app para PC): paridade em tests/test_paridade_dupla.py.
+// Aqui também ficam as frases dos títulos e as escalas: funções puras, testadas em tests/js/graficos.test.mjs.
+import { fmtNum } from './dupla.js';
 
-const FUNDO = '#181818', GRADE = '#2a2a2a', TEXTO = '#ffffff', SECUNDARIO = '#b3b3b3', VERDE_ESCURO = '#14833b';
-const FONTE = 'Figtree, "Circular Std", "Helvetica Neue", Helvetica, Arial, sans-serif';
-const CORES_GRUPO = [VERDE, ROXO, '#ffa42b', '#4cc9f0', '#f573a0', '#e8db5a'];
-const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-const LIMIARES = [60, 40, 40]; // perfis.LIMIAR_FAVORITOS, LIMIAR_REPEAT e LIMIAR_MADRUGADA, em %
+export const VISIVEIS = 8; // artistas à vista em "Quem puxa"; o resto fica no "Ver mais"
+export const LIMIARES = [60, 40, 40]; // perfis.LIMIAR_FAVORITOS, LIMIAR_REPEAT e LIMIAR_MADRUGADA, em %
+const DIAS = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
+const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
-// Escapa só & < >: o Plotly lê tags, mas mostra &quot; e &#x27; ao pé da letra (graficos._texto).
-const texto = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-// graficos._base: tema, fontes, separadores pt-BR, margens e transição comuns.
-function base(titulo, altura, eixos = [['xaxis', 'yaxis']]) {
-  const layout = {
-    title: { font: { size: 20, color: TEXTO }, text: `<b>${titulo}</b>`, x: 0.01, xanchor: 'left', y: 0.98, yanchor: 'top' },
-    font: { family: FONTE, size: 15, color: TEXTO },
-    margin: { l: 45, r: 35, t: 110, b: 60 },
-    legend: { font: { color: SECUNDARIO }, orientation: 'h', yanchor: 'bottom', y: 1.01, x: 0, bgcolor: 'rgba(0,0,0,0)' },
-    hoverlabel: { font: { size: 15, family: FONTE, color: TEXTO }, bgcolor: '#282828', bordercolor: VERDE },
-    transition: { duration: 650, easing: 'cubic-in-out' },
-    height: altura,
-    paper_bgcolor: FUNDO,
-    plot_bgcolor: FUNDO,
-    separators: ',.',
-    template: TEMA,
-  };
-  for (const [x, y] of eixos) {
-    layout[x] = { gridcolor: GRADE, zerolinecolor: SECUNDARIO, linecolor: GRADE };
-    layout[y] = { gridcolor: GRADE, linecolor: GRADE };
-  }
-  return layout;
-}
+export const mesLongo = (m) => `${MESES[Number(m.slice(5)) - 1]}/${m.slice(0, 4)}`;
+export const mesCurto = (m) => `${MESES[Number(m.slice(5)) - 1]}/${m.slice(2, 4)}`;
+const pct = (x) => `${fmtNum(x, 1)}%`;
+const maior = (lista) => lista.indexOf(Math.max(...lista));
 
 const participacao = (b, plays, artista) => ((b.contagens.get(artista) || 0) / plays) * 100;
 
-function butterfly(r) {
-  const artistas = r.ordem, nomes = artistas.map(texto);
-  const [a, b] = r.perfis;
-  const valores = [0, 1].map((k) => artistas.map((x) => participacao(r._bruto[k], r.perfis[k].plays, x)));
-  const data = [[a, valores[0], -1, VERDE, 'A'], [b, valores[1], 1, ROXO, 'B']].map(([p, v, sinal, cor, prefixo]) => ({
-    customdata: v,
-    hovertemplate: '%{y}<br>%{customdata:.2f}% dos plays<extra>%{fullData.name}</extra>',
-    marker: { color: cor, cornerradius: 6, line: { width: 0 } },
-    name: texto(`${prefixo} · ${p.nome}`),
-    orientation: 'h',
-    x: v.map((x) => sinal * x),
-    y: nomes,
-    type: 'bar',
-  }));
-  const limite = Math.max(...valores[0], ...valores[1], 1) * 1.1;
-  const ticks = [-limite, -limite / 2, 0, limite / 2, limite];
-  const layout = base('Artistas: participação na escuta', Math.max(500, artistas.length * 40 + 180));
-  Object.assign(layout.xaxis, {
-    title: { font: { color: SECUNDARIO }, text: 'Participação nos plays de cada perfil (%)' },
-    range: [-limite, limite],
-    tickvals: ticks,
-    ticktext: ticks.map((x) => `${fmtNum(Math.abs(x), 1)}%`),
-  });
-  Object.assign(layout.yaxis, { autorange: 'reversed', title: {}, showgrid: false });
-  return { data, layout: { ...layout, barmode: 'relative', bargap: 0.3 } };
-}
-
-function mapaHorarios(r) {
-  const matrizes = r._bruto.map((b, k) => b.diaHora.map((linha) => linha.map((n) => (n / r.perfis[k].plays) * 100)));
-  const data = matrizes.map((z, k) => ({
-    coloraxis: 'coloraxis',
-    hovertemplate: '%{y}, %{x}h<br>%{z:.2f}% dos plays<extra></extra>',
-    x: Array.from({ length: 24 }, (_, h) => h),
-    xgap: 2,
-    y: DIAS_SEMANA,
-    ygap: 2,
-    z,
-    type: 'heatmap',
-    xaxis: k ? 'x2' : 'x',
-    yaxis: k ? 'y2' : 'y',
-  }));
-  const layout = base(`Horários de escuta · ${texto(r.fuso)}`, 540, [['xaxis', 'yaxis'], ['xaxis2', 'yaxis2']]);
-  const titulo = { title: { text: 'Hora local' }, tickvals: [0, 4, 8, 12, 16, 20, 23], showgrid: false };
-  Object.assign(layout.xaxis, { anchor: 'y', domain: [0, 0.44], ...titulo });
-  Object.assign(layout.xaxis2, { anchor: 'y2', domain: [0.56, 1], ...titulo });
-  Object.assign(layout.yaxis, { anchor: 'x', domain: [0, 1], autorange: 'reversed', showgrid: false });
-  Object.assign(layout.yaxis2, { anchor: 'x2', domain: [0, 1], autorange: 'reversed', showgrid: false });
-  const todos = matrizes.flat(2);
-  layout.annotations = r.perfis.map((p, k) => ({
-    font: { size: 15, color: SECUNDARIO }, showarrow: false, text: texto(`${k ? 'B' : 'A'} · ${p.nome}`),
-    x: k ? 0.78 : 0.22, xanchor: 'center', xref: 'paper', y: 1, yanchor: 'bottom', yref: 'paper',
-  }));
-  layout.coloraxis = {
-    colorbar: { title: { text: '% dos plays' }, outlinewidth: 0, thickness: 14 },
-    colorscale: [[0, '#202020'], [0.35, '#1a5c33'], [0.7, VERDE_ESCURO], [1, VERDE]],
-    // Escala comum aos dois mapas, do menor ao maior valor observado.
-    cmin: Math.min(...todos),
-    cmax: Math.max(...todos) || 1,
-  };
-  return { data, layout };
-}
-
-// As três proporções dos arquétipos (perfis.classificar_proporcoes), em %.
+// As três proporções dos arquétipos (perfis.classificar_proporcoes), em fração.
 function tracos(p, b) {
   const soma = (lista, n) => [...lista].sort((x, y) => y - x).slice(0, n).reduce((s, x) => s + x, 0);
   const madrugada = b.porHora.slice(0, 6).reduce((s, x) => s + x, 0); // 00h a 05h59
   return [soma(b.contagens.values(), 2) / p.plays, soma(b.faixas.values(), 10) / p.plays, madrugada / p.plays];
 }
 
-function radarTracos(r) {
-  const categorias = ['Top 2 artistas', 'Top 10 faixas', 'Madrugada (00–05h59)'];
-  const theta = [...categorias, categorias[0]];
-  const data = r.perfis.map((p, k) => {
-    const v = tracos(p, r._bruto[k]).map((x) => x * 100);
-    return {
-      fill: 'toself',
-      fillcolor: k ? 'rgba(196,183,255,0.25)' : 'rgba(30,215,96,0.25)',
-      hovertemplate: '%{theta}: %{r:.1f}%<extra>%{fullData.name}</extra>',
-      line: { color: k ? ROXO : VERDE, width: 3 },
-      marker: { size: 9 },
-      mode: 'lines+markers',
-      name: texto(`${k ? 'B' : 'A'} · ${p.nome}`),
-      r: [...v, v[0]],
-      theta,
-      type: 'scatterpolar',
-    };
-  });
-  data.push({ line: { color: TEXTO, dash: 'dash', width: 2 }, mode: 'lines+markers', name: 'Limiares de classificação', r: [...LIMIARES, LIMIARES[0]], theta, type: 'scatterpolar' });
-  const layout = base('Traços de escuta · regras experimentais', 580);
-  return {
-    data,
-    layout: {
-      ...layout,
-      margin: { l: 90, r: 90, t: 90, b: 90 },
-      legend: { ...layout.legend, orientation: 'h', yanchor: 'top', y: -0.06, x: 0.5, xanchor: 'center' },
-      polar: {
-        radialaxis: { tickfont: { size: 13, color: SECUNDARIO }, range: [0, 100], ticksuffix: '%', gridcolor: '#3a3a3a', linecolor: '#3a3a3a' },
-        angularaxis: { tickfont: { size: 15 }, gridcolor: '#3a3a3a', linecolor: '#3a3a3a' },
-        bgcolor: FUNDO,
-      },
-    },
-  };
+// Todos os meses do primeiro ao último dos dois; mês sem escuta de um lado (ou dos dois) vale 0 h.
+function mesesContinuos(mapas) {
+  const chaves = mapas.flatMap((m) => [...m.keys()]);
+  if (!chaves.length) return [];
+  const [ini, fim] = [Math.min(...chaves), Math.max(...chaves)];
+  const meses = [];
+  for (let m = ini; m <= fim; m = m % 100 === 12 ? m + 89 : m + 1) {
+    const [a, b] = mapas.map((x) => (x.get(m) || 0) / 60);
+    meses.push({ mes: `${Math.floor(m / 100)}-${String(m % 100).padStart(2, '0')}`, a, b });
+  }
+  return meses;
 }
 
-function slopeChart(r, limite = 8) {
-  const artistas = r.ordem.slice(0, limite);
-  const data = artistas.map((artista, i) => ({
-    hovertemplate: '%{y:.2f}% dos plays<extra>%{fullData.name}</extra>',
-    line: { color: CORES_GRUPO[i % CORES_GRUPO.length], width: 3 },
-    marker: { size: 12, symbol: i < 6 ? 'circle' : 'diamond' },
-    mode: 'lines+markers',
-    name: texto(artista),
-    x: [0, 1],
-    y: [0, 1].map((k) => participacao(r._bruto[k], r.perfis[k].plays, artista)),
-    type: 'scatter',
-  }));
-  const n = artistas.length;
-  const layout = base(`Diferenças de participação · ${n} artista${n !== 1 ? 's' : ''} líder${n !== 1 ? 'es' : ''}`, 600);
-  Object.assign(layout.xaxis, { tickvals: [0, 1], ticktext: r.perfis.map((p, k) => texto(`${k ? 'B' : 'A'} · ${p.nome}`)), range: [-0.15, 1.15], showgrid: false, zeroline: false });
-  Object.assign(layout.yaxis, { title: { text: 'Participação nos plays (%)' }, ticksuffix: '%' });
-  return {
-    data,
-    layout: { ...layout, legend: { ...layout.legend, orientation: 'v', x: 1.02, y: 0.9, yanchor: 'top' }, margin: { l: 70, r: 190, t: 90, b: 85 } },
-  };
-}
-
-function evolucaoMensal(r) {
-  const data = r.perfis.map((p, k) => {
-    const meses = [...r._bruto[k].horasMes].sort(([x], [y]) => x - y);
-    return {
-      fill: 'tozeroy',
-      fillcolor: k ? 'rgba(196,183,255,0.12)' : 'rgba(30,215,96,0.12)',
-      hovertemplate: '%{x}: %{y:.1f} h<extra>%{fullData.name}</extra>',
-      line: { color: k ? ROXO : VERDE, shape: 'spline', smoothing: 0.6, width: 3 },
-      marker: { size: 6 },
-      mode: 'lines+markers',
-      name: texto(`${k ? 'B' : 'A'} · ${p.nome}`),
-      x: meses.map(([m]) => `${Math.floor(m / 100)}-${String(m % 100).padStart(2, '0')}`),
-      y: meses.map(([, minutos]) => minutos / 60),
-      type: 'scatter',
-    };
-  });
-  const layout = base('Horas ouvidas por mês', 430);
-  Object.assign(layout.xaxis, { nticks: 12, showgrid: false });
-  Object.assign(layout.yaxis, { title: { text: 'Horas' }, rangemode: 'tozero' });
-  return { data, layout: { ...layout, hovermode: 'x unified' } };
-}
-
-/** Os 5 gráficos da resposta (`graficos` de ponte.comparar_dupla), a partir de compararDupla. */
+/** Os números dos 4 gráficos (`graficos` da resposta do app), a partir de compararDupla. */
 export function graficosDupla(r) {
-  return { artistas: butterfly(r), horarios: mapaHorarios(r), tracos: radarTracos(r), rankings: slopeChart(r), meses: evolucaoMensal(r) };
+  const [pa, pb] = r.perfis, [ba, bb] = r._bruto;
+  return {
+    artistas: r.ordem.map((nome) => ({ nome, a: participacao(ba, pa.plays, nome), b: participacao(bb, pb.plays, nome) })),
+    horas: [[ba, pa], [bb, pb]].map(([b, p]) => b.porHora.map((n) => (n / p.plays) * 100)),
+    dias: [[ba, pa], [bb, pb]].map(([b, p]) => b.diaHora.map((linha) => (linha.reduce((s, n) => s + n, 0) / p.plays) * 100)),
+    tracos: { a: tracos(pa, ba).map((x) => x * 100), b: tracos(pb, bb).map((x) => x * 100), limiares: LIMIARES },
+    meses: mesesContinuos([ba.horasMes, bb.horasMes]),
+    fuso: r.fuso,
+  };
+}
+
+// ---- Escalas -------------------------------------------------------------------------------------
+
+/** Largura (0–1) de cada meia-barra: pelo maior % dos 8 à vista; um extra maior trava em 1. */
+export function escalaArtistas(artistas) {
+  const topo = Math.max(...artistas.slice(0, VISIVEIS).flatMap((x) => [x.a, x.b]), 0) || 1;
+  return (v) => Math.min(1, v / topo);
+}
+
+/** Altura (0–1) de cada barrinha da hora: pelo pico da própria pessoa. */
+export const escalaHoras = (horas) => {
+  const topo = Math.max(...horas) || 1;
+  return horas.map((v) => v / topo);
+};
+
+/** Grade do eixo Y de "Horas por mês": 0, passo e 2 × passo, com passo "redondo" e topo ≥ 1. */
+export function gradeHoras(meses) {
+  const topo = Math.max(...meses.flatMap((m) => [m.a, m.b]), 1);
+  const base = 10 ** Math.floor(Math.log10(topo / 2));
+  // Passo de pelo menos 1 h: os rótulos são inteiros (fmtNum sem casas).
+  const passo = Math.max(1, [1, 2, 5, 10].map((f) => f * base).find((x) => 2 * x >= topo));
+  return { topo: 2 * passo, linhas: [0, passo, 2 * passo] };
+}
+
+/** Rótulos do eixo dos meses: primeiro, último e viradas de ano, sem dois a menos de 15% da largura. */
+export function rotulosMeses(meses) {
+  const n = meses.length;
+  if (n <= 1) return n ? [{ i: 0, x: 50 }] : [];
+  const x = (i) => (i / (n - 1)) * 100;
+  const escolhidos = [0, n - 1];
+  meses.forEach((m, i) => {
+    if (m.mes.endsWith('-01') && escolhidos.every((j) => Math.abs(x(i) - x(j)) >= 15)) escolhidos.push(i);
+  });
+  return escolhidos.sort((p, q) => p - q).map((i) => ({ i, x: x(i) }));
+}
+
+// ---- Títulos -------------------------------------------------------------------------------------
+
+const quaseIgual = (a, b) => a > 0 && b > 0 && (Math.abs(a - b) < 2 || Math.max(a, b) / Math.min(a, b) < 1.25);
+
+function tituloArtistas(artistas, [na, nb]) {
+  const vistos = artistas.slice(0, VISIVEIS);
+  if (!vistos.length) return 'Nenhum artista para comparar neste período';
+  // Só é "quase igual" quando todos os visíveis são; senão, a maior diferença entre os que não são.
+  const diferentes = vistos.filter((y) => !quaseIgual(y.a, y.b));
+  if (!diferentes.length) return 'Os dois puxam os favoritos quase igual';
+  const x = diferentes.reduce((m, y) => (Math.abs(y.a - y.b) > Math.abs(m.a - m.b) ? y : m));
+  const [mais, menos, nMais, nMenos] = x.a >= x.b ? [x.a, x.b, na, nb] : [x.b, x.a, nb, na];
+  return `${x.nome} pesa mais para ${nMais}: ${pct(mais)} dos plays, contra ${pct(menos)} de ${nMenos}`;
+}
+
+// null: sem plays; -1: sem pico claro (o pico não chega a 1,2 × a média); senão, a hora do pico.
+function pico(horas) {
+  const soma = horas.reduce((s, x) => s + x, 0);
+  if (soma <= 0) return null;
+  const h = maior(horas);
+  return horas[h] < 1.2 * (soma / 24) ? -1 : h;
+}
+
+function tituloHoras(horas, [na, nb]) {
+  const [pa, pb] = horas.map(pico);
+  const temPico = (p) => p !== null && p >= 0; // null >= 0 é true no JS
+  if (pa === -1 && pb === -1) return 'Os dois ouvem o dia todo, sem hora de pico';
+  if (temPico(pa) && pa === pb) return `Os dois ouvem mais às ${pa}h`;
+  const frase = (nome, p, curta) => {
+    if (p === null) return `${nome} não tem plays neste período`;
+    if (p === -1) return `${nome} ouve o dia todo, sem hora de pico`;
+    return curta ? `${nome}, às ${p}h` : `${nome} ouve mais às ${p}h`;
+  };
+  // "Ana ouve mais às 18h; Bruno, às 12h": a forma curta só quando as duas frases são de pico.
+  return `${frase(na, pa, false)}; ${frase(nb, pb, temPico(pa) && temPico(pb))}`;
+}
+
+function linhaDias(dias, horas, fuso, nomes) {
+  const ks = [0, 1].filter((k) => pico(horas[k]) !== null);
+  const dia = (k) => DIAS[maior(dias[k])];
+  let texto = ks.map((k) => `${nomes[k]}, ${dia(k)}`).join('; ');
+  if (ks.length === 2 && dia(0) === dia(1)) texto = `${dia(0)} para os dois`;
+  return `${texto ? `Dia com mais plays: ${texto}. ` : ''}Horário de ${fuso}.`;
+}
+
+const tracosTexto = (n) => (n === 0 ? 'nenhum' : n === 1 ? '1 traço' : `${n} traços`);
+function tituloTracos({ a, b, limiares }, [na, nb]) {
+  const [ta, tb] = [a, b].map((v) => v.filter((x, i) => x >= limiares[i]).length);
+  if (!ta && !tb) return 'Nenhum dos dois atingiu os limiares de traço';
+  if (ta === tb) return `Os dois têm ${tracosTexto(ta)}`;
+  return `${na} tem ${tracosTexto(ta)}; ${nb}, ${tracosTexto(tb)}`;
+}
+
+function tituloMeses(meses, [na, nb]) {
+  const topo = (k) => {
+    const valores = meses.map((m) => (k ? m.b : m.a));
+    return Math.max(...valores, 0) > 0 ? meses[maior(valores)] : null;
+  };
+  const [ma, mb] = [topo(0), topo(1)];
+  const h = (x) => `${fmtNum(x, 0)} h`;
+  if (!ma && !mb) return 'Nenhuma hora ouvida neste período';
+  if (ma && mb && ma.mes === mb.mes) return `Os dois ouviram mais em ${mesLongo(ma.mes)} (${h(ma.a)} e ${h(mb.b)})`;
+  const frase = (nome, m, v, curta) => {
+    if (!m) return `${nome} não ouviu nada neste período`;
+    return `${nome}${curta ? ', em' : ' ouviu mais em'} ${mesLongo(m.mes)} (${h(v)})`;
+  };
+  return `${frase(na, ma, ma?.a, false)}; ${frase(nb, mb, mb?.b, Boolean(ma && mb))}`;
+}
+
+/** As frases dos títulos (o fato principal de cada gráfico), sem gênero: os nomes são digitados. */
+export function destaques(g, nomes) {
+  return {
+    artistas: tituloArtistas(g.artistas, nomes),
+    horas: tituloHoras(g.horas, nomes),
+    dias: linhaDias(g.dias, g.horas, g.fuso, nomes),
+    tracos: tituloTracos(g.tracos, nomes),
+    meses: tituloMeses(g.meses, nomes),
+  };
 }

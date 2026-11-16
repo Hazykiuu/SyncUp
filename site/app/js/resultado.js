@@ -2,6 +2,7 @@
 // Nas abas, o HTML ainda vem pronto do núcleo (textos externos já escapados lá).
 import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { chegar, chegarPouco } from './chegada.js';
+import { GraficosDupla } from './graficos.js';
 import { compartilhar, desenharPosterDupla } from './poster.js';
 import { SomStories } from './som.js';
 import { SLIDES_DUPLA } from './stories/dupla.js';
@@ -22,86 +23,6 @@ function Tabela({ titulo, tabela }) {
         <tbody>${tabela.linhas.map((l) => html`<tr>${l.map((v) => html`<td>${v}</td>`)}</tr>`)}</tbody>
       </table>
     </div>`;
-}
-
-// plotly.js só baixa quando a aba Gráficos abre (~5 MB).
-let plotly = null;
-const carregarPlotly = () => plotly ??= new Promise((ok, erro) => {
-  const s = Object.assign(document.createElement('script'), { src: 'https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.7.0/plotly.min.js', integrity: 'sha384-l4G4qURPwALv583BKlynU/4LiUx0rk9jcTX58Aq+Jc+jgWb52zeH2geZkSS3UPPs', crossOrigin: 'anonymous', // se o CDN trocar o arquivo, o navegador recusa
-    onload: () => ok(window.Plotly), onerror: () => { s.remove(); plotly = null; erro(); } });
-  document.head.append(s);
-});
-
-// Ajustes de tela na hora de desenhar: as figuras (iguais às do Python) não mudam.
-const DIAS_CURTOS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-function paraTela(data, layout, estreita) {
-  const tipo = data[0]?.type;
-  // Meses no eixo de datas: o Plotly escreveria "Jan 2020" em inglês.
-  if (tipo === 'scatter' && layout.hovermode === 'x unified') layout.xaxis = { ...layout.xaxis, tickformat: '%m/%Y' };
-  if (!estreita) return [data, layout];
-  if (tipo === 'heatmap') {
-    // Os dois mapas um embaixo do outro, cada um com a largura toda; dias abreviados e horas de 6 em 6.
-    const horas = { tickvals: [0, 6, 12, 18, 23], tickfont: { size: 11 } };
-    const dias = { tickvals: data[0].y, ticktext: DIAS_CURTOS, tickfont: { size: 11 } };
-    layout = {
-      ...layout,
-      height: 620,
-      margin: { l: 40, r: 8, t: 30, b: 70 },
-      xaxis: { ...layout.xaxis, ...horas, domain: [0, 1], title: { text: '' } },
-      yaxis: { ...layout.yaxis, ...dias, domain: [0.56, 1] },
-      xaxis2: { ...layout.xaxis2, ...horas, domain: [0, 1], title: { text: '' } }, // "hora" já está na legenda da cor
-      yaxis2: { ...layout.yaxis2, ...dias, domain: [0, 0.44] },
-      annotations: layout.annotations.map((a, k) => ({ ...a, x: 0, xanchor: 'left', y: k ? 0.45 : 1.01 })),
-      coloraxis: { ...layout.coloraxis, colorbar: { ...layout.coloraxis.colorbar, orientation: 'h', x: 0.5, xanchor: 'center', y: -0.2, thickness: 10, title: { text: '% dos plays em cada hora', side: 'top', font: { size: 12 } } } },
-    };
-  } else if (tipo === 'scatterpolar') {
-    // Radar maior e rótulos que cabem: menos margem, nome curto da madrugada, poucos números no eixo.
-    data = data.map((t) => ({ ...t, theta: t.theta.map((x) => x.replace(' (00–05h59)', '').replace(' artistas', '').replace(' faixas', '')) }));
-    layout = {
-      ...layout,
-      height: 400,
-      margin: { l: 64, r: 72, t: 20, b: 20 },
-      polar: {
-        ...layout.polar,
-        radialaxis: { ...layout.polar.radialaxis, tickvals: [50, 100], tickfont: { size: 10, color: '#b3b3b3' } },
-        angularaxis: { ...layout.polar.angularaxis, tickfont: { size: 12 } },
-      },
-    };
-  } else if (tipo === 'scatter' && layout.hovermode !== 'x unified') {
-    // Rankings: o título do eixo cortava na borda; o "%" dos números já diz o que é.
-    // A legenda à direita ocupava metade da largura: vai para baixo, e o gráfico fica com a largura toda.
-    layout = {
-      ...layout,
-      height: 720,
-      margin: { l: 44, r: 12, t: 20, b: 40 },
-      yaxis: { ...layout.yaxis, title: { text: '' } },
-      legend: { ...layout.legend, orientation: 'h', x: 0, xanchor: 'left', y: -0.12, yanchor: 'top', font: { ...layout.legend.font, size: 13 } },
-      // Rótulo comprido na ponta some (o Plotly esconde o que não cabe): sem o que vem entre parênteses, com folga.
-      xaxis: { ...layout.xaxis, tickfont: { size: 12 }, range: [-0.3, 1.3], ticktext: layout.xaxis.ticktext.map((t) => t.replace(/\s*\(.*\)\s*$/, '')) },
-    };
-  } else if (tipo === 'bar') {
-    layout = { ...layout, xaxis: { ...layout.xaxis, title: { ...layout.xaxis.title, text: 'Participação nos plays (%)' }, tickfont: { size: 11 } } };
-  }
-  return [data, layout];
-}
-
-function Grafico({ figura, titulo }) {
-  const alvo = useRef(null);
-  const [falhou, setFalhou] = useState(false);
-  useEffect(() => {
-    let vivo = true;
-    // Fundo transparente (o gráfico fica no vidro do cartão) e sem o título do Plotly: o <figcaption> já dá o nome.
-    const base = { ...figura.layout, autosize: true, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', title: { text: '' }, margin: { ...figura.layout.margin, t: 24 } };
-    const estreita = matchMedia('(max-width: 599px)').matches;
-    const [data, layout] = paraTela(figura.data, base, estreita);
-    // No celular a barra de ferramentas do Plotly cobria a legenda.
-    carregarPlotly().then((P) => vivo && P.newPlot(alvo.current, data, layout, { responsive: true, displaylogo: false, displayModeBar: estreita ? false : 'hover' }))
-      .catch(() => vivo && setFalhou(true));
-    return () => { vivo = false; window.Plotly?.purge(alvo.current); };
-  }, [figura]);
-  return html`<figure class="grafico vidro"><figcaption>${titulo}</figcaption>
-    ${falhou && html`<p class="erro" role="alert">Não deu para baixar os gráficos. Confira a internet e abra esta aba de novo.</p>`}
-    <div ref=${alvo} class="grafico-area" role="img" aria-label=${titulo}></div></figure>`;
 }
 
 // Nomes como etiquetas: as 12 primeiras à vista, o resto atrás de "ver mais".
@@ -212,10 +133,7 @@ export function Resultado({ r }) {
         <${Lista} titulo=${`Só ${b}`} itens=${r.conexoes.so_b} vazio=${`Todos os artistas de ${b} também aparecem para ${a}.`} /></div>
       ${r.ponte.length > 0 && html`<div class="vidro conexao"><h3>Ponte musical</h3><p class="nota">Sugestões de artistas ausentes no recorte do outro. Não são descobertas comprovadas.</p>
         <ul class="ponte">${r.ponte.map((p) => html`<li>${p.de} → ${p.para}: <a href=${p.link} target="_blank" rel="noopener">${p.artista}</a> · ${p.plays.toLocaleString('pt-BR')} plays</li>`)}</ul></div>`}`,
-    () => html`<div class="graficos">
-      <${Grafico} figura=${g.artistas} titulo="Artistas mais ouvidos, lado a lado" /><${Grafico} figura=${g.horarios} titulo="Quando cada um ouve" />
-      <${Grafico} figura=${g.tracos} titulo="Traços de escuta" /><${Grafico} figura=${g.rankings} titulo="Rankings comparados" /><${Grafico} figura=${g.meses} titulo="Horas por mês" /></div>
-      <${Html} conteudo=${h.corrida} />`,
+    () => html`<${GraficosDupla} g=${g} nomes=${r.nomes} /><${Html} conteudo=${h.corrida} />`,
     () => html`<${Medidas} metricas=${r.metricas} />
       <p class="nota">${r.aviso}</p>
       <p class="nota">Quase juntos (até 1 h de distância): <b>${r.quase.artistas.toLocaleString('pt-BR')}</b> pares com o mesmo artista e <b>${r.quase.musicas.toLocaleString('pt-BR')}</b> com a mesma música.</p>

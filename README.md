@@ -77,7 +77,7 @@ Feche a janela preta (o terminal) que o `iniciar.bat` abriu, ou aperte `Ctrl+C` 
 
 ### Dupla: a história de duas pessoas, em stories
 
-No navegador, a Dupla vira 7 stories: o quanto a escuta se parece (num afinador: 100% é "afinados", a 440 Hz), o que une vocês, o favorito de cada um, um som de cada um para o outro, os relógios de escuta e **Em sintonia**, os minutos em que vocês ouviram a mesma música ao mesmo tempo. Depois vêm os rankings, os gráficos, os detalhes técnicos, um pôster para o Instagram e a playlist em comum em CSV. No app para PC, a Dupla mostra também o Blend e a identidade musical de cada um.
+No navegador, a Dupla vira 7 stories: o quanto a escuta se parece (num afinador: 100% é "afinados", a 440 Hz), o que une vocês, o favorito de cada um, um som de cada um para o outro, os relógios de escuta e **Em sintonia**, os minutos em que vocês ouviram a mesma música ao mesmo tempo. Depois vêm os rankings, os gráficos (em HTML, sem Plotly, com o fato principal no título de cada um), os detalhes técnicos, um pôster para o Instagram e a playlist em comum em CSV. No app para PC, a Dupla mostra também o Blend e a identidade musical de cada um.
 
 ![Dupla e Wrapped no navegador](docs/img/recursos.jpg)
 

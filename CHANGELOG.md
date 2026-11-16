@@ -1,5 +1,10 @@
 # Changelog — SyncUp
 
+## [Não lançado]
+
+### Mudado
+- **Gráficos da Dupla no app web, sem Plotly:** quatro gráficos em HTML, pensados primeiro para o celular. Cada um tem no título o fato principal, os números escritos (sem depender do mouse) e uma tabela para leitor de tela. Saíram o mapa de 168 células e os "Rankings comparados", que repetiam os artistas lado a lado. A aba não baixa mais ~5 MB e não prende a rolagem no celular. O app para PC segue com o Plotly.
+
 ## [1.10.0] — 2026-11-13
 
 Os stories da Dupla agora tocam as músicas que vocês dois têm em comum.

@@ -209,27 +209,26 @@ def _sem_binario(valor):
     return valor
 
 
-def test_tema_do_plotly_em_dia() -> None:
-    """site/app/js/tema-plotly.js é o plotly_dark do plotly instalado (tools/gerar_tema_plotly.py)."""
-    from tools.gerar_tema_plotly import DESTINO, conteudo
-
-    assert DESTINO.read_text(encoding='utf-8') == conteudo()
+CASOS_RESPOSTA = ['padrao', 'log', 'sem_periodo_comum', 'borda', 'borda_opcoes', 'mesmo_arquivo']
 
 
-@pytest.mark.parametrize(
-    'caso', ['padrao', 'log', 'sem_periodo_comum', 'borda', 'borda_opcoes', 'mesmo_arquivo']
-)
-def test_resposta_do_app_igual_a_ponte(arquivos: dict[str, Path], caso: str) -> None:  # noqa: F811
-    """O JSON que o app recebe: o mesmo de ``ponte.comparar_dupla``, gráficos inclusive."""
+def _ponte(a: list[Path], b: list[Path], nomes: tuple[str, str], opcoes: dict) -> dict:
     from web import ponte
 
+    r = ponte.comparar_dupla([str(c) for c in a], [str(c) for c in b], *nomes, opcoes)
+    return _sem_binario(json.loads(json.dumps(r)))
+
+
+@pytest.mark.parametrize('caso', CASOS_RESPOSTA)
+def test_resposta_do_app_igual_a_ponte(arquivos: dict[str, Path], caso: str) -> None:  # noqa: F811
+    """O JSON que o app recebe: o mesmo de ``ponte.comparar_dupla``. Os gráficos têm teste próprio: no app
+    web são só os números (desenhados em HTML), no app para PC são figuras do Plotly."""
     ca, cb, nomes, opcoes = CASOS[caso]
     a, b = [arquivos[c] for c in ca], [arquivos[c] for c in cb]
     js = _js(a, b, nomes, {**opcoes, '_saida': 'resposta'})
     assert 'erro' not in js, js
-    py = json.loads(
-        json.dumps(ponte.comparar_dupla([str(c) for c in a], [str(c) for c in b], *nomes, opcoes))
-    )
+    py = _ponte(a, b, nomes, opcoes)
+    py.pop('graficos')
     # A origem dos dados é do app para PC (cache em disco); no navegador é sempre "Lido no navegador".
     for r in (py, js):
         tabela = r['tabelas']['diagnostico']
@@ -237,7 +236,40 @@ def test_resposta_do_app_igual_a_ponte(arquivos: dict[str, Path], caso: str) -> 
         for linha in tabela['linhas']:
             linha.pop(k)
         tabela['colunas'].pop(k)
-    _igual(_sem_binario(py), js, 'resposta')
+    _igual(py, js, 'resposta')
+
+
+@pytest.mark.parametrize('caso', CASOS_RESPOSTA)
+def test_numeros_dos_graficos_iguais_ao_python(arquivos: dict[str, Path], caso: str) -> None:  # noqa: F811
+    """Os números dos gráficos do app web (graficos-dupla.js) são os das figuras de graficos.py."""
+    import html
+
+    ca, cb, nomes, opcoes = CASOS[caso]
+    a, b = [arquivos[c] for c in ca], [arquivos[c] for c in cb]
+    js = _js(a, b, nomes, {**opcoes, '_saida': 'graficos'})
+    assert 'erro' not in js, js
+    g, fig = js['graficos'], _ponte(a, b, nomes, opcoes)['graficos']
+    # Artistas: nomes (escapados para o Plotly em graficos._texto) e a participação de cada um.
+    barras = fig['artistas']['data']
+    assert [html.unescape(n) for n in barras[0]['y']] == [x['nome'] for x in g['artistas']]
+    for k, lado in enumerate('ab'):
+        _igual(barras[k]['customdata'], [x[lado] for x in g['artistas']], f'artistas {lado}')
+        # Horários: o z é 7 × 24 (dias × horas); por hora soma as linhas, por dia soma cada linha.
+        z = fig['horarios']['data'][k]['z']
+        assert len(z) == 7 and all(len(linha) == 24 for linha in z)
+        _igual([sum(linha[h] for linha in z) for h in range(24)], g['horas'][k], f'horas {lado}')
+        _igual([sum(linha) for linha in z], g['dias'][k], f'dias {lado}')
+        _igual(fig['tracos']['data'][k]['r'][:3], g['tracos'][lado], f'traços {lado}')
+        # Meses: o JS preenche com 0 os meses sem escuta; os do Python têm de bater, os outros valem 0.
+        serie = fig['meses']['data'][k]
+        py = dict(zip(serie['x'], serie['y']))
+        assert set(py) <= {m['mes'] for m in g['meses']}
+        _igual(
+            [py.get(m['mes'], 0) for m in g['meses']],
+            [m[lado] for m in g['meses']],
+            f'meses {lado}',
+        )
+    _igual(fig['tracos']['data'][2]['r'][:3], g['tracos']['limiares'], 'limiares')
 
 
 def test_csv_da_playlist_igual_ao_python(arquivos: dict[str, Path], tmp_path: Path) -> None:  # noqa: F811

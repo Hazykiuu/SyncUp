@@ -265,3 +265,10 @@ html:active-view-transition-type(modo)::view-transition-old(barra) { display: no
 html:active-view-transition-type(modo)::view-transition-new(barra) { animation: none; }
 /* O player dos stories segue o raio de painel do app. */
 .st-player.su-stories { border-radius: var(--r-painel); }
+/* Corrida (HTML do núcleo) em tela estreita: a coluna dos nomes cede espaço às barras, e a barra mais longa
+   deixa lugar para o número ao lado ("2.075" cortava). */
+@media (max-width: 599px) {
+  .resultado .su-race-row { grid-template-columns: 20px minmax(0, 8.5rem) minmax(0, 1fr); gap: 8px; }
+  .resultado .su-race-name { font-size: 13px; }
+  .resultado .su-race-bar { max-width: calc(100% - 5.5ch - 10px); }
+}

@@ -32,14 +32,70 @@ const carregarPlotly = () => plotly ??= new Promise((ok, erro) => {
   document.head.append(s);
 });
 
+// Ajustes de tela na hora de desenhar: as figuras (iguais às do Python) não mudam.
+const DIAS_CURTOS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+function paraTela(data, layout, estreita) {
+  const tipo = data[0]?.type;
+  // Meses no eixo de datas: o Plotly escreveria "Jan 2020" em inglês.
+  if (tipo === 'scatter' && layout.hovermode === 'x unified') layout.xaxis = { ...layout.xaxis, tickformat: '%m/%Y' };
+  if (!estreita) return [data, layout];
+  if (tipo === 'heatmap') {
+    // Os dois mapas um embaixo do outro, cada um com a largura toda; dias abreviados e horas de 6 em 6.
+    const horas = { tickvals: [0, 6, 12, 18, 23], tickfont: { size: 11 } };
+    const dias = { tickvals: data[0].y, ticktext: DIAS_CURTOS, tickfont: { size: 11 } };
+    layout = {
+      ...layout,
+      height: 620,
+      margin: { l: 40, r: 8, t: 30, b: 70 },
+      xaxis: { ...layout.xaxis, ...horas, domain: [0, 1], title: { text: '' } },
+      yaxis: { ...layout.yaxis, ...dias, domain: [0.56, 1] },
+      xaxis2: { ...layout.xaxis2, ...horas, domain: [0, 1], title: { text: '' } }, // "hora" já está na legenda da cor
+      yaxis2: { ...layout.yaxis2, ...dias, domain: [0, 0.44] },
+      annotations: layout.annotations.map((a, k) => ({ ...a, x: 0, xanchor: 'left', y: k ? 0.45 : 1.01 })),
+      coloraxis: { ...layout.coloraxis, colorbar: { ...layout.coloraxis.colorbar, orientation: 'h', x: 0.5, xanchor: 'center', y: -0.2, thickness: 10, title: { text: '% dos plays em cada hora', side: 'top', font: { size: 12 } } } },
+    };
+  } else if (tipo === 'scatterpolar') {
+    // Radar maior e rótulos que cabem: menos margem, nome curto da madrugada, poucos números no eixo.
+    data = data.map((t) => ({ ...t, theta: t.theta.map((x) => x.replace(' (00–05h59)', '').replace(' artistas', '').replace(' faixas', '')) }));
+    layout = {
+      ...layout,
+      height: 400,
+      margin: { l: 64, r: 72, t: 20, b: 20 },
+      polar: {
+        ...layout.polar,
+        radialaxis: { ...layout.polar.radialaxis, tickvals: [50, 100], tickfont: { size: 10, color: '#b3b3b3' } },
+        angularaxis: { ...layout.polar.angularaxis, tickfont: { size: 12 } },
+      },
+    };
+  } else if (tipo === 'scatter' && layout.hovermode !== 'x unified') {
+    // Rankings: o título do eixo cortava na borda; o "%" dos números já diz o que é.
+    // A legenda à direita ocupava metade da largura: vai para baixo, e o gráfico fica com a largura toda.
+    layout = {
+      ...layout,
+      height: 720,
+      margin: { l: 44, r: 12, t: 20, b: 40 },
+      yaxis: { ...layout.yaxis, title: { text: '' } },
+      legend: { ...layout.legend, orientation: 'h', x: 0, xanchor: 'left', y: -0.12, yanchor: 'top', font: { ...layout.legend.font, size: 13 } },
+      // Rótulo comprido na ponta some (o Plotly esconde o que não cabe): sem o que vem entre parênteses, com folga.
+      xaxis: { ...layout.xaxis, tickfont: { size: 12 }, range: [-0.3, 1.3], ticktext: layout.xaxis.ticktext.map((t) => t.replace(/\s*\(.*\)\s*$/, '')) },
+    };
+  } else if (tipo === 'bar') {
+    layout = { ...layout, xaxis: { ...layout.xaxis, title: { ...layout.xaxis.title, text: 'Participação nos plays (%)' }, tickfont: { size: 11 } } };
+  }
+  return [data, layout];
+}
+
 function Grafico({ figura, titulo }) {
   const alvo = useRef(null);
   const [falhou, setFalhou] = useState(false);
   useEffect(() => {
     let vivo = true;
     // Fundo transparente (o gráfico fica no vidro do cartão) e sem o título do Plotly: o <figcaption> já dá o nome.
-    const layout = { ...figura.layout, autosize: true, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', title: { text: '' }, margin: { ...figura.layout.margin, t: 24 } };
-    carregarPlotly().then((P) => vivo && P.newPlot(alvo.current, figura.data, layout, { responsive: true, displaylogo: false }))
+    const base = { ...figura.layout, autosize: true, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', title: { text: '' }, margin: { ...figura.layout.margin, t: 24 } };
+    const estreita = matchMedia('(max-width: 599px)').matches;
+    const [data, layout] = paraTela(figura.data, base, estreita);
+    // No celular a barra de ferramentas do Plotly cobria a legenda.
+    carregarPlotly().then((P) => vivo && P.newPlot(alvo.current, data, layout, { responsive: true, displaylogo: false, displayModeBar: estreita ? false : 'hover' }))
       .catch(() => vivo && setFalhou(true));
     return () => { vivo = false; window.Plotly?.purge(alvo.current); };
   }, [figura]);

@@ -7,7 +7,7 @@ const ACEITOS = /\.(zip|json)$/i;
 const TETO = 50 * 1048576;
 const tamanho = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(1).replace('.', ',')} MB` : `${Math.max(1, Math.round(b / 1024))} KB`);
 
-export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquivos, desabilitado, titulo = `Pessoa ${rotulo}` }) {
+export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquivos, desabilitado, titulo = `Pessoa ${rotulo}`, exemplo = rotulo === 'A' ? 'Ana' : 'Bia', extra = null }) {
   const entrada = useRef(null);
   const [arrastando, setArrastando] = useState(false);
   const [aviso, setAviso] = useState('');
@@ -28,9 +28,10 @@ export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquiv
       <div class="pessoa-topo">
         <span class=${`avatar ${cor}`} aria-hidden="true">${rotulo}</span>
         <div><h2 id=${`titulo-${rotulo}`}>${titulo}</h2>${(rotulo === 'A' || rotulo === 'B') && html`<small class="lado">Lado ${rotulo}</small>`}</div>
+        ${extra}
       </div>
       <label class="campo" for=${idNome}>Nome</label>
-      <input id=${idNome} class="entrada" value=${nome} placeholder=${rotulo === 'A' ? 'Ex.: Ana' : 'Ex.: Bia'}
+      <input id=${idNome} class="entrada" value=${nome} placeholder=${`Ex.: ${exemplo}`}
         onInput=${(e) => aoMudarNome(e.target.value)} disabled=${desabilitado} autocomplete="off" />
       <div class=${`soltar${arrastando ? ' sobre' : ''}${arquivos.length ? ' tem' : ''}`}
         onDragOver=${(e) => { e.preventDefault(); setArrastando(true); }}

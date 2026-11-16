@@ -89,12 +89,12 @@ export function campeoes(m) {
   return m.map((x, i) => (comparar(x, melhor) === 0 ? i : -1)).filter((i) => i >= 0);
 }
 
-// Maior cosseno (em % com 1 casa); empate: mais artistas em comum, depois os nomes em ordem.
+// Maior cosseno log1p (o mais estável no estudo com históricos reais), em % com 1 casa; empate: mais artistas em comum, depois os nomes em ordem.
 export function maisAfinada(contagens, nomes) {
   const pares = [];
   for (let i = 0; i < contagens.length; i++) {
     for (let j = i + 1; j < contagens.length; j++) {
-      const valor = arredondar((cosseno(ponderar(contagens[i]), ponderar(contagens[j])) ?? 0) * 100, 1);
+      const valor = arredondar((cosseno(ponderar(contagens[i], 'log1p'), ponderar(contagens[j], 'log1p')) ?? 0) * 100, 1);
       let comuns = 0;
       for (const k of contagens[i].keys()) if (contagens[j].has(k)) comuns++;
       pares.push({ par: [i, j], valor, comuns, nomes: [nomes[i], nomes[j]].sort(compararTexto) });

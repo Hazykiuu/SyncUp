@@ -89,7 +89,9 @@ export function campeoes(m) {
   return m.map((x, i) => (comparar(x, melhor) === 0 ? i : -1)).filter((i) => i >= 0);
 }
 
-// Maior cosseno log1p (o mais estável no estudo com históricos reais), em % com 1 casa; empate: mais artistas em comum, depois os nomes em ordem.
+// Maior cosseno log1p (o mais estável no estudo com históricos reais), em % com 1 casa; empate: mais artistas em comum,
+// depois os nomes em ordem. `menosAfinada` é a ponta oposta da mesma ordem (desempates invertidos).
+// `artistaComum`: o artista que mais une o par, pelo menor dos dois plays (500 x 1 não une; 80 x 80 une).
 export function maisAfinada(contagens, nomes) {
   const pares = [];
   for (let i = 0; i < contagens.length; i++) {
@@ -102,19 +104,96 @@ export function maisAfinada(contagens, nomes) {
   }
   pares.sort((a, b) => b.valor - a.valor || b.comuns - a.comuns || compararTexto(a.nomes[0], b.nomes[0]) || compararTexto(a.nomes[1], b.nomes[1]));
   const { par, valor, comuns } = pares[0];
-  return { par, valor, comuns };
+  const [ca, cb] = par.map((i) => contagens[i]);
+  let artistaComum = null, melhor = 0;
+  for (const [k, n] of ca) {
+    const juntos = Math.min(n, cb.get(k) ?? 0);
+    if (juntos > melhor || (juntos === melhor && juntos > 0 && compararTexto(k, artistaComum) < 0)) { artistaComum = k; melhor = juntos; }
+  }
+  const ultimo = pares[pares.length - 1];
+  return { par, valor, comuns, artistaComum, menosAfinada: { par: ultimo.par, valor: ultimo.valor, comuns: ultimo.comuns } };
+}
+
+/* ---------- Disputa e narrativa (adendo de 16/11) ---------- */
+const FOLGA = 1e-9; // 5% "exatos" não podem falhar por ponto flutuante
+
+// 'por-um-triz' (diferença ≤ 5%), 'massacre' (o dobro) ou null. Só com um único 1º e um 2º acima de zero.
+export function destaqueRodada(r) {
+  const unico = r.posicoes.filter((p) => p === 1).length === 1;
+  const primeiro = r.valores[r.posicoes.indexOf(1)];
+  const segundos = r.valores.filter((_, i) => r.posicoes[i] === 2);
+  if (!unico || !segundos.length || !(segundos[0] > 0)) return null;
+  const segundo = segundos[0];
+  if (r.menor) {
+    if ((segundo - primeiro) / segundo <= 0.05 + FOLGA) return 'por-um-triz';
+    return primeiro > 0 && segundo >= primeiro * 2 - FOLGA ? 'massacre' : null;
+  }
+  if ((primeiro - segundo) / primeiro <= 0.05 + FOLGA) return 'por-um-triz';
+  return primeiro >= segundo * 2 - FOLGA ? 'massacre' : null;
+}
+
+// Paciência: o último colocado, se for um só e pular mais de 60% das músicas ("Dedinho nervoso").
+export function alertaPaciencia(r, nomes) {
+  if (r.chave !== 'paciencia') return null;
+  const pior = Math.max(...r.valores);
+  const quem = r.valores.map((v, i) => (v === pior ? i : -1)).filter((i) => i >= 0);
+  return quem.length === 1 && pior > 60 ? { nome: nomes[quem[0]], valor: pior } : null;
+}
+
+// Título de classe do campeão único, pela primeira combinação de ouros que bater.
+const TITULOS = [
+  [['coruja', 'dia'], 'Insone Oficial'],
+  [['repeteco', 'fa'], 'Modo Obsessão'],
+  [['artistas', 'musicas'], 'Enciclopédia Musical'],
+  [['horas', 'plays'], 'Trator de Plays'],
+];
+export function tituloCampeao(b) {
+  if (b.campeoes.length !== 1) return null;
+  const c = b.campeoes[0];
+  const ouros = new Set(b.rodadas.filter((r) => r.posicoes[c] === 1).map((r) => r.chave));
+  return TITULOS.find(([chaves]) => chaves.every((k) => ouros.has(k)))?.[1] ?? 'Dono(a) do Aux';
+}
+
+// Campeão único que venceu por 1 ouro, ou empatado em ouros e decidido na prata.
+export function decididoNoDetalhe(b) {
+  if (b.campeoes.length !== 1) return false;
+  const c = b.lutadores[b.campeoes[0]].medalhas;
+  const vice = b.lutadores.filter((_, i) => i !== b.campeoes[0]).map((l) => l.medalhas)
+    .sort((x, y) => y.ouro - x.ouro || y.prata - x.prata || y.bronze - x.bronze)[0];
+  return c.ouro - vice.ouro === 1 || (c.ouro === vice.ouro && c.prata !== vice.prata);
+}
+
+const NOME_SELO = { 'por-um-triz': 'por um triz', massacre: 'massacre' };
+// Até 3 fatos da partida: o campeão, um selo (massacre antes de por um triz) e a dupla menos afinada.
+export function resenha(b, nomes) {
+  const e = (lista) => lista.join(lista.length > 2 ? ', ' : ' e ').replace(/, ([^,]*)$/, ' e $1');
+  const fatos = [b.campeoes.length === 1
+    ? `${nomes[b.campeoes[0]]} levou a batalha como ${b.titulo}.`
+    : `Empate no topo entre ${e(b.campeoes.map((i) => nomes[i]))}.`];
+  const selo = b.rodadas.find((r) => r.destaque === 'massacre') || b.rodadas.find((r) => r.destaque === 'por-um-triz');
+  if (selo) fatos.push(`${selo.titulo} foi ${NOME_SELO[selo.destaque]}: ${nomes[selo.posicoes.indexOf(1)]} venceu.`);
+  const [x, y] = b.menosAfinada.par;
+  fatos.push(`${nomes[x]} e ${nomes[y]} são os de gosto mais distante (${String(b.menosAfinada.valor).replace('.', ',')}%).`);
+  return fatos.join(' ');
 }
 
 // `lutadores`: [{ nome, numeros, contagens }] na ordem do formulário. Devolve o JSON da tela.
 export function montarBatalha(lutadores) {
   const { dentro, fora } = rodadas(lutadores);
   if (!dentro.length) throw new Error('Não há números suficientes para uma batalha neste período.');
+  const nomes = lutadores.map((l) => l.nome);
   const m = medalhas(dentro);
-  return {
+  const { menosAfinada, ...afinada } = maisAfinada(lutadores.map((l) => l.contagens), nomes);
+  const b = {
     lutadores: lutadores.map((l, i) => ({ nome: l.nome, cor: CORES[i], medalhas: m[i] })),
-    rodadas: dentro,
+    rodadas: dentro.map((r) => ({ ...r, destaque: destaqueRodada(r), alerta: alertaPaciencia(r, nomes) })),
     fora,
     campeoes: campeoes(m),
-    afinada: maisAfinada(lutadores.map((l) => l.contagens), lutadores.map((l) => l.nome)),
+    afinada,
+    menosAfinada,
   };
+  b.titulo = tituloCampeao(b);
+  b.detalhe = decididoNoDetalhe(b);
+  b.resenha = resenha(b, nomes);
+  return b;
 }

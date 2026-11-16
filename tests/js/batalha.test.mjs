@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import {
-  arredondar, campeoes, CORES, janelaComum, maisAfinada, medalhas, montarBatalha, numerosDoLutador, posicoes,
+  alertaPaciencia, arredondar, campeoes, CORES, decididoNoDetalhe, destaqueRodada, janelaComum, maisAfinada, medalhas, montarBatalha,
+  numerosDoLutador, posicoes, tituloCampeao,
   recortar, rodadas, validarNomes,
 } from '../../site/app/js/batalha.js';
 
@@ -160,4 +161,83 @@ test('as 6 cores dos lutadores têm contraste no fundo escuro e com texto preto'
     assert.ok(contraste(cor, '#121212') >= 4.5, `${cor} sobre #121212: ${contraste(cor, '#121212').toFixed(2)}`);
     assert.ok(contraste('#000000', cor) >= 4.5, `#000 sobre ${cor}: ${contraste('#000000', cor).toFixed(2)}`);
   }
+});
+
+/* ---------- Adendo: disputa e narrativa ---------- */
+const r = (valores, menor = false, chave = 'horas') => ({ chave, valores, posicoes: posicoes(valores, menor), menor });
+
+test('destaqueRodada: por um triz com 5% exatos, nada com 6%', () => {
+  assert.equal(destaqueRodada(r([100, 95, 10])), 'por-um-triz');
+  assert.equal(destaqueRodada(r([100, 94, 10])), null);
+});
+
+test('destaqueRodada: por um triz invertido na Paciência', () => {
+  assert.equal(destaqueRodada(r([19.0, 20.0, 40], true, 'paciencia')), 'por-um-triz');
+});
+
+test('destaqueRodada: massacre com 2x exatos; nada com 2º zerado ou empate no topo', () => {
+  assert.equal(destaqueRodada(r([200, 100, 50])), 'massacre');
+  assert.equal(destaqueRodada(r([10, 4.9, 1], true, 'paciencia')), 'massacre');
+  assert.equal(destaqueRodada(r([100, 0, 0])), null);
+  assert.equal(destaqueRodada(r([100, 100, 50])), null);
+});
+
+test('alertaPaciencia: último único acima de 60%', () => {
+  const nomes = ['Ana', 'Bia', 'Caio'];
+  assert.deepEqual(alertaPaciencia(r([10, 20, 60.1], true, 'paciencia'), nomes), { nome: 'Caio', valor: 60.1 });
+  assert.equal(alertaPaciencia(r([10, 20, 60.0], true, 'paciencia'), nomes), null);
+  assert.equal(alertaPaciencia(r([10, 70, 70], true, 'paciencia'), nomes), null);
+  assert.equal(alertaPaciencia(r([10, 20, 70], false, 'horas'), nomes), null);
+});
+
+// Batalha mínima: o lutador 0 vence as rodadas pedidas; o 1 vence o resto (para ter um único campeão use `extra`).
+function batalhaCom(ganhas, extra = {}) {
+  const todas = ['horas', 'plays', 'artistas', 'musicas', 'sequencia', 'dia', 'coruja', 'repeteco', 'fa', 'paciencia'];
+  const rodadasB = todas.map((chave) => ({ chave, posicoes: ganhas.includes(chave) ? [1, 2, 3] : [3, 2, 1] }));
+  return { rodadas: rodadasB, campeoes: [0], ...extra };
+}
+
+test('tituloCampeao: as combinações, a ordem e o Dono(a) do Aux', () => {
+  assert.equal(tituloCampeao(batalhaCom(['coruja', 'dia'])), 'Insone Oficial');
+  assert.equal(tituloCampeao(batalhaCom(['repeteco', 'fa'])), 'Modo Obsessão');
+  assert.equal(tituloCampeao(batalhaCom(['artistas', 'musicas'])), 'Enciclopédia Musical');
+  assert.equal(tituloCampeao(batalhaCom(['horas', 'plays'])), 'Trator de Plays');
+  assert.equal(tituloCampeao(batalhaCom(['coruja', 'dia', 'repeteco', 'fa', 'artistas', 'musicas', 'horas', 'plays'])), 'Insone Oficial');
+  assert.equal(tituloCampeao(batalhaCom(['horas', 'coruja'])), 'Dono(a) do Aux');
+  assert.equal(tituloCampeao(batalhaCom(['horas'], { campeoes: [0, 1] })), null);
+});
+
+test('maisAfinada: artista-cola pelo menor dos dois e a dupla menos afinada', () => {
+  const m = (obj) => new Map(Object.entries(obj));
+  const r1 = maisAfinada([m({ estrela: 500, cola: 80 }), m({ estrela: 1, cola: 80 }), m({ z: 3 })], ['Ana', 'Bia', 'Caio']);
+  assert.equal(r1.artistaComum, 'cola');
+  assert.ok(r1.menosAfinada.par.includes(2));
+  const r2 = maisAfinada([m({ a: 1 }), m({ b: 1 }), m({ c: 1 })], ['Ana', 'Bia', 'Caio']);
+  assert.equal(r2.artistaComum, null);
+  // Todos com 0%: menos afinada = menos artistas em comum (0), depois os nomes do fim da ordem.
+  assert.deepEqual(r2.menosAfinada.par, [1, 2]);
+});
+
+test('decididoNoDetalhe: 1 ouro de diferença, ou ouro empatado e prata decide', () => {
+  const b = (m, campeoes = [0]) => ({ campeoes, lutadores: m.map((medalhas) => ({ medalhas })) });
+  assert.equal(decididoNoDetalhe(b([{ ouro: 3, prata: 0, bronze: 0 }, { ouro: 2, prata: 5, bronze: 0 }, { ouro: 0, prata: 0, bronze: 0 }])), true);
+  assert.equal(decididoNoDetalhe(b([{ ouro: 2, prata: 2, bronze: 0 }, { ouro: 2, prata: 1, bronze: 9 }, { ouro: 0, prata: 0, bronze: 0 }])), true);
+  assert.equal(decididoNoDetalhe(b([{ ouro: 4, prata: 0, bronze: 0 }, { ouro: 2, prata: 0, bronze: 0 }, { ouro: 0, prata: 0, bronze: 0 }])), false);
+  assert.equal(decididoNoDetalhe(b([{ ouro: 2, prata: 1, bronze: 2 }, { ouro: 2, prata: 1, bronze: 1 }, { ouro: 0, prata: 0, bronze: 0 }])), false);
+  assert.equal(decididoNoDetalhe(b([{ ouro: 2, prata: 0, bronze: 0 }, { ouro: 2, prata: 0, bronze: 0 }], [0, 1])), false);
+});
+
+test('montarBatalha traz selos, título, detalhe e resenha', () => {
+  const m = (obj) => new Map(Object.entries(obj));
+  const b = montarBatalha([
+    { ...lutador('Ana', { horas: 50, plays: 900 }), contagens: m({ x: 5, y: 1 }) },
+    { ...lutador('Bia', { horas: 20 }), contagens: m({ x: 5, y: 1 }) },
+    { ...lutador('Caio', { horas: 30, plays: 50 }), contagens: m({ z: 3 }) },
+  ]);
+  assert.equal(b.rodadas.find((x) => x.chave === 'horas').destaque, null); // 50 h x 30 h: nem triz nem 2x
+  assert.equal(b.rodadas.find((x) => x.chave === 'plays').destaque, 'massacre'); // 900 x 100
+  assert.equal(b.titulo, 'Trator de Plays');
+  assert.equal(b.afinada.artistaComum, 'x');
+  assert.match(b.resenha, /Ana/);
+  assert.match(b.resenha, /Trator de Plays/);
 });

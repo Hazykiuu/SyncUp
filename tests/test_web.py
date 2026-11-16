@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 import zipfile
@@ -37,6 +38,21 @@ def test_empacotamento_gera_so_as_duas_demos(tmp_path: Path) -> None:
         with zipfile.ZipFile(pasta / demo) as pacote:
             assert any(n.endswith('.json') for n in pacote.namelist())
     assert not (pasta / 'syncup-core.zip').exists()  # sem Python no navegador desde a 1.11
+
+
+def test_nucleo_css_tem_regra_para_cada_classe_su_do_app() -> None:
+    # O nucleo.css é um recorte do styles.css (app para PC): nem classe usada sem regra, nem regra sobrando.
+    app = RAIZ / 'site' / 'app'
+    codigo = [*app.rglob('*.js'), *app.glob('*.html')]
+    usadas = {
+        c for arq in codigo for c in re.findall(r'\bsu-[a-z0-9-]+', arq.read_text(encoding='utf-8'))
+    }
+    com_regra = set(
+        re.findall(r'\.(su-[a-z0-9-]+)', (app / 'nucleo.css').read_text(encoding='utf-8'))
+    )
+    assert 'su-race' in usadas and 'su-ripple' in usadas  # a busca enxerga o corrida.js
+    assert sorted(usadas - com_regra) == []
+    assert sorted(com_regra - usadas) == []
 
 
 def test_ponte_nao_importa_gradio_nem_rede() -> None:

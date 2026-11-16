@@ -1,6 +1,4 @@
 /* App do SyncUp: usa os tokens e o vidro do site (estilo.css); só o que é próprio do app fica aqui. */
-body { background: var(--bg) !important; }
-footer { opacity: 1; }
 
 /* Tokens do app. Espaço em escala de 4 px; raios aninhados (o de dentro = o de fora − o padding). */
 :root {

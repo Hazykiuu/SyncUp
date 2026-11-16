@@ -1,5 +1,5 @@
 /* Stories do Wrapped no app web: "Capa Viva" (fundo) + "Liquid Glass" (vidro por cima).
-   O componentes.css (Gradio) fica intacto; aqui só o player novo e os slides refeitos. */
+   O nucleo.css traz a moldura dos stories (su-stories, su-story); aqui só o player novo e os slides refeitos. */
 
 /* 1. Tokens (cores, vidro e véu ficam no estilo.css) */
 :root {

@@ -8,8 +8,8 @@
 <meta name="description" content="Compare históricos do Spotify direto no navegador. O histórico não sai do seu aparelho.">
 <meta name="theme-color" content="#121212">
 <link rel="preload" href="../assets/Figtree.ttf" as="font" type="font/ttf" crossorigin>
-<!-- Ordem: componentes do núcleo (Blend, stories) → estilo do site → ajustes do app. -->
-<link rel="stylesheet" href="componentes.css">
+<!-- Ordem: núcleo (listas, corrida, stories) → estilo do site → ajustes do app. -->
+<link rel="stylesheet" href="nucleo.css">
 <link rel="stylesheet" href="../estilo.css">
 <link rel="stylesheet" href="app.css">
 <link rel="stylesheet" href="stories.css">
@@ -41,7 +41,6 @@ try {
 <div class="bolhas fixas" aria-hidden="true"><i></i><i></i><i></i></div>
 <div id="app"><p class="shell" style="padding-top:6rem">Carregando o SyncUp…</p></div>
 <noscript><p class="shell">O SyncUp precisa de JavaScript para rodar no navegador.</p></noscript>
-<script src="componentes.js"></script>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>

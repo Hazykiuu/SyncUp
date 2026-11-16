@@ -129,7 +129,7 @@ python -m ruff format --check .
 
 O CI roda os mesmos comandos no GitHub, em Python 3.10 e 3.12, mais `node --test tests/js/*.test.mjs` para o app do navegador. O cache Parquet é opcional: `python -m pip install -r requirements-parquet.txt`.
 
-**App do navegador (`site/`) num servidor local:** rode antes `python tools/empacotar_web.py`. Ele gera em `site/app/` os arquivos que não ficam no Git (`componentes.css`, `componentes.js` e as demos `demo-wrapped.zip` e `demo-bruno.zip`); sem eles o visual das listas e o "Testar com dados fictícios" não funcionam. Depois de mexer em `styles.css` ou `syncup.js`, rode de novo.
+**App do navegador (`site/`) num servidor local:** rode antes `python tools/empacotar_web.py`. Ele gera em `site/app/` as demos `demo-wrapped.zip` e `demo-bruno.zip`, que não ficam no Git; sem elas o "Testar com dados fictícios" não funciona.
 
 | Módulo | Papel |
 |---|---|

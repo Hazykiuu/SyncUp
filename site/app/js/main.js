@@ -1,6 +1,7 @@
 // App do SyncUp no navegador: casca (topo, modos) e a tela Dupla.
 import { html, render, useEffect, useRef, useState } from 'preact-htm';
 import { chegarPouco } from './chegada.js';
+import { ligarOndas } from './corrida.js';
 import { audioCtx, destravarSom, pausarSom, silenciado } from './som.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
@@ -160,4 +161,5 @@ const MODOS = [
 document.addEventListener('touchstart', () => {}, { passive: true });
 const raiz = document.getElementById('app');
 raiz.replaceChildren();
+ligarOndas();
 render(html`<${App} />`, raiz);

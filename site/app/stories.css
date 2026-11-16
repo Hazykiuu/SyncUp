@@ -296,3 +296,100 @@
   .st-veu { background: rgba(0, 0, 0, .85); }
 }
 @media (prefers-contrast: more) { .st-vidro, .vidro-ctrl { border: 2px solid #fff; } .st-veu { background: rgba(0, 0, 0, .85); } }
+
+/* 7. Batalha (stories/batalha.js): cada lutador tem a sua cor (--lut); texto sobre a cor é preto.
+   Selos na tipografia do Kicker, sem brilho; pódio sobe com desaceleração firme, sem mola nem quique. */
+.sb { --sai-bt: cubic-bezier(.22, 1, .36, 1); }
+.sb-cabeca { display: flex; align-items: center; gap: 2cqw; min-width: 0; }
+.sb-selo { flex: none; padding: .5cqw 2cqw; border: 1px solid rgba(255, 255, 255, .4); border-radius: 99px; font-size: 2.5cqw; font-weight: 800;
+  letter-spacing: .14em; text-transform: uppercase; color: #fff; white-space: nowrap; }
+.sb-vence { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
+.sb-valor { color: rgba(255, 255, 255, .8) !important; } .sb-valor b { font-size: 9cqw; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; }
+.sb-pos { color: rgba(255, 255, 255, .7); font-weight: 800; font-variant-numeric: tabular-nums; }
+.sb-nome { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.sb-rodape { font-size: 3.1cqw; color: rgba(255, 255, 255, .78) !important; } .sb-rodape .sb-selo { margin-right: 1.4cqw; }
+.sb-avatar { display: grid; place-items: center; flex: none; width: 14cqw; aspect-ratio: 1; border-radius: 50%; background: var(--lut); color: #000;
+  font-size: 6cqw; font-weight: 900; box-shadow: 0 2cqw 6cqw rgba(0, 0, 0, .35); }
+.sb-avatar.mini { width: 8cqw; font-size: 3.6cqw; box-shadow: none; }
+.sb-elenco { display: flex; flex-wrap: wrap; gap: 3cqw 2cqw; }
+.sb-elenco > span { display: flex; flex-direction: column; align-items: center; gap: 1.4cqw; width: 26cqw; min-width: 0; }
+.sb-elenco b { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 3.6cqw; }
+.sb-dupla { display: flex; } .sb-dupla .sb-avatar { width: 17cqw; font-size: 7.4cqw; } .sb-dupla .sb-avatar + .sb-avatar { margin-left: -4cqw; }
+.sb-unidos { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; } .sb-unidos b { font-weight: 900; }
+.sb-quadro { list-style: none; margin: 1cqw 0 0; padding: 0; display: grid; gap: 1.6cqw; }
+.sb-quadro li { display: grid; grid-template-columns: 8cqw minmax(0, 1fr) auto; align-items: center; gap: 2.4cqw; min-height: 9cqw; font-size: 3.8cqw; }
+.sb-medalhas { display: inline-flex; gap: 2.4cqw; align-items: center; }
+.sb-med { display: inline-flex; align-items: center; gap: 1cqw; font-weight: 800; font-variant-numeric: tabular-nums; }
+.sb-med i { width: 3.2cqw; height: 3.2cqw; border-radius: 50%; box-shadow: inset 0 -.4cqw 0 rgba(0, 0, 0, .25); }
+.sb-med.ouro i { background: #f5c542; } .sb-med.prata i { background: #c9d1d9; } .sb-med.bronze i { background: #d08b4f; }
+.sb-podio { list-style: none; margin: auto 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 2.4cqw; }
+.sb-podio li { display: flex; flex-direction: column; align-items: center; gap: 1.4cqw; min-width: 0; text-align: center; }
+.sb-podio .sb-avatar { width: 13cqw; font-size: 5.6cqw; } .sb-podio .p1 .sb-avatar { width: 17cqw; font-size: 7.4cqw; }
+.sb-podio .sb-nome { max-width: 100%; font-size: 4cqw; font-weight: 800; }
+.sb-titulo { font-size: 2.4cqw; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #fff; }
+.sb-bloco { display: grid; place-items: start center; width: 100%; height: 18cqw; padding-top: 2cqw; border-radius: 3cqw 3cqw 1cqw 1cqw; transform-origin: bottom;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--lut) 48%, transparent), color-mix(in srgb, var(--lut) 12%, transparent));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(255, 255, 255, .16); }
+.sb-podio .p1 .sb-bloco { height: 28cqw; } .sb-podio .p2 .sb-bloco { height: 22cqw; }
+.sb-bloco span { font-size: 6cqw; font-weight: 900; }
+.sb-empate { display: grid; gap: 2cqw; }
+.sb-empate > span { display: flex; align-items: center; gap: 2.4cqw; min-width: 0; }
+.sb-empate b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 5cqw; font-weight: 900; }
+@keyframes sb-cresce { from { transform: scaleY(.06); opacity: .4; } }
+.st-slot.ativo .sb-podio .sb-bloco { animation: sb-cresce .6s var(--sai-bt) both; animation-delay: calc(250ms + var(--k, 0) * 150ms); }
+.st-slot.ativo .sb-podio li > :not(.sb-bloco) { animation: st-entra .45s var(--sai-bt) both; animation-delay: calc(480ms + var(--k, 0) * 150ms); }
+/* Desenhos das rodadas: um por rodada (stories/batalha.js). */
+.sb-linhas { list-style: none; margin: 2cqw 0; padding: 0; display: grid; gap: 3cqw; }
+.sb-linhas li { display: grid; grid-template-columns: 7cqw 18cqw minmax(0, 1fr) auto; align-items: center; gap: 2cqw; min-height: 10cqw; font-size: 3.8cqw; }
+.sb-linhas em, .sb-grade em, .sb-estante em { font-style: normal; font-variant-numeric: tabular-nums; color: rgba(255, 255, 255, .85); }
+.sb-linhas em { text-align: right; padding-left: 1cqw; }
+.sb-linhas .lider .sb-nome, .sb-linhas .lider em, .sb-grade .lider .sb-nome, .sb-grade .lider em, .sb-estante .lider em { color: #fff; font-weight: 800; }
+.sb-pista { position: relative; height: 5cqw; overflow: hidden; }
+.sb-pista::before { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 2px; background: repeating-linear-gradient(#fff 0 .8cqw, transparent .8cqw 1.6cqw); opacity: .6; }
+.sb-corredor { position: absolute; inset: 0 auto 0 0; width: calc(var(--f) * (100% - 3.2cqw) + 3.2cqw);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--lut) 60%, transparent)) left center / 100% 2px no-repeat; }
+.sb-corredor::after { content: ''; position: absolute; right: 0; top: 50%; width: 3.2cqw; aspect-ratio: 1; border-radius: 50%; background: var(--lut); transform: translateY(-50%); }
+.sb-pontos, .sb-corrente, .sb-casas, .sb-tally { display: flex; align-items: center; min-width: 0; }
+/* Os pontos encolhem no espaço que sobra: com números longos não invadem a coluna do valor. */
+.sb-pontos { gap: .5cqw; overflow: hidden; } .sb-pontos i { flex: 1 1 0; min-width: 0; max-width: 1.9cqw; aspect-ratio: 1; border-radius: 50%; background: rgba(255, 255, 255, .14); }
+.sb-corrente { gap: .5cqw; } .sb-corrente i { flex: 1; max-width: 2.6cqw; aspect-ratio: 1; border-radius: .6cqw; background: rgba(255, 255, 255, .12); }
+.sb-pontos .aceso, .sb-corrente .aceso { background: var(--lut); }
+.sb-casas { gap: .6cqw; } .sb-casas i { flex: 1; max-width: 2.8cqw; height: 4.4cqw; border-radius: .5cqw; border: 1px solid rgba(255, 255, 255, .3); }
+.sb-casas .pulou { background: var(--lut); border-color: var(--lut); }
+.sb-tally { gap: 2cqw; flex-wrap: wrap; row-gap: 1cqw; }
+.sb-tally i { position: relative; display: inline-flex; gap: .9cqw; height: 5cqw; }
+.sb-tally b { width: .55cqw; border-radius: 1px; background: var(--lut); }
+.sb-tally s { position: absolute; left: -.6cqw; right: -.6cqw; top: 50%; height: .55cqw; background: #fff; transform: rotate(-24deg); }
+.sb-grade { list-style: none; margin: 1cqw 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6cqw 2cqw; margin-block: 3cqw; }
+.sb-grade li { display: flex; flex-direction: column; align-items: center; gap: 1.2cqw; min-width: 0; text-align: center; font-size: 3.6cqw; }
+.sb-grade .sb-nome { max-width: 100%; }
+.sb-glifo { width: min(23cqw, 100%); height: auto; overflow: visible; }
+.sb-arco-fundo { fill: none; stroke: rgba(255, 255, 255, .14); stroke-width: 4; }
+.sb-arco { fill: none; stroke: var(--lut); stroke-width: 4; stroke-linecap: round; transform: rotate(-90deg); transform-origin: center; transform-box: fill-box; }
+.sb-fa .sb-arco, .sb-fa .sb-arco-fundo { stroke-width: 7; }
+.sb-vinil { fill: #0d0d0d; stroke: rgba(255, 255, 255, .12); stroke-width: .6; } .sb-sulco { fill: none; stroke: rgba(255, 255, 255, .08); stroke-width: .6; }
+.sb-selo-disco { fill: var(--lut); }
+.sb-hora { stroke: rgba(255, 255, 255, .16); stroke-width: 2.2; stroke-linecap: round; } .sb-hora.acesa { stroke: var(--lut); }
+.sb-lua { fill: rgba(255, 255, 255, .1); } .sb-lua.acesa { fill: var(--lut); }
+.sb-estante { list-style: none; margin: 1cqw 0 0; padding: 0; display: flex; align-items: flex-end; gap: 2.4cqw; height: 62cqw; margin-block: 2cqw; }
+.sb-estante li { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 1cqw; min-width: 0; height: 100%; font-size: 3cqw; }
+.sb-estante .sb-nome { max-width: 100%; }
+.sb-lombada { width: 100%; height: calc(var(--f) * 48cqw); border-radius: 1cqw 1cqw .4cqw .4cqw; transform-origin: bottom;
+  background: linear-gradient(180deg, var(--lut), color-mix(in srgb, var(--lut) 55%, #000)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5); }
+@keyframes sb-traco { from { stroke-dashoffset: var(--f); } }
+@keyframes sb-pop { from { opacity: 0; transform: scale(.6); } }
+@keyframes sb-corre { from { transform: translateX(-100%); } }
+@keyframes sb-acende { from { opacity: .2; } }
+@media (prefers-reduced-motion: no-preference) {
+  .st-slot.ativo .sb-arco { animation: sb-traco .9s var(--sai-bt) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo)); }
+  .st-slot.ativo .lider .sb-arco { animation-duration: 1.05s; }
+  .st-slot.ativo .sb-corredor { animation: sb-corre .9s var(--sai-bt) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo)); }
+  .st-slot.ativo .lider .sb-corredor { animation-duration: 1.05s; }
+  .st-slot.ativo .sb-pontos .aceso, .st-slot.ativo .sb-corrente .aceso, .st-slot.ativo .sb-casas .pulou, .st-slot.ativo .sb-tally i {
+    animation: sb-pop .3s var(--sai-bt) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo) + var(--n, 0) * 25ms); }
+  .st-slot.ativo .sb-hora.acesa { animation: sb-acende .3s var(--sai-bt) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo) + var(--n, 0) * 25ms); }
+  .st-slot.ativo .sb-lombada { animation: st-cresce-y .8s var(--sai-bt) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo)); }
+  .st-slot.ativo .lider .sb-lombada { animation-duration: .95s; }
+}
+@media (prefers-reduced-motion: reduce) { .st-slot.ativo .sb-podio .sb-bloco, .st-slot.ativo .sb-podio li > * { animation: none; } }
+@media (forced-colors: active) { .sb-pontos i, .sb-corrente i, .sb-casas i, .sb-tally b, .sb-lombada, .sb-corredor::after, .sb-arco, .sb-hora, .sb-lua { forced-color-adjust: none; } }

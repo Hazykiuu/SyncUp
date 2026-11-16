@@ -18,9 +18,9 @@ Compare o seu histórico do Spotify com o dos amigos e veja com quem você está
 
 1. Peça o seu histórico ao Spotify (veja o passo 4, abaixo).
 2. Abra <https://hazykiuu.github.io/SyncUp/app/> no computador ou no celular.
-3. Envie o ZIP: na **Dupla**, o de duas pessoas; no **Wrapped**, o seu. Não precisa extrair.
+3. Envie o ZIP: na **Dupla**, o de duas pessoas; no **Wrapped**, o seu; na **Batalha**, o de 3 a 6 pessoas. Não precisa extrair.
 
-Sem histórico ainda? Use **"Testar com dados fictícios"**. O Match e o Grupo, por enquanto, só existem no app para PC.
+Sem histórico ainda? Use **"Testar com dados fictícios"**. O Match e o Grupo (matriz de compatibilidade), por enquanto, só existem no app para PC.
 
 ## Como rodar o SyncUp na sua máquina
 
@@ -97,6 +97,10 @@ Fontes aceitas, que podem ser misturadas:
 
 Envie o seu histórico completo e veja, em stories com as capas e trechos das suas músicas, o artista e a música da vida, os anos, os recordes, o relógio musical e o seu arquétipo de escuta. No fim, um pôster em PNG 1080×1920 para postar.
 
+### Batalha: de 3 a 6 pessoas (navegador)
+
+Um histórico por pessoa, no mesmo período. Cada número vira uma rodada (mais horas, mais artistas, coruja, repeteco, menos músicas puladas…), com ouro, prata e bronze. Os stories mostram cada rodada com um desenho próprio, a dupla mais afinada, o quadro de medalhas e, por último, o pódio. No fim, um pôster em PNG para postar. É uma brincadeira com os números do período: não mede gosto nem personalidade.
+
 ### Grupo: de 3 a 6 pessoas (app para PC)
 
 Um arquivo por pessoa. Mostra uma matriz de compatibilidade de todos com todos, os perfis e os arquétipos. As regras técnicas ficam em "Detalhes técnicos".
@@ -129,7 +133,7 @@ python -m ruff format --check .
 
 O CI roda os mesmos comandos no GitHub, em Python 3.10 e 3.12, mais `node --test tests/js/*.test.mjs` para o app do navegador. O cache Parquet é opcional: `python -m pip install -r requirements-parquet.txt`.
 
-**App do navegador (`site/`) num servidor local:** rode antes `python tools/empacotar_web.py`. Ele gera em `site/app/` as demos `demo-wrapped.zip` e `demo-bruno.zip`, que não ficam no Git; sem elas o "Testar com dados fictícios" não funciona.
+**App do navegador (`site/`) num servidor local:** rode antes `python tools/empacotar_web.py`. Ele gera em `site/app/` as demos `demo-wrapped.zip`, `demo-bruno.zip`, `demo-carla.zip` e `demo-davi.zip`, que não ficam no Git; sem elas o "Testar com dados fictícios" não funciona.
 
 | Módulo | Papel |
 |---|---|

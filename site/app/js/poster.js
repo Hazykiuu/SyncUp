@@ -56,11 +56,11 @@ function capa(ctx, img, nome, x, y, lado, raio) {
 
 // Topo dos pôsteres: as 4 barras do SyncUp, em degradê verde → violeta como no site, e o período.
 const BARRAS = ['#1ed760', '#55cc94', '#8dc2cb', '#c4b7ff']; // = color-mix do estilo.css (0, 33, 67 e 100%)
-function topo(ctx, d) {
+function topo(ctx, d, direita = `${mesAno(d.inicio)} → ${mesAno(d.fim)}`) {
   [0.55, 1, 0.4, 0.75].forEach((h, k) => { ctx.fillStyle = BARRAS[k]; retangulo(ctx, M + k * 16, 150 - 48 * h, 10, 48 * h, 5); ctx.fill(); });
   ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 48); ctx.fillText('SyncUp', M + 78, 150);
   ctx.font = FONTE(400, 34); ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.textAlign = 'right';
-  ctx.fillText(`${mesAno(d.inicio)} → ${mesAno(d.fim)}`, L - M, 148); ctx.textAlign = 'left';
+  ctx.fillText(direita, L - M, 148); ctx.textAlign = 'left';
 }
 
 // Pé dos pôsteres: o convite em duas linhas discretas, separadas por um fio. A ênfase é a pessoa, não o site.
@@ -226,6 +226,110 @@ export async function desenharPosterDupla(d) {
   ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.font = FONTE(400, 30);
   ctx.fillText('Mede a escuta neste período, não afinidade entre pessoas.', M, A - 270);
 
+  pe(ctx);
+
+  return new Promise((ok, falha) => canvas.toBlob((blob) => (blob ? ok(blob) : falha(new Error('Não deu para gerar a imagem.'))), 'image/png'));
+}
+
+// Pôster da Batalha (o pódio, último story): campeão, título de classe, pódio de vidro e, no rodapé, a dupla mais
+// afinada numa linha própria, com respiro antes do convite (mesma sobriedade do pôster da Dupla).
+const MEDALHA = { ouro: '#f5c542', prata: '#c9d1d9', bronze: '#d08b4f' };
+const rgba = (hex, a) => `rgba(${[1, 3, 5].map((k) => parseInt(hex.slice(k, k + 2), 16)).join(',')},${a})`;
+export async function desenharPosterBatalha(b) {
+  await Promise.all([FONTE(900, 64), FONTE(800, 36), FONTE(400, 36)].map((f) => document.fonts.load(f).catch(() => null)));
+  const canvas = Object.assign(document.createElement('canvas'), { width: L, height: A });
+  const ctx = canvas.getContext('2d');
+  const inicial = (nome) => ([...nome.trim()][0] || '?').toUpperCase();
+  const ordem = b.lutadores.map((_, i) => i).sort((i, j) => {
+    const x = b.lutadores[i].medalhas, y = b.lutadores[j].medalhas;
+    return y.ouro - x.ouro || y.prata - x.prata || y.bronze - x.bronze || i - j;
+  });
+  const campeoes = b.campeoes.map((k) => b.lutadores[k]);
+
+  // Fundo: a cor de quem levou no alto, a do 2º embaixo, e o véu (como os stories).
+  ctx.fillStyle = '#0b0b0c'; ctx.fillRect(0, 0, L, A);
+  for (const [cx, cy, raio, cor] of [[L * 0.1, 0, A * 0.8, rgba(campeoes[0].cor, 0.7)], [L, A, A * 0.7, rgba(b.lutadores[ordem[1]].cor, 0.45)]]) {
+    const m = ctx.createRadialGradient(cx, cy, 0, cx, cy, raio);
+    m.addColorStop(0, cor); m.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = m; ctx.fillRect(0, 0, L, A);
+  }
+  const veu = ctx.createLinearGradient(0, 0, 0, A * 0.7);
+  veu.addColorStop(0, 'rgba(0,0,0,.5)'); veu.addColorStop(1, 'rgba(0,0,0,.75)');
+  ctx.fillStyle = veu; ctx.fillRect(0, 0, L, A);
+  topo(ctx, null, 'Batalha');
+
+  const kicker = (texto, y) => {
+    ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.font = FONTE(800, 30);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '4px';
+    ctx.fillText(texto.toUpperCase(), M, y);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+  };
+  const avatar = (l, cx, cy, r) => {
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.fillStyle = l.cor; ctx.fill();
+    ctx.fillStyle = '#000'; ctx.font = FONTE(900, r * 0.95); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(inicial(l.nome), cx, cy + r * 0.04); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  };
+  const medalhas = (m, x, y) => {
+    const itens = ['ouro', 'prata', 'bronze'].filter((t) => m[t] > 0);
+    ctx.font = FONTE(800, 34);
+    const larg = itens.reduce((s, t) => s + 40 + ctx.measureText(String(m[t])).width + 24, 0) - 24;
+    let xi = x - larg / 2;
+    for (const t of itens) {
+      ctx.beginPath(); ctx.arc(xi + 14, y - 12, 14, 0, 2 * Math.PI); ctx.fillStyle = MEDALHA[t]; ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.fillText(String(m[t]), xi + 40, y);
+      xi += 40 + ctx.measureText(String(m[t])).width + 24;
+    }
+  };
+
+  const geral = campeoes.length >= 3;
+  kicker(campeoes.length === 1 ? 'Quem levou' : campeoes.length === 2 ? 'Empate no topo' : 'Empate geral', 330);
+  if (!geral) {
+    // O nome encolhe até 80 px; dois campeões que não cabem numa linha vão um em cada linha.
+    let px = 130;
+    const nome = campeoes.map((l) => l.nome).join(' e ');
+    ctx.font = FONTE(900, px);
+    while (px > 80 && ctx.measureText(nome).width > UTIL) ctx.font = FONTE(900, (px -= 4));
+    const linhas = ctx.measureText(nome).width > UTIL && campeoes.length === 2 ? [`${campeoes[0].nome} e`, campeoes[1].nome] : [nome];
+    ctx.fillStyle = '#fff';
+    linhas.forEach((texto, k) => ctx.fillText(cortar(ctx, texto, UTIL), M, 330 + px + 20 + k * (px + 10)));
+    if (b.titulo) kicker(b.titulo, 330 + px + 90);
+    // Pódio: 2º, 1º, 3º; quem empata no placar fica à mesma altura.
+    const top = ordem.slice(0, 3);
+    const igual = (x, y) => x.ouro === y.ouro && x.prata === y.prata && x.bronze === y.bronze;
+    const pos = top.map((k, n) => 1 + top.slice(0, n).filter((j) => !igual(b.lutadores[j].medalhas, b.lutadores[k].medalhas)).length);
+    const gap = 30, w = (UTIL - 2 * gap) / 3, base = 1420, altura = { 1: 420, 2: 320, 3: 240 };
+    [1, 0, 2].filter((n) => n < top.length).forEach((n, coluna) => {
+      const l = b.lutadores[top[n]], h = altura[pos[n]], x = M + coluna * (w + gap), y = base - h;
+      const g = ctx.createLinearGradient(0, y, 0, base);
+      g.addColorStop(0, rgba(l.cor, 0.55)); g.addColorStop(1, rgba(l.cor, 0.12));
+      retangulo(ctx, x, y, w, h, [36, 36, 12, 12]); ctx.fillStyle = g; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillRect(x + 30, y + 1, w - 60, 2);
+      ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 72); ctx.textAlign = 'center'; ctx.fillText(`${pos[n]}º`, x + w / 2, y + 100);
+      ctx.textAlign = 'left';
+      const r = pos[n] === 1 ? 84 : 66;
+      medalhas(l.medalhas, x + w / 2, y - 40);
+      ctx.font = FONTE(800, 40); ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.fillText(cortar(ctx, l.nome, w), x + w / 2, y - 100);
+      ctx.textAlign = 'left';
+      avatar(l, x + w / 2, y - 150 - r, r);
+    });
+  } else {
+    let y = 450;
+    for (const l of campeoes) {
+      avatar(l, M + 44, y - 16, 44);
+      ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 60); ctx.fillText(cortar(ctx, l.nome, UTIL - 130), M + 120, y + 4);
+      y += 130;
+    }
+    const m = campeoes[0].medalhas;
+    ctx.font = FONTE(400, 38); ctx.fillStyle = 'rgba(255,255,255,.85)';
+    ctx.fillText(`Todos com ${['ouro', 'prata', 'bronze'].filter((t) => m[t]).map((t) => `${m[t]} ${t}${m[t] === 1 ? '' : 's'}`).join(', ')}.`, M, y + 10);
+  }
+
+  // Rodapé: a dupla mais afinada numa linha própria, com respiro antes do convite.
+  const [nomeX, nomeY] = b.afinada.par.map((k) => b.lutadores[k].nome);
+  kicker('A dupla mais afinada', A - 360);
+  ctx.fillStyle = '#fff'; ctx.font = FONTE(800, 42);
+  ctx.fillText(cortar(ctx, `${nomeX} & ${nomeY} — ${fmtNum(b.afinada.valor, 1)}%`, UTIL), M, A - 300);
   pe(ctx);
 
   return new Promise((ok, falha) => canvas.toBlob((blob) => (blob ? ok(blob) : falha(new Error('Não deu para gerar a imagem.'))), 'image/png'));

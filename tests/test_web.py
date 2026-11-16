@@ -28,14 +28,16 @@ def zips(tmp_path_factory: pytest.TempPathFactory) -> tuple[str, str]:
     return str(a), str(b)
 
 
-def test_empacotamento_gera_so_as_duas_demos(tmp_path: Path) -> None:
+def test_empacotamento_gera_so_as_demos(tmp_path: Path) -> None:
     pasta = empacotar(tmp_path)
-    assert sorted(p.name for p in pasta.iterdir()) == ['demo-bruno.zip', 'demo-wrapped.zip']
-    for demo in (
-        'demo-wrapped.zip',
+    assert sorted(p.name for p in pasta.iterdir()) == [
         'demo-bruno.zip',
-    ):  # Ana e Bruno do "Testar com dados fictícios"
-        with zipfile.ZipFile(pasta / demo) as pacote:
+        'demo-carla.zip',
+        'demo-davi.zip',
+        'demo-wrapped.zip',
+    ]
+    for demo in pasta.iterdir():  # Ana, Bruno, Carla e Davi do "Testar com dados fictícios"
+        with zipfile.ZipFile(demo) as pacote:
             assert any(n.endswith('.json') for n in pacote.namelist())
     assert not (pasta / 'syncup-core.zip').exists()  # sem Python no navegador desde a 1.11
 

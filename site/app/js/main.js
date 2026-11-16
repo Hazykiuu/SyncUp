@@ -3,6 +3,7 @@ import { html, render, useEffect, useRef, useState } from 'preact-htm';
 import { chegarPouco } from './chegada.js';
 import { ligarOndas } from './corrida.js';
 import { audioCtx, destravarSom, pausarSom, silenciado } from './som.js';
+import { Batalha } from './batalha-tela.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { Resultado } from './resultado.js';
@@ -88,22 +89,28 @@ function Dupla() {
 // Clique do fader na troca de modo: um toque de 40 ms, bem baixo. Para o Wrapped sobe (sol, 1568 Hz);
 // para a Dupla desce (ré, 1175 Hz), uma quinta abaixo: os dois lados do crossfader. Um por troca.
 // Usa o mesmo AudioContext dos stories e respeita o "Silenciar" deles.
-function cliqueFader(paraWrapped) {
+function cliqueFader(paraDireita) {
   const audio = audioCtx();
   if (!audio || silenciado) return;
   try {
     audio.resume();
     const t = audio.currentTime, o = audio.createOscillator(), g = audio.createGain();
-    o.frequency.value = paraWrapped ? 1568 : 1175;
+    o.frequency.value = paraDireita ? 1568 : 1175;
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.028, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
     o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 0.05);
   } catch { /* sem áudio: só a animação */ }
 }
 
+const CABECA = {
+  dupla: ['Compare dois históricos', 'Envie o Histórico Estendido do Spotify de duas pessoas. Nada é enviado para nenhum servidor.'],
+  wrapped: ['Seu Wrapped da vida toda', 'Envie o seu Histórico Estendido do Spotify e veja a sua vida musical em stories. O histórico não sai do seu aparelho.'],
+  batalha: ['Batalha de históricos', 'Junte de 3 a 6 históricos do Spotify e veja quem leva cada rodada. Nada sai do seu aparelho.'],
+};
+
 function App() {
-  // As duas telas ficam montadas (hidden): trocar de aba não perde o resultado.
+  // As telas ficam montadas (hidden): trocar de aba não perde o resultado.
   // Só hash conhecido troca de modo: "Pular para o conteúdo" (#principal) fica onde a pessoa está.
-  const lerModo = (atual = 'dupla') => (location.hash === '#wrapped' ? 'wrapped' : location.hash === '#dupla' || location.hash === '' ? 'dupla' : atual);
+  const lerModo = (atual = 'dupla') => ({ '#wrapped': 'wrapped', '#batalha': 'batalha', '#dupla': 'dupla', '': 'dupla' })[location.hash] ?? atual;
   const [modo, setModo] = useState(() => lerModo());
   const modoAtual = useRef(modo); // o efeito abaixo roda uma vez só e não enxerga o `modo` novo
   useEffect(() => {
@@ -112,13 +119,16 @@ function App() {
     const mudar = () => {
       const novo = lerModo(modoAtual.current);
       if (novo === modoAtual.current) return;
+      const antigo = modoAtual.current;
       modoAtual.current = novo;
       pausarSom(); // um só <audio> para os dois modos: troca de modo pausa, e quem voltar a andar retoma o seu
       if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) { setModo(novo); return; }
-      cliqueFader(novo === 'wrapped');
+      // Na ordem da barra (Dupla, Wrapped, Batalha): para a direita o conteúdo entra pela direita e o clique sobe.
+      const ordem = ['dupla', 'wrapped', 'batalha'], volta = ordem.indexOf(novo) < ordem.indexOf(antigo);
+      cliqueFader(!volta);
       const update = async () => { setModo(novo); await new Promise((r) => setTimeout(r)); }; // espera o Preact desenhar
       let vt;
-      try { vt = document.startViewTransition({ update, types: ['modo', `para-${novo}`] }); } catch { vt = document.startViewTransition(update); } // navegador sem tipos: fade simples
+      try { vt = document.startViewTransition({ update, types: ['modo', `para-${novo}`, ...(volta ? ['volta'] : [])] }); } catch { vt = document.startViewTransition(update); } // navegador sem tipos: fade simples
       vt.ready.catch(() => {}); // aba em segundo plano: o navegador pula a animação, a troca acontece igual
     };
     addEventListener('hashchange', mudar);
@@ -138,11 +148,12 @@ function App() {
     <main id="principal" class="app-corpo" data-modo=${modo}>
       <div class="shell">
         <div class="app-cabeca">
-          <h1>${modo === 'wrapped' ? 'Seu Wrapped da vida toda' : 'Compare dois históricos'}</h1>
-          <p class="sub">${modo === 'wrapped' ? 'Envie o seu Histórico Estendido do Spotify e veja a sua vida musical em stories. O histórico não sai do seu aparelho.' : 'Envie o Histórico Estendido do Spotify de duas pessoas. Nada é enviado para nenhum servidor.'}</p>
+          <h1>${CABECA[modo][0]}</h1>
+          <p class="sub">${CABECA[modo][1]}</p>
         </div>
         <div hidden=${modo !== 'dupla'}><${Dupla} /></div>
         <div hidden=${modo !== 'wrapped'}><${Wrapped} /></div>
+        <div hidden=${modo !== 'batalha'}><${Batalha} /></div>
       </div>
     </main>`;
 }
@@ -152,8 +163,8 @@ const icone = (corpo) => html`<svg viewBox="0 0 24 24" fill="none" stroke="curre
 const MODOS = [
   ['dupla', 'Dupla', icone(html`<circle cx="9" cy="12" r="6" /><circle cx="15" cy="12" r="6" />`)],
   ['wrapped', 'Wrapped', icone(html`<rect x="6" y="2.5" width="12" height="19" rx="2.5" /><path d="M9 6h6" />`)],
+  ['batalha', 'Batalha', icone(html`<circle cx="12" cy="7.5" r="3.5" /><circle cx="6" cy="16.5" r="3.5" /><circle cx="18" cy="16.5" r="3.5" />`)],
   ['match', 'Match', icone(html`<path d="M4 8h13l-3-3M20 16H7l3 3" />`), true],
-  ['grupo', 'Grupo', icone(html`<circle cx="12" cy="7.5" r="3.5" /><circle cx="6" cy="16.5" r="3.5" /><circle cx="18" cy="16.5" r="3.5" />`), true],
 ];
 
 // O aviso "Carregando o SyncUp…" do index.html sai: o render do Preact não apaga o que ele não criou.

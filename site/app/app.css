@@ -99,6 +99,7 @@ a.nav-item:hover { color: var(--texto); }
 .app-corpo { background-repeat: no-repeat; background-size: 100% 28rem; }
 .app-corpo[data-modo="dupla"] { background-image: radial-gradient(60% 100% at 0% 0%, rgb(30 215 96 / .22), transparent 70%), radial-gradient(60% 100% at 100% 0%, rgb(196 183 255 / .2), transparent 70%); }
 .app-corpo[data-modo="wrapped"] { background-image: radial-gradient(80% 100% at 0% 0%, rgb(30 215 96 / .24), transparent 70%); }
+.app-corpo[data-modo="batalha"] { background-image: radial-gradient(60% 100% at 0% 0%, rgb(255 164 43 / .16), transparent 70%), radial-gradient(60% 100% at 100% 0%, rgb(245 115 160 / .16), transparent 70%); }
 .app-cabeca { display: flex; flex-direction: column; gap: var(--e3); padding-block: 2rem 2.5rem; }
 @media (min-width: 900px) { .app-cabeca { padding-block: 4rem 3rem; } }
 .app-cabeca h1 { text-wrap: balance; font-size: clamp(2.2rem, 6vw, 3.6rem); font-weight: 900; letter-spacing: -.03em; line-height: 1; }
@@ -115,6 +116,99 @@ a.nav-item:hover { color: var(--texto); }
 .pessoa-topo .lado { font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--cor); }
 .avatar { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: 50%; font-weight: 900; color: #000; }
 .avatar.verde { background: var(--verde); } .avatar.roxo { background: var(--roxo); }
+/* Batalha: cada pessoa tem a sua cor (--lut, em batalha.js); texto sobre ela é preto. */
+.pessoa.lut { --cor: var(--lut); } .avatar.lut { background: var(--lut); }
+.lutador { display: flex; flex-direction: column; }
+.tirar-lutador { margin-left: auto; }
+/* Cartão novo entra pequeno e transparente (150 ms); "menos movimento" desliga no estilo.css. */
+.lutador .pessoa { transition: opacity .15s var(--sai), scale .15s var(--sai); @starting-style { opacity: 0; scale: .95; } }
+.arena { display: flex; align-items: center; justify-content: space-between; gap: var(--e3); border-radius: 999px; padding: var(--e2) var(--e4) var(--e2) var(--e2); margin-bottom: var(--vao); }
+.arena-lista { display: flex; align-items: center; gap: var(--e2); min-width: 0; overflow: hidden; }
+.arena-lista .avatar { width: 2.2rem; height: 2.2rem; transition: scale .15s var(--sai); @starting-style { scale: .9; } }
+/* Com 5 ou mais pessoas os "vs" saem (não cabem em 360 px); o texto do leitor de tela fica preso ao item. */
+.arena-lista > li { position: relative; }
+.arena-lista:has(> li:nth-child(9)) .vs { display: none; }
+.arena .vs { font-size: .75rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--fraco); }
+.arena small { color: var(--sub); font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* Medalhas desenhadas: o número fica ao lado; o metal é só cor (o texto vai para o leitor de tela). */
+.medalhas { display: inline-flex; gap: var(--e2); align-items: center; }
+.med { display: inline-flex; align-items: center; gap: .3em; font-weight: 800; font-variant-numeric: tabular-nums; }
+.med i { width: .95em; height: .95em; border-radius: 50%; box-shadow: inset 0 -2px 0 rgb(0 0 0 / .25); }
+.med.ouro i { background: #f5c542; } .med.prata i { background: #c9d1d9; } .med.bronze i { background: #d08b4f; }
+@media (forced-colors: active) { .med i { forced-color-adjust: none; border: 1px solid CanvasText; } }
+/* Pódio: 2º, 1º, 3º. Sobe do 3º ao 1º (suspense), só transform e opacidade. */
+.podio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: var(--e3); padding-top: var(--e5); }
+.degrau { display: flex; flex-direction: column; align-items: center; gap: var(--e2); min-width: 0; text-align: center; }
+.degrau .avatar { width: 3.2rem; height: 3.2rem; font-size: 1.3rem; box-shadow: 0 0 0 4px rgb(0 0 0 / .35); }
+.degrau.p1 .avatar { width: 4rem; height: 4rem; font-size: 1.6rem; }
+.podio-nome { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1.05rem; }
+/* Blocos de vidro (Liquid Glass): tinta da cor do lutador, borda de luz e um brilho colorido atrás para o vidro refratar. */
+.podio { position: relative; isolation: isolate; }
+.degrau { position: relative; }
+.degrau::before { content: ''; position: absolute; z-index: -1; left: 12%; right: 12%; bottom: 0; height: 60%; border-radius: 50%; background: var(--lut); filter: blur(28px); opacity: .45; }
+.degrau .bloco { position: relative; overflow: hidden; display: grid; place-items: start center; width: 100%; height: 4.5rem; padding-top: var(--e3); border-radius: 18px 18px 6px 6px; transform-origin: bottom;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--lut) 42%, transparent), color-mix(in srgb, var(--lut) 10%, transparent) 75%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .55), inset 0 0 0 1px rgb(255 255 255 / .16), inset 0 -18px 30px -18px rgb(0 0 0 / .45), 0 20px 40px -22px rgb(0 0 0 / .8);
+  -webkit-backdrop-filter: blur(16px) saturate(170%); backdrop-filter: blur(16px) saturate(170%); }
+.degrau .bloco::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / .35) 50%, transparent 65%); transform: translateX(-120%); }
+@media (prefers-reduced-transparency: reduce) { .degrau .bloco { -webkit-backdrop-filter: none; backdrop-filter: none; background: color-mix(in srgb, var(--lut) 30%, #1a1a1a); } .degrau::before { display: none; } }
+@media (forced-colors: active) { .degrau .bloco { border: 2px solid CanvasText; } }
+.degrau.p1 .bloco { height: 7rem; } .degrau.p2 .bloco { height: 5.5rem; }
+.lugar { font-size: 1.6rem; font-weight: 900; color: #fff; text-shadow: 0 1px 8px rgb(0 0 0 / .4); }
+.degrau.p1 .lugar { font-size: 2.2rem; }
+.rodadas { display: grid; gap: var(--vao); }
+@media (min-width: 640px) { .rodadas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .rodadas { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.rodada { display: flex; flex-direction: column; gap: var(--e3); border-radius: var(--r-cartao); padding: var(--pad-cartao); }
+.rodada h3 { font-size: .8rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); }
+.rodada-vence { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 .4em; font-weight: 800; }
+.rodada-vence b { font-size: 1.6rem; font-variant-numeric: tabular-nums; }
+.rodada-vence small { color: var(--sub); font-weight: 500; }
+.barras { display: grid; gap: var(--e2); }
+.barras li { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr) auto; align-items: center; gap: var(--e2); font-size: .85rem; }
+.barra-nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--sub); }
+.trilho { height: .5rem; border-radius: 99px; background: rgb(255 255 255 / .08); overflow: hidden; }
+.trilho i { display: block; height: 100%; border-radius: inherit; background: var(--lut); transform-origin: left; }
+.barra-valor { font-variant-numeric: tabular-nums; color: var(--sub); }
+@media (forced-colors: active) { .trilho i { forced-color-adjust: none; } }
+/* Coreografia do resultado (evento raro): a resenha e os cartões das rodadas entram primeiro, em onda; a barra do
+   1º colocado dura 150 ms a mais (o "sprint"). O pódio é o fim: só anima quando aparece (.em-cena), do 3º ao 1º
+   (--k: 0, 1, 2 → 0, 150, 300 ms), com desaceleração firme (--sai), sem mola nem quique. Só transform e opacidade. */
+.batalha-res { --t: calc(var(--k, 0) * 150ms); }
+@media (prefers-reduced-motion: no-preference) {
+  .batalha-res .rodada { animation: bt-aparece .4s var(--sai) calc(var(--i, 0) * 50ms) both; }
+  .batalha-res .rodada-vence b { animation: bt-cai .4s var(--sai) calc(80ms + var(--i, 0) * 50ms) both; }
+  .batalha-res .trilho i { animation: bt-enche .6s var(--sai) calc(120ms + var(--i, 0) * 50ms + var(--j, 0) * 40ms) both; }
+  .batalha-res .trilho i.lider { animation-duration: .75s; }
+  .batalha-res .podio:not(.em-cena) { visibility: hidden; }
+  .batalha-res .em-cena .degrau .bloco { animation: bt-cresce .6s var(--sai) var(--t) both; }
+  .batalha-res .em-cena .degrau.p1 .bloco { animation-duration: .7s; }
+  .batalha-res .em-cena .degrau::before { animation: bt-acende .8s var(--sai) var(--t) both; }
+  .batalha-res .em-cena .degrau .avatar, .batalha-res .em-cena .podio-nome, .batalha-res .em-cena .podio-titulo { animation: bt-cai .45s var(--sai) calc(var(--t) + 240ms) both; }
+  .batalha-res .em-cena .degrau .med { animation: bt-estala .3s var(--sai) calc(var(--t) + 380ms + var(--m, 0) * 60ms) both; }
+  .batalha-res .em-cena .degrau .med.prata { --m: 1; } .batalha-res .em-cena .degrau .med.bronze { --m: 2; }
+  .batalha-res .em-cena .degrau .lugar { animation: bt-aparece .3s var(--sai) calc(var(--t) + 300ms) both; }
+  .batalha-res .em-cena .degrau.p1 .bloco::after { animation: bt-brilho .9s var(--sai) 1s both; }
+}
+@keyframes bt-cresce { from { transform: scaleY(.06); opacity: .4; } }
+@keyframes bt-acende { from { opacity: 0; transform: scale(.6); } }
+@keyframes bt-cai { from { opacity: 0; transform: translateY(-14px); } }
+@keyframes bt-estala { from { opacity: 0; transform: scale(.7); } }
+@keyframes bt-aparece { from { opacity: 0; transform: translateY(10px); } }
+@keyframes bt-enche { from { transform: scaleX(0); } }
+@keyframes bt-brilho { from { transform: translateX(-120%); } to { transform: translateX(120%); } }
+/* Selos: a tipografia do Kicker dos stories (caixa alta, tracking largo), sem brilho; contraste ≥ 4,5:1 (teste). */
+.selo { display: inline-block; margin-left: .5em; padding: .15em .55em; border: 1px solid rgb(255 255 255 / .3); border-radius: 99px;
+  font-size: .68rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #e6e6e6; vertical-align: .1em; white-space: nowrap; }
+.selo-rodape { font-size: .85rem; color: var(--sub); }
+.selo-rodape .selo { margin: 0 .4em 0 0; }
+.podio-titulo { font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #e6e6e6; }
+.batalha-resumo { font-size: 1.05rem; line-height: 1.55; color: var(--texto); text-wrap: pretty; }
+.mais-lutador { margin-top: var(--vao); }
+.lut-ponto { display: inline-block; width: .7em; height: .7em; margin-right: .5em; border-radius: 50%; background: var(--lut); }
+.placar td.venceu { color: var(--texto); font-weight: 800; }
+.placar td small, .placar th small { color: var(--sub); font-weight: 500; }
+@media (forced-colors: active) { .avatar.lut, .lut-ponto { forced-color-adjust: none; color: #000; } }
 .campo { display: flex; flex-direction: column; gap: var(--e1); font-size: .9rem; font-weight: 600; color: var(--sub); }
 .campo small, .marcar small { font-weight: 400; color: var(--fraco); }
 .entrada { width: 100%; min-height: 44px; border-radius: var(--r-campo); border: 1px solid var(--linha); background: rgba(0, 0, 0, .3); color: var(--texto); font: inherit; font-size: 1rem; padding: var(--e2) var(--e3); }
@@ -333,7 +427,7 @@ html:active-view-transition-type(modo) .app-corpo > .shell { view-transition-nam
 html:active-view-transition-type(modo) .nav-app { view-transition-name: barra; }
 @media (max-width: 899px) { html:active-view-transition-type(modo) .nav-item[aria-current="page"] svg { view-transition-name: fader; } }
 @media (min-width: 900px) { html:active-view-transition-type(modo) .nav-item[aria-current="page"] { view-transition-name: fader; } }
-html:active-view-transition-type(para-dupla) { --cf: -1; }
+html:active-view-transition-type(volta) { --cf: -1; }
 @keyframes cf-sai { to { translate: calc(var(--cf, 1) * -32px) 0; opacity: 0; } }
 @keyframes cf-entra { from { translate: calc(var(--cf, 1) * 32px) 0; opacity: 0; } }
 html:active-view-transition-type(modo)::view-transition-old(conteudo) { animation: cf-sai .25s var(--sai) both; }

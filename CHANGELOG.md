@@ -1,5 +1,23 @@
 # Changelog — SyncUp
 
+## [Não lançado]
+
+A Batalha chega ao app no navegador: de 3 a 6 pessoas disputam rodadas com os números do período.
+
+### Novo
+- **Batalha** (no lugar do "Grupo — em breve" do app web): cada pessoa envia o seu histórico e o app compara o mesmo período de todos (recorte comum, como no Grupo do PC).
+  - **10 rodadas:** Maratonista, Play infinito, Explorador(a), Colecionador(a), Sem parar, Dia mais insano, Coruja, Repeteco, Fã nº 1 e Paciência (menos pulos vence). Rodada sem dado ou sem disputa fica de fora, com o motivo.
+  - **Quadro de medalhas:** ouro, prata e bronze, com empates olímpicos; o campeão tem mais ouros, depois pratas, depois bronzes; empate total vira co-campeões.
+  - **Disputa:** selos "Por um triz" e "Massacre", "Dedinho nervoso" na Paciência, título de classe do campeão ("Enciclopédia Musical", "Modo Obsessão"…), "Decidido no detalhe" e uma resenha da partida.
+  - **Dupla mais afinada** (cosseno log1p) e o artista que mais une os dois.
+  - **Stories:** cada rodada com um desenho próprio (pista, vinis, constelação, estante, luas…); o pódio é sempre o último.
+  - **Tela:** pódio de vidro que sobe quando aparece, cartões das rodadas e a tabela completa.
+  - **Pôster** em PNG 1080×1920 e "Compartilhar pôster".
+  - Lê um histórico por vez num Worker (a memória não cresce com o grupo) e para ao trocar de modo. Demo com 4 pessoas fictícias (Ana, Bruno, Carla e Davi).
+
+### Mudado
+- A troca de modo desliza na ordem da barra (Dupla, Wrapped, Batalha).
+
 ## [1.12.0] — 2026-11-16
 
 O app no navegador deixa de baixar o CSS e o JS do app para PC.

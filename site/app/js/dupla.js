@@ -425,16 +425,26 @@ export function compararDupla(ca, cb, nomeA, nomeB, opcoes = {}, ids = [{ sha256
     fuso,
     // Para a resposta do app (respostaDupla): plays por hora e por mês e artista. Fora da paridade da etapa 2.
     _bruto: [[ca, pa], [cb, pb]].map(([c, p]) => {
-      const porHora = Array(24).fill(0), porMes = new Map();
+      const porHora = Array(24).fill(0), porMes = new Map(), diaHora = Array.from({ length: 7 }, () => Array(24).fill(0));
       for (const i of p.plays) {
         const d = new Date(c.local[i]);
         porHora[d.getUTCHours()]++;
+        diaHora[(d.getUTCDay() + 6) % 7][d.getUTCHours()]++; // segunda = 0, como o dayofweek do pandas
         const mes = d.getUTCFullYear() * 100 + d.getUTCMonth() + 1;
         const m = porMes.get(mes) || porMes.set(mes, new Map()).get(mes);
         somar(m, c.artista[i]);
       }
-      return { porHora, porMes, contagens: p.contagens };
+      // Horas por mês: todas as execuções do período (não só as de 30 s), como perfil.mensal.
+      const horasMes = new Map();
+      for (const i of p.todos) {
+        const d = new Date(c.local[i]);
+        somar(horasMes, d.getUTCFullYear() * 100 + d.getUTCMonth() + 1, c.ms[i] / 60000);
+      }
+      return { porHora, porMes, diaHora, horasMes, contagens: p.contagens, faixas: p.faixas };
     }),
+    // Os 12 artistas do gráfico: maior participação somada nos dois; empate pelo nome.
+    ordem: [...new Set([...ra.keys(), ...rb.keys()])].sort(compararTexto)
+      .map((k) => [k, participacao(k)]).sort(([, x], [, y]) => y - x).slice(0, 12).map(([k]) => k),
   };
 }
 

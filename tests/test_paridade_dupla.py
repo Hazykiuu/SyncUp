@@ -194,11 +194,33 @@ def test_erros_iguais_aos_do_python(arquivos: dict[str, Path]) -> None:  # noqa:
 ORIGEM = 'Origem dos dados'
 
 
+def _sem_binario(valor):
+    """O plotly do Python manda séries numpy em base64 ({'dtype', 'bdata'}); o JS manda listas."""
+    import base64
+
+    import numpy as np
+
+    if isinstance(valor, dict):
+        if set(valor) == {'dtype', 'bdata'}:
+            return np.frombuffer(base64.b64decode(valor['bdata']), dtype=valor['dtype']).tolist()
+        return {k: _sem_binario(v) for k, v in valor.items()}
+    if isinstance(valor, list):
+        return [_sem_binario(v) for v in valor]
+    return valor
+
+
+def test_tema_do_plotly_em_dia() -> None:
+    """site/app/js/tema-plotly.js é o plotly_dark do plotly instalado (tools/gerar_tema_plotly.py)."""
+    from tools.gerar_tema_plotly import DESTINO, conteudo
+
+    assert DESTINO.read_text(encoding='utf-8') == conteudo()
+
+
 @pytest.mark.parametrize(
     'caso', ['padrao', 'log', 'sem_periodo_comum', 'borda', 'borda_opcoes', 'mesmo_arquivo']
 )
 def test_resposta_do_app_igual_a_ponte(arquivos: dict[str, Path], caso: str) -> None:  # noqa: F811
-    """O JSON que o app recebe: o mesmo de ``ponte.comparar_dupla``, menos os gráficos (etapa 5)."""
+    """O JSON que o app recebe: o mesmo de ``ponte.comparar_dupla``, gráficos inclusive."""
     from web import ponte
 
     ca, cb, nomes, opcoes = CASOS[caso]
@@ -208,7 +230,6 @@ def test_resposta_do_app_igual_a_ponte(arquivos: dict[str, Path], caso: str) -> 
     py = json.loads(
         json.dumps(ponte.comparar_dupla([str(c) for c in a], [str(c) for c in b], *nomes, opcoes))
     )
-    del py['graficos']
     # A origem dos dados é do app para PC (cache em disco); no navegador é sempre "Lido no navegador".
     for r in (py, js):
         tabela = r['tabelas']['diagnostico']
@@ -216,4 +237,4 @@ def test_resposta_do_app_igual_a_ponte(arquivos: dict[str, Path], caso: str) -> 
         for linha in tabela['linhas']:
             linha.pop(k)
         tabela['colunas'].pop(k)
-    _igual(py, js, 'resposta')
+    _igual(_sem_binario(py), js, 'resposta')

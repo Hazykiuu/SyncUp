@@ -309,7 +309,14 @@ def comparar(
     total_a, total_b = len(va), len(vb)
     todos = ra.index.union(rb.index)
     pesos = ra.reindex(todos, fill_value=0) / total_a + rb.reindex(todos, fill_value=0) / total_b
-    selecionados = pesos.nlargest(QUANTIDADE_ARTISTAS_GRAFICO).index
+    # Maior participação somada; empate pelo nome (o nlargest do pandas não garante a ordem dos empates,
+    # e o app do navegador precisa da mesma ordem: dupla.js).
+    selecionados = pd.Index(
+        [k for k, _ in sorted(pesos.items(), key=lambda kv: (-kv[1], kv[0]))][
+            :QUANTIDADE_ARTISTAS_GRAFICO
+        ],
+        dtype=object,
+    )
     grafico = pd.DataFrame(
         {
             'Artista': selecionados,

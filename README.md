@@ -129,7 +129,7 @@ python -m ruff format --check .
 
 O CI roda os mesmos comandos no GitHub, em Python 3.10 e 3.12, mais `node --test tests/js/*.test.mjs` para o app do navegador. O cache Parquet é opcional: `python -m pip install -r requirements-parquet.txt`.
 
-**App do navegador (`site/`) num servidor local:** rode antes `python tools/empacotar_web.py`. Ele gera em `site/app/` os arquivos que não ficam no Git (`syncup-core.zip`, `componentes.css`, `componentes.js` e `demo-wrapped.zip`); sem eles a Dupla e a demo do Wrapped não abrem. Depois de mexer no Python do núcleo, rode de novo.
+**App do navegador (`site/`) num servidor local:** rode antes `python tools/empacotar_web.py`. Ele gera em `site/app/` os arquivos que não ficam no Git (`componentes.css`, `componentes.js` e as demos `demo-wrapped.zip` e `demo-bruno.zip`); sem eles o visual das listas e o "Testar com dados fictícios" não funcionam. Depois de mexer em `styles.css` ou `syncup.js`, rode de novo.
 
 | Módulo | Papel |
 |---|---|
@@ -141,7 +141,7 @@ O CI roda os mesmos comandos no GitHub, em Python 3.10 e 3.12, mais `node --test
 | `wrapped.py`, `arquetipos.py`, `stories.py`, `cartao.py` | Wrapped, stories e PNGs |
 | `festa.py`, `exportacoes.py`, `privacidade.py` | Playlist da festa, CSV protegido e "Meus dados" |
 | `ui/`, `componentes.py`, `syncup.js`, `styles.css` | Interface Gradio 6 do app para PC |
-| `site/` | Página inicial e app no navegador (Preact + htm, sem build); a Dupla roda o núcleo Python no Pyodide |
+| `site/` | Página inicial e app no navegador (Preact + htm, sem build); Dupla e Wrapped calculados em JavaScript, com paridade testada contra o núcleo Python |
 | `site/app/js/historico.js`, `calculo.js` | Wrapped do app no navegador em JavaScript, com as regras do Python (teste de paridade em `tests/test_paridade_wrapped.py`) |
 
 ```python

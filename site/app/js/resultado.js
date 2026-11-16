@@ -2,7 +2,6 @@
 // Nas abas, o HTML ainda vem pronto do núcleo (textos externos já escapados lá).
 import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { chegar, chegarPouco } from './chegada.js';
-import { baixar, executar } from './motor.js';
 import { compartilhar, desenharPosterDupla } from './poster.js';
 import { SomStories } from './som.js';
 import { SLIDES_DUPLA } from './stories/dupla.js';
@@ -85,7 +84,7 @@ function Medidas({ metricas }) {
 
 // Ações embaixo dos stories: pôster em PNG (Canvas, no aparelho), playlist em CSV e "ver de novo".
 const segundos = (ms) => (ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
-function Acoes({ d, aoRepetir }) {
+function Acoes({ d, csv, aoRepetir }) {
   const [ocupado, setOcupado] = useState('');
   const [aviso, setAviso] = useState('');
   const [erro, setErro] = useState('');
@@ -100,7 +99,12 @@ function Acoes({ d, aoRepetir }) {
     const como = await compartilhar(blob, 'syncup-dupla.png', 'Nossa sintonia no SyncUp');
     setAviso(como === 'cancelado' ? '' : `Pôster pronto em ${segundos(ms)} s${como === 'baixado' ? ' (baixado como syncup-dupla.png)' : ''}.`);
   });
-  const playlist = () => fazer('playlist', async () => baixar(await executar('playlist_dupla', [], { saida: 'arquivo' })));
+  // A playlist comum inteira vem pronta do Worker (dupla.csvPlaylist): só vira arquivo para baixar.
+  const playlist = () => fazer('playlist', async () => {
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    Object.assign(document.createElement('a'), { href: url, download: 'SyncUp_playlist.csv' }).click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
   return html`
     <div class="compartilhar"><div class="acoes">
       <button type="button" class="btn btn-verde" onClick=${poster} disabled=${!!ocupado}>${ocupado === 'poster' ? 'Gerando…' : 'Compartilhar pôster'}</button>
@@ -172,7 +176,7 @@ export function Resultado({ r }) {
       <div ref=${stories} class="nucleo">
         <${Player} key=${r} slides=${slides} rotulo=${`Dupla de ${a} e ${b}`} />
       </div>
-      <${Acoes} d=${r.dupla} aoRepetir=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))} />
+      <${Acoes} d=${r.dupla} csv=${r.csv} aoRepetir=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))} />
       <div ref=${lista} class="sub-abas" role="tablist" aria-label="Partes do resultado" onKeyDown=${teclar}>
         ${ABAS.map((rotulo, i) => html`<button ref=${(el) => (botoes.current[i] = el)} role="tab" id=${`aba-${i}`} aria-selected=${aba === i} tabindex=${aba === i ? 0 : -1} onClick=${() => setAba(i)}>${rotulo}</button>`)}
       </div>

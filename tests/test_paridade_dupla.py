@@ -238,3 +238,18 @@ def test_resposta_do_app_igual_a_ponte(arquivos: dict[str, Path], caso: str) -> 
             linha.pop(k)
         tabela['colunas'].pop(k)
     _igual(_sem_binario(py), js, 'resposta')
+
+
+def test_csv_da_playlist_igual_ao_python(arquivos: dict[str, Path], tmp_path: Path) -> None:  # noqa: F811
+    """O CSV que o app baixa: o mesmo arquivo de exportacoes.exportar_playlist (BOM, ';', proteção)."""
+    from analise import comparar
+    from configuracao import ConfiguracaoCarga
+    from exportacoes import exportar_playlist
+
+    a, b = [arquivos['borda'], arquivos['b']], [arquivos['a']]
+    r = comparar(
+        [str(c) for c in a], [str(c) for c in b], 'Lia', 'Ana', configuracao=ConfiguracaoCarga()
+    )
+    py = exportar_playlist(r, tmp_path / 'p.csv').read_bytes().decode('utf-8')
+    js = _js(a, b, ('Lia', 'Ana'), {'_saida': 'csv'})['csv']
+    assert js == py and py.count('\n') > 100

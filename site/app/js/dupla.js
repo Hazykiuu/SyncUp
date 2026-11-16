@@ -610,3 +610,13 @@ export function respostaDupla(r) {
     },
   };
 }
+
+/* ---------- Playlist comum em CSV (exportacoes.exportar_playlist) ---------- */
+// UTF-8 com BOM, separado por ponto e vírgula, como o csv.writer do Python. Nomes que uma planilha leria
+// como fórmula (=, +, -, @, tab, CR no começo) ganham um apóstrofo na frente.
+const seguro = (v) => { const t = String(v); return /^\s*[=+\-@\t\r]/.test(t) ? `'${t}` : t; };
+const campo = (t) => (/[;"\r\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t);
+export function csvPlaylist(r) {
+  const linhas = [['Artista', 'Música', 'Reproduções A', 'Reproduções B', 'Spotify'], ...r.playlist.map((l) => l.map(seguro))];
+  return `﻿${linhas.map((l) => l.map(campo).join(';')).join('\r\n')}\r\n`;
+}

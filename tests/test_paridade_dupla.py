@@ -49,7 +49,17 @@ def _py(a: list[Path], b: list[Path], nomes: tuple[str, str], opcoes: dict) -> d
         configuracao=config,
         ponderacao=opcoes.get('ponderacao') or 'bruta',
     )
+    from web import ponte
+
     m, p = r.metricas, r.periodo
+
+    def quase(x):
+        return {
+            'total_pares': x.total_pares,
+            'exemplos': [
+                [*linha[:7], float(linha[7])] for linha in x.exemplos.itertuples(index=False)
+            ],
+        }
 
     def data(valor):
         return None if valor is None else valor.floor('s').isoformat()
@@ -82,7 +92,52 @@ def _py(a: list[Path], b: list[Path], nomes: tuple[str, str], opcoes: dict) -> d
             for ar, mu, x, y, link in r.playlist.itertuples(index=False)
         ],
         'ponderacao': r.ponderacao,
+        'quase_artistas': quase(r.momentos_artistas),
+        'quase_musicas': quase(r.momentos_musicas),
+        'sintonia': ponte._simples(ponte._sintonia_json(r)),
+        'ponte': [
+            [de, para, art, int(n), float(pct), link]
+            for de, para, art, n, pct, link in r.ponte.itertuples(index=False)
+        ],
+        'diversidade': [{'entropia': x.entropia, 'gini': x.gini} for x in (r.perfil_a, r.perfil_b)],
+        'estatisticas': [
+            [float(v) for v in r.estatisticas[coluna]] for coluna in r.estatisticas.columns[1:]
+        ],
     }
+
+
+def _sintonia_borda(pasta: Path) -> tuple[Path, Path]:
+    """Mesma faixa com nomes em caixas diferentes, plays que se sobrepõem, encontros com meses vazios
+    no meio, um "quase" (a 40 min) e um encontro curto demais (20 s juntos)."""
+    from tests.test_paridade_wrapped import _ev
+
+    a = [
+        _ev('2021-01-10T10:03:00Z', 'Zé Ramalho', 'Avôhai', 180_000),
+        _ev('2021-01-10T10:04:00Z', 'Zé Ramalho', 'Avôhai', 120_000),  # sobrepõe o anterior
+        _ev('2021-04-02T22:00:00Z', 'Lia', 'Noite', 200_000),
+        _ev('2021-04-03T08:00:00Z', 'Rui', 'Manhã', 60_000),
+        _ev('2021-04-05T12:00:00Z', 'Bo', 'Curta', 60_000),
+    ]
+    b = [
+        _ev('2021-01-10T10:02:30Z', 'ZÉ RAMALHO', 'avôhai!', 150_000),
+        _ev('2021-04-02T22:01:00Z', 'lia', 'noite', 200_000),
+        _ev('2021-04-03T08:40:00Z', 'Rui', 'Manhã', 60_000),  # 40 min depois: quase juntos
+        _ev('2021-04-05T12:00:40Z', 'Bo', 'Curta', 60_000),  # 20 s juntos: não conta
+    ]
+    caminhos = (pasta / 'sa.json', pasta / 'sb.json')
+    for caminho, eventos in zip(caminhos, (a, b)):
+        caminho.write_text(json.dumps(eventos, ensure_ascii=False), encoding='utf-8')
+    return caminhos
+
+
+def test_sintonia_de_borda_igual_ao_python(tmp_path: Path) -> None:
+    sa, sb = _sintonia_borda(tmp_path)
+    js = _js([sa], [sb], ('Ana', 'Bia'), {'comum': False})
+    assert 'erro' not in js, js
+    py = _py([sa], [sb], ('Ana', 'Bia'), {'comum': False})
+    assert py['sintonia']['momentos'] == 2 and len(py['sintonia']['por_mes']) == 4
+    for campo in ('sintonia', 'quase_musicas', 'quase_artistas', 'ponte', 'estatisticas'):
+        _igual(py[campo], js[campo], campo)
 
 
 CASOS = {

@@ -125,6 +125,9 @@ a.nav-item:hover { color: var(--texto); }
 .arena { display: flex; align-items: center; justify-content: space-between; gap: var(--e3); border-radius: 999px; padding: var(--e2) var(--e4) var(--e2) var(--e2); margin-bottom: var(--vao); }
 .arena-lista { display: flex; align-items: center; gap: var(--e2); min-width: 0; overflow: hidden; }
 .arena-lista .avatar { width: 2.2rem; height: 2.2rem; transition: scale .15s var(--sai); @starting-style { scale: .9; } }
+/* Com 5 ou mais pessoas os "vs" saem (não cabem em 360 px); o texto do leitor de tela fica preso ao item. */
+.arena-lista > li { position: relative; }
+.arena-lista:has(> li:nth-child(9)) .vs { display: none; }
 .arena .vs { font-size: .75rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; color: var(--fraco); }
 .arena small { color: var(--sub); font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
 /* Medalhas desenhadas: o número fica ao lado; o metal é só cor (o texto vai para o leitor de tela). */

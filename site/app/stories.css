@@ -296,3 +296,55 @@
   .st-veu { background: rgba(0, 0, 0, .85); }
 }
 @media (prefers-contrast: more) { .st-vidro, .vidro-ctrl { border: 2px solid #fff; } .st-veu { background: rgba(0, 0, 0, .85); } }
+
+/* 7. Batalha (stories/batalha.js): cada lutador tem a sua cor (--lut); texto sobre a cor é preto.
+   Selos na tipografia do Kicker, sem brilho; pódio sobe com desaceleração firme, sem mola nem quique. */
+.sb { --sai-bt: cubic-bezier(.22, 1, .36, 1); }
+.sb-cabeca { display: flex; align-items: center; gap: 2cqw; min-width: 0; }
+.sb-selo { flex: none; padding: .5cqw 2cqw; border: 1px solid rgba(255, 255, 255, .4); border-radius: 99px; font-size: 2.5cqw; font-weight: 800;
+  letter-spacing: .14em; text-transform: uppercase; color: #fff; white-space: nowrap; }
+.sb-vence { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
+.sb-valor { color: rgba(255, 255, 255, .8) !important; } .sb-valor b { font-size: 9cqw; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; }
+.sb-lista { list-style: none; margin: 1cqw 0 0; padding: 0; display: grid; gap: 1.4cqw; }
+.sb-lista li { display: grid; grid-template-columns: 7cqw 21cqw minmax(0, 1fr) 15cqw; align-items: center; gap: 2cqw; min-height: min(9cqw, 44px); font-size: 3.4cqw; }
+.sb-pos { color: rgba(255, 255, 255, .7); font-weight: 800; font-variant-numeric: tabular-nums; }
+.sb-nome { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.sb-lista .lider .sb-nome, .sb-lista .lider em { color: #fff; font-weight: 800; }
+.sb-lista em { font-style: normal; text-align: right; color: rgba(255, 255, 255, .85); font-variant-numeric: tabular-nums; }
+.sb-trilho { height: 2.6cqw; border-radius: 99px; background: rgba(255, 255, 255, .12); overflow: hidden; }
+.sb-trilho i { display: block; height: 100%; border-radius: inherit; background: var(--lut); transform-origin: left; }
+.sb-rodape { font-size: 3.1cqw; color: rgba(255, 255, 255, .78) !important; } .sb-rodape .sb-selo { margin-right: 1.4cqw; }
+.sb-avatar { display: grid; place-items: center; flex: none; width: 14cqw; aspect-ratio: 1; border-radius: 50%; background: var(--lut); color: #000;
+  font-size: 6cqw; font-weight: 900; box-shadow: 0 2cqw 6cqw rgba(0, 0, 0, .35); }
+.sb-avatar.mini { width: 8cqw; font-size: 3.6cqw; box-shadow: none; }
+.sb-elenco { display: flex; flex-wrap: wrap; gap: 3cqw 2cqw; }
+.sb-elenco > span { display: flex; flex-direction: column; align-items: center; gap: 1.4cqw; width: 26cqw; min-width: 0; }
+.sb-elenco b { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 3.6cqw; }
+.sb-dupla { display: flex; } .sb-dupla .sb-avatar { width: 17cqw; font-size: 7.4cqw; } .sb-dupla .sb-avatar + .sb-avatar { margin-left: -4cqw; }
+.sb-unidos { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; } .sb-unidos b { font-weight: 900; }
+.sb-quadro { list-style: none; margin: 1cqw 0 0; padding: 0; display: grid; gap: 1.6cqw; }
+.sb-quadro li { display: grid; grid-template-columns: 8cqw minmax(0, 1fr) auto; align-items: center; gap: 2.4cqw; min-height: 9cqw; font-size: 3.8cqw; }
+.sb-medalhas { display: inline-flex; gap: 2.4cqw; align-items: center; }
+.sb-med { display: inline-flex; align-items: center; gap: 1cqw; font-weight: 800; font-variant-numeric: tabular-nums; }
+.sb-med i { width: 3.2cqw; height: 3.2cqw; border-radius: 50%; box-shadow: inset 0 -.4cqw 0 rgba(0, 0, 0, .25); }
+.sb-med.ouro i { background: #f5c542; } .sb-med.prata i { background: #c9d1d9; } .sb-med.bronze i { background: #d08b4f; }
+.sb-podio { list-style: none; margin: auto 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: 2.4cqw; }
+.sb-podio li { display: flex; flex-direction: column; align-items: center; gap: 1.4cqw; min-width: 0; text-align: center; }
+.sb-podio .sb-avatar { width: 13cqw; font-size: 5.6cqw; } .sb-podio .p1 .sb-avatar { width: 17cqw; font-size: 7.4cqw; }
+.sb-podio .sb-nome { max-width: 100%; font-size: 4cqw; font-weight: 800; }
+.sb-titulo { font-size: 2.4cqw; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #fff; }
+.sb-bloco { display: grid; place-items: start center; width: 100%; height: 18cqw; padding-top: 2cqw; border-radius: 3cqw 3cqw 1cqw 1cqw; transform-origin: bottom;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--lut) 48%, transparent), color-mix(in srgb, var(--lut) 12%, transparent));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(255, 255, 255, .16); }
+.sb-podio .p1 .sb-bloco { height: 28cqw; } .sb-podio .p2 .sb-bloco { height: 22cqw; }
+.sb-bloco span { font-size: 6cqw; font-weight: 900; }
+.sb-empate { display: grid; gap: 2cqw; }
+.sb-empate > span { display: flex; align-items: center; gap: 2.4cqw; min-width: 0; }
+.sb-empate b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 5cqw; font-weight: 900; }
+@keyframes sb-cresce { from { transform: scaleY(.06); opacity: .4; } }
+.st-slot.ativo .sb-trilho i { animation: st-cresce-x .9s var(--sai-bt) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo)); }
+.st-slot.ativo .sb-lista .lider .sb-trilho i { animation-duration: 1.05s; }
+.st-slot.ativo .sb-podio .sb-bloco { animation: sb-cresce .6s var(--sai-bt) both; animation-delay: calc(250ms + var(--k, 0) * 150ms); }
+.st-slot.ativo .sb-podio li > :not(.sb-bloco) { animation: st-entra .45s var(--sai-bt) both; animation-delay: calc(480ms + var(--k, 0) * 150ms); }
+@media (prefers-reduced-motion: reduce) { .st-slot.ativo .sb-trilho i, .st-slot.ativo .sb-podio .sb-bloco, .st-slot.ativo .sb-podio li > * { animation: none; } }
+@media (forced-colors: active) { .sb-avatar, .sb-trilho i, .sb-med i, .sb-bloco { forced-color-adjust: none; } .sb-selo { border-color: CanvasText; } }

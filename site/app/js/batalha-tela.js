@@ -23,16 +23,27 @@ const mesmoPlacar = (x, y) => x.ouro === y.ouro && x.prata === y.prata && x.bron
 const Medalhas = ({ m }) => html`<span class="medalhas"><span class="sr-only">${textoMedalhas(m)}</span>
   ${['ouro', 'prata', 'bronze'].map((t) => m[t] > 0 && html`<span class=${`med ${t}`} aria-hidden="true"><i></i>${m[t]}</span>`)}</span>`;
 
+// Os selos de disputa, na tipografia do Kicker dos stories (etiqueta em caixa alta, sem brilho).
+const SELOS = { 'por-um-triz': 'Por um triz', massacre: 'Massacre' };
+
 // Pódio: 2º, 1º, 3º da esquerda para a direita; quem empata no placar sobe à mesma altura.
+// É o fim da tela: anima só quando aparece (classe em-cena, uma vez).
 function Podio({ b, nomes, ordem }) {
+  const raiz = useRef(null);
+  useEffect(() => {
+    const el = raiz.current;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { el.classList.add('em-cena'); obs.disconnect(); } }, { threshold: 0.35 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
   const top = ordem.slice(0, 3);
   const pos = top.map((i, k) => 1 + top.slice(0, k).filter((j) => !mesmoPlacar(b.lutadores[j].medalhas, b.lutadores[i].medalhas)).length);
   const lugares = [1, 0, 2].filter((k) => k < top.length);
-  return html`<ol class="podio" aria-label="Pódio">${lugares.map((k) => {
+  return html`<ol ref=${raiz} class="podio" aria-label="Pódio">${lugares.map((k) => {
     const i = top[k], l = b.lutadores[i];
     return html`<li class=${`degrau p${pos[k]}`} style=${{ '--lut': l.cor, '--k': 2 - k }}>
       <span class="avatar lut" aria-hidden="true">${inicial(nomes[i])}</span>
-      <b class="podio-nome">${nomes[i]}</b><${Medalhas} m=${l.medalhas} />
+      <b class="podio-nome">${nomes[i]}</b>${pos[k] === 1 && b.titulo && html`<small class="podio-titulo">${b.titulo}</small>`}<${Medalhas} m=${l.medalhas} />
       <span class="bloco"><span class="lugar">${pos[k]}º</span></span></li>`;
   })}</ol>`;
 }
@@ -43,13 +54,14 @@ function Rodadas({ b, nomes }) {
     const maior = Math.max(...r.valores) || 1;
     const venc = r.posicoes.map((p, i) => (p === 1 ? i : -1)).filter((i) => i >= 0);
     return html`<li class="rodada vidro" style=${{ '--i': Math.min(n, 8) }}>
-      <h3>${r.titulo}</h3>
+      <h3>${r.titulo}${r.destaque && html` <span class="selo">${SELOS[r.destaque]}</span>`}</h3>
       <p class="rodada-vence"><span class="lut-ponto" style=${{ '--lut': b.lutadores[venc[0]].cor }} aria-hidden="true"></span>${venc.map((i) => nomes[i]).join(' e ')}
         <b>${fmtNum(r.valores[venc[0]], r.casas)}</b> <small>${r.unidade}${r.menor ? ' (menos vence)' : ''}</small></p>
       <ul class="barras" aria-label=${`${r.titulo}: todos`}>${r.valores.map((v, i) => html`
         <li style=${{ '--lut': b.lutadores[i].cor, '--j': i }}><span class="barra-nome">${nomes[i]}</span>
-          <span class="trilho"><i style=${{ width: v > 0 ? `max(4px, ${(v / maior) * 100}%)` : '0' }}></i></span>
-          <span class="barra-valor">${fmtNum(v, r.casas)}</span></li>`)}</ul></li>`;
+          <span class="trilho"><i class=${r.posicoes[i] === 1 ? 'lider' : ''} style=${{ width: v > 0 ? `max(4px, ${(v / maior) * 100}%)` : '0' }}></i></span>
+          <span class="barra-valor">${fmtNum(v, r.casas)}</span></li>`)}</ul>
+      ${r.alerta && html`<p class="selo-rodape"><span class="selo">Dedinho nervoso</span> ${r.alerta.nome} pulou ${fmtNum(r.alerta.valor, 1)}% das músicas</p>`}</li>`;
   })}</ul>`;
 }
 const textoMedalhas = (m) => [m.ouro && plural(m.ouro, 'ouro', 'ouros'), m.prata && plural(m.prata, 'prata', 'pratas'), m.bronze && plural(m.bronze, 'bronze', 'bronzes')].filter(Boolean).join(', ') || 'sem medalha';
@@ -87,8 +99,9 @@ function ResultadoBatalha({ b, nomes, comum }) {
   return html`
     <section class="resultado batalha-res" aria-labelledby="titulo-batalha">
       <h2 id="titulo-batalha" class="sr-only">Resultado da batalha</h2>
-      <${Podio} b=${b} nomes=${nomes} ordem=${b.lutadores.map((l, i) => i).sort(porMedalhas(b))} />
+      <p class="batalha-resumo">${b.resenha}</p>
       <${Rodadas} b=${b} nomes=${nomes} />
+      <${Podio} b=${b} nomes=${nomes} ordem=${b.lutadores.map((l, i) => i).sort(porMedalhas(b))} />
       <details class="vidro detalhe"><summary>Ver todos os números</summary><${Placar} b=${b} nomes=${nomes} /></details>
       ${b.fora.length > 0 && html`<p class="nota">Ficaram de fora: ${b.fora.map((f) => `${f.titulo} (${f.motivo})`).join('; ')}.</p>`}
       ${!comum && html`<p class="nota">Históricos inteiros: quem tem mais tempo de histórico leva vantagem.</p>`}

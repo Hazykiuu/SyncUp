@@ -163,7 +163,7 @@ export function decididoNoDetalhe(b) {
   return c.ouro - vice.ouro === 1 || (c.ouro === vice.ouro && c.prata !== vice.prata);
 }
 
-const NOME_SELO = { 'por-um-triz': 'por um triz', massacre: 'massacre' };
+const NOME_SELO = { 'por-um-triz': 'Por um triz', massacre: 'Massacre' };
 // Até 3 fatos da partida: o campeão, um selo (massacre antes de por um triz) e a dupla menos afinada.
 export function resenha(b, nomes) {
   const e = (lista) => lista.join(lista.length > 2 ? ', ' : ' e ').replace(/, ([^,]*)$/, ' e $1');
@@ -171,9 +171,9 @@ export function resenha(b, nomes) {
     ? `${nomes[b.campeoes[0]]} levou a batalha como ${b.titulo}.`
     : `Empate no topo entre ${e(b.campeoes.map((i) => nomes[i]))}.`];
   const selo = b.rodadas.find((r) => r.destaque === 'massacre') || b.rodadas.find((r) => r.destaque === 'por-um-triz');
-  if (selo) fatos.push(`${selo.titulo} foi ${NOME_SELO[selo.destaque]}: ${nomes[selo.posicoes.indexOf(1)]} venceu.`);
+  if (selo) fatos.push(`${NOME_SELO[selo.destaque]} em ${selo.titulo}: ${nomes[selo.posicoes.indexOf(1)]} venceu ${selo.destaque === 'massacre' ? 'com folga' : 'por pouco'}.`);
   const [x, y] = b.menosAfinada.par;
-  fatos.push(`${nomes[x]} e ${nomes[y]} são os de gosto mais distante (${String(b.menosAfinada.valor).replace('.', ',')}%).`);
+  fatos.push(`${nomes[x]} e ${nomes[y]} têm o gosto mais distante (${String(b.menosAfinada.valor).replace('.', ',')}% de sintonia).`);
   return fatos.join(' ');
 }
 

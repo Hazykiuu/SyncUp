@@ -241,3 +241,7 @@ test('montarBatalha traz selos, título, detalhe e resenha', () => {
   assert.match(b.resenha, /Ana/);
   assert.match(b.resenha, /Trator de Plays/);
 });
+
+test('selos e título de classe (#e6e6e6) legíveis sobre o cartão de vidro mais claro', () => {
+  assert.ok(contraste('#e6e6e6', '#2a2a2a') >= 4.5, contraste('#e6e6e6', '#2a2a2a').toFixed(2));
+});

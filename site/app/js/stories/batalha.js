@@ -27,19 +27,72 @@ function Abertura({ b, i }) {
   <//>`;
 }
 
+// Cada rodada tem um desenho ligado ao que mede (pista, discos, constelação…), na ordem da classificação.
+// Frações: do maior valor da rodada, ou da escala natural (% e 24 h). Animações: só transform, opacidade e traço.
+const FRASES = {
+  horas: 'Horas de música no período.', plays: 'Plays de pelo menos 30 segundos.', artistas: 'Artistas diferentes que cada um ouviu.',
+  musicas: 'Músicas diferentes na estante de cada um.', sequencia: 'Dias seguidos ouvindo, sem falhar um.', dia: 'O dia em que mais ouviu, nas 24 horas.',
+  coruja: 'Fatia dos plays entre meia-noite e 6 h.', repeteco: 'A mesma música, repetida num dia só.', fa: 'Fatia dos plays no artista favorito.',
+  paciencia: 'Fatia de músicas puladas. Aqui, menos é melhor.',
+};
+const arco = (f, classe = '') => html`<circle class="sb-arco-fundo" cx="20" cy="20" r="15" pathLength="1" />
+  <circle class=${`sb-arco ${classe}`} cx="20" cy="20" r="15" pathLength="1" style=${{ '--f': f, strokeDasharray: `${f} 1` }} />`;
+const GLIFOS = {
+  // Pequenos múltiplos: um desenho por pessoa, numa grade.
+  plays: (f) => html`<svg viewBox="0 0 40 40" class="sb-glifo"><circle cx="20" cy="20" r="18" class="sb-vinil" />
+    ${[13, 9.5].map((r) => html`<circle cx="20" cy="20" r=${r} class="sb-sulco" />`)}${arco(f)}<circle cx="20" cy="20" r="3.4" class="sb-selo-disco" /></svg>`,
+  fa: (f) => html`<svg viewBox="0 0 40 40" class="sb-glifo">${arco(f, 'grosso')}</svg>`,
+  dia: (f) => html`<svg viewBox="0 0 40 40" class="sb-glifo">${Array.from({ length: 24 }, (_, h) => {
+    const a = (h / 24) * 2 * Math.PI, x = 20 + 17 * Math.sin(a), y = 20 - 17 * Math.cos(a), x2 = 20 + 14.5 * Math.sin(a), y2 = 20 - 14.5 * Math.cos(a);
+    return html`<line x1=${x.toFixed(1)} y1=${y.toFixed(1)} x2=${x2.toFixed(1)} y2=${y2.toFixed(1)} class=${h < Math.round(f * 24) ? 'sb-hora acesa' : 'sb-hora'} style=${{ '--n': h }} />`;
+  })}</svg>`,
+  coruja: (f, k) => html`<svg viewBox="0 0 40 40" class="sb-glifo"><defs><clipPath id=${`sb-lua-${k}`}><rect x="2" y="2" width=${(36 * f).toFixed(1)} height="36" class="sb-lua-luz" /></clipPath></defs>
+    <circle cx="20" cy="20" r="16" class="sb-lua" /><circle cx="20" cy="20" r="16" class="sb-lua acesa" clip-path=${`url(#sb-lua-${k})`} /></svg>`,
+};
+// Lineares: uma linha por pessoa.
+const LINHAS = {
+  horas: (f) => html`<span class="sb-pista"><i class="sb-corredor" style=${{ '--f': f }}></i></span>`,
+  artistas: (f) => html`<span class="sb-pontos">${Array.from({ length: 20 }, (_, n) => html`<i class=${n < Math.max(1, Math.round(f * 20)) ? 'aceso' : ''} style=${{ '--n': n }}></i>`)}</span>`,
+  sequencia: (f) => html`<span class="sb-corrente">${Array.from({ length: 14 }, (_, n) => html`<i class=${n < Math.max(1, Math.round(f * 14)) ? 'aceso' : ''} style=${{ '--n': n }}></i>`)}</span>`,
+  repeteco: (f, v, maior) => {
+    const marcas = maior <= 25 ? v : Math.round(f * 25);
+    return html`<span class="sb-tally">${Array.from({ length: Math.ceil(marcas / 5) }, (_, g) => {
+      const n = Math.min(5, marcas - g * 5);
+      return html`<i class=${`g${n}`} style=${{ '--n': g }}>${Array.from({ length: Math.min(n, 4) }, () => html`<b></b>`)}${n === 5 && html`<s></s>`}</i>`;
+    })}</span>`;
+  },
+  paciencia: (f) => html`<span class="sb-casas">${Array.from({ length: 10 }, (_, n) => html`<i class=${n < Math.round(f * 10) ? 'pulou' : ''} style=${{ '--n': n }}></i>`)}</span>`,
+};
+
 function Rodada({ b, r, i }) {
   const ordem = r.valores.map((_, k) => k).sort((x, y) => r.posicoes[x] - r.posicoes[y] || x - y);
   const venc = ordem.filter((k) => r.posicoes[k] === 1);
   const maior = Math.max(...r.valores) || 1;
-  return html`<${Slide} tipo=${`rodada-${r.chave}`} classe="sb" i=${i} cor=${rgb(b.lutadores[venc[0]].cor)}>
+  const escala = { coruja: 100, fa: 100, paciencia: 100, dia: 24 }[r.chave] ?? maior;
+  const fracao = (v) => Math.min(1, v / escala);
+  const pessoa = (k) => b.lutadores[k];
+  let corpo;
+  if (GLIFOS[r.chave]) {
+    corpo = html`<ol class=${`sb-grade sb-${r.chave}`}>${ordem.map((k, n) => html`
+      <li class=${`entra${r.posicoes[k] === 1 ? ' lider' : ''}`} style=${{ '--i': 3 + n * 0.4, '--lut': pessoa(k).cor }}>
+        ${GLIFOS[r.chave](fracao(r.valores[k]), k)}<span class="sb-nome">${pessoa(k).nome}</span><em>${fmtNum(r.valores[k], r.casas)}</em></li>`)}</ol>`;
+  } else if (r.chave === 'musicas') {
+    corpo = html`<ol class="sb-estante">${ordem.map((k, n) => html`
+      <li class=${`entra${r.posicoes[k] === 1 ? ' lider' : ''}`} style=${{ '--i': 3 + n * 0.4, '--lut': pessoa(k).cor, '--f': Math.max(0.03, fracao(r.valores[k])) }}>
+        <em>${fmtNum(r.valores[k], r.casas)}</em><span class="sb-lombada"></span><span class="sb-nome">${pessoa(k).nome}</span></li>`)}</ol>`;
+  } else {
+    const linha = LINHAS[r.chave] || LINHAS.horas;
+    corpo = html`<ol class=${`sb-linhas sb-${r.chave}`}>${ordem.map((k, n) => html`
+      <li class=${`entra${r.posicoes[k] === 1 ? ' lider' : ''}`} style=${{ '--i': 3 + n * 0.4, '--lut': pessoa(k).cor }}>
+        <span class="sb-pos">${r.posicoes[k]}º</span><span class="sb-nome">${pessoa(k).nome}</span>
+        ${linha(fracao(r.valores[k]), r.valores[k], maior)}<em>${fmtNum(r.valores[k], r.casas)}</em></li>`)}</ol>`;
+  }
+  return html`<${Slide} tipo=${`rodada-${r.chave}`} classe=${`sb sb-r-${r.chave}`} i=${i} cor=${rgb(pessoa(venc[0]).cor)}>
     <${Entra} i=${0} classe="sb-cabeca"><span class="st-kicker">${r.titulo}</span>${r.destaque && html`<span class="sb-selo">${SELOS[r.destaque]}</span>`}<//>
-    <${Entra} i=${1} tag="h3" classe="st-titulo menor sb-vence">${venc.map((k) => b.lutadores[k].nome).join(' e ')}<//>
-    <${Entra} i=${2} tag="p" classe="sb-valor"><b>${fmtNum(r.valores[venc[0]], r.casas)}</b> ${r.unidade}${r.menor ? ' · menos vence' : ''}<//>
-    <ol class="sb-lista">${ordem.map((k, n) => html`
-      <li class=${`entra${r.posicoes[k] === 1 ? ' lider' : ''}`} style=${{ '--i': 3 + n * 0.5, '--lut': b.lutadores[k].cor }}>
-        <span class="sb-pos">${r.posicoes[k]}º</span><span class="sb-nome">${b.lutadores[k].nome}</span>
-        <span class="sb-trilho"><i style=${{ width: r.valores[k] > 0 ? `max(4px, ${(r.valores[k] / maior) * 100}%)` : '0' }}></i></span>
-        <em>${fmtNum(r.valores[k], r.casas)}</em></li>`)}</ol>
+    <${Entra} i=${1} tag="h3" classe="st-titulo menor sb-vence">${venc.map((k) => pessoa(k).nome).join(' e ')}<//>
+    <${Entra} i=${2} tag="p" classe="sb-valor"><b>${fmtNum(r.valores[venc[0]], r.casas)}</b> ${r.unidade}<//>
+    ${corpo}
+    <${Entra} i=${6} tag="p" classe="st-nota">${FRASES[r.chave]}<//>
     ${r.alerta && html`<${Entra} i=${7} tag="p" classe="sb-rodape"><span class="sb-selo">Dedinho nervoso</span> ${r.alerta.nome} pulou ${fmtNum(r.alerta.valor, 1)}%<//>`}
   <//>`;
 }

@@ -2,6 +2,7 @@
 // Nas abas, o HTML ainda vem pronto do núcleo (textos externos já escapados lá).
 import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { chegar, chegarPouco } from './chegada.js';
+import { ligarCorrida } from './corrida.js';
 import { GraficosDupla } from './graficos.js';
 import { compartilhar, desenharPosterDupla } from './poster.js';
 import { SomStories } from './som.js';
@@ -12,7 +13,7 @@ import { Player } from './stories/player.js';
 // O som da Dupla só busca trechos: nada de capas nem fotos (não vai nada ao Spotify nem ao MusicBrainz).
 const NOTA_DUPLA = 'Para o som, o SyncUp envia à Apple (iTunes) os nomes das músicas e dos artistas em comum de vocês dois, além do seu endereço IP. Os históricos e os nomes de vocês não saem do aparelho. Trechos: iTunes.';
 
-const Html = ({ conteudo, classe = '' }) => html`<div class=${`nucleo ${classe}`} dangerouslySetInnerHTML=${{ __html: conteudo }} />`;
+const Html = ({ conteudo, classe = '', liga }) => html`<div ref=${liga} class=${`nucleo ${classe}`} dangerouslySetInnerHTML=${{ __html: conteudo }} />`;
 
 function Tabela({ titulo, tabela }) {
   if (!tabela || !tabela.linhas.length) return null;
@@ -133,7 +134,7 @@ export function Resultado({ r }) {
         <${Lista} titulo=${`Só ${b}`} itens=${r.conexoes.so_b} vazio=${`Todos os artistas de ${b} também aparecem para ${a}.`} /></div>
       ${r.ponte.length > 0 && html`<div class="vidro conexao"><h3>Ponte musical</h3><p class="nota">Sugestões de artistas ausentes no recorte do outro. Não são descobertas comprovadas.</p>
         <ul class="ponte">${r.ponte.map((p) => html`<li>${p.de} → ${p.para}: <a href=${p.link} target="_blank" rel="noopener">${p.artista}</a> · ${p.plays.toLocaleString('pt-BR')} plays</li>`)}</ul></div>`}`,
-    () => html`<${GraficosDupla} g=${g} nomes=${r.nomes} /><${Html} conteudo=${h.corrida} />`,
+    () => html`<${GraficosDupla} g=${g} nomes=${r.nomes} /><${Html} conteudo=${h.corrida} liga=${ligarCorrida} />`,
     () => html`<${Medidas} metricas=${r.metricas} />
       <p class="nota">${r.aviso}</p>
       <p class="nota">Quase juntos (até 1 h de distância): <b>${r.quase.artistas.toLocaleString('pt-BR')}</b> pares com o mesmo artista e <b>${r.quase.musicas.toLocaleString('pt-BR')}</b> com a mesma música.</p>

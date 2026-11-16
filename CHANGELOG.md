@@ -1,6 +1,6 @@
 # Changelog — SyncUp
 
-## [Não lançado]
+## [1.12.0] — 2026-11-16
 
 O app no navegador deixa de baixar o CSS e o JS do app para PC.
 

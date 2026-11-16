@@ -189,3 +189,31 @@ def test_erros_iguais_aos_do_python(arquivos: dict[str, Path]) -> None:  # noqa:
         with pytest.raises(ValueError) as erro:
             _py(a, b, ('Ana', 'Bia'), opcoes)
         assert _js(a, b, ('Ana', 'Bia'), opcoes) == {'erro': str(erro.value)}
+
+
+ORIGEM = 'Origem dos dados'
+
+
+@pytest.mark.parametrize(
+    'caso', ['padrao', 'log', 'sem_periodo_comum', 'borda', 'borda_opcoes', 'mesmo_arquivo']
+)
+def test_resposta_do_app_igual_a_ponte(arquivos: dict[str, Path], caso: str) -> None:  # noqa: F811
+    """O JSON que o app recebe: o mesmo de ``ponte.comparar_dupla``, menos os gráficos (etapa 5)."""
+    from web import ponte
+
+    ca, cb, nomes, opcoes = CASOS[caso]
+    a, b = [arquivos[c] for c in ca], [arquivos[c] for c in cb]
+    js = _js(a, b, nomes, {**opcoes, '_saida': 'resposta'})
+    assert 'erro' not in js, js
+    py = json.loads(
+        json.dumps(ponte.comparar_dupla([str(c) for c in a], [str(c) for c in b], *nomes, opcoes))
+    )
+    del py['graficos']
+    # A origem dos dados é do app para PC (cache em disco); no navegador é sempre "Lido no navegador".
+    for r in (py, js):
+        tabela = r['tabelas']['diagnostico']
+        k = tabela['colunas'].index(ORIGEM)
+        for linha in tabela['linhas']:
+            linha.pop(k)
+        tabela['colunas'].pop(k)
+    _igual(py, js, 'resposta')

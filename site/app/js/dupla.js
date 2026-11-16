@@ -422,5 +422,181 @@ export function compararDupla(ca, cb, nomeA, nomeB, opcoes = {}, ids = [{ sha256
     status,
     aviso: AVISOS[status],
     diagnostico: [diagnostico(ca, ids[0], nomeA, fuso), diagnostico(cb, ids[1], nomeB, fuso)],
+    fuso,
+    // Para a resposta do app (respostaDupla): plays por hora e por mês e artista. Fora da paridade da etapa 2.
+    _bruto: [[ca, pa], [cb, pb]].map(([c, p]) => {
+      const porHora = Array(24).fill(0), porMes = new Map();
+      for (const i of p.plays) {
+        const d = new Date(c.local[i]);
+        porHora[d.getUTCHours()]++;
+        const mes = d.getUTCFullYear() * 100 + d.getUTCMonth() + 1;
+        const m = porMes.get(mes) || porMes.set(mes, new Map()).get(mes);
+        somar(m, c.artista[i]);
+      }
+      return { porHora, porMes, contagens: p.contagens };
+    }),
+  };
+}
+
+/* ---------- Resposta do app (web/ponte.comparar_dupla, sem os gráficos) ---------- */
+export const VERDE = '#1ed760', ROXO = '#c4b7ff';
+const ARTISTAS_CORRIDA = 8, LINHAS_TABELA = 20, TOP_LISTA = 10;
+
+// fmt_num do Python: milhares com ponto, decimais com vírgula.
+export function fmtNum(valor, casas = 0) {
+  const [inteiro, decimais] = Math.abs(valor).toFixed(casas).split('.');
+  const sinal = valor < 0 && Number(Math.abs(valor).toFixed(casas)) !== 0 ? '-' : '';
+  return sinal + inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + (decimais ? `,${decimais}` : '');
+}
+// html.escape(texto, quote=True) do Python.
+const escapar = (texto) => String(texto).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+
+// zlib.crc32 (o tom da capa tipográfica de cada nome, igual ao do app para PC).
+const TABELA_CRC = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+function crc32(texto) {
+  let c = 0xffffffff;
+  for (const b of new TextEncoder().encode(texto)) c = TABELA_CRC[(c ^ b) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+// Até duas iniciais (primeira e última palavra que começam com letra ou número).
+function inicial(nome) {
+  const palavras = (nome || '').split(/\s+/).filter((p) => /^[\p{L}\p{N}]/u.test(p));
+  if (!palavras.length) return '?';
+  return escapar((palavras[0][0] + (palavras.length > 1 ? palavras.at(-1)[0] : '')).toUpperCase());
+}
+
+// componentes.lista_top: a lista estilo playlist dos rankings, com o mesmo HTML do Python.
+function listaTop(entradas, cor, titulo) {
+  if (!entradas.length) return `<div class="su-tracklist-card"><h3>${escapar(titulo)}</h3><p class="su-note">Sem dados neste recorte.</p></div>`;
+  const linhas = entradas.slice(0, TOP_LISTA);
+  const maximo = Math.max(...linhas.map((l) => l.plays), 1);
+  const itens = linhas.map(({ principal, secundario, link, plays }, i) => `<li style="--i:${i}"><a href="${escapar(link)}" target="_blank" rel="noopener noreferrer">`
+    + `<span class="su-num">${i + 1}</span><span class="su-playicon" aria-hidden="true"></span>`
+    + `<span class="su-cover" style="--hue:${crc32(principal) % 360}">${inicial(principal)}</span>`
+    + `<span class="su-meta"><b>${escapar(principal)}</b>${secundario ? `<small>${escapar(secundario)}</small>` : ''}</span>`
+    + `<span class="su-mini"><i style="--value:${((plays / maximo) * 100).toFixed(1)}%"></i></span>`
+    + `<span class="su-count">${fmtNum(plays)}</span></a></li>`);
+  return `<div class="su-tracklist-card" style="--accent:${cor}"><h3>${escapar(titulo)}</h3><ol class="su-tracklist">${itens.join('')}</ol></div>`;
+}
+
+// componentes.corrida_html: plays acumulados mês a mês dos artistas que chegam ao top 8 em algum mês.
+function corridaHtml(perfis, brutos) {
+  const meses = [...new Set(brutos.flatMap((b) => [...b.porMes.keys()]))].sort((a, b) => a - b);
+  if (!meses.length) return '<p class="su-note">Sem meses suficientes para a corrida de artistas.</p>';
+  const serie = (nome, { porMes }) => {
+    const acumulado = new Map(), linhas = [], selecionados = new Set();
+    for (const mes of meses) {
+      for (const [artista, n] of porMes.get(mes) || []) somar(acumulado, artista, n);
+      linhas.push(new Map(acumulado));
+      [...acumulado].filter(([, v]) => v > 0).sort(porContagem).slice(0, ARTISTAS_CORRIDA).forEach(([k]) => selecionados.add(k));
+    }
+    const colunas = [...selecionados].sort((x, y) => (acumulado.get(y) - acumulado.get(x)) || compararTexto(x, y));
+    return { nome, artistas: colunas, valores: colunas.map((k) => linhas.map((l) => l.get(k) || 0)) };
+  };
+  const dados = {
+    meses: meses.map((m) => `${Math.floor(m / 100)}-${String(m % 100).padStart(2, '0')}`),
+    topo: ARTISTAS_CORRIDA,
+    perfis: [{ ...serie(perfis[0].nome, brutos[0]), cor: VERDE, rotulo: 'A' }, { ...serie(perfis[1].nome, brutos[1]), cor: ROXO, rotulo: 'B' }],
+  };
+  return `<div class="su-race" data-race="${escapar(JSON.stringify(dados))}"><p class="su-note">Corrida dos artistas: plays ≥30s acumulados mês a mês no recorte. Ative o JavaScript para ver a animação.</p></div>`;
+}
+
+// ponte._tabela + apresentacao.tabela_display: números em pt-BR (inteiros sem casas, decimais com 2).
+const celula = (v, inteiro = false) => (typeof v !== 'number' ? (v ?? '') : Number.isNaN(v) ? '—' : fmtNum(v, inteiro || Number.isInteger(v) ? 0 : 2));
+const tabela = (colunas, linhas, inteiro = () => false) => ({ colunas, linhas: linhas.map((l, r) => l.map((v) => String(celula(v, inteiro(r))))) });
+const COLUNAS_MOMENTOS = ['Artista', 'Música A', 'Música B', 'Instante A (UTC)', 'Instante B (UTC)', 'Horário A', 'Horário B', 'Distância (min)'];
+const MEDIDAS = ['count', 'mean', 'std', 'min', '25%', '50%', '75%', 'max'];
+
+// ponte._trilha_dupla: a música de cada story vem da playlist comum (a mais ouvida pelos dois primeiro).
+function trilhaDupla(r, apresentar) {
+  const comuns = r.playlist.slice(0, 10).map(([artista, musica]) => ({ faixa: musica, artista }));
+  const emComum = r.comuns.slice(0, 3);
+  const doArtista = comuns.filter((m) => emComum.includes(m.artista));
+  const favoritos = r.perfis.filter((p) => p.top_artistas.length).map((p) => ({ artista: p.top_artistas[0][0] }));
+  const juntos = r.sintonia.musica ? [{ faixa: r.sintonia.musica.nome, artista: r.sintonia.musica.artista }] : [];
+  const slides = {
+    abertura: comuns.slice(0, 1),
+    em_comum: [...doArtista.slice(0, 1), ...emComum.map((a) => ({ artista: a }))],
+    frente: favoritos,
+    apresentar: apresentar.map((p) => ({ artista: p.artista })),
+    relogios: comuns.slice(1, 2),
+    sintonia: juntos,
+    sintonia_musica: juntos,
+    poster: comuns.slice(0, 1),
+  };
+  return {
+    slides: Object.fromEntries(Object.entries(slides).filter(([, c]) => c.length)),
+    fila: [...comuns, ...emComum.map((a) => ({ artista: a }))],
+  };
+}
+
+// ponte._dupla_json: o contrato dos stories da Dupla.
+function duplaJson(r) {
+  const [ra, rb] = r._bruto.map((b) => b.contagens);
+  const posicoes = [ra, rb].map((m) => new Map([...m].sort(porContagem).map(([k], i) => [k, i + 1])));
+  const pessoa = (p, b) => ({ nome: p.nome, plays: p.plays, horas: p.horas, artistas: p.artistas, plays_por_hora: b.porHora, pico_hora: b.porHora.indexOf(Math.max(...b.porHora)) });
+  const favorito = (i) => {
+    const topo = r.perfis[i].top_artistas[0];
+    return topo ? { nome: topo[0], plays: topo[1], posicao_no_outro: posicoes[1 - i].get(topo[0]) ?? null } : null;
+  };
+  const apresentar = [r.perfis[0].nome, r.perfis[1].nome].flatMap((de) => r.ponte.filter((l) => l[0] === de).slice(0, 2)
+    .map(([d, para, artista, plays, , link]) => ({ de: d, para, artista, plays, link })));
+  return {
+    a: pessoa(r.perfis[0], r._bruto[0]),
+    b: pessoa(r.perfis[1], r._bruto[1]),
+    inicio: r.periodo.inicio,
+    fim: r.periodo.fim,
+    periodo_comum: r.periodo.comum,
+    match: r.metricas.cosseno,
+    total_comuns: r.comuns.length,
+    em_comum: r.comuns.slice(0, 3).map((nome) => ({ nome, plays_a: ra.get(nome) || 0, plays_b: rb.get(nome) || 0 })),
+    favoritos: [favorito(0), favorito(1)],
+    apresentar,
+    sintonia: r.sintonia,
+    trilha: trilhaDupla(r, apresentar),
+  };
+}
+
+const dataBr = (iso) => iso.slice(0, 10).split('-').reverse().join('/');
+
+/** A mesma resposta de web/ponte.comparar_dupla (sem `graficos`), a partir de compararDupla. */
+export function respostaDupla(r) {
+  const [a, b] = r.perfis;
+  const listaArtistas = (p) => p.top_artistas.map(([nome, plays]) => ({ principal: nome, secundario: '', link: linkSpotify(nome), plays }));
+  const listaMusicas = (p) => p.top_musicas.map(([musica, artista, plays]) => ({ principal: musica, secundario: artista, link: linkSpotify(artista, musica), plays }));
+  // Distância e estatísticas são decimais no Python (2 casas mesmo quando redondas, como 30,00); o JS não distingue 30 de 30.0.
+  const decimal = (v) => (Number.isNaN(v) ? '—' : fmtNum(v, 2));
+  const momentos = (q) => tabela(COLUNAS_MOMENTOS, q.exemplos.map((l) => [...l.slice(0, 7), decimal(l[7])]));
+  const div = (p, d) => [p.nome, fmtNum(p.artistas), d.entropia === null ? '—' : fmtNum(d.entropia, 4), d.gini === null ? '—' : fmtNum(d.gini, 4)];
+  const colunasDiagnostico = Object.keys(r.diagnostico[0]);
+  return {
+    nomes: [a.nome, b.nome],
+    periodo: r.periodo.comum
+      ? `${dataBr(r.periodo.inicio)} a ${dataBr(r.periodo.fim)} (fuso ${r.fuso})`
+      : `Históricos completos, com coberturas potencialmente diferentes. Fuso: ${r.fuso}.`,
+    aviso: r.aviso,
+    dupla: duplaJson(r),
+    metricas: r.metricas,
+    html: {
+      corrida: corridaHtml(r.perfis, r._bruto),
+      listas: [
+        listaTop(listaArtistas(a), VERDE, `Top artistas · ${a.nome}`),
+        listaTop(listaArtistas(b), ROXO, `Top artistas · ${b.nome}`),
+        listaTop(listaMusicas(a), VERDE, `Top músicas · ${a.nome}`),
+        listaTop(listaMusicas(b), ROXO, `Top músicas · ${b.nome}`),
+      ],
+    },
+    quase: { artistas: r.quase_artistas.total_pares, musicas: r.quase_musicas.total_pares },
+    conexoes: { comuns: r.comuns.slice(0, 20), so_a: r.so_a.slice(0, 20), so_b: r.so_b.slice(0, 20) },
+    ponte: r.ponte.map(([de, para, artista, plays, , link]) => ({ de, para, artista, plays, link })),
+    tabelas: {
+      playlist: tabela(['Artista', 'Música', 'Reproduções A', 'Reproduções B', 'Spotify'], r.playlist.slice(0, LINHAS_TABELA)),
+      contribuicoes: tabela(['Artista', 'Contribuição ao cosseno'], r.contribuicoes.slice(0, LINHAS_TABELA).map(([k, v]) => [k, `${fmtNum(v * 100, 4)} p.p.`])),
+      diversidade: tabela(['Perfil', 'Artistas observados', 'Entropia normalizada', 'Gini observado'], [div(a, r.diversidade[0]), div(b, r.diversidade[1])]),
+      estatisticas: tabela(['Medida', 'Minutos por execução · A', 'Minutos por execução · B'], MEDIDAS.map((m, k) => [m, ...[0, 1].map((p) => (k === 0 ? fmtNum(r.estatisticas[p][k]) : decimal(r.estatisticas[p][k])))])),
+      diagnostico: tabela(colunasDiagnostico, r.diagnostico.map((d) => colunasDiagnostico.map((k) => d[k]))),
+      quase_artistas: momentos(r.quase_artistas),
+      quase_musicas: momentos(r.quase_musicas),
+    },
   };
 }

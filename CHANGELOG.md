@@ -1,9 +1,16 @@
 # Changelog — SyncUp
 
-## [Não lançado]
+## [1.11.0] — 2026-11-16
+
+A Dupla roda em JavaScript no navegador, sem baixar o Python, e os gráficos foram refeitos para o celular.
 
 ### Mudado
+- **Dupla sem Pyodide:** a comparação roda em JavaScript num Web Worker, como o Wrapped desde a 1.5.0. Não baixa mais o Python (~15 MB na primeira visita). A demo da Dupla caiu de 18,7 s para 1,0 s no PC. Os resultados são os mesmos do Python: paridade em testes a cada etapa, inclusive a resposta inteira do app e o CSV da playlist, byte a byte.
+- **"Testar com dados fictícios"** usa dois históricos prontos (Ana e Bruno), sem gerar nada no aparelho.
 - **Gráficos da Dupla no app web, sem Plotly:** quatro gráficos em HTML, pensados primeiro para o celular. Cada um tem no título o fato principal, os números escritos (sem depender do mouse) e uma tabela para leitor de tela. Saíram o mapa de 168 células e os "Rankings comparados", que repetiam os artistas lado a lado. A aba não baixa mais ~5 MB e não prende a rolagem no celular. O app para PC segue com o Plotly.
+
+### Corrigido
+- **Empates com regra explícita no Python e no JS:** as contribuições ao cosseno desempatam pelo valor com 15 casas, e os 12 artistas do gráfico desempatam pelo nome. Antes, a ordem de empates podia variar.
 
 ## [1.10.0] — 2026-11-13
 

@@ -203,6 +203,8 @@ export async function lerHistorico(arquivos, opcoes = {}) {
   const unico = (v) => (typeof v === 'string' ? unicos.get(v) ?? (unicos.set(v, v), v) : null);
   const familias = new Map();
   const c = { utc: [], local: [], ms: [], musica: [], artista: [], uri: [], pulada: [], aleatorio: [], offline: [], plataforma: [], motivo: [] };
+  // Descartes na mesma ordem e com os mesmos nomes de dados.ContadoresCarga (diagnóstico da Dupla).
+  const n = { recebidos: 0, podcasts: 0, ms_invalidos: 0, datas_invalidas: 0, metadados_invalidos: 0, various_artists_encontrados: 0, various_artists_descartados: 0, ignorados: 0, duplicados: 0, validos: 0 };
   const bool = (v) => (typeof v === 'boolean' ? v : null);
 
   for (const arquivo of arquivos) {
@@ -213,21 +215,22 @@ export async function lerHistorico(arquivos, opcoes = {}) {
       if (!Array.isArray(conteudo) || !conteudo.some((x) => objeto(x) && CAMPOS.some((k) => k in x))) continue;
       for (const bruto of conteudo) {
         const e = objeto(bruto) ? bruto : {};
+        n.recebidos++;
         if (encontrados.size < CAMPOS.length) for (const k of CAMPOS) if (k in e) encontrados.add(k);
-        if (e.episode_name || e.episode_show_name || e.spotify_episode_uri) continue; // podcast
+        if (e.episode_name || e.episode_show_name || e.spotify_episode_uri) { n.podcasts++; continue; }
         const msBruto = e.ms_played;
         const ms = typeof msBruto === 'number' ? msBruto : typeof msBruto === 'string' && msBruto.trim() ? Number(msBruto) : NaN;
-        if (!(ms >= 0 && ms <= TETO_MS)) continue; // mais de 24 h num play só: arquivo corrompido ou adulterado
+        if (!(ms >= 0 && ms <= TETO_MS)) { n.ms_invalidos++; continue; } // mais de 24 h num play só: arquivo corrompido ou adulterado
         const utc = instanteUtc(e.ts);
-        if (!(utc >= 0)) continue; // NaN ou antes de 1970 (relógio zerado): o cálculo por dia supõe dia ≥ 0
+        if (!(utc >= 0)) { n.datas_invalidas++; continue; } // NaN ou antes de 1970 (relógio zerado): o cálculo por dia supõe dia ≥ 0
         const musica = typeof e.master_metadata_track_name === 'string' ? unico(e.master_metadata_track_name.trim()) : '';
         const artista = typeof e.master_metadata_album_artist_name === 'string' ? unico(e.master_metadata_album_artist_name.trim()) : '';
-        if (!musica || !artista) continue;
-        if (ignorarVarios && norm(artista) === VARIOS) continue;
-        if ((musicasIgnoradas.size && musicasIgnoradas.has(norm(musica))) || (artistasIgnorados.size && artistasIgnorados.has(norm(artista)))) continue;
+        if (!musica || !artista) { n.metadados_invalidos++; continue; }
+        if (norm(artista) === VARIOS) { n.various_artists_encontrados++; if (ignorarVarios) { n.various_artists_descartados++; continue; } }
+        if ((musicasIgnoradas.size && musicasIgnoradas.has(norm(musica))) || (artistasIgnorados.size && artistasIgnorados.has(norm(artista)))) { n.ignorados++; continue; }
         if (vistos) {
           const chave = `${utc}|${ms}|${musica}|${artista}`;
-          if (vistos.has(chave)) continue;
+          if (vistos.has(chave)) { n.duplicados++; continue; }
           vistos.add(chave);
         }
         const plataforma = typeof e.platform === 'string' ? (familias.get(e.platform) ?? (familias.set(e.platform, familiaPlataforma(e.platform)), familias.get(e.platform))) : null;
@@ -238,5 +241,7 @@ export async function lerHistorico(arquivos, opcoes = {}) {
     }
     if (encontrados.size < CAMPOS.length) throw falha('estendido');
   }
+  n.validos = c.utc.length;
+  c.contadores = n;
   return c;
 }

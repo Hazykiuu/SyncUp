@@ -2,7 +2,7 @@
 // Nas abas, o HTML ainda vem pronto do núcleo (textos externos já escapados lá).
 import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { chegar, chegarPouco } from './chegada.js';
-import { baixar, executar } from './motor.js';
+import { GraficosDupla } from './graficos.js';
 import { compartilhar, desenharPosterDupla } from './poster.js';
 import { SomStories } from './som.js';
 import { SLIDES_DUPLA } from './stories/dupla.js';
@@ -23,30 +23,6 @@ function Tabela({ titulo, tabela }) {
         <tbody>${tabela.linhas.map((l) => html`<tr>${l.map((v) => html`<td>${v}</td>`)}</tr>`)}</tbody>
       </table>
     </div>`;
-}
-
-// plotly.js só baixa quando a aba Gráficos abre (~5 MB).
-let plotly = null;
-const carregarPlotly = () => plotly ??= new Promise((ok, erro) => {
-  const s = Object.assign(document.createElement('script'), { src: 'https://cdn.jsdelivr.net/npm/plotly.js-dist-min@3.7.0/plotly.min.js', integrity: 'sha384-l4G4qURPwALv583BKlynU/4LiUx0rk9jcTX58Aq+Jc+jgWb52zeH2geZkSS3UPPs', crossOrigin: 'anonymous', // se o CDN trocar o arquivo, o navegador recusa
-    onload: () => ok(window.Plotly), onerror: () => { s.remove(); plotly = null; erro(); } });
-  document.head.append(s);
-});
-
-function Grafico({ figura, titulo }) {
-  const alvo = useRef(null);
-  const [falhou, setFalhou] = useState(false);
-  useEffect(() => {
-    let vivo = true;
-    // Fundo transparente (o gráfico fica no vidro do cartão) e sem o título do Plotly: o <figcaption> já dá o nome.
-    const layout = { ...figura.layout, autosize: true, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', title: { text: '' }, margin: { ...figura.layout.margin, t: 24 } };
-    carregarPlotly().then((P) => vivo && P.newPlot(alvo.current, figura.data, layout, { responsive: true, displaylogo: false }))
-      .catch(() => vivo && setFalhou(true));
-    return () => { vivo = false; window.Plotly?.purge(alvo.current); };
-  }, [figura]);
-  return html`<figure class="grafico vidro"><figcaption>${titulo}</figcaption>
-    ${falhou && html`<p class="erro" role="alert">Não deu para baixar os gráficos. Confira a internet e abra esta aba de novo.</p>`}
-    <div ref=${alvo} class="grafico-area" role="img" aria-label=${titulo}></div></figure>`;
 }
 
 // Nomes como etiquetas: as 12 primeiras à vista, o resto atrás de "ver mais".
@@ -85,7 +61,7 @@ function Medidas({ metricas }) {
 
 // Ações embaixo dos stories: pôster em PNG (Canvas, no aparelho), playlist em CSV e "ver de novo".
 const segundos = (ms) => (ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
-function Acoes({ d, aoRepetir }) {
+function Acoes({ d, csv, aoRepetir }) {
   const [ocupado, setOcupado] = useState('');
   const [aviso, setAviso] = useState('');
   const [erro, setErro] = useState('');
@@ -100,7 +76,12 @@ function Acoes({ d, aoRepetir }) {
     const como = await compartilhar(blob, 'syncup-dupla.png', 'Nossa sintonia no SyncUp');
     setAviso(como === 'cancelado' ? '' : `Pôster pronto em ${segundos(ms)} s${como === 'baixado' ? ' (baixado como syncup-dupla.png)' : ''}.`);
   });
-  const playlist = () => fazer('playlist', async () => baixar(await executar('playlist_dupla', [], { saida: 'arquivo' })));
+  // A playlist comum inteira vem pronta do Worker (dupla.csvPlaylist): só vira arquivo para baixar.
+  const playlist = () => fazer('playlist', async () => {
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    Object.assign(document.createElement('a'), { href: url, download: 'SyncUp_playlist.csv' }).click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
   return html`
     <div class="compartilhar"><div class="acoes">
       <button type="button" class="btn btn-verde" onClick=${poster} disabled=${!!ocupado}>${ocupado === 'poster' ? 'Gerando…' : 'Compartilhar pôster'}</button>
@@ -152,10 +133,7 @@ export function Resultado({ r }) {
         <${Lista} titulo=${`Só ${b}`} itens=${r.conexoes.so_b} vazio=${`Todos os artistas de ${b} também aparecem para ${a}.`} /></div>
       ${r.ponte.length > 0 && html`<div class="vidro conexao"><h3>Ponte musical</h3><p class="nota">Sugestões de artistas ausentes no recorte do outro. Não são descobertas comprovadas.</p>
         <ul class="ponte">${r.ponte.map((p) => html`<li>${p.de} → ${p.para}: <a href=${p.link} target="_blank" rel="noopener">${p.artista}</a> · ${p.plays.toLocaleString('pt-BR')} plays</li>`)}</ul></div>`}`,
-    () => html`<div class="graficos">
-      <${Grafico} figura=${g.artistas} titulo="Artistas mais ouvidos, lado a lado" /><${Grafico} figura=${g.horarios} titulo="Quando cada um ouve" />
-      <${Grafico} figura=${g.tracos} titulo="Traços de escuta" /><${Grafico} figura=${g.rankings} titulo="Rankings comparados" /><${Grafico} figura=${g.meses} titulo="Horas por mês" /></div>
-      <${Html} conteudo=${h.corrida} />`,
+    () => html`<${GraficosDupla} g=${g} nomes=${r.nomes} /><${Html} conteudo=${h.corrida} />`,
     () => html`<${Medidas} metricas=${r.metricas} />
       <p class="nota">${r.aviso}</p>
       <p class="nota">Quase juntos (até 1 h de distância): <b>${r.quase.artistas.toLocaleString('pt-BR')}</b> pares com o mesmo artista e <b>${r.quase.musicas.toLocaleString('pt-BR')}</b> com a mesma música.</p>
@@ -172,7 +150,7 @@ export function Resultado({ r }) {
       <div ref=${stories} class="nucleo">
         <${Player} key=${r} slides=${slides} rotulo=${`Dupla de ${a} e ${b}`} />
       </div>
-      <${Acoes} d=${r.dupla} aoRepetir=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))} />
+      <${Acoes} d=${r.dupla} csv=${r.csv} aoRepetir=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))} />
       <div ref=${lista} class="sub-abas" role="tablist" aria-label="Partes do resultado" onKeyDown=${teclar}>
         ${ABAS.map((rotulo, i) => html`<button ref=${(el) => (botoes.current[i] = el)} role="tab" id=${`aba-${i}`} aria-selected=${aba === i} tabindex=${aba === i ? 0 : -1} onClick=${() => setAba(i)}>${rotulo}</button>`)}
       </div>

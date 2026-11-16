@@ -1,4 +1,4 @@
-# SyncUp v1.10
+# SyncUp v1.11
 
 Compare o seu histórico do Spotify com o dos amigos e veja com quem você está em sintonia, em stories. **Use direto no navegador**, no computador ou no celular: sem instalar, sem conta, sem anúncios, e o histórico não sai do seu aparelho. Há também um app para PC com o Match e o Grupo. Projeto de ciência de dados, **código aberto** ([licença MIT](LICENSE)).
 
@@ -77,7 +77,7 @@ Feche a janela preta (o terminal) que o `iniciar.bat` abriu, ou aperte `Ctrl+C` 
 
 ### Dupla: a história de duas pessoas, em stories
 
-No navegador, a Dupla vira 7 stories: o quanto a escuta se parece (num afinador: 100% é "afinados", a 440 Hz), o que une vocês, o favorito de cada um, um som de cada um para o outro, os relógios de escuta e **Em sintonia**, os minutos em que vocês ouviram a mesma música ao mesmo tempo. Depois vêm os rankings, os gráficos, os detalhes técnicos, um pôster para o Instagram e a playlist em comum em CSV. No app para PC, a Dupla mostra também o Blend e a identidade musical de cada um.
+No navegador, a Dupla vira 7 stories: o quanto a escuta se parece (num afinador: 100% é "afinados", a 440 Hz), o que une vocês, o favorito de cada um, um som de cada um para o outro, os relógios de escuta e **Em sintonia**, os minutos em que vocês ouviram a mesma música ao mesmo tempo. Depois vêm os rankings, os gráficos (em HTML, sem Plotly, com o fato principal no título de cada um), os detalhes técnicos, um pôster para o Instagram e a playlist em comum em CSV. No app para PC, a Dupla mostra também o Blend e a identidade musical de cada um.
 
 ![Dupla e Wrapped no navegador](docs/img/recursos.jpg)
 
@@ -129,7 +129,7 @@ python -m ruff format --check .
 
 O CI roda os mesmos comandos no GitHub, em Python 3.10 e 3.12, mais `node --test tests/js/*.test.mjs` para o app do navegador. O cache Parquet é opcional: `python -m pip install -r requirements-parquet.txt`.
 
-**App do navegador (`site/`) num servidor local:** rode antes `python tools/empacotar_web.py`. Ele gera em `site/app/` os arquivos que não ficam no Git (`syncup-core.zip`, `componentes.css`, `componentes.js` e `demo-wrapped.zip`); sem eles a Dupla e a demo do Wrapped não abrem. Depois de mexer no Python do núcleo, rode de novo.
+**App do navegador (`site/`) num servidor local:** rode antes `python tools/empacotar_web.py`. Ele gera em `site/app/` os arquivos que não ficam no Git (`componentes.css`, `componentes.js` e as demos `demo-wrapped.zip` e `demo-bruno.zip`); sem eles o visual das listas e o "Testar com dados fictícios" não funcionam. Depois de mexer em `styles.css` ou `syncup.js`, rode de novo.
 
 | Módulo | Papel |
 |---|---|
@@ -141,7 +141,7 @@ O CI roda os mesmos comandos no GitHub, em Python 3.10 e 3.12, mais `node --test
 | `wrapped.py`, `arquetipos.py`, `stories.py`, `cartao.py` | Wrapped, stories e PNGs |
 | `festa.py`, `exportacoes.py`, `privacidade.py` | Playlist da festa, CSV protegido e "Meus dados" |
 | `ui/`, `componentes.py`, `syncup.js`, `styles.css` | Interface Gradio 6 do app para PC |
-| `site/` | Página inicial e app no navegador (Preact + htm, sem build); a Dupla roda o núcleo Python no Pyodide |
+| `site/` | Página inicial e app no navegador (Preact + htm, sem build); Dupla e Wrapped calculados em JavaScript, com paridade testada contra o núcleo Python |
 | `site/app/js/historico.js`, `calculo.js` | Wrapped do app no navegador em JavaScript, com as regras do Python (teste de paridade em `tests/test_paridade_wrapped.py`) |
 
 ```python

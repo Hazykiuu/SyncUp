@@ -1,68 +1,64 @@
-// App do SyncUp no navegador: casca (topo, motor) e a tela Dupla.
+// App do SyncUp no navegador: casca (topo, modos) e a tela Dupla.
 import { html, render, useEffect, useRef, useState } from 'preact-htm';
-import { chegarPouco, pulsar } from './chegada.js';
-import { aoProgredir, executar, iniciar } from './motor.js';
+import { chegarPouco } from './chegada.js';
 import { audioCtx, destravarSom, pausarSom, silenciado } from './som.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { Resultado } from './resultado.js';
 import { Wrapped } from './wrapped.js';
 
-// Carregamento como equalizador: 24 barras de alturas fixas que se acendem conforme o progresso.
-const ALTURAS = [.35, .6, .45, .8, .55, 1, .7, .5, .85, .4, .65, .9, .5, .75, .45, .95, .6, .4, .7, .85, .5, .65, .35, .55];
+const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos arquivos.';
+const DEMO = [['demo-wrapped.zip', 'Ana (fictícia)'], ['demo-bruno.zip', 'Bruno (fictício)']]; // os mesmos de ponte.arquivos_demo
 
-// O ponto verde só pulsa quando o motor acabou de ficar pronto, não a cada volta para a Dupla.
-let prontoEm = -Infinity;
-const pontoPronto = (el) => { if (performance.now() - prontoEm < 1000) pulsar(el); };
-
-function Motor({ estado }) {
-  if (estado.pronto) return html`<p class="motor ok" role="status"><span ref=${pontoPronto} class="ponto" aria-hidden="true"></span>Pronto para comparar</p>`;
-  if (estado.erro) return html`<p class="motor erro" role="alert">Não foi possível carregar o SyncUp: ${estado.erro} <button type="button" class="btn btn-borda vidro" onClick=${() => location.reload()}>Tentar de novo</button></p>`;
-  return html`
-    <div class="motor" role="status" aria-live="polite">
-      <span>${estado.etapa}</span>
-      <div class="eq" role="progressbar" aria-label="Carregando o SyncUp" aria-valuemin="0" aria-valuemax="100" aria-valuenow=${Math.round(estado.fracao * 100)}>
-        ${ALTURAS.map((h, k) => html`<i class=${k < Math.round(estado.fracao * ALTURAS.length) ? 'aceso' : ''} style=${{ '--h': h }}></i>`)}
-      </div>
-      <small>Na primeira visita o navegador baixa o Python (~15 MB) e guarda. Nas próximas ele só carrega, em alguns segundos.</small>
-    </div>`;
+// A comparação roda em JavaScript num Worker (dupla-worker.js), sem baixar o Python. Um Worker por
+// comparação: ao terminar, o navegador devolve toda a memória (importa no celular).
+function compararNoWorker(a, b, nomes, opcoes) {
+  return new Promise((ok, erro) => {
+    const w = new Worker('dupla-worker.js', { type: 'module' });
+    w.onmessage = ({ data }) => { w.terminate(); data.ok ? ok(data.dados) : erro(new Error(data.erro)); };
+    w.onerror = (e) => { e.preventDefault?.(); w.terminate(); erro(new Error(SEM_RESPOSTA)); };
+    w.postMessage({ a, b, nomes, opcoes }, [...a, ...b].map((x) => x.bytes));
+  });
 }
 
-function Dupla({ pronto }) {
+const lerArquivos = (lista) => Promise.all(lista.map(async (f) => ({ nome: f.name, bytes: await f.arrayBuffer() })));
+
+function Dupla() {
   const [nomes, setNomes] = useState(['', '']);
   const [arquivos, setArquivos] = useState([[], []]);
   const [opcoes, setOpcoes] = useState(PADRAO);
   const [fase, setFase] = useState({ tipo: 'parado' });
   const ocupado = fase.tipo === 'processando';
-  const pode = pronto && !ocupado && arquivos[0].length > 0 && arquivos[1].length > 0;
+  const pode = !ocupado && arquivos[0].length > 0 && arquivos[1].length > 0;
   // Qual foi a última tentativa ("comparar" ou "demo"), para o "Tentar de novo" do erro. Guarda o tipo, não a
   // função: o botão chama a da renderização atual, com os arquivos e opções que a tela mostra agora.
   const ultima = useRef(null);
 
-  const rodar = async (args, envio = []) => {
-    setFase({ tipo: 'processando', etapa: 'Lendo os históricos e calculando a sintonia… (na primeira comparação o navegador também baixa os gráficos, ~10 MB)' });
+  // `ler` devolve os dois lados ([{nome, bytes}]); ler os arquivos conta no tempo (é o que a pessoa espera).
+  const rodar = async (ler, nomesUsados) => {
+    setFase({ tipo: 'processando', etapa: 'Lendo os históricos e calculando a sintonia…' });
     try {
-      const r = await executar('comparar_dupla', args, { arquivos: envio });
+      const [a, b] = await ler();
+      const r = await compararNoWorker(a, b, nomesUsados, opcoes);
       setFase({ tipo: 'resultado', r });
       requestAnimationFrame(() => document.getElementById('resultado')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     } catch (e) { setFase({ tipo: 'erro', mensagem: e.message }); }
   };
   const comparar = () => {
-    const envio = arquivos.flatMap((lista, p) => lista.map((arquivo, i) => ({ caminho: `/tmp/${p ? 'b' : 'a'}-${i}-${arquivo.name.replace(/[^\w.-]/g, '_')}`, arquivo })));
-    const caminhos = [0, 1].map((p) => envio.filter((e) => e.caminho.startsWith(`/tmp/${p ? 'b' : 'a'}-`)).map((e) => e.caminho));
     ultima.current = 'comparar';
     destravarSom(); // dentro do clique, antes de qualquer espera: o iPhone só toca som destravado por um toque
-    rodar([caminhos[0], caminhos[1], nomes[0] || 'Pessoa A', nomes[1] || 'Pessoa B', opcoes], envio);
+    rodar(() => Promise.all(arquivos.map(lerArquivos)), [nomes[0] || 'Pessoa A', nomes[1] || 'Pessoa B']);
   };
-  const demo = async () => {
+  // Dois históricos fictícios prontos (gerados por tools/empacotar_web.py): nenhum dado real.
+  const demo = () => {
     ultima.current = 'demo';
     destravarSom();
-    setFase({ tipo: 'processando', etapa: 'Gerando dois históricos fictícios no seu aparelho…' });
-    try {
-      const d = await executar('arquivos_demo');
-      setNomes([d.nome_a, d.nome_b]); setArquivos([[], []]);
-      await rodar([[d.a], [d.b], d.nome_a, d.nome_b, opcoes]);
-    } catch (e) { setFase({ tipo: 'erro', mensagem: e.message }); }
+    setNomes(DEMO.map(([, nome]) => nome)); setArquivos([[], []]);
+    rodar(() => Promise.all(DEMO.map(async ([arquivo]) => {
+      const resposta = await fetch(arquivo).catch(() => null);
+      if (!resposta?.ok) throw new Error('Não deu para baixar os históricos fictícios. Confira a internet e tente de novo.');
+      return [{ nome: arquivo, bytes: await resposta.arrayBuffer() }];
+    })), DEMO.map(([, nome]) => nome));
   };
   // Atualização por função: duas mudanças no mesmo instante não apagam uma à outra.
   const mudar = (lista, i, v) => lista.map((x, j) => (j === i ? v : x));
@@ -76,8 +72,8 @@ function Dupla({ pronto }) {
     <div class="barra-acao">
       <button type="button" class="btn btn-verde" onClick=${comparar} disabled=${!pode} aria-describedby="dica-comparar">
         ${ocupado ? 'Comparando…' : 'Comparar históricos'}<span class="seta" aria-hidden="true">→</span></button>
-      <button type="button" class="btn btn-borda vidro" onClick=${demo} disabled=${!pronto || ocupado}>Testar com dados fictícios</button>
-      <small id="dica-comparar">${!pronto ? 'Esperando o SyncUp terminar de carregar.' : arquivos[0].length && arquivos[1].length ? '' : 'Envie pelo menos um arquivo para cada pessoa.'}</small>
+      <button type="button" class="btn btn-borda vidro" onClick=${demo} disabled=${ocupado}>Testar com dados fictícios</button>
+      <small id="dica-comparar">${arquivos[0].length && arquivos[1].length ? '' : 'Envie pelo menos um arquivo para cada pessoa.'}</small>
     </div>
     <div aria-live="polite">
       ${fase.tipo === 'processando' && html`<p ref=${chegarPouco} class="processando vidro"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
@@ -104,7 +100,6 @@ function cliqueFader(paraWrapped) {
 }
 
 function App() {
-  const [motor, setMotor] = useState({ etapa: 'Preparando…', fracao: 0, pronto: false, erro: '' });
   // As duas telas ficam montadas (hidden): trocar de aba não perde o resultado.
   // Só hash conhecido troca de modo: "Pular para o conteúdo" (#principal) fica onde a pessoa está.
   const lerModo = (atual = 'dupla') => (location.hash === '#wrapped' ? 'wrapped' : location.hash === '#dupla' || location.hash === '' ? 'dupla' : atual);
@@ -128,14 +123,6 @@ function App() {
     addEventListener('hashchange', mudar);
     return () => removeEventListener('hashchange', mudar);
   }, []);
-  // O Python (Pyodide) só baixa quando a Dupla abre: o Wrapped roda em JavaScript.
-  const iniciado = useRef(false);
-  useEffect(() => {
-    if (modo !== 'dupla' || iniciado.current) return;
-    iniciado.current = true;
-    aoProgredir(({ etapa, fracao }) => setMotor((m) => ({ ...m, etapa, fracao })));
-    iniciar().then(() => { prontoEm = performance.now(); setMotor((m) => ({ ...m, pronto: true })); }).catch((e) => setMotor((m) => ({ ...m, erro: e.message })));
-  }, [modo]);
   const marca = html`<a class="marca vivo" href="../" aria-label="SyncUp, voltar ao site"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>SyncUp</a>`;
   return html`
     <header class="app-topo shell">${marca}</header>
@@ -152,9 +139,8 @@ function App() {
         <div class="app-cabeca">
           <h1>${modo === 'wrapped' ? 'Seu Wrapped da vida toda' : 'Compare dois históricos'}</h1>
           <p class="sub">${modo === 'wrapped' ? 'Envie o seu Histórico Estendido do Spotify e veja a sua vida musical em stories. O histórico não sai do seu aparelho.' : 'Envie o Histórico Estendido do Spotify de duas pessoas. Nada é enviado para nenhum servidor.'}</p>
-          ${modo === 'dupla' && html`<${Motor} estado=${motor} />`}
         </div>
-        <div hidden=${modo !== 'dupla'}><${Dupla} pronto=${motor.pronto} /></div>
+        <div hidden=${modo !== 'dupla'}><${Dupla} /></div>
         <div hidden=${modo !== 'wrapped'}><${Wrapped} /></div>
       </div>
     </main>`;

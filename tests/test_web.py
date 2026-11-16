@@ -1,4 +1,4 @@
-"""App no navegador: o pacote do Pyodide e a ponte (rodando aqui no Python comum)."""
+"""App no navegador: os arquivos gerados e a ponte Python, que é a referência dos testes de paridade."""
 
 from __future__ import annotations
 
@@ -27,15 +27,17 @@ def zips(tmp_path_factory: pytest.TempPathFactory) -> tuple[str, str]:
     return str(a), str(b)
 
 
-def test_pacote_leva_so_o_que_roda_no_navegador(tmp_path: Path) -> None:
-    with zipfile.ZipFile(empacotar(tmp_path / 'nucleo.zip')) as pacote:
-        nomes = set(pacote.namelist())
-    assert {'web/ponte.py', 'analise.py', 'dados.py', 'fontes/Figtree.ttf'} <= nomes
-    # Rede, servidor e interface Gradio ficam de fora.
-    assert not nomes & {'generos.py', 'spotify_api.py', 'listenbrainz.py', 'app.py'}
-    assert not any(n.startswith('ui/') for n in nomes)
-    with zipfile.ZipFile(tmp_path / 'demo-wrapped.zip') as demo:  # demo do Wrapped (JS)
-        assert any(n.endswith('.json') for n in demo.namelist())
+def test_empacotamento_gera_o_visual_e_as_duas_demos(tmp_path: Path) -> None:
+    pasta = empacotar(tmp_path)
+    assert (pasta / 'componentes.css').read_text(encoding='utf-8').strip()
+    assert (pasta / 'componentes.js').read_text(encoding='utf-8').startswith('(')
+    for demo in (
+        'demo-wrapped.zip',
+        'demo-bruno.zip',
+    ):  # Ana e Bruno do "Testar com dados fictícios"
+        with zipfile.ZipFile(pasta / demo) as pacote:
+            assert any(n.endswith('.json') for n in pacote.namelist())
+    assert not (pasta / 'syncup-core.zip').exists()  # sem Python no navegador desde a 1.11
 
 
 def test_ponte_nao_importa_gradio_nem_rede() -> None:

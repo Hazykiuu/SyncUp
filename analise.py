@@ -309,7 +309,14 @@ def comparar(
     total_a, total_b = len(va), len(vb)
     todos = ra.index.union(rb.index)
     pesos = ra.reindex(todos, fill_value=0) / total_a + rb.reindex(todos, fill_value=0) / total_b
-    selecionados = pesos.nlargest(QUANTIDADE_ARTISTAS_GRAFICO).index
+    # Maior participação somada; empate pelo nome (o nlargest do pandas não garante a ordem dos empates,
+    # e o app do navegador precisa da mesma ordem: dupla.js).
+    selecionados = pd.Index(
+        [k for k, _ in sorted(pesos.items(), key=lambda kv: (-kv[1], kv[0]))][
+            :QUANTIDADE_ARTISTAS_GRAFICO
+        ],
+        dtype=object,
+    )
     grafico = pd.DataFrame(
         {
             'Artista': selecionados,
@@ -365,17 +372,27 @@ def comparar(
         duplicados_removidos_a=ha.duplicados_removidos,
         duplicados_removidos_b=hb.duplicados_removidos,
         ponderacao=ponderacao,
-        contribuicoes=pd.DataFrame(
-            contribuicoes_cosseno(pesos_a, pesos_b).items(),
-            columns=['Artista', 'Contribuição ao cosseno'],
-        )
-        .sort_values(['Contribuição ao cosseno', 'Artista'], ascending=[False, True], kind='stable')
-        .reset_index(drop=True),
+        contribuicoes=_ordenar_contribuicoes(contribuicoes_cosseno(pesos_a, pesos_b)),
         momentos_artistas=momentos_sincronizados(va, vb, 'artista'),
         momentos_musicas=momentos_sincronizados(va, vb, 'musica'),
         sintonia=sintonia(va, vb),
         ponte=ponte_musical(ra, rb, nome_a, nome_b),
         playlist=playlist_comum(fa, fb),
+    )
+
+
+def _ordenar_contribuicoes(contribuicoes: dict[str, float]) -> pd.DataFrame:
+    """Maior contribuição primeiro; empate pelo nome do artista.
+
+    Ordena pelo valor arredondado a 15 casas: contribuições iguais na matemática podem diferir no
+    último bit (a raiz da norma), e o empate precisa dar a mesma ordem aqui e no app web (dupla.js).
+    """
+    tabela = pd.DataFrame(contribuicoes.items(), columns=['Artista', 'Contribuição ao cosseno'])
+    tabela['_ordem'] = tabela['Contribuição ao cosseno'].round(15)
+    return (
+        tabela.sort_values(['_ordem', 'Artista'], ascending=[False, True], kind='stable')
+        .drop(columns='_ordem')
+        .reset_index(drop=True)
     )
 
 

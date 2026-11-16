@@ -21,7 +21,7 @@ export function compararTexto(a, b) {
 }
 
 // Datas como o pandas escreve um Timestamp sem fuso: "2021-03-24T13:45:12" (frações com 6 casas).
-const iso = (ms) => {
+export const iso = (ms) => {
   const s = new Date(ms).toISOString();
   return ms % 1000 ? `${s.slice(0, 23)}000` : s.slice(0, 19);
 };

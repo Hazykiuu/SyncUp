@@ -1,5 +1,14 @@
 # Changelog — SyncUp
 
+## [Não lançado]
+
+O app no navegador deixa de baixar o CSS e o JS do app para PC.
+
+### Mudado
+- **Visual próprio no app web:** o `nucleo.css` (10 KB) traz só as regras do `styles.css` que o app web usa (listas dos Rankings, corrida dos artistas, moldura dos stories e detalhe dos arquétipos). Antes ele baixava o `styles.css` inteiro (58 KB) como `componentes.css`. A tela não muda: capturas de antes e depois iguais no celular e no PC.
+- **Corrida e onda nos botões em módulo próprio:** o `js/corrida.js` (7,6 KB) faz o mesmo que o `syncup.js` (13 KB, antes `componentes.js`), sem vigiar a página inteira. A corrida começa ao aparecer e respeita o "menos movimento".
+- O `tools/empacotar_web.py` gera só as duas demos do "Testar com dados fictícios". O app para PC (`styles.css` e `syncup.js`) não mudou.
+
 ## [1.11.0] — 2026-11-16
 
 A Dupla roda em JavaScript no navegador, sem baixar o Python, e os gráficos foram refeitos para o celular.

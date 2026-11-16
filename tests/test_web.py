@@ -27,10 +27,9 @@ def zips(tmp_path_factory: pytest.TempPathFactory) -> tuple[str, str]:
     return str(a), str(b)
 
 
-def test_empacotamento_gera_o_visual_e_as_duas_demos(tmp_path: Path) -> None:
+def test_empacotamento_gera_so_as_duas_demos(tmp_path: Path) -> None:
     pasta = empacotar(tmp_path)
-    assert (pasta / 'componentes.css').read_text(encoding='utf-8').strip()
-    assert (pasta / 'componentes.js').read_text(encoding='utf-8').startswith('(')
+    assert sorted(p.name for p in pasta.iterdir()) == ['demo-bruno.zip', 'demo-wrapped.zip']
     for demo in (
         'demo-wrapped.zip',
         'demo-bruno.zip',

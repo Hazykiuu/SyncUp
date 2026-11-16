@@ -17,8 +17,6 @@ graphify-out/
 # Configurações locais do Claude Code (ganchos pessoais, não vão para o repositório)
 .claude/settings.local.json
 
-# Pacote do núcleo e demo do Wrapped para o app no navegador (gerados por tools/empacotar_web.py no CI)
+# Demos do "Testar com dados fictícios" no app no navegador (gerados por tools/empacotar_web.py no CI)
 site/app/demo-wrapped.zip
 site/app/demo-bruno.zip
-site/app/componentes.css
-site/app/componentes.js

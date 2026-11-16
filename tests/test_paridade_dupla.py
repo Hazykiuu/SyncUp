@@ -100,6 +100,16 @@ def _py(a: list[Path], b: list[Path], nomes: tuple[str, str], opcoes: dict) -> d
             for de, para, art, n, pct, link in r.ponte.itertuples(index=False)
         ],
         'diversidade': [{'entropia': x.entropia, 'gini': x.gini} for x in (r.perfil_a, r.perfil_b)],
+        'status': r.status_arquivos,
+        'aviso': r.aviso,
+        'diagnostico': [
+            {
+                k: (int(v) if hasattr(v, 'item') else v)
+                for k, v in linha.items()
+                if k != 'Origem dos dados'
+            }
+            for linha in r.diagnostico.to_dict('records')
+        ],
         'estatisticas': [
             [float(v) for v in r.estatisticas[coluna]] for coluna in r.estatisticas.columns[1:]
         ],
@@ -164,6 +174,8 @@ def test_dupla_js_igual_ao_python(arquivos: dict[str, Path], caso: str) -> None:
     assert 'erro' not in js, js
     py = _py(a, b, nomes, opcoes)
     js['periodo'] = {k: js['periodo'][k] for k in ('comum', 'inicio', 'fim')}
+    for linha in js['diagnostico']:
+        assert linha.pop('Origem dos dados') == 'Lido no navegador'
     _igual(py, js, 'dupla')
 
 

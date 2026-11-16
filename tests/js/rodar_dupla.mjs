@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 
-import { compararDupla } from '../../site/app/js/dupla.js';
+import { compararDupla, identificar } from '../../site/app/js/dupla.js';
 import { lerHistorico } from '../../site/app/js/historico.js';
 
 const [opcoesJson, nomeA, nomeB, ...caminhos] = process.argv.slice(2);
@@ -12,7 +12,8 @@ const ler = (lado) => caminhos.filter((c) => c.startsWith(`${lado}:`)).map((c) =
   .map((c) => ({ nome: basename(c), bytes: new Uint8Array(readFileSync(c)) }));
 try {
   const [ca, cb] = [await lerHistorico(ler('a'), opcoes), await lerHistorico(ler('b'), opcoes)];
-  process.stdout.write(JSON.stringify(compararDupla(ca, cb, nomeA, nomeB, opcoes)));
+  const ids = [await identificar(ler('a')), await identificar(ler('b'))];
+  process.stdout.write(JSON.stringify(compararDupla(ca, cb, nomeA, nomeB, opcoes, ids)));
 } catch (e) {
   process.stdout.write(JSON.stringify({ erro: e.message }));
 }

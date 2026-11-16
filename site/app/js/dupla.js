@@ -263,6 +263,60 @@ function ponte(ra, rb, nomeA, nomeB) {
   return linhas;
 }
 
+/* ---------- Diagnóstico dos arquivos (analise._diagnostico) ---------- */
+const hex = (buffer) => [...new Uint8Array(buffer)].map((b) => b.toString(16).padStart(2, '0')).join('');
+const sha256 = async (bytes) => hex(await crypto.subtle.digest('SHA-256', bytes));
+
+// SHA-256 e nome do que uma pessoa enviou, como dados.carregar_historicos: com várias partes, o resumo
+// combina os SHA das partes na ordem (não os nomes). `arquivos`: [{ nome, bytes }].
+export async function identificar(arquivos) {
+  const shas = await Promise.all(arquivos.map((a) => sha256(a.bytes)));
+  return {
+    sha256: shas.length === 1 ? shas[0] : await sha256(new TextEncoder().encode(`SyncUp-partes-v1:${shas.join(':')}`)),
+    arquivo: arquivos.map((a) => a.nome).join(' + '),
+  };
+}
+
+function diagnostico(c, id, nome, fuso) {
+  const n = c.contadores;
+  let min = 0, max = 0;
+  c.utc.forEach((t, i) => { if (t < c.utc[min]) min = i; if (t > c.utc[max]) max = i; });
+  return {
+    Perfil: nome,
+    Arquivo: id.arquivo,
+    'SHA-256 do arquivo': id.sha256,
+    'Registros recebidos': n.recebidos,
+    'Podcasts descartados': n.podcasts,
+    'Duração inválida': n.ms_invalidos,
+    'Data inválida': n.datas_invalidas,
+    'Identificação inválida': n.metadados_invalidos,
+    'Various Artists encontrados': n.various_artists_encontrados,
+    'Various Artists descartados': n.various_artists_descartados,
+    'Ignorados pelos filtros': n.ignorados,
+    'Duplicados removidos': n.duplicados,
+    'Registros de músicas antes do recorte': n.validos,
+    'Início do histórico': localTexto(c.local[min]),
+    'Fim do histórico': localTexto(c.local[max]),
+    'Fuso horário': fuso,
+    'Origem dos dados': 'Lido no navegador',
+  };
+}
+
+// Mesmos eventos (instante, duração, música, artista) e na mesma ordem.
+function iguais(ca, ia, cb, ib) {
+  return ia.length === ib.length && ia.every((i, k) => {
+    const j = ib[k];
+    return ca.utc[i] === cb.utc[j] && ca.ms[i] === cb.ms[j] && ca.musica[i] === cb.musica[j] && ca.artista[i] === cb.artista[j];
+  });
+}
+
+const AVISOS = {
+  bytes_identicos: 'Os arquivos recebidos possuem bytes idênticos (SHA-256 igual). Confira os arquivos selecionados na aba Diagnóstico.',
+  historicos_identicos: 'Os ZIPs são diferentes, mas os registros de músicas após a limpeza são idênticos. Isso não identifica o dono dos arquivos.',
+  recorte_identico: 'Os históricos completos são diferentes; apenas os registros no período selecionado coincidem.',
+  diferentes: 'Os históricos recebidos possuem registros diferentes.',
+};
+
 /* ---------- Comparação (analise.comparar) ---------- */
 // Índices dos eventos de uma pessoa dentro do período [inicio, fim] (UTC, inclusivo).
 const noPeriodo = (c, inicio, fim) => c.utc.reduce((lista, t, i) => (t >= inicio && t <= fim && lista.push(i), lista), []);
@@ -296,7 +350,7 @@ function perfil(c, todos, nome) {
  * Compara duas pessoas. `ca`/`cb`: colunas de lerHistorico. `opcoes`: { comum, ponderacao }.
  * Lança Error com as mesmas mensagens do Python (paridade de erros).
  */
-export function compararDupla(ca, cb, nomeA, nomeB, opcoes = {}) {
+export function compararDupla(ca, cb, nomeA, nomeB, opcoes = {}, ids = [{ sha256: '', arquivo: '' }, { sha256: '', arquivo: '' }]) {
   const modo = opcoes.ponderacao || 'bruta';
   ponderar(new Map(), modo); // valida antes de calcular
   nomeA = (nomeA || '').trim() || 'Pessoa A';
@@ -315,6 +369,11 @@ export function compararDupla(ca, cb, nomeA, nomeB, opcoes = {}) {
     periodo = { comum, inicio: iso(local(inicioUtc)), fim: iso(local(fimUtc)), inicioUtc, fimUtc };
     ia = noPeriodo(ca, inicioUtc, fimUtc); ib = noPeriodo(cb, inicioUtc, fimUtc);
   }
+  const todosA = ca.utc.map((_, i) => i), todosB = cb.utc.map((_, i) => i);
+  const status = ids[0].sha256 && ids[0].sha256 === ids[1].sha256 ? 'bytes_identicos'
+    : iguais(ca, todosA, cb, todosB) ? 'historicos_identicos'
+      : iguais(ca, ia, cb, ib) ? 'recorte_identico' : 'diferentes';
+  const fuso = opcoes.fuso || 'America/Sao_Paulo';
   const pa = perfil(ca, ia, nomeA), pb = perfil(cb, ib, nomeB);
   if (!pa.plays.length || !pb.plays.length) throw new Error('Não há reproduções de pelo menos 30 segundos para os dois perfis nesse período.');
   const ra = pa.contagens, rb = pb.contagens;
@@ -360,5 +419,8 @@ export function compararDupla(ca, cb, nomeA, nomeB, opcoes = {}) {
     diversidade: [pa, pb].map((p) => ({ entropia: entropia(p.contagens), gini: gini(p.contagens) })),
     // Minutos por execução: todas as execuções do período (não só as de 30 s).
     estatisticas: [ca, cb].map((c, k) => descrever([pa, pb][k].todos.map((i) => c.ms[i] / 60000))),
+    status,
+    aviso: AVISOS[status],
+    diagnostico: [diagnostico(ca, ids[0], nomeA, fuso), diagnostico(cb, ids[1], nomeB, fuso)],
   };
 }

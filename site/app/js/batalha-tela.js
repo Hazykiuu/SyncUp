@@ -3,6 +3,7 @@ import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { CORES, janelaComum } from './batalha.js';
 import { chegarPouco } from './chegada.js';
 import { Pessoa } from './envio.js';
+import { compartilhar, desenharPosterBatalha } from './poster.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { destravarSom } from './som.js';
 import { slidesDaBatalha } from './stories/batalha.js';
@@ -97,16 +98,30 @@ function Placar({ b, nomes }) {
     </div>`;
 }
 
+const segundos = (ms) => (ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 function ResultadoBatalha({ b, nomes, comum }) {
   const stories = useRef(null);
+  const [ocupado, setOcupado] = useState(false);
+  const [aviso, setAviso] = useState('');
+  const poster = async () => {
+    setOcupado(true); setAviso('');
+    try {
+      const inicio = performance.now();
+      const blob = await desenharPosterBatalha(b);
+      const ms = performance.now() - inicio;
+      const como = await compartilhar(blob, 'syncup-batalha.png', 'Batalha no SyncUp');
+      setAviso(como === 'cancelado' ? '' : `Pôster pronto em ${segundos(ms)} s${como === 'baixado' ? ' (baixado como syncup-batalha.png)' : ''}.`);
+    } catch (e) { setAviso(`Não deu certo: ${e.message}`); } finally { setOcupado(false); }
+  };
   const slides = useMemo(() => slidesDaBatalha(b), [b]);
   return html`
     <section class="resultado batalha-res" aria-labelledby="titulo-batalha">
       <h2 id="titulo-batalha" class="sr-only">Resultado da batalha</h2>
       <div ref=${stories} class="nucleo"><${Player} key=${b} slides=${slides} rotulo=${`Batalha de ${nomes.join(', ')}`} /></div>
       <div class="compartilhar"><div class="acoes">
+        <button type="button" class="btn btn-verde" onClick=${poster} disabled=${ocupado}>${ocupado ? 'Gerando…' : 'Compartilhar pôster'}</button>
         <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
-      </div></div>
+      </div>${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}</div>
       <p class="batalha-resumo">${b.resenha}</p>
       <${Rodadas} b=${b} nomes=${nomes} />
       <${Podio} b=${b} nomes=${nomes} ordem=${b.lutadores.map((l, i) => i).sort(porMedalhas(b))} />

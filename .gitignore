@@ -20,3 +20,5 @@ graphify-out/
 # Demos do "Testar com dados fictícios" no app no navegador (gerados por tools/empacotar_web.py no CI)
 site/app/demo-wrapped.zip
 site/app/demo-bruno.zip
+site/app/demo-carla.zip
+site/app/demo-davi.zip

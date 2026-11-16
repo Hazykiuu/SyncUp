@@ -1,6 +1,6 @@
 # Changelog — SyncUp
 
-## [Não lançado]
+## [1.13.0] — 2026-11-16
 
 A Batalha chega ao app no navegador: de 3 a 6 pessoas disputam rodadas com os números do período.
 

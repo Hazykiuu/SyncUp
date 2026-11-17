@@ -13,7 +13,12 @@ import { Player } from './stories/player.js';
 // O som da Dupla só busca trechos: nada de capas nem fotos (não vai nada ao Spotify nem ao MusicBrainz).
 const NOTA_DUPLA = 'Para o som, o SyncUp envia à Apple (iTunes) os nomes das músicas e dos artistas em comum de vocês dois, além do seu endereço IP. Os históricos e os nomes de vocês não saem do aparelho. Trechos: iTunes.';
 
-const Html = ({ conteudo, classe = '', liga }) => html`<div ref=${liga} class=${`nucleo ${classe}`} dangerouslySetInnerHTML=${{ __html: conteudo }} />`;
+// `liga(el)` roda depois de montar e devolve a limpeza (a corrida para ao sair da aba ou trocar de resultado).
+function Html({ conteudo, classe = '', liga }) {
+  const el = useRef(null);
+  useEffect(() => liga?.(el.current), [conteudo]);
+  return html`<div ref=${el} class=${`nucleo ${classe}`} dangerouslySetInnerHTML=${{ __html: conteudo }} />`;
+}
 
 function Tabela({ titulo, tabela }) {
   if (!tabela || !tabela.linhas.length) return null;

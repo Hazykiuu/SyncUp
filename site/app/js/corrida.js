@@ -32,7 +32,7 @@ function montarCorrida(raiz) {
   try {
     dados = JSON.parse(raiz.dataset.race);
   } catch {
-    return false;
+    return null;
   }
   raiz.dataset.suRaceReady = '1';
   const topo = dados.topo || 8;
@@ -148,13 +148,15 @@ function montarCorrida(raiz) {
     const t = Math.min(1, Math.max(0, (ev.clientX - caixa.left) / caixa.width));
     desenhar(Math.round(t * (total - 1)));
   };
+  // Arraste com captura: pointermove fica no próprio trilho e qualquer fim (soltar, cancelar, perder a captura) encerra.
   progresso.addEventListener('pointerdown', (ev) => {
     parar();
     buscar(ev);
-    const mover = (e) => buscar(e);
-    window.addEventListener('pointermove', mover);
-    window.addEventListener('pointerup', () => window.removeEventListener('pointermove', mover), { once: true });
+    progresso.setPointerCapture?.(ev.pointerId);
+    progresso.addEventListener('pointermove', buscar);
   });
+  const soltar = () => progresso.removeEventListener('pointermove', buscar);
+  for (const fim of ['pointerup', 'pointercancel', 'lostpointercapture']) progresso.addEventListener(fim, soltar);
   progresso.addEventListener('keydown', (ev) => {
     if (ev.key === 'ArrowRight') desenhar(quadro + 1);
     if (ev.key === 'ArrowLeft') desenhar(quadro - 1);
@@ -165,7 +167,16 @@ function montarCorrida(raiz) {
     tocar();
   };
   desenhar(semMovimento() ? total - 1 : 0);
-  return true;
+  // Para de vez (sair da aba Gráficos ou trocar de resultado). Chamar de novo não faz nada.
+  let desligada = false;
+  return () => {
+    if (desligada) return;
+    desligada = true;
+    raiz.__suPlay = null; // um início agendado pelo observador não toca mais
+    parar();
+    soltar();
+    observador.unobserve(raiz); // o observador é de todas as corridas: só esta raiz sai
+  };
 }
 
 // Começa sozinha quando um quarto dela aparece na tela, uma vez.
@@ -177,8 +188,11 @@ const observador = new IntersectionObserver((entradas) => {
   }
 }, { threshold: 0.25 });
 
-// ref do Preact (função de módulo, estável): recebe o elemento que contém a .su-race[data-race], e null ao desmontar.
+// Liga a corrida dentro de `el` (quem a desenha chama ao montar) e devolve como desligá-la (ao desmontar).
 export function ligarCorrida(el) {
   const raiz = el?.querySelector('.su-race[data-race]');
-  if (raiz && !raiz.dataset.suRaceReady && montarCorrida(raiz)) observador.observe(raiz);
+  if (!raiz || raiz.dataset.suRaceReady) return undefined;
+  const desligar = montarCorrida(raiz);
+  if (desligar) observador.observe(raiz);
+  return desligar;
 }

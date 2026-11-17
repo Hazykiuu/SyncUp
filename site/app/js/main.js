@@ -8,20 +8,13 @@ import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { Resultado } from './resultado.js';
 import { Wrapped } from './wrapped.js';
+import { rodarNoWorker } from './worker.js';
 
-const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos arquivos.';
 const DEMO = [['demo-wrapped.zip', 'Ana (fictícia)'], ['demo-bruno.zip', 'Bruno (fictício)']]; // os mesmos de ponte.arquivos_demo
 
 // A comparação roda em JavaScript num Worker (dupla-worker.js), sem baixar o Python. Um Worker por
 // comparação: ao terminar, o navegador devolve toda a memória (importa no celular).
-function compararNoWorker(a, b, nomes, opcoes) {
-  return new Promise((ok, erro) => {
-    const w = new Worker('dupla-worker.js', { type: 'module' });
-    w.onmessage = ({ data }) => { w.terminate(); data.ok ? ok(data.dados) : erro(new Error(data.erro)); };
-    w.onerror = (e) => { e.preventDefault?.(); w.terminate(); erro(new Error(SEM_RESPOSTA)); };
-    w.postMessage({ a, b, nomes, opcoes }, [...a, ...b].map((x) => x.bytes));
-  });
-}
+const compararNoWorker = (a, b, nomes, opcoes) => rodarNoWorker('dupla-worker.js', { a, b, nomes, opcoes }, [...a, ...b].map((x) => x.bytes));
 
 const lerArquivos = (lista) => Promise.all(lista.map(async (f) => ({ nome: f.name, bytes: await f.arrayBuffer() })));
 
@@ -44,7 +37,7 @@ function Dupla() {
       const r = await compararNoWorker(a, b, nomesUsados, opcoes);
       setFase({ tipo: 'resultado', r });
       requestAnimationFrame(() => document.getElementById('resultado')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-    } catch (e) { setFase({ tipo: 'erro', mensagem: e.message }); }
+    } catch (e) { if (e.name !== 'AbortError') setFase({ tipo: 'erro', mensagem: e.message }); }
   };
   const comparar = () => {
     ultima.current = 'comparar';

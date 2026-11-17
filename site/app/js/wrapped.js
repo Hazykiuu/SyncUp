@@ -11,20 +11,13 @@ import { SomStories, destravarSom } from './som.js';
 import { Player } from './stories/player.js';
 import { CapasCtx, chaveCapa, NOVOS } from './stories/slides.js';
 import { tiposDoWrapped } from './stories/logica.js';
+import { rodarNoWorker } from './worker.js';
 
 const DEMO = 'Ana (fictícia)'; // demo-wrapped.zip: o mesmo histórico fictício da demo da Dupla
-const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos arquivos.';
 const segundos = (ms) => (ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 
 // Um Worker por montagem: ao terminar, o navegador devolve toda a memória (importa no celular).
-function montarNoWorker(arquivos, nome, opcoes) {
-  return new Promise((ok, erro) => {
-    const w = new Worker('wrapped-worker.js', { type: 'module' });
-    w.onmessage = ({ data }) => { w.terminate(); data.ok ? ok(data.dados) : erro(new Error(data.erro)); };
-    w.onerror = (e) => { e.preventDefault?.(); w.terminate(); erro(new Error(SEM_RESPOSTA)); };
-    w.postMessage({ arquivos, nome, opcoes }, arquivos.map((a) => a.bytes));
-  });
-}
+const montarNoWorker = (arquivos, nome, opcoes) => rodarNoWorker('wrapped-worker.js', { arquivos, nome, opcoes }, arquivos.map((a) => a.bytes));
 
 // Todas as regras avaliadas, com o valor da pessoa e o limiar (o mesmo de stories.arquetipos_detalhe_html).
 function ArquetiposDetalhe({ arquetipos }) {
@@ -107,7 +100,7 @@ export function Wrapped() {
       setCapas(null);
       setFase({ tipo: 'resultado', r, ms: performance.now() - inicio });
       requestAnimationFrame(() => document.getElementById('resultado-wrapped')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-    } catch (e) { setFase({ tipo: 'erro', mensagem: e.message }); }
+    } catch (e) { if (e.name !== 'AbortError') setFase({ tipo: 'erro', mensagem: e.message }); }
   };
   const montar = () => { ultima.current = 'montar'; destravarSom(); return rodar(() => Promise.all(arquivos.map(async (f) => ({ nome: f.name, bytes: await f.arrayBuffer() }))), nome || 'Você'); };
   const demo = () => {

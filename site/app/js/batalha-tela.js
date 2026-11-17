@@ -9,6 +9,7 @@ import { destravarSom } from './som.js';
 import { slidesDaBatalha } from './stories/batalha.js';
 import { fmtNum } from './stories/logica.js';
 import { Player } from './stories/player.js';
+import { abrirWorker } from './worker.js';
 
 const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos pessoas.';
 const DEMO = [['demo-wrapped.zip', 'Ana'], ['demo-bruno.zip', 'Bruno'], ['demo-carla.zip', 'Carla'], ['demo-davi.zip', 'Davi']];
@@ -70,16 +71,9 @@ function Rodadas({ b, nomes }) {
 const textoMedalhas = (m) => [m.ouro && plural(m.ouro, 'ouro', 'ouros'), m.prata && plural(m.prata, 'prata', 'pratas'), m.bronze && plural(m.bronze, 'bronze', 'bronzes')].filter(Boolean).join(', ') || 'sem medalha';
 
 // Um Worker por batalha. Os File vão em cada fase (o Worker nunca relê o que guardou da anterior).
-function batalharNoWorker(w, arquivos, nomes, opcoes, aoEtapa) {
-  const pedir = (msg) => new Promise((ok, erro) => {
-    w.onmessage = ({ data }) => { if (data.etapa) aoEtapa(data.etapa); else if (data.ok) ok(data); else erro(new Error(data.erro)); };
-    w.onerror = (e) => { e.preventDefault?.(); erro(new Error(SEM_RESPOSTA)); };
-    w.postMessage(msg);
-  });
-  return (async () => {
-    const janela = opcoes.comum ? janelaComum((await pedir({ fase: 1, arquivos, opcoes })).faixas) : null;
-    return (await pedir({ fase: 2, arquivos, nomes, opcoes, janela })).dados;
-  })();
+async function batalharNoWorker(w, arquivos, nomes, opcoes) {
+  const janela = opcoes.comum ? janelaComum((await w.pedir({ fase: 1, arquivos, opcoes })).faixas) : null;
+  return (await w.pedir({ fase: 2, arquivos, nomes, opcoes, janela })).dados;
 }
 
 function Placar({ b, nomes }) {
@@ -143,7 +137,7 @@ export function Batalha() {
   const worker = useRef(null);
   const rodada = useRef(0); // resposta de uma batalha já cancelada é ignorada
 
-  const cancelar = () => { worker.current?.terminate(); worker.current = null; rodada.current++; };
+  const cancelar = () => { worker.current?.cancelar(); worker.current = null; rodada.current++; };
   // Saiu do modo Batalha (ou da página) no meio da leitura: nada fica lendo em segundo plano.
   useEffect(() => {
     const sair = () => {
@@ -162,14 +156,14 @@ export function Batalha() {
     try {
       const lista = await ler();
       if (minha !== rodada.current) return;
-      const w = (worker.current = new Worker('batalha-worker.js', { type: 'module' }));
-      const b = await batalharNoWorker(w, lista, nomesUsados, opcoes, (etapa) => minha === rodada.current && setFase({ tipo: 'processando', etapa }));
+      const w = (worker.current = abrirWorker('batalha-worker.js', { semResposta: SEM_RESPOSTA, aoProgresso: (etapa) => minha === rodada.current && setFase({ tipo: 'processando', etapa }) }));
+      const b = await batalharNoWorker(w, lista, nomesUsados, opcoes);
       if (minha !== rodada.current) return;
       cancelar();
       setFase({ tipo: 'resultado', b, nomes: nomesUsados, comum: opcoes.comum });
       requestAnimationFrame(() => document.getElementById('resultado-batalha')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
     } catch (e) {
-      if (minha !== rodada.current) return;
+      if (e.name === 'AbortError' || minha !== rodada.current) return; // cancelada: nada a mostrar
       cancelar();
       setFase({ tipo: 'erro', mensagem: e.message });
     }

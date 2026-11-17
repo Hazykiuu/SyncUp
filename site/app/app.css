@@ -8,10 +8,7 @@
 }
 @media (min-width: 900px) { :root { --pad-cartao: var(--e5); --vao: var(--e4); } }
 
-/* O vidro vem de estilo.css (Liquid Glass, com blur em todos os cartões; pedido de 16/11/2026).
-   Atenção: em 12/11 o blur em ~15 painéis caiu de 85–90 para 30–40 fps num Redmi; vidro dentro de vidro não borra.
-   A borda das duas pessoas (verde → violeta) fica só nos cartões de pessoa (.pessoa.vidro::before, abaixo). */
-.btn-borda.vidro:hover { background: rgba(255, 255, 255, .12); box-shadow: var(--vidro-sombra), inset 0 0 0 1px rgba(255, 255, 255, .28); }
+/* As superfícies vêm de estilo.css (.superficie, sólida); blur só no que flutua (barra de modos e dock). */
 /* No app a seta é "→": no hover ela anda para a frente (a da página inicial é ↗ e sobe). */
 @media (hover: hover) { .app-corpo .btn:hover:not(:disabled) .seta { transform: translateX(3px); } }
 /* Fundo com matéria, parado: as duas manchas (verde = A no alto, violeta = B embaixo) um pouco mais presentes
@@ -19,8 +16,6 @@
 body::after { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .06; background-size: 160px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"); }
 @media (prefers-reduced-transparency: reduce) { body::after { display: none; } }
-@supports not ((mask-composite: exclude) or (-webkit-mask-composite: xor)) { .pessoa.vidro::before { display: none; } }
-@media (prefers-contrast: more) { .vidro { border-color: #fff; } .pessoa.vidro::before { background: #fff; } }
 
 /* Casca de app de música: a navegação é uma só; no celular vira a barra de baixo, no computador a lateral.
    Barras fixas em vidro escuro (fundo ≥ 72%): capa que passa por baixo não aparece borrada (regra do Spotify). */
@@ -97,11 +92,7 @@ a.nav-item:hover { color: var(--texto); }
 /* Cada cartão leva a cor da sua pessoa (verde = A, violeta = B) na borda e ao arrastar um arquivo. */
 .pessoa { --cor: var(--verde); display: flex; flex-direction: column; gap: var(--e3); border-radius: var(--r-cartao); padding: var(--pad-cartao); }
 .pessoa.roxo { --cor: var(--roxo); }
-.pessoa.vidro { border-color: transparent; }
-.pessoa.vidro::before { content: ''; position: absolute; inset: -1px; z-index: -1; padding: 1px; border-radius: inherit; pointer-events: none;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--cor) 70%, transparent), rgba(255, 255, 255, .14) 35%, rgba(255, 255, 255, .05)); }
+.pessoa.superficie { border-color: color-mix(in srgb, var(--cor) 45%, transparent); }
 .pessoa-topo { display: flex; align-items: center; gap: var(--e3); }
 .pessoa-topo h2 { font-size: 1.3rem; font-weight: 800; }
 .pessoa-topo .lado { font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--cor); }
@@ -134,16 +125,11 @@ a.nav-item:hover { color: var(--texto); }
 .degrau .avatar { width: 3.2rem; height: 3.2rem; font-size: 1.3rem; box-shadow: 0 0 0 4px rgb(0 0 0 / .35); }
 .degrau.p1 .avatar { width: 4rem; height: 4rem; font-size: 1.6rem; }
 .podio-nome { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1.05rem; }
-/* Blocos de vidro (Liquid Glass): tinta da cor do lutador, borda de luz e um brilho colorido atrás para o vidro refratar. */
+/* Blocos do pódio: superfície tingida com a cor do lutador, fio claro de 1 px, sem blur. */
 .podio { position: relative; isolation: isolate; }
 .degrau { position: relative; }
-.degrau::before { content: ''; position: absolute; z-index: -1; left: 12%; right: 12%; bottom: 0; height: 60%; border-radius: 50%; background: var(--lut); filter: blur(28px); opacity: .45; }
 .degrau .bloco { position: relative; overflow: hidden; display: grid; place-items: start center; width: 100%; height: 4.5rem; padding-top: var(--e3); border-radius: 18px 18px 6px 6px; transform-origin: bottom;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--lut) 42%, transparent), color-mix(in srgb, var(--lut) 10%, transparent) 75%);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / .55), inset 0 0 0 1px rgb(255 255 255 / .16), inset 0 -18px 30px -18px rgb(0 0 0 / .45), 0 20px 40px -22px rgb(0 0 0 / .8);
-  -webkit-backdrop-filter: blur(16px) saturate(170%); backdrop-filter: blur(16px) saturate(170%); }
-.degrau .bloco::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / .35) 50%, transparent 65%); transform: translateX(-120%); }
-@media (prefers-reduced-transparency: reduce) { .degrau .bloco { -webkit-backdrop-filter: none; backdrop-filter: none; background: color-mix(in srgb, var(--lut) 30%, #1a1a1a); } .degrau::before { display: none; } }
+  background: color-mix(in srgb, var(--lut) 30%, #1a1a1a); border: 1px solid rgb(255 255 255 / .16); border-bottom: 0; box-shadow: 0 1px 3px rgb(0 0 0 / .45); }
 @media (forced-colors: active) { .degrau .bloco { border: 2px solid CanvasText; } }
 .degrau.p1 .bloco { height: 7rem; } .degrau.p2 .bloco { height: 5.5rem; }
 .lugar { font-size: 1.6rem; font-weight: 900; color: #fff; text-shadow: 0 1px 8px rgb(0 0 0 / .4); }
@@ -175,12 +161,10 @@ a.nav-item:hover { color: var(--texto); }
   .batalha-res .podio:not(.em-cena) { visibility: hidden; }
   .batalha-res .em-cena .degrau .bloco { animation: bt-cresce .6s var(--sai) var(--t) both; }
   .batalha-res .em-cena .degrau.p1 .bloco { animation-duration: .7s; }
-  .batalha-res .em-cena .degrau::before { animation: bt-acende .8s var(--sai) var(--t) both; }
   .batalha-res .em-cena .degrau .avatar, .batalha-res .em-cena .podio-nome, .batalha-res .em-cena .podio-titulo { animation: bt-cai .45s var(--sai) calc(var(--t) + 240ms) both; }
   .batalha-res .em-cena .degrau .med { animation: bt-estala .3s var(--sai) calc(var(--t) + 380ms + var(--m, 0) * 60ms) both; }
   .batalha-res .em-cena .degrau .med.prata { --m: 1; } .batalha-res .em-cena .degrau .med.bronze { --m: 2; }
   .batalha-res .em-cena .degrau .lugar { animation: bt-aparece .3s var(--sai) calc(var(--t) + 300ms) both; }
-  .batalha-res .em-cena .degrau.p1 .bloco::after { animation: bt-brilho .9s var(--sai) 1s both; }
 }
 @keyframes bt-cresce { from { transform: scaleY(.06); opacity: .4; } }
 @keyframes bt-acende { from { opacity: 0; transform: scale(.6); } }
@@ -188,7 +172,6 @@ a.nav-item:hover { color: var(--texto); }
 @keyframes bt-estala { from { opacity: 0; transform: scale(.7); } }
 @keyframes bt-aparece { from { opacity: 0; transform: translateY(10px); } }
 @keyframes bt-enche { from { transform: scaleX(0); } }
-@keyframes bt-brilho { from { transform: translateX(-120%); } to { transform: translateX(120%); } }
 /* Selos: a tipografia do Kicker dos stories (caixa alta, tracking largo), sem brilho; contraste ≥ 4,5:1 (teste). */
 .selo { display: inline-block; margin-left: .5em; padding: .15em .55em; border: 1px solid rgb(255 255 255 / .3); border-radius: 99px;
   font-size: .68rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #e6e6e6; vertical-align: .1em; white-space: nowrap; }
@@ -524,26 +507,14 @@ body::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-even
 .faixas-legenda { font-size: .8rem; color: var(--sub); }
 @media (forced-colors: active) { .faixas i { forced-color-adjust: none; } }
 
-/* Vidro de verdade (1.17): a cor do modo vaza nos cartões; a página atual na barra é uma gota de vidro;
-   o dock ganha a mesma borda com luz. */
+/* Cor de cada modo (--tinta): só para a cascata do topo. Página atual na barra: pílula sólida. */
 .app-corpo[data-modo="dupla"], .app-corpo[data-modo="wrapped"] { --tinta: 30 215 96; }
 .app-corpo[data-modo="batalha"] { --tinta: 255 164 43; }
 .app-corpo[data-modo="match"] { --tinta: 245 115 160; }
-.pessoa.vidro { background: var(--vidro-face) padding-box; }
-.nav-item[aria-current="page"] {
-  background: linear-gradient(180deg, rgb(255 255 255 / .16), rgb(255 255 255 / .04)) padding-box,
-    linear-gradient(160deg, rgb(255 255 255 / .6), rgb(255 255 255 / .08) 45%, rgb(30 215 96 / .5)) border-box;
-  border: 1px solid transparent; color: var(--texto);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / .3), inset 0 -10px 18px -12px rgb(30 215 96 / .55), 0 8px 24px -10px rgb(30 215 96 / .45); }
+.nav-item[aria-current="page"] { background: rgb(255 255 255 / .1); color: var(--texto); }
 .nav-item[aria-current="page"] svg { color: var(--verde); }
-@media (max-width: 899px) {
-  .nav-item[aria-current="page"] { background: none; border-color: transparent; box-shadow: none; }
-  .nav-item[aria-current="page"] svg { background: linear-gradient(180deg, rgb(255 255 255 / .16), rgb(30 215 96 / .12)); box-shadow: inset 0 1px 0 rgb(255 255 255 / .35), inset 0 0 0 1px rgb(255 255 255 / .12), 0 6px 16px -8px rgb(30 215 96 / .6); }
-}
-.dock { border: 1px solid transparent;
-  background: linear-gradient(180deg, rgb(30 30 32 / .78), rgb(14 14 14 / .74)) padding-box,
-    linear-gradient(160deg, rgb(255 255 255 / .5), rgb(255 255 255 / .08) 40%, rgb(255 255 255 / .2)) border-box;
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / .25), 0 18px 40px -12px rgb(0 0 0 / .8); }
+@media (max-width: 899px) { .nav-item[aria-current="page"] { background: none; } }
+.dock { border: 1px solid var(--vidro-linha); box-shadow: 0 12px 32px -12px rgb(0 0 0 / .8); }
 @media (prefers-contrast: more) { .nav-item[aria-current="page"] { background: var(--texto); color: #000; } }
 
 /* Cara de Spotify (1.17): o topo de cada modo é a capa de uma playlist. Faixa de cor do modo descendo do alto,

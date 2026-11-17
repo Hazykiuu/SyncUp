@@ -66,19 +66,11 @@ function fundoPlaylist(ctx, cor, extra = null) {
   veu.addColorStop(0, 'rgba(0,0,0,.42)'); veu.addColorStop(0.45, 'rgba(18,18,18,.5)'); veu.addColorStop(1, 'rgba(18,18,18,.82)');
   ctx.fillStyle = veu; ctx.fillRect(0, 0, L, A);
 }
-// Vidro: face translúcida com a cor vazando do canto e a borda clara no alto, apagada embaixo, tingida no fim.
-function vidro(ctx, x, y, w, h, raio, cor = [255, 255, 255]) {
+// Peça dos pôsteres (como .st-vidro): superfície escura translúcida e fio claro de 1 px, sem aro nem brilho.
+function vidro(ctx, x, y, w, h, raio) {
   retangulo(ctx, x, y, w, h, raio);
-  ctx.fillStyle = 'rgba(18,18,20,.45)'; ctx.fill();
-  const tinta = ctx.createRadialGradient(x, y, 0, x, y, Math.max(w, h));
-  tinta.addColorStop(0, rgbTexto(cor, 0.2)); tinta.addColorStop(0.6, rgbTexto(cor, 0));
-  ctx.fillStyle = tinta; ctx.fill();
-  const brilho = ctx.createLinearGradient(0, y, 0, y + h);
-  brilho.addColorStop(0, 'rgba(255,255,255,.13)'); brilho.addColorStop(0.4, 'rgba(255,255,255,.03)'); brilho.addColorStop(1, 'rgba(255,255,255,.05)');
-  ctx.fillStyle = brilho; ctx.fill();
-  const aro = ctx.createLinearGradient(x, y, x + w * 0.35, y + h);
-  aro.addColorStop(0, 'rgba(255,255,255,.55)'); aro.addColorStop(0.32, 'rgba(255,255,255,.1)'); aro.addColorStop(0.62, 'rgba(255,255,255,.04)'); aro.addColorStop(1, rgbTexto(cor, 0.45));
-  ctx.strokeStyle = aro; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 2; ctx.stroke();
 }
 // Kicker do Spotify: 700, tracking curto, branco cheio (como .st-kicker).
 function kickerEm(ctx, texto, x, y, cor = '#fff', alinhamento = 'left') {
@@ -301,13 +293,8 @@ export async function desenharPosterBatalha(b) {
     const gap = 30, w = (UTIL - 2 * gap) / 3, base = 1420, altura = { 1: 420, 2: 320, 3: 240 };
     [1, 0, 2].filter((n) => n < top.length).forEach((n, coluna) => {
       const l = b.lutadores[top[n]], h = altura[pos[n]], x = M + coluna * (w + gap), y = base - h;
-      const g = ctx.createLinearGradient(0, y, 0, base);
-      g.addColorStop(0, rgba(l.cor, 0.55)); g.addColorStop(1, rgba(l.cor, 0.12));
-      retangulo(ctx, x, y, w, h, [36, 36, 12, 12]); ctx.fillStyle = g; ctx.fill();
-      const aro = ctx.createLinearGradient(x, y, x + w * 0.35, base);
-      aro.addColorStop(0, 'rgba(255,255,255,.6)'); aro.addColorStop(0.4, 'rgba(255,255,255,.12)'); aro.addColorStop(1, rgba(l.cor, 0.6));
-      ctx.strokeStyle = aro; ctx.lineWidth = 2; ctx.stroke();
-      ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillRect(x + 30, y + 1, w - 60, 2);
+      retangulo(ctx, x, y, w, h, [36, 36, 12, 12]); ctx.fillStyle = rgba(l.cor, 0.34); ctx.fill(); // como .sb-bloco: cor chapada e fio claro
+      ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 2; ctx.stroke();
       ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 72); ctx.textAlign = 'center'; ctx.fillText(`${pos[n]}º`, x + w / 2, y + 100);
       ctx.textAlign = 'left';
       const r = pos[n] === 1 ? 84 : 66;

@@ -261,3 +261,8 @@ test('trilha da Batalha: favorito de quem venceu cada rodada, artista que une a 
   assert.equal(semComum.slides.afinada, undefined);
   assert.deepEqual(semComum.slides.abertura, [{ artista: 'B' }]);
 });
+
+test('textos legíveis sobre a superfície sólida da 1.19 (#181818)', () => {
+  assert.ok(contraste('#e6e6e6', '#181818') >= 4.5, contraste('#e6e6e6', '#181818').toFixed(2));
+  assert.ok(contraste('#b3b3b3', '#181818') >= 4.5, contraste('#b3b3b3', '#181818').toFixed(2)); // --sub
+});

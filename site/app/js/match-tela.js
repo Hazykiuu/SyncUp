@@ -68,7 +68,7 @@ function ResultadoMatch({ dados: { r, fontes, fora } }) {
     <${Palco} alvo=${stories} slides=${slides} comSom=${trilha.fila.length > 0} lado=${html`
     <div class="compartilhar"><div class="acoes">
       <button type="button" class="btn btn-verde" onClick=${poster} disabled=${ocupado}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></svg>${ocupado ? 'Gerando…' : 'Baixar pôster'}</button>
-      <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
+      <button type="button" class="btn btn-borda superficie" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
     </div>${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
     <${Dock} alvo=${stories} aoPoster=${poster} ocupado=${ocupado} comSom=${!!trilha.fila.length} /></div>
     ${trilha.fila.length > 0 && html`<${SomStories} key=${r} trilha=${trilha} alvo=${stories} nota=${NOTA_SOM} />`}`}>
@@ -76,7 +76,7 @@ function ResultadoMatch({ dados: { r, fontes, fora } }) {
     <//>
     <p class="batalha-resumo">Média dos pares: <b>${pct(r.pontuacao_media_pares)}</b>. Os pares somam a maior compatibilidade possível do grupo${r.nomes.length % 2 ? '; com número ímpar, uma pessoa entra no par onde mais combina e vira trio' : ''}.</p>
     <ul class="duetos">${duetos(r).map((d) => html`<${Dueto} d=${d} cor=${(n) => cores[n]} />`)}</ul>
-    <details class="vidro detalhe"><summary>Com quem cada um mais combina</summary>
+    <details class="superficie detalhe"><summary>Com quem cada um mais combina</summary>
       <div class="tabela-rolagem" role="region" aria-label="Com quem cada um mais combina" tabindex="0">
         <table class="placar"><thead><tr><th scope="col">Pessoa</th><th scope="col">Fonte</th><th scope="col">1º match</th><th scope="col">2º match</th></tr></thead>
           <tbody>${r.nomes.map((n) => html`<tr><th scope="row"><span class="lut-ponto" style=${{ '--lut': cores[n] }} aria-hidden="true"></span>${n}</th>
@@ -99,10 +99,10 @@ function MeuConvite({ opcoes, rodar, ocupado }) {
   const copiar = async () => {
     try { await navigator.clipboard.writeText(codigo); setAviso('Código copiado. Mande para quem vai fazer o Match.'); } catch { setAviso('Não deu para copiar sozinho: selecione o código e copie.'); }
   };
-  return html`<details class="vidro detalhe match-convite"><summary>Gerar o meu convite</summary>
+  return html`<details class="superficie detalhe match-convite"><summary>Gerar o meu convite</summary>
     <p class="nota">Quem não está com você manda um código em vez do ZIP. O código leva só os rankings (top artistas e músicas): o histórico, os horários e o resto ficam no seu aparelho.</p>
     <${Pessoa} rotulo="Eu" titulo="Seu histórico" cor="lut" exemplo="Seu nome" nome=${nome} aoMudarNome=${setNome} arquivos=${arquivos} aoMudarArquivos=${setArquivos} desabilitado=${ocupado} />
-    <button type="button" class="btn btn-borda vidro" onClick=${gerar} disabled=${ocupado || !arquivos.length}>Gerar o código</button>
+    <button type="button" class="btn btn-borda superficie" onClick=${gerar} disabled=${ocupado || !arquivos.length}>Gerar o código</button>
     ${codigo && html`<label class="match-codigo"><span>Seu convite</span><textarea readonly rows="3" onFocus=${(e) => e.target.select()}>${codigo}</textarea></label>
       <button type="button" class="btn btn-verde" onClick=${copiar}>Copiar o código</button>`}
     ${aviso && html`<p class="nota" role="status">${aviso}</p>`}
@@ -183,21 +183,21 @@ export function Match() {
             extra=${i >= 1 && html`<button type="button" class="tirar tirar-lutador" aria-label=${`Tirar a pessoa ${i + 1}`} onClick=${() => tirar(i)} disabled=${ocupado}>×</button>`} />
         </div>`)}
     </div>
-    ${nomes.length < 16 && html`<button type="button" class="btn btn-borda vidro mais-lutador" onClick=${adicionar} disabled=${ocupado}>+ Adicionar pessoa</button>`}
-    <label class="vidro match-colar"><span><b>Convites recebidos</b> <small>(opcional) Cole os códigos que começam com SYNCUP1., um por linha.</small></span>
+    ${nomes.length < 16 && html`<button type="button" class="btn btn-borda superficie mais-lutador" onClick=${adicionar} disabled=${ocupado}>+ Adicionar pessoa</button>`}
+    <label class="superficie match-colar"><span><b>Convites recebidos</b> <small>(opcional) Cole os códigos que começam com SYNCUP1., um por linha.</small></span>
       <textarea rows="3" value=${convites} onInput=${(e) => setConvites(e.target.value)} disabled=${ocupado} spellcheck="false" autocomplete="off"></textarea></label>
     <${MeuConvite} opcoes=${opcoes} rodar=${(m) => pedir(m)} ocupado=${ocupado} />
     <${Opcoes} valor=${opcoes} aoMudar=${setOpcoes} desabilitado=${ocupado} comPonderacao=${false} />
     <div class="barra-acao">
       <button type="button" class="btn btn-verde" onClick=${combinar} disabled=${!pode} aria-describedby="dica-match">
         ${ocupado ? 'Combinando…' : 'Ver quem combina'}<span class="seta" aria-hidden="true">→</span></button>
-      <button type="button" class="btn btn-borda vidro" onClick=${demo} disabled=${ocupado}>Testar com dados fictícios</button>
+      <button type="button" class="btn btn-borda superficie" onClick=${demo} disabled=${ocupado}>Testar com dados fictícios</button>
       <small id="dica-match">${pode || ocupado || fase.tipo === 'resultado' ? '' : 'Junte pelo menos duas pessoas, com ZIP ou convite. Quem tem nome precisa de arquivo.'}</small>
     </div>
     <div aria-live="polite">
-      ${fase.tipo === 'processando' && html`<p ref=${chegarPouco} class="processando vidro"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
-      ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro vidro" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
-        ${ultima.current && html`<button type="button" class="btn btn-borda vidro" onClick=${ultima.current === 'demo' ? demo : combinar}>Tentar de novo</button>`}</div>`}
+      ${fase.tipo === 'processando' && html`<p ref=${chegarPouco} class="processando superficie"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
+      ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro superficie" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
+        ${ultima.current && html`<button type="button" class="btn btn-borda superficie" onClick=${ultima.current === 'demo' ? demo : combinar}>Tentar de novo</button>`}</div>`}
       ${fase.tipo === 'resultado' && html`<p class="sr-only">Resultado do Match pronto, logo abaixo.</p>`}
     </div>
     <div id="resultado-match">${fase.tipo === 'resultado' && html`<${ResultadoMatch} dados=${fase.dados} />`}</div></div>`;

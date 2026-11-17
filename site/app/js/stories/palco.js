@@ -38,7 +38,7 @@ const capaGrande = (url) => url?.replace(/\/\d+x\d+bb\./, '/600x600bb.');
 function Agora({ titulo, comSom }) {
   const { trecho, tocando, mudo } = useSom();
   const t = comSom ? trecho : null;
-  return html`<div class="palco-agora vidro">
+  return html`<div class="palco-agora superficie">
     <p class="palco-rotulo">Tocando agora</p>
     ${t ? html`<img class="palco-capa" src=${capaGrande(t.capa)} alt="" width="600" height="600" crossorigin="anonymous" />`
       : html`<div class="palco-capa vazia" aria-hidden="true">${ICONE.nota}</div>`}
@@ -47,7 +47,7 @@ function Agora({ titulo, comSom }) {
       <small>${t ? `${t.artista} · trecho de 30 s` : comSom ? 'Preparando o som…' : 'Stories sem som'}</small>
     </div>
     ${t && html`<span key=${t.url} class=${`dock-progresso palco-progresso${tocando ? '' : ' parado'}`} aria-hidden="true"><i></i></span>`}
-    ${comSom && html`<button type="button" class="palco-mudo btn btn-borda vidro" aria-pressed=${mudo} onClick=${() => definirMudo(!mudo)}>
+    ${comSom && html`<button type="button" class="palco-mudo btn btn-borda superficie" aria-pressed=${mudo} onClick=${() => definirMudo(!mudo)}>
       ${mudo ? ICONE.mudo : ICONE.som}${mudo ? 'Ligar o som' : 'Silenciar'}</button>`}
   </div>`;
 }
@@ -57,7 +57,7 @@ export function Palco({ alvo, slides, comSom = false, lado = null, children }) {
   const ativa = useContext(TelaAtiva);
   const ir = (k) => alvo.current?.querySelector('.st-player')?.dispatchEvent(new CustomEvent('st-ir', { detail: k }));
   return html`<div class="st-palco">
-    <nav class="palco-fila vidro" aria-label="Fila dos stories">
+    <nav class="palco-fila superficie" aria-label="Fila dos stories">
       <p class="palco-rotulo">Fila</p>
       <ol>${slides.map((s, k) => html`<li><button type="button" class=${k === atual ? 'atual' : ''} aria-current=${k === atual ? 'step' : null} onClick=${() => ir(k)} tabindex=${ativa ? 0 : -1}>
         <span class="palco-n">${k === atual ? html`<span class="eq tocando" aria-hidden="true"><i></i><i></i><i></i><i></i></span>` : k + 1}</span>

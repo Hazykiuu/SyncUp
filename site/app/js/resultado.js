@@ -25,7 +25,7 @@ function Html({ conteudo, classe = '', liga }) {
 function Tabela({ titulo, tabela }) {
   if (!tabela || !tabela.linhas.length) return null;
   return html`
-    <div class="tabela-rolagem vidro" role="region" aria-label=${titulo} tabindex="0">
+    <div class="tabela-rolagem superficie" role="region" aria-label=${titulo} tabindex="0">
       <table><caption>${titulo}</caption>
         <thead><tr>${tabela.colunas.map((c) => html`<th scope="col">${c}</th>`)}</tr></thead>
         <tbody>${tabela.linhas.map((l) => html`<tr>${l.map((v) => html`<td>${v}</td>`)}</tr>`)}</tbody>
@@ -37,7 +37,7 @@ function Tabela({ titulo, tabela }) {
 const VISIVEIS = 12;
 function Lista({ titulo, itens, vazio }) {
   const etiquetas = (nomes) => html`<ul class="dp-etiquetas">${nomes.map((n) => html`<li>${n}</li>`)}</ul>`;
-  return html`<div class="conexao vidro"><h3>${titulo}</h3>
+  return html`<div class="conexao superficie"><h3>${titulo}</h3>
     ${itens.length ? etiquetas(itens.slice(0, VISIVEIS)) : html`<p class="nota">${vazio}</p>`}
     ${itens.length > VISIVEIS && html`<details class="dp-mais"><summary>Ver mais ${itens.length - VISIVEIS}</summary>${etiquetas(itens.slice(VISIVEIS))}</details>`}
   </div>`;
@@ -50,7 +50,7 @@ function Rankings({ nomes, listas }) {
     <div class="dp-alternador" role="group" aria-label="De quem são os rankings">
       ${nomes.map((n, i) => html`<button type="button" class=${i ? 'b' : 'a'} aria-pressed=${quem === i} onClick=${() => setQuem(i)}>${n}</button>`)}
     </div>
-    <div class="grade-2">${listas.map((l, i) => html`<${Html} conteudo=${l.replace('class="su-tracklist-card"', 'class="su-tracklist-card vidro"')} classe=${`dp-lado-${i % 2}`} />`)}</div>
+    <div class="grade-2">${listas.map((l, i) => html`<${Html} conteudo=${l.replace('class="su-tracklist-card"', 'class="su-tracklist-card superficie"')} classe=${`dp-lado-${i % 2}`} />`)}</div>
   </div>`;
 }
 
@@ -63,7 +63,7 @@ const MEDIDAS = [
 ];
 function Medidas({ metricas }) {
   return html`<dl class="dp-medidas">${MEDIDAS.map(([chave, titulo, tecnico, frase]) => html`
-    <div class="vidro"><dt>${titulo} <small>${tecnico}</small></dt>
+    <div class="superficie"><dt>${titulo} <small>${tecnico}</small></dt>
       <dd><b>${(metricas[chave] * 100).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%</b><span>${frase}</span></dd></div>`)}</dl>`;
 }
 
@@ -93,11 +93,11 @@ function Acoes({ d, csv, aoRepetir, alvo }) {
   return html`
     <div class="compartilhar"><div class="acoes">
       <button type="button" class="btn btn-verde" onClick=${poster} disabled=${!!ocupado}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></svg>${ocupado === 'poster' ? 'Gerando…' : 'Baixar pôster'}</button>
-      <button type="button" class="btn btn-borda vidro" onClick=${playlist} disabled=${!!ocupado}>${ocupado === 'playlist' ? 'Gerando…' : 'Playlist comum · CSV'}</button>
-      <button type="button" class="btn btn-borda vidro" onClick=${aoRepetir}>↺ Ver de novo</button>
+      <button type="button" class="btn btn-borda superficie" onClick=${playlist} disabled=${!!ocupado}>${ocupado === 'playlist' ? 'Gerando…' : 'Playlist comum · CSV'}</button>
+      <button type="button" class="btn btn-borda superficie" onClick=${aoRepetir}>↺ Ver de novo</button>
     </div>
     ${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
-    ${erro && html`<p ref=${chegarPouco} class="erro vidro" role="alert">Não deu certo: ${erro}</p>`}
+    ${erro && html`<p ref=${chegarPouco} class="erro superficie" role="alert">Não deu certo: ${erro}</p>`}
     <${Dock} alvo=${alvo} aoPoster=${poster} ocupado=${ocupado === 'poster'} comSom=${!!d.trilha} /></div>`;
 }
 
@@ -140,13 +140,13 @@ export function Resultado({ r }) {
       <div class="grade-3"><${Lista} titulo="Artistas em comum" itens=${r.conexoes.comuns} vazio="Nenhum artista aparece nos dois históricos neste período." />
         <${Lista} titulo=${`Só ${a}`} itens=${r.conexoes.so_a} vazio=${`Todos os artistas de ${a} também aparecem para ${b}.`} />
         <${Lista} titulo=${`Só ${b}`} itens=${r.conexoes.so_b} vazio=${`Todos os artistas de ${b} também aparecem para ${a}.`} /></div>
-      ${r.ponte.length > 0 && html`<div class="vidro conexao"><h3>Ponte musical</h3><p class="nota">Sugestões de artistas ausentes no recorte do outro. Não são descobertas comprovadas.</p>
+      ${r.ponte.length > 0 && html`<div class="superficie conexao"><h3>Ponte musical</h3><p class="nota">Sugestões de artistas ausentes no recorte do outro. Não são descobertas comprovadas.</p>
         <ul class="ponte">${r.ponte.map((p) => html`<li>${p.de} → ${p.para}: <a href=${p.link} target="_blank" rel="noopener">${p.artista}</a> · ${p.plays.toLocaleString('pt-BR')} plays</li>`)}</ul></div>`}`,
     () => html`<${GraficosDupla} g=${g} nomes=${r.nomes} /><${Html} conteudo=${h.corrida} liga=${ligarCorrida} />`,
     () => html`<${Medidas} metricas=${r.metricas} />
       <p class="nota">${r.aviso}</p>
       <p class="nota">Quase juntos (até 1 h de distância): <b>${r.quase.artistas.toLocaleString('pt-BR')}</b> pares com o mesmo artista e <b>${r.quase.musicas.toLocaleString('pt-BR')}</b> com a mesma música.</p>
-      <details class="vidro detalhe"><summary>Exemplos de quase juntos</summary><${Tabela} titulo="Mesmo artista" tabela=${t.quase_artistas} /><${Tabela} titulo="Mesma música" tabela=${t.quase_musicas} /></details>
+      <details class="superficie detalhe"><summary>Exemplos de quase juntos</summary><${Tabela} titulo="Mesmo artista" tabela=${t.quase_artistas} /><${Tabela} titulo="Mesma música" tabela=${t.quase_musicas} /></details>
       <${Tabela} titulo="Contribuição de cada artista ao cosseno" tabela=${t.contribuicoes} /><${Tabela} titulo="Diversidade" tabela=${t.diversidade} />
       <${Tabela} titulo="Minutos por execução" tabela=${t.estatisticas} /><${Tabela} titulo="Diagnóstico dos arquivos" tabela=${t.diagnostico} /><${Tabela} titulo="Playlist comum" tabela=${t.playlist} />
       <p class="nota">As tabelas mostram as 20 primeiras linhas. A playlist inteira está no botão “Playlist comum · CSV”, logo abaixo dos stories.</p>`,

@@ -44,6 +44,49 @@ function capa(ctx, img, nome, x, y, lado, raio) {
   ctx.restore();
 }
 
+// Tema dos stories (1.18) no Canvas: "capa de playlist" (a cor vem do alto e se apaga em #121212, com o mesmo
+// véu do CSS) e o vidro com borda de luz. `extra`: uma segunda luz no canto de baixo (o violeta de B na Dupla).
+const SUP_1 = '#121212';
+const rgbTexto = ([r, g, b], a) => `rgba(${r},${g},${b},${a})`;
+function fundoPlaylist(ctx, cor, extra = null) {
+  ctx.fillStyle = SUP_1; ctx.fillRect(0, 0, L, A);
+  // Elipse larga como a do CSS (140% × 70%): escala o eixo x para o raio vertical virar o de referência.
+  ctx.save(); ctx.translate(L * 0.22, -A * 0.08); ctx.scale((1.4 * L) / (0.7 * A), 1);
+  const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 0.7 * A);
+  [[0, 0.95], [0.42, 0.45], [0.7, 0.08], [0.88, 0]].forEach(([p, a]) => g.addColorStop(p, rgbTexto(cor, a)));
+  ctx.fillStyle = g; ctx.fillRect(-L * 2, -A, L * 6, A * 3); ctx.restore();
+  if (extra) {
+    const e = ctx.createRadialGradient(L, A * 1.05, 0, L, A * 1.05, A * 0.5);
+    e.addColorStop(0, rgbTexto(extra, 0.3)); e.addColorStop(1, rgbTexto(extra, 0));
+    ctx.fillStyle = e; ctx.fillRect(0, 0, L, A);
+  }
+  const veu = ctx.createLinearGradient(0, 0, 0, A);
+  veu.addColorStop(0, 'rgba(0,0,0,.42)'); veu.addColorStop(0.45, 'rgba(18,18,18,.5)'); veu.addColorStop(1, 'rgba(18,18,18,.82)');
+  ctx.fillStyle = veu; ctx.fillRect(0, 0, L, A);
+}
+// Vidro: face translúcida com a cor vazando do canto e a borda clara no alto, apagada embaixo, tingida no fim.
+function vidro(ctx, x, y, w, h, raio, cor = [255, 255, 255]) {
+  retangulo(ctx, x, y, w, h, raio);
+  ctx.fillStyle = 'rgba(18,18,20,.45)'; ctx.fill();
+  const tinta = ctx.createRadialGradient(x, y, 0, x, y, Math.max(w, h));
+  tinta.addColorStop(0, rgbTexto(cor, 0.2)); tinta.addColorStop(0.6, rgbTexto(cor, 0));
+  ctx.fillStyle = tinta; ctx.fill();
+  const brilho = ctx.createLinearGradient(0, y, 0, y + h);
+  brilho.addColorStop(0, 'rgba(255,255,255,.13)'); brilho.addColorStop(0.4, 'rgba(255,255,255,.03)'); brilho.addColorStop(1, 'rgba(255,255,255,.05)');
+  ctx.fillStyle = brilho; ctx.fill();
+  const aro = ctx.createLinearGradient(x, y, x + w * 0.35, y + h);
+  aro.addColorStop(0, 'rgba(255,255,255,.55)'); aro.addColorStop(0.32, 'rgba(255,255,255,.1)'); aro.addColorStop(0.62, 'rgba(255,255,255,.04)'); aro.addColorStop(1, rgbTexto(cor, 0.45));
+  ctx.strokeStyle = aro; ctx.lineWidth = 2; ctx.stroke();
+}
+// Kicker do Spotify: 700, tracking curto, branco cheio (como .st-kicker).
+function kickerEm(ctx, texto, x, y, cor = '#fff', alinhamento = 'left') {
+  ctx.fillStyle = cor; ctx.font = FONTE(700, 30); ctx.textAlign = alinhamento;
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '2px';
+  ctx.fillText(texto.toUpperCase(), x, y);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+  ctx.textAlign = 'left';
+}
+
 // Topo dos pôsteres: as 4 barras do SyncUp, em degradê verde → violeta como no site, e o período.
 const BARRAS = ['#1ed760', '#55cc94', '#8dc2cb', '#c4b7ff']; // = color-mix do estilo.css (0, 33, 67 e 100%)
 function topo(ctx, d, direita = `${mesAno(d.inicio)} → ${mesAno(d.fim)}`) {
@@ -60,13 +103,11 @@ function pe(ctx) {
   ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = FONTE(400, 32); ctx.fillText('hazykiuu.github.io/SyncUp', M, A - 100);
 }
 
-function pilula(ctx, texto, x, y) {
+function pilula(ctx, texto, x, y, cor) {
   ctx.font = FONTE(800, 36);
   const w = ctx.measureText(texto).width + 64;
-  retangulo(ctx, x, y, w, 76, 38);
-  ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,.2)'; ctx.lineWidth = 2; ctx.stroke();
-  ctx.fillStyle = '#fff'; ctx.fillText(texto, x + 32, y + 50);
+  vidro(ctx, x, y, w, 76, 38, cor);
+  ctx.font = FONTE(800, 36); ctx.fillStyle = '#fff'; ctx.fillText(texto, x + 32, y + 50);
   return x + w + 20;
 }
 
@@ -82,16 +123,7 @@ export async function desenharPoster(d, capas) {
   const ctx = canvas.getContext('2d');
   const [r, g, b] = corDe(foto);
 
-  // Fundo: preto, duas manchas da cor da foto e o véu (igual ao CSS do story).
-  ctx.fillStyle = '#0b0b0c'; ctx.fillRect(0, 0, L, A);
-  for (const [cx, cy, raio, alfa] of [[L * 0.15, 0, A * 0.9, 0.95], [L, A, A * 0.8, 0.55]]) {
-    const m = ctx.createRadialGradient(cx, cy, 0, cx, cy, raio);
-    m.addColorStop(0, `rgba(${r},${g},${b},${alfa})`); m.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = m; ctx.fillRect(0, 0, L, A);
-  }
-  const veu = ctx.createLinearGradient(0, 0, 0, A * 0.7);
-  veu.addColorStop(0, 'rgba(0,0,0,.55)'); veu.addColorStop(1, 'rgba(0,0,0,.78)');
-  ctx.fillStyle = veu; ctx.fillRect(0, 0, L, A);
+  fundoPlaylist(ctx, [r, g, b]);
 
   topo(ctx, d);
 
@@ -110,7 +142,7 @@ export async function desenharPoster(d, capas) {
   const yA = 570, lado = 380;
   capa(ctx, foto, a.nome, M, yA, lado, 16);
   const xt = M + lado + 48, wt = L - M - xt;
-  ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = FONTE(800, 30); ctx.fillText('ARTISTA DA VIDA', xt, yA + 110);
+  kickerEm(ctx, 'Artista da vida', xt, yA + 110);
   ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 78);
   const palavras = a.nome.split(' '); let linha = '', linhas = [];
   for (const w of palavras) { const t = linha ? `${linha} ${w}` : w; if (ctx.measureText(t).width > wt && linha) { linhas.push(linha); linha = w; } else linha = t; }
@@ -127,7 +159,7 @@ export async function desenharPoster(d, capas) {
 
   // Arquétipo e pico.
   const yP = yC + lc + 110;
-  pilula(ctx, `pico às ${d.pico_hora}h`, pilula(ctx, p.nome, M, yP), yP);
+  pilula(ctx, `pico às ${d.pico_hora}h`, pilula(ctx, p.nome, M, yP, [r, g, b]), yP, [r, g, b]);
 
   // Logo do Spotify (regra das capas), só se alguma capa veio dele.
   if (logo) ctx.drawImage(logo, M, yP + 140, 240, 240 * (225.25 / 823.46));
@@ -145,16 +177,7 @@ export async function desenharPosterDupla(d) {
   const ctx = canvas.getContext('2d');
   const s = d.sintonia;
 
-  // Fundo: preto com o degradê da dupla (verde no alto, violeta embaixo) e o véu.
-  ctx.fillStyle = '#0b0b0c'; ctx.fillRect(0, 0, L, A);
-  for (const [cx, cy, raio, cor] of [[L * 0.1, 0, A * 0.8, 'rgba(30,215,96,.75)'], [L, A, A * 0.8, 'rgba(196,183,255,.6)']]) {
-    const m = ctx.createRadialGradient(cx, cy, 0, cx, cy, raio);
-    m.addColorStop(0, cor); m.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = m; ctx.fillRect(0, 0, L, A);
-  }
-  const veu = ctx.createLinearGradient(0, 0, 0, A * 0.7);
-  veu.addColorStop(0, 'rgba(0,0,0,.5)'); veu.addColorStop(1, 'rgba(0,0,0,.75)');
-  ctx.fillStyle = veu; ctx.fillRect(0, 0, L, A);
+  fundoPlaylist(ctx, [30, 215, 96], [196, 183, 255]);
 
   topo(ctx, d);
 
@@ -162,7 +185,7 @@ export async function desenharPosterDupla(d) {
   const inicial = (nome) => (nome.trim()[0] || '?').toUpperCase();
   [[d.b, VIOLETA, M + 150], [d.a, VERDE, M + 60]].forEach(([p, cor, cx]) => {
     ctx.beginPath(); ctx.arc(cx, 300, 60, 0, 2 * Math.PI); ctx.fillStyle = cor; ctx.fill();
-    ctx.lineWidth = 6; ctx.strokeStyle = '#0b0b0c'; ctx.stroke();
+    ctx.lineWidth = 6; ctx.strokeStyle = SUP_1; ctx.stroke();
     ctx.fillStyle = '#000'; ctx.font = FONTE(900, 56); ctx.textAlign = 'center'; ctx.fillText(inicial(p.nome), cx, 320); ctx.textAlign = 'left';
   });
 
@@ -192,10 +215,8 @@ export async function desenharPosterDupla(d) {
   let y = 920 + dy;
   if (s?.momentos > 0) {
     const h = s.musica ? 250 : 190;
-    retangulo(ctx, M, y, UTIL, h, 40);
-    ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.fill();
-    ctx.strokeStyle = 'rgba(245,115,160,.8)'; ctx.lineWidth = 4; ctx.stroke();
-    ctx.fillStyle = ROSA; ctx.font = FONTE(800, 30); ctx.fillText('EM SINTONIA', M + 48, y + 70);
+    vidro(ctx, M, y, UTIL, h, 40, [245, 115, 160]);
+    kickerEm(ctx, 'Em sintonia', M + 48, y + 70, ROSA);
     ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 60); ctx.fillText(cortar(ctx, `${fmtNum(s.minutos)} min ouvindo juntos`, UTIL - 96), M + 48, y + 145);
     if (s.musica) { ctx.font = FONTE(400, 36); ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillText(cortar(ctx, `A música de vocês: ${s.musica.nome}`, UTIL - 96), M + 48, y + 210); }
     y += h + 50;
@@ -208,7 +229,7 @@ export async function desenharPosterDupla(d) {
     const nome = cortar(ctx, c.nome, UTIL - 64);
     const w = ctx.measureText(nome).width + 64;
     if (xc + w > L - M) { if (++linhas > 2) break; xc = M; y += 96; }
-    xc = pilula(ctx, nome, xc, y);
+    xc = pilula(ctx, nome, xc, y, [30, 215, 96]);
   }
   if (d.em_comum.length) y += 96 + 40;
 
@@ -236,24 +257,12 @@ export async function desenharPosterBatalha(b) {
   });
   const campeoes = b.campeoes.map((k) => b.lutadores[k]);
 
-  // Fundo: a cor de quem levou no alto, a do 2º embaixo, e o véu (como os stories).
-  ctx.fillStyle = '#0b0b0c'; ctx.fillRect(0, 0, L, A);
-  for (const [cx, cy, raio, cor] of [[L * 0.1, 0, A * 0.8, rgba(campeoes[0].cor, 0.7)], [L, A, A * 0.7, rgba(b.lutadores[ordem[1]].cor, 0.45)]]) {
-    const m = ctx.createRadialGradient(cx, cy, 0, cx, cy, raio);
-    m.addColorStop(0, cor); m.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = m; ctx.fillRect(0, 0, L, A);
-  }
-  const veu = ctx.createLinearGradient(0, 0, 0, A * 0.7);
-  veu.addColorStop(0, 'rgba(0,0,0,.5)'); veu.addColorStop(1, 'rgba(0,0,0,.75)');
-  ctx.fillStyle = veu; ctx.fillRect(0, 0, L, A);
+  // Fundo de playlist: a cor de quem levou no alto, a do 2º no canto de baixo (como os stories).
+  const rgbDe = (hex) => [1, 3, 5].map((k) => parseInt(hex.slice(k, k + 2), 16));
+  fundoPlaylist(ctx, rgbDe(campeoes[0].cor), ordem[1] === undefined ? null : rgbDe(b.lutadores[ordem[1]].cor));
   topo(ctx, null, 'Batalha');
 
-  const kicker = (texto, y) => {
-    ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.font = FONTE(800, 30);
-    if ('letterSpacing' in ctx) ctx.letterSpacing = '4px';
-    ctx.fillText(texto.toUpperCase(), M, y);
-    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
-  };
+  const kicker = (texto, y) => kickerEm(ctx, texto, M, y);
   const avatar = (l, cx, cy, r) => {
     ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.fillStyle = l.cor; ctx.fill();
     ctx.fillStyle = '#000'; ctx.font = FONTE(900, r * 0.95); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -293,7 +302,9 @@ export async function desenharPosterBatalha(b) {
       const g = ctx.createLinearGradient(0, y, 0, base);
       g.addColorStop(0, rgba(l.cor, 0.55)); g.addColorStop(1, rgba(l.cor, 0.12));
       retangulo(ctx, x, y, w, h, [36, 36, 12, 12]); ctx.fillStyle = g; ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 2; ctx.stroke();
+      const aro = ctx.createLinearGradient(x, y, x + w * 0.35, base);
+      aro.addColorStop(0, 'rgba(255,255,255,.6)'); aro.addColorStop(0.4, 'rgba(255,255,255,.12)'); aro.addColorStop(1, rgba(l.cor, 0.6));
+      ctx.strokeStyle = aro; ctx.lineWidth = 2; ctx.stroke();
       ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.fillRect(x + 30, y + 1, w - 60, 2);
       ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 72); ctx.textAlign = 'center'; ctx.fillText(`${pos[n]}º`, x + w / 2, y + 100);
       ctx.textAlign = 'left';
@@ -335,21 +346,16 @@ export async function desenharPosterMatch(r, x, y, c, cores) {
     ctx.save(); ctx.translate(cx - lado / 2, cy - lado / 2); ctx.scale(lado / 24, lado / 24); ctx.fillStyle = cor; ctx.fill(CORACAO); ctx.restore();
   };
 
-  // Fundo vinho com brilho rosa e a renda no alto e embaixo.
-  ctx.fillStyle = '#170b13'; ctx.fillRect(0, 0, L, A);
-  for (const [cx, cy, raio, cor] of [[0, 0, A * 0.75, 'rgba(245,115,160,.55)'], [L, A, A * 0.7, rgba(cores[x], 0.35)]]) {
-    const m = ctx.createRadialGradient(cx, cy, 0, cx, cy, raio);
-    m.addColorStop(0, cor); m.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = m; ctx.fillRect(0, 0, L, A);
-  }
+  // Fundo de playlist em rosa (o tema dos stories), com a cor de uma das pessoas no canto e a renda no alto e embaixo.
+  fundoPlaylist(ctx, [245, 115, 160], [1, 3, 5].map((k) => parseInt(cores[x].slice(k, k + 2), 16)));
   ctx.fillStyle = 'rgba(245,115,160,.6)';
   for (let k = 0; k * 40 < L + 40; k++) for (const yy of [0, A]) { ctx.beginPath(); ctx.arc(k * 40 + 20, yy, 14, 0, 2 * Math.PI); ctx.fill(); }
   for (let k = 0; k < 14; k++) coracao((k * 197) % L, 200 + ((k * 331) % (A - 400)), 24 + (k % 4) * 10, 'rgba(245,115,160,.18)');
   topo(ctx, null, 'Match');
 
   ctx.textAlign = 'center';
-  ctx.fillStyle = ROSA; ctx.font = FONTE(800, 32);
-  if ('letterSpacing' in ctx) ctx.letterSpacing = '5px';
+  ctx.fillStyle = ROSA; ctx.font = FONTE(700, 32);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '2px';
   ctx.fillText('O CASAL DO GRUPO', L / 2, 360);
   if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 
@@ -386,8 +392,8 @@ export async function desenharPosterMatch(r, x, y, c, cores) {
   for (let k = 0; k < 5; k++) coracao(L / 2 + (k - 2) * 90, 1340, 70, k < cheios ? ROSA : 'rgba(255,255,255,.18)');
 
   if (c.artistas_comuns.length) {
-    ctx.fillStyle = ROSA; ctx.font = FONTE(800, 30);
-    if ('letterSpacing' in ctx) ctx.letterSpacing = '4px';
+    ctx.fillStyle = ROSA; ctx.font = FONTE(700, 30);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '2px';
     ctx.fillText('VOCÊS DOIS AMAM', L / 2, 1480);
     if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
     ctx.fillStyle = '#fff'; ctx.font = FONTE(800, 44);

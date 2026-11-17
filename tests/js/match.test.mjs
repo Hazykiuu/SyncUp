@@ -19,3 +19,22 @@ test('perfilDeHistorico: aguenta um histórico grande (sem estourar a pilha)', (
   const p = perfilDeHistorico(c, 'Ana');
   assert.equal(p.top_artistas.long_term.length, 50);
 });
+
+test('melhorPar e trilhaMatch: o casal do grupo e um artista em comum por par', async () => {
+  const { chave, melhorPar, trilhaMatch } = await import('../../site/app/js/match.js');
+  const det = (p, comuns) => ({ pontuacao: p, artistas_comuns: comuns });
+  const r = {
+    pares: [['Ana', 'Bia'], ['Caio', 'Duda', 'Edu']],
+    detalhes: {
+      [chave('Ana', 'Bia')]: det(9, ['X', 'Y']), [chave('Caio', 'Duda')]: det(20, []),
+      [chave('Caio', 'Edu')]: det(31, ['Z']), [chave('Duda', 'Edu')]: det(31, ['W']),
+    },
+  };
+  const [x, y, c] = melhorPar(r);
+  assert.deepEqual([x, y, c.pontuacao], ['Caio', 'Edu', 31]); // empate em 31: o primeiro fica
+  const t = trilhaMatch(r);
+  assert.deepEqual(t.slides['par-0'], [{ artista: 'X' }]);
+  assert.equal(t.slides['par-1'], undefined); // Caio e Duda sem artista em comum
+  assert.deepEqual(t.slides.poster, [{ artista: 'Z' }]);
+  assert.deepEqual(t.fila, [{ artista: 'X' }, { artista: 'Y' }]);
+});

@@ -195,3 +195,28 @@ export function conciliar(perfis) {
     pontuacao_media_pares: pontuacoes.length ? pontuacoes.reduce((s, v) => s + v, 0) / pontuacoes.length : 0,
   };
 }
+
+// O par formado de maior nota (em trio, o melhor dos três pares): o "casal do grupo" do pôster.
+// Empate: o que vem primeiro na lista de pares.
+export function melhorPar(r) {
+  let melhor = null;
+  for (const g of r.pares) for (let a = 0; a < g.length; a++) for (let b = a + 1; b < g.length; b++) {
+    const c = r.detalhes[chave(g[a], g[b])];
+    if (!melhor || c.pontuacao > melhor[2].pontuacao) melhor = [g[a], g[b], c];
+  }
+  return melhor;
+}
+
+// Trilha dos stories (o formato de som.js): cada par toca o artista que mais os une; o pôster, o do casal do grupo.
+// Só nomes de artistas em comum vão ao iTunes.
+export function trilhaMatch(r) {
+  const comum = (x, y) => r.detalhes[chave(x, y)].artistas_comuns.slice(0, 1).map((artista) => ({ artista }));
+  const [x, y] = melhorPar(r);
+  const slides = {
+    abertura: comum(x, y),
+    ...Object.fromEntries(r.pares.map((g, n) => [`par-${n}`, comum(g[0], g[1])])),
+    poster: comum(x, y),
+  };
+  const fila = [...new Set(r.pares.flatMap((g) => r.detalhes[chave(g[0], g[1])].artistas_comuns.slice(0, 3)))].map((artista) => ({ artista }));
+  return { slides: Object.fromEntries(Object.entries(slides).filter(([, c]) => c.length)), fila };
+}

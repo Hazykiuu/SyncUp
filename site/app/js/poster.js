@@ -325,6 +325,80 @@ export async function desenharPosterBatalha(b) {
   return new Promise((ok, falha) => canvas.toBlob((blob) => (blob ? ok(blob) : falha(new Error('Não deu para gerar a imagem.'))), 'image/png'));
 }
 
+// Pôster do Match: o casal do grupo em rosa, com a nota, a fita do nível, os corações e o que une os dois.
+const CORACAO = new Path2D('M12 21s-7.5-4.6-9.6-9.4C.9 8 3.1 4 6.9 4c2.2 0 3.7 1.2 5.1 3 1.4-1.8 2.9-3 5.1-3 3.8 0 6 4 4.5 7.6C19.5 16.4 12 21 12 21Z');
+export async function desenharPosterMatch(r, x, y, c, cores) {
+  await Promise.all([FONTE(900, 64), FONTE(800, 36), FONTE(400, 36)].map((f) => document.fonts.load(f).catch(() => null)));
+  const canvas = Object.assign(document.createElement('canvas'), { width: L, height: A });
+  const ctx = canvas.getContext('2d');
+  const coracao = (cx, cy, lado, cor) => {
+    ctx.save(); ctx.translate(cx - lado / 2, cy - lado / 2); ctx.scale(lado / 24, lado / 24); ctx.fillStyle = cor; ctx.fill(CORACAO); ctx.restore();
+  };
+
+  // Fundo vinho com brilho rosa e a renda no alto e embaixo.
+  ctx.fillStyle = '#170b13'; ctx.fillRect(0, 0, L, A);
+  for (const [cx, cy, raio, cor] of [[0, 0, A * 0.75, 'rgba(245,115,160,.55)'], [L, A, A * 0.7, rgba(cores[x], 0.35)]]) {
+    const m = ctx.createRadialGradient(cx, cy, 0, cx, cy, raio);
+    m.addColorStop(0, cor); m.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = m; ctx.fillRect(0, 0, L, A);
+  }
+  ctx.fillStyle = 'rgba(245,115,160,.6)';
+  for (let k = 0; k * 40 < L + 40; k++) for (const yy of [0, A]) { ctx.beginPath(); ctx.arc(k * 40 + 20, yy, 14, 0, 2 * Math.PI); ctx.fill(); }
+  for (let k = 0; k < 14; k++) coracao((k * 197) % L, 200 + ((k * 331) % (A - 400)), 24 + (k % 4) * 10, 'rgba(245,115,160,.18)');
+  topo(ctx, null, 'Match');
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = ROSA; ctx.font = FONTE(800, 32);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '5px';
+  ctx.fillText('O CASAL DO GRUPO', L / 2, 360);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+
+  // O casal: duas iniciais e o coração no meio.
+  const raio = 110, cy = 560;
+  for (const [n, cx] of [[x, L / 2 - 120], [y, L / 2 + 120]]) {
+    ctx.beginPath(); ctx.arc(cx, cy, raio + 10, 0, 2 * Math.PI); ctx.fillStyle = 'rgba(245,115,160,.6)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, raio, 0, 2 * Math.PI); ctx.fillStyle = cores[n]; ctx.fill();
+    ctx.fillStyle = '#120810'; ctx.font = FONTE(900, 110); ctx.textBaseline = 'middle';
+    ctx.fillText(([...n.trim()][0] || '?').toUpperCase(), cx, cy + 6); ctx.textBaseline = 'alphabetic';
+  }
+  ctx.shadowColor = 'rgba(245,115,160,.9)'; ctx.shadowBlur = 30; coracao(L / 2, cy, 120, ROSA); ctx.shadowBlur = 0;
+
+  let px = 110;
+  const nomes = `${x} & ${y}`;
+  ctx.font = FONTE(900, px);
+  while (px > 64 && ctx.measureText(nomes).width > UTIL) ctx.font = FONTE(900, (px -= 4));
+  ctx.fillStyle = '#fff'; ctx.fillText(cortar(ctx, nomes, UTIL), L / 2, 820);
+
+  const nota = ctx.createLinearGradient(0, 900, 0, 1160);
+  nota.addColorStop(0, '#ffffff'); nota.addColorStop(0.55, '#ffc2d9'); nota.addColorStop(1, ROSA);
+  ctx.fillStyle = nota; ctx.font = FONTE(900, 260); ctx.shadowColor = 'rgba(245,115,160,.6)'; ctx.shadowBlur = 50;
+  ctx.fillText(`${fmtNum(c.pontuacao, 1)}%`, L / 2, 1130); ctx.shadowBlur = 0;
+
+  // Fita com pontas recortadas.
+  ctx.font = FONTE(800, 34);
+  const texto = c.nivel.toUpperCase(), w = ctx.measureText(texto).width + 120, fy = 1190, fh = 70;
+  ctx.beginPath(); ctx.moveTo(L / 2 - w / 2, fy); ctx.lineTo(L / 2 + w / 2, fy); ctx.lineTo(L / 2 + w / 2 - 22, fy + fh / 2);
+  ctx.lineTo(L / 2 + w / 2, fy + fh); ctx.lineTo(L / 2 - w / 2, fy + fh); ctx.lineTo(L / 2 - w / 2 + 22, fy + fh / 2); ctx.closePath();
+  ctx.fillStyle = ROSA; ctx.fill();
+  ctx.fillStyle = '#2a0a1a'; ctx.fillText(texto, L / 2, fy + 47);
+
+  const cheios = c.pontuacao > 0 ? Math.max(1, Math.round(Math.min(1, c.pontuacao / 25) * 5)) : 0;
+  for (let k = 0; k < 5; k++) coracao(L / 2 + (k - 2) * 90, 1340, 70, k < cheios ? ROSA : 'rgba(255,255,255,.18)');
+
+  if (c.artistas_comuns.length) {
+    ctx.fillStyle = ROSA; ctx.font = FONTE(800, 30);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '4px';
+    ctx.fillText('VOCÊS DOIS AMAM', L / 2, 1480);
+    if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+    ctx.fillStyle = '#fff'; ctx.font = FONTE(800, 44);
+    c.artistas_comuns.slice(0, 3).forEach((a, k) => ctx.fillText(cortar(ctx, a, UTIL), L / 2, 1550 + k * 60));
+  }
+  ctx.textAlign = 'left';
+  pe(ctx);
+
+  return new Promise((ok, falha) => canvas.toBlob((blob) => (blob ? ok(blob) : falha(new Error('Não deu para gerar a imagem.'))), 'image/png'));
+}
+
 // Celular: abre a folha de compartilhar (Instagram, WhatsApp…). Sem suporte: baixa o PNG.
 export async function compartilhar(blob, nome = 'syncup-wrapped.png', titulo = 'Meu SyncUp Wrapped') {
   const arquivo = new File([blob], nome, { type: 'image/png' });

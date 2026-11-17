@@ -1,15 +1,22 @@
 // Tela do Match: ZIPs e convites colados, o Worker e os pares que mais combinam (com os motivos).
-import { html, useEffect, useRef, useState } from 'preact-htm';
+import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { CORES } from './batalha.js';
 import { chegarPouco, rolarAte } from './chegada.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
-import { chave } from './match.js';
+import { chave, melhorPar, trilhaMatch } from './match.js';
+import { compartilhar, desenharPosterMatch } from './poster.js';
+import { destravarSom, SomStories } from './som.js';
+import { Dock } from './stories/dock.js';
+import { slidesDoMatch } from './stories/match.js';
+import { Player } from './stories/player.js';
 import { fmtNum } from './stories/logica.js';
 import { abrirWorker } from './worker.js';
 
 const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos pessoas.';
 const DEMO = [['demo-wrapped.zip', 'Ana'], ['demo-bruno.zip', 'Bruno'], ['demo-carla.zip', 'Carla'], ['demo-davi.zip', 'Davi']];
+const NOTA_SOM = 'Para o som, o SyncUp envia à Apple (iTunes) os nomes dos artistas em comum de cada par, além do seu endereço IP. Os históricos e os nomes de vocês não saem do aparelho. Trechos: iTunes.';
+const segundos = (ms) => (ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 const AVISO = 'O Match compara só os rankings de artistas e músicas. Não mede afinidade pessoal.';
 const EXEMPLOS = ['Ana', 'Bia', 'Caio', 'Duda', 'Edu', 'Fabi'];
 const cor = (i) => CORES[i % CORES.length];
@@ -62,8 +69,29 @@ function Par({ g, r, cores, n }) {
 
 function ResultadoMatch({ dados: { r, fontes, fora } }) {
   const cores = Object.fromEntries(r.nomes.map((n, i) => [n, cor(i)]));
+  const stories = useRef(null);
+  const [ocupado, setOcupado] = useState(false);
+  const [aviso, setAviso] = useState('');
+  const slides = useMemo(() => slidesDoMatch(r), [r]);
+  const trilha = useMemo(() => trilhaMatch(r), [r]);
+  const poster = async () => {
+    setOcupado(true); setAviso('');
+    try {
+      const inicio = performance.now();
+      const blob = await desenharPosterMatch(r, ...melhorPar(r), cores);
+      const ms = performance.now() - inicio;
+      const como = await compartilhar(blob, 'syncup-match.png', 'Match no SyncUp');
+      setAviso(como === 'cancelado' ? '' : `Pôster pronto em ${segundos(ms)} s${como === 'baixado' ? ' (baixado como syncup-match.png)' : ''}.`);
+    } catch (e) { setAviso(`Não deu certo: ${e.message}`); } finally { setOcupado(false); }
+  };
   return html`<section class="resultado" aria-labelledby="titulo-match">
     <h2 id="titulo-match" class="amor-titulo">Quem combina com quem</h2>
+    <div ref=${stories} class="nucleo"><${Player} key=${r} slides=${slides} rotulo=${`Match de ${r.nomes.join(', ')}`} /></div>
+    <div class="compartilhar"><div class="acoes">
+      <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
+    </div>${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
+    <${Dock} alvo=${stories} aoPoster=${poster} ocupado=${ocupado} comSom=${!!trilha.fila.length} /></div>
+    ${trilha.fila.length > 0 && html`<${SomStories} key=${r} trilha=${trilha} alvo=${stories} nota=${NOTA_SOM} />`}
     <p class="batalha-resumo">Média dos pares: <b>${pct(r.pontuacao_media_pares)}</b>. Os pares somam a maior compatibilidade possível do grupo${r.nomes.length % 2 ? '; com número ímpar, uma pessoa entra no par onde mais combina e vira trio' : ''}.</p>
     <ul class="amores">${r.pares.map((g, n) => html`<${Par} g=${g} r=${r} cores=${cores} n=${n} />`)}</ul>
     <details class="vidro detalhe"><summary>Com quem cada um mais combina</summary>
@@ -146,11 +174,13 @@ export function Match() {
   };
   const combinar = () => {
     ultima.current = 'combinar';
+    destravarSom();
     const usados = arquivos.map((a, i) => [a, (nomes[i] || '').trim() || `Pessoa ${i + 1}`]).filter(([a]) => a.length);
     rodar(async () => usados.map(([a]) => a), usados.map(([, n]) => n), convites);
   };
   const demo = () => {
     ultima.current = 'demo';
+    destravarSom();
     setNomes(DEMO.map(([, n]) => n)); setArquivos(DEMO.map(() => [])); setConvites('');
     rodar(() => Promise.all(DEMO.map(async ([arquivo]) => {
       const resposta = await fetch(arquivo).catch(() => null);

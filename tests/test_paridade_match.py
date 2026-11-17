@@ -150,3 +150,15 @@ def test_convite_do_pc_abre_no_navegador_e_vice_versa(arquivos):  # noqa: F811
     no_py = ler_convite(codigo)
     assert no_py.nome == 'Ana 🎸'
     assert {'top_artistas': no_py.top_artistas, 'top_musicas': no_py.top_musicas} == rankings
+
+
+def test_arredondamento_igual_ao_round_do_python():
+    import random
+
+    sorteio = random.Random(3)
+    valores = [sorteio.randrange(0, 100_001) / 1000 for _ in range(3000)]
+    valores += [k / 100 for k in range(0, 10_001, 5)]  # todos os meios de 0,00 a 100,00
+    script = """import { arredondar1 } from './site/app/js/match.js';
+let s = ''; for await (const c of process.stdin) s += c;
+process.stdout.write(JSON.stringify(JSON.parse(s).map(arredondar1)));"""
+    assert json.loads(_node(script, json.dumps(valores))) == [round(v, 1) for v in valores]

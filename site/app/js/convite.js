@@ -11,6 +11,8 @@ const ALTERADO = 'O convite está incompleto ou foi alterado. Copie o código in
 
 const tamanho = (s) => [...s].length; // pontos de código, como o len() do Python
 
+const SEM_SUPORTE = 'Este navegador não sabe abrir convites. Atualize o navegador ou use outro (Chrome, Firefox, Safari 16.4+).';
+
 async function passar(bytes, stream, limite = Infinity) {
   const leitor = new Blob([bytes]).stream().pipeThrough(stream).getReader();
   const partes = [];
@@ -26,6 +28,7 @@ async function passar(bytes, stream, limite = Infinity) {
 }
 
 export async function gerarConvite(perfil) {
+  if (typeof CompressionStream === 'undefined') throw new Error(SEM_SUPORTE);
   const dados = {
     n: [...perfil.nome.trim()].slice(0, MAXIMO_NOME).join(''),
     a: Object.fromEntries(PERIODOS.map((p) => [p, (perfil.top_artistas[p] || []).slice(0, TAMANHO_RANKING)])),
@@ -51,6 +54,7 @@ export async function lerConvite(codigo) {
   codigo = (codigo || '').replace(/\s+/g, ''); // tolera quebras de linha do aplicativo de mensagem
   if (!codigo.startsWith(PREFIXO)) throw new Error('Isso não parece um convite do SyncUp (ele começa com "SYNCUP1.").');
   if (tamanho(codigo) > MAXIMO_CODIGO) throw new Error('O convite é grande demais. Peça para a pessoa gerar de novo.');
+  if (typeof DecompressionStream === 'undefined') throw new Error(SEM_SUPORTE);
   let nome, top_artistas, top_musicas;
   try {
     const bin = atob(codigo.slice(PREFIXO.length).replace(/-/g, '+').replace(/_/g, '/'));

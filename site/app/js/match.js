@@ -32,7 +32,8 @@ export function perfilDeHistorico(c, nome) {
   const plays = [];
   for (let i = 0; i < c.ms.length; i++) if (c.ms[i] >= TEMPO_MINIMO_PLAY_MS) plays.push(i);
   if (!plays.length) throw new Error(`O histórico de ${nome} não tem plays de pelo menos 30 segundos.`);
-  const fim = Math.max(...plays.map((i) => c.utc[i]));
+  let fim = -Infinity; // laço, não Math.max(...): centenas de milhares de argumentos estouram a pilha
+  for (const i of plays) if (c.utc[i] > fim) fim = c.utc[i];
   const top_artistas = {}, top_musicas = {};
   for (const p of PERIODOS) {
     const artistas = new Map(), musicas = new Map();
@@ -46,6 +47,15 @@ export function perfilDeHistorico(c, nome) {
     top_musicas[p] = ranking(musicas).map(([musica, artista]) => ({ musica, artista }));
   }
   return { nome: (nome || '').trim() || 'Sem nome', fonte: 'historico_zip', top_artistas, top_musicas };
+}
+
+// round(x, 1) do Python: meio para o par sobre o valor binário exato. toFixed sobe o meio (6,25 → 6,3) e o Intl
+// arredonda o decimal mais curto (6,35 → 6,4); toFixed(60) dá a expansão exata de um valor entre 0 e 100.
+export function arredondar1(v) {
+  const [int, frac] = v.toFixed(60).split('.');
+  const base = Number(`${int}.${frac[0]}`), resto = frac.slice(1);
+  const sobe = resto[0] > '5' || (resto[0] === '5' && (/[1-9]/.test(resto.slice(1)) || frac[0] % 2 === 1));
+  return sobe ? Number((base + 0.1).toFixed(1)) : base;
 }
 
 const pesoPosicao = (i) => Math.max(0, (TAMANHO_RANKING - i + 1) / TAMANHO_RANKING);
@@ -98,7 +108,7 @@ function recomendar(origem, destino, nomes, n) {
 export function compararPerfis(a, b, nExemplos = 8) {
   const va = vetorArtistas(a), vb = vetorArtistas(b);
   const valor = va.size && vb.size ? cosseno(va, vb) : null;
-  const pontuacao = Number(((valor || 0) * 100).toFixed(1)); // toFixed arredonda o binário exato, como o round() do Python
+  const pontuacao = arredondar1((valor || 0) * 100);
   const na = nomesExibicao(a), nb = nomesExibicao(b);
   const nomes = new Map([...nb, ...na]);
   const contrib = va.size && vb.size ? contribuicoes(va, vb) : [];

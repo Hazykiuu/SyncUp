@@ -2,7 +2,7 @@
 // O Gradio continua com o HTML de stories.py; o app web usa só estes.
 import { createContext, html, useContext, useEffect, useRef, useState } from 'preact-htm';
 import {
-  ajustarCor, corReserva, dataBr, descobertasCurta, fmtNum, fmtPct, fraseConstancia, fraseRecorde,
+  ajustarCor, CORES_PADRAO, coresVivas, corReserva, dataBr, descobertasCurta, fmtNum, fmtPct, fraseConstancia, fraseRecorde,
   fraseRepeticao, fraseSequencia, habitoDestaque, hashNome, mesAno,
 } from './logica.js';
 
@@ -27,14 +27,28 @@ export const doSpotify = (url) => /^https:\/\/[^/]*(scdn\.co|spotifycdn\.com)\//
 
 // Cor média de uma imagem (16×16), já ajustada para fundo de story; null se a imagem não tiver CORS.
 // Usada aqui (fundo do slide) e no pôster.
-export function corMedia(img) {
+function pixels(img) {
   try {
     const c = Object.assign(document.createElement('canvas'), { width: 16, height: 16 }).getContext('2d', { willReadFrequently: true });
     c.drawImage(img, 0, 0, 16, 16);
-    const px = c.getImageData(0, 0, 16, 16).data, soma = [0, 0, 0];
-    for (let k = 0; k < px.length; k += 4) { soma[0] += px[k]; soma[1] += px[k + 1]; soma[2] += px[k + 2]; }
-    return ajustarCor(...soma.map((s) => s / 256));
-  } catch { return null; } // imagem sem CORS
+    return c.getImageData(0, 0, 16, 16).data;
+  } catch { return null; } // imagem sem CORS: o canvas fica "sujo" e não deixa ler
+}
+export function corMedia(img) {
+  const px = pixels(img);
+  if (!px) return null;
+  const soma = [0, 0, 0];
+  for (let k = 0; k < px.length; k += 4) { soma[0] += px[k]; soma[1] += px[k + 1]; soma[2] += px[k + 2]; }
+  return ajustarCor(...soma.map((s) => s / 256));
+}
+// Luz ambiente: as duas cores vivas da capa ativa iluminam o fundo atrás do vidro (--ambient-*, app.css).
+// Sem CORS ou sem cor: as do SyncUp. Só a cor sai da capa; a capa em si continua nítida.
+export function luzAmbiente(img) {
+  const px = pixels(img);
+  const [a, b] = px ? coresVivas(px) : CORES_PADRAO;
+  const raiz = document.documentElement.style;
+  raiz.setProperty('--ambient-primary', `rgb(${a.join(' ')})`);
+  raiz.setProperty('--ambient-secondary', `rgb(${b.join(' ')})`);
 }
 const Marca = ({ link }) => html`<div class="st-marca">
   <img src="marcas/spotify-logo-branco.svg" alt="Spotify" width="80" height="22" />
@@ -59,7 +73,10 @@ export function Contador({ valor, casas = 0, ativo }) {
 export function Slide({ tipo, i, capa, link, cor: corInicial, classe = '', children }) {
   const raiz = useRef(null);
   const [cor, setCor] = useState(corInicial || corReserva(i));
-  const lerCor = (e) => { const c = corMedia(e.target); if (c) setCor(c); }; // sem CORS: fica a cor de reserva
+  const lerCor = (e) => {
+    const c = corMedia(e.target); if (c) setCor(c); // sem CORS: fica a cor de reserva
+    if (raiz.current?.closest('.st-slot.ativo')) luzAmbiente(e.target); // a capa do story na tela acende o fundo
+  };
   return html`
     <section ref=${raiz} class=${`su-story ativo st s-${tipo} ${classe}`} style=${{ '--capa': cor.join(' ') }}>
       <div class="st-fundo" aria-hidden="true">${capa && html`<img src=${capa} alt="" crossorigin="anonymous" onLoad=${lerCor} />`}</div>

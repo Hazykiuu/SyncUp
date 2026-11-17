@@ -448,3 +448,34 @@ html:active-view-transition-type(modo)::view-transition-new(barra) { animation: 
 .esq-titulo { height: 2.5rem; width: min(32rem, 90%); margin-top: var(--e5); }
 .esq-cartao { height: 15rem; border-radius: var(--r-cartao); }
 @media (min-width: 900px) { .esqueleto { padding-left: calc(var(--e7) + 15rem); } }
+
+/* Luz ambiente: as duas cores vivas da capa ativa (stories/slides.js, luzAmbiente) iluminam o fundo atrás do vidro.
+   @property deixa o navegador fazer a transição da cor; sem suporte, a cor só troca. */
+@property --ambient-primary { syntax: '<color>'; inherits: true; initial-value: rgb(30 215 96); }
+@property --ambient-secondary { syntax: '<color>'; inherits: true; initial-value: rgb(196 183 255); }
+html { transition: --ambient-primary .6s ease, --ambient-secondary .6s ease; }
+body::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  background: radial-gradient(55% 45% at 12% 8%, color-mix(in srgb, var(--ambient-primary) 22%, transparent), transparent 70%),
+    radial-gradient(50% 50% at 92% 70%, color-mix(in srgb, var(--ambient-secondary) 16%, transparent), transparent 70%); }
+@media (prefers-reduced-transparency: reduce) { body::before { display: none; } }
+
+/* Dock dos stories (stories/dock.js): cápsula de vidro fixa na base enquanto o player está na tela.
+   Fundo escuro ≥ 72%: a capa do story que passa por baixo não aparece borrada (regra do Spotify). */
+.dock { position: fixed; z-index: 55; left: 50%; bottom: calc(var(--e5) + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: var(--e3);
+  width: min(34rem, calc(100% - 2 * var(--e4))); padding: var(--e2); border-radius: var(--pilula); background: rgba(14, 14, 14, .74);
+  -webkit-backdrop-filter: blur(32px) saturate(200%); backdrop-filter: blur(32px) saturate(200%);
+  translate: -50% 1.5rem; opacity: 0; pointer-events: none; transition: translate .25s var(--sai), opacity .2s ease; }
+.dock.visivel { translate: -50% 0; opacity: 1; pointer-events: auto; }
+.dock:not(.com-trecho) { width: auto; }
+.dock-capa { width: 2.75rem; height: 2.75rem; border-radius: 10px; flex: none; }
+.dock-faixa { display: grid; min-width: 0; flex: 1; font-size: .85rem; line-height: 1.25; }
+.dock-faixa b, .dock-faixa small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.dock-faixa small { color: var(--sub); }
+.dock .eq:not(.tocando) i { animation-play-state: paused; }
+.dock-mudo { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; flex: none; background: rgba(255, 255, 255, .08); transition: background .15s, scale .1s ease-out; }
+.dock-mudo:hover { background: rgba(255, 255, 255, .14); } .dock-mudo:active { scale: .94; }
+.dock-mudo[aria-pressed="true"] { color: var(--sub); }
+.dock-poster { flex: none; min-height: 44px; }
+/* Celular: o dock fica acima da barra de modos. */
+@media (max-width: 899px) { .dock { bottom: calc(4.75rem + env(safe-area-inset-bottom)); } }
+@media (max-width: 479px) { .dock-poster { padding-inline: 1rem; } .dock.com-trecho .dock-poster { font-size: 0; gap: 0; } .dock.com-trecho .dock-poster svg { font-size: 1.1rem; } }

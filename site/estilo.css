@@ -145,11 +145,11 @@ section[id] { scroll-margin-top: 6rem; }
 .palco-luz img:nth-child(1) { left: 0; top: 4%; } .palco-luz img:nth-child(2) { right: 0; top: 30%; } .palco-luz img:nth-child(3) { left: 18%; bottom: 0; opacity: .45; }
 .palco-placa { position: absolute; inset: 9% -9% -5% -9%; z-index: 0; border-radius: calc(var(--r-vidro) + 6px); display: flex; align-items: flex-end; padding: 1rem; }
 .palco .frente { position: relative; z-index: 1; width: 100%; margin-bottom: 4.5rem; box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .8), 0 0 0 1px rgba(255, 255, 255, .08); }
-.tocando { display: flex; align-items: center; gap: .75rem; width: 100%; padding: .55rem .9rem .55rem .55rem; border-radius: var(--pilula); background: rgba(0, 0, 0, .35); }
-.tocando img { width: 2.5rem; height: 2.5rem; border-radius: 8px; flex: none; }
-.tocando span:not(.eq) { display: grid; min-width: 0; flex: 1; font-size: .85rem; line-height: 1.25; }
-.tocando b, .tocando small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.tocando small { color: var(--sub); }
+.tocando-agora { display: flex; align-items: center; gap: .75rem; width: 100%; padding: .55rem .9rem .55rem .55rem; border-radius: var(--pilula); background: rgba(0, 0, 0, .35); }
+.tocando-agora img { width: 2.5rem; height: 2.5rem; border-radius: 8px; flex: none; }
+.tocando-agora span:not(.eq) { display: grid; min-width: 0; flex: 1; font-size: .85rem; line-height: 1.25; }
+.tocando-agora b, .tocando-agora small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tocando-agora small { color: var(--sub); }
 /* Micro-equalizador: 4 barras que sobem e descem enquanto o trecho toca (parado com "menos movimento"). */
 .eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; flex: none; }
 .eq i { width: 3px; height: 100%; border-radius: 2px; background: var(--verde); transform-origin: bottom; transform: scaleY(.5); }

@@ -176,3 +176,14 @@ test('modo escondido pausa junto com os outros motivos', () => {
   e = player(e, { tipo: 'RETOMAR', motivo: 'escondido' });
   assert.ok(pausado(e)); // a pausa da pessoa continua
 });
+
+test('luz ambiente: duas cores vivas e distantes; capa sem cor vira verde e violeta', async () => {
+  const { coresVivas, CORES_PADRAO } = await import('../../site/app/js/stories/logica.js');
+  const pinta = (...cores) => { const px = []; for (const [c, n] of cores) for (let k = 0; k < n; k++) px.push(...c, 255); return px; };
+  const [a, b] = coresVivas(pinta([[250, 40, 40], 120], [[40, 60, 240], 80], [[20, 20, 20], 56]));
+  assert.ok(a[0] > 200 && a[2] < 80, `primária vermelha: ${a}`);
+  assert.ok(b[2] > 200 && b[0] < 80, `secundária azul: ${b}`);
+  assert.deepEqual(coresVivas(pinta([[128, 128, 128], 256])), CORES_PADRAO);
+  const [, sozinha] = coresVivas(pinta([[250, 40, 40], 256]));
+  assert.deepEqual(sozinha, CORES_PADRAO[1]); // uma matiz só: a secundária é o violeta
+});

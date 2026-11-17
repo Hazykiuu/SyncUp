@@ -48,7 +48,7 @@ Dupla G + G2 (identificar, ler e comparar): **5 493 ms**.
 | CLS | 0,0000 |
 | Long tasks na carga | nenhuma registrada |
 | JS carregado (decodificado, sem o Preact) | 260 001 B em 22 módulos, todos de imediato (nenhum `import()`) |
-| Preact (unpkg) | tamanho invisível: o unpkg não manda `Timing-Allow-Origin` (`transferSize` = 0) |
+| Preact (unpkg) | tamanho invisível (`transferSize` = 0); hipótese: o unpkg não manda `Timing-Allow-Origin` (não conferido nos cabeçalhos) |
 | CSS | 108 297 B em 4 arquivos, **todos bloqueiam a renderização** |
 | Fonte Figtree | 62 712 B, com preload e `font-display: swap`; sem CLS medido |
 | Heap do main thread depois da carga | 2,4 MB |
@@ -94,7 +94,7 @@ Dupla G + G2: **4 557 ms**.
 
 - Os recursos terminam de chegar em cerca de 45 ms localmente: 23 módulos JS, um a mais que antes (`js/worker.js`, 2 KB).
 - Sem long tasks na carga e CLS 0.
-- **FCP e LCP não são confiáveis neste painel.** A primeira pintura depende de o painel estar visível: deu 652 ms antes e 3 352 ms agora, com todos os recursos prontos aos 45 ms. Para esses dois números, use o Lighthouse do Chrome no site publicado (medição manual).
+- **FCP e LCP não são confiáveis neste painel.** Deu 652 ms antes e 3 352 ms agora, com todos os recursos prontos aos 45 ms nas duas vezes. A hipótese é que a primeira pintura dependa de o painel estar visível (não confirmado). Para esses dois números, use o Lighthouse do Chrome no site publicado (medição manual, ainda não feita).
 
 ### Processamento (navegador)
 
@@ -117,6 +117,21 @@ Dupla demo 5 vezes, heap 10 s depois de cada uma: 16,7 → 9,2 → 8,8 → 10,8 
 - **49,71 MB, válido:** o histórico G mais uma entrada `.bin` de enchimento. Foi aceito e processado (1,3 s), e a entrada que não é JSON foi ignorada.
 - **50 MB + 1 byte:** recusado na hora com "Passou de 50 MB para esta pessoa".
 - **ZIP malicioso:** coberto em `tests/js/historico.test.mjs`. Recusa o ZIP truncado, o cabeçalho que mente o tamanho, a entrada acima de 64 MB e, agora, a soma declarada acima de 1 GiB.
+
+### Outras verificações (v1.14)
+
+- **H1, desktop:** Dupla G + G2 e Wrapped GG ao mesmo tempo, com três trocas de modo no meio. As duas terminaram (3,5 s e 3,7 s), sem erro e sem long task. Os eventos medidos ficaram em até 48 ms (só eventos de ponteiro; os cliques sintéticos não entram no Event Timing). O risco de memória no celular **não foi testado**.
+- **375 px:** Dupla, Wrapped e Batalha sem rolagem horizontal.
+- **Pôsteres:** os três desenham (PNG de 1,3 a 1,5 MB) depois da consolidação.
+- **Corrida:** o arraste real move o slider e pausa a corrida, e nada se move depois de soltar.
+
+### Não medido
+
+- Batalha 4×M e 6×G.
+- INP real de cliques durante o processamento.
+- LCP e CLS no site publicado.
+- Memória dos Workers.
+- Celular real.
 
 ### Conclusão da etapa de desempenho
 

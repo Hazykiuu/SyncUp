@@ -14,7 +14,7 @@ Uma versão de cuidado com o app no navegador: acessibilidade, ciclo de vida e m
 - **Corrida pelo teclado:** setas, PageUp/PageDown e Home/End. O leitor de tela anuncia o mês, e a área de toque tem 44 px.
 - **Home e End nos stories:** vão ao primeiro e ao último story.
 - **Rolagem até o resultado:** respeita "menos movimento".
-- **Alto contraste do Windows:** as barras de progresso e de dados usam as cores do sistema.
+- **Alto contraste do Windows:** as barras de progresso e de dados usam as cores do sistema. Ainda falta conferir nos temas de contraste do próprio Windows.
 - **Sinais além da cor:** os anos do top 5 ganham ★; o placar da Batalha escreve as medalhas ("2 ouros, 1 prata").
 - **"Silenciar":** fica guardado no navegador entre visitas.
 - **Workers:** os três modos falam com eles por um módulo só (`js/worker.js`). Cancelar tem fim definido, e uma resposta ilegível vira mensagem clara.

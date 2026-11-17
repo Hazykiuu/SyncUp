@@ -114,3 +114,73 @@ export function compararPerfis(a, b, nExemplos = 8) {
     recomendacoes_para_b: recomendar(va, vb, na, nExemplos),
   };
 }
+
+export const MAXIMO_PESSOAS = 16;
+
+// (total, -índices em ordem) como chave de desempate, igual ao max() do Python (o primeiro máximo fica).
+function maior(x, y) {
+  if (x[0] !== y[0]) return x[0] > y[0];
+  const a = x[1].flat().map((k) => -k), b = y[1].flat().map((k) => -k);
+  for (let i = 0; i < a.length && i < b.length; i++) if (a[i] !== b[i]) return a[i] > b[i];
+  return a.length > b.length;
+}
+const melhorDe = (opcoes) => opcoes.reduce((m, o) => (maior(o, m) ? o : m));
+
+// Grupos que maximizam a soma das compatibilidades (conciliacao.emparelhamento_otimo): exato, até 16 pessoas.
+// Com número ímpar, um trio vale a média dos seus três pares.
+export function emparelhamentoOtimo(nomes, valores) {
+  const n = nomes.length;
+  if (n < 2) return n ? [nomes.slice()] : [];
+  const memo = new Map();
+  const melhor = (restantes) => {
+    if (restantes === 0) return [0, []];
+    if (memo.has(restantes)) return memo.get(restantes);
+    const i = 31 - Math.clz32(restantes & -restantes); // primeiro índice livre
+    const semI = restantes & ~(1 << i);
+    const opcoes = [];
+    for (let bits = semI; bits; bits &= bits - 1) {
+      const j = 31 - Math.clz32(bits & -bits);
+      const [total, pares] = melhor(semI & ~(1 << j));
+      opcoes.push([total + valores[i][j], [[i, j], ...pares]]);
+    }
+    const r = melhorDe(opcoes);
+    memo.set(restantes, r);
+    return r;
+  };
+  const todos = (1 << n) - 1;
+  let grupos;
+  if (n % 2 === 0) grupos = melhor(todos)[1];
+  else {
+    const opcoes = [];
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) for (let k = j + 1; k < n; k++) {
+      const [total, pares] = melhor(todos & ~((1 << i) | (1 << j) | (1 << k)));
+      opcoes.push([total + (valores[i][j] + valores[i][k] + valores[j][k]) / 3, [...pares, [i, j, k]]]);
+    }
+    grupos = melhorDe(opcoes)[1];
+  }
+  return [...grupos].sort((a, b) => Math.min(...a) - Math.min(...b)).map((g) => g.map((k) => nomes[k]));
+}
+
+// Todos contra todos, pares ótimos e o ranking de cada pessoa (conciliacao.conciliar).
+export function conciliar(perfis) {
+  if (perfis.length < 2) throw new Error('Adicione pelo menos duas pessoas para conciliar.');
+  if (perfis.length > MAXIMO_PESSOAS) throw new Error(`Use no máximo ${MAXIMO_PESSOAS} pessoas por conciliação.`);
+  const nomes = perfis.map((p) => p.nome);
+  if (new Set(nomes).size !== nomes.length) throw new Error('Cada pessoa precisa de um nome diferente.');
+  const matriz = nomes.map(() => nomes.map(() => 100));
+  const detalhes = {}; // sem funções no resultado: ele atravessa o postMessage do Worker
+  const chave = (x, y) => [x, y].sort(compararTexto).join('\u0000');
+  for (let i = 0; i < perfis.length; i++) for (let j = i + 1; j < perfis.length; j++) {
+    const c = compararPerfis(perfis[i], perfis[j]);
+    detalhes[chave(nomes[i], nomes[j])] = c;
+    matriz[i][j] = matriz[j][i] = c.pontuacao;
+  }
+  const pares = emparelhamentoOtimo(nomes, matriz);
+  const pontuacoes = pares.flatMap((g) => g.flatMap((x, a) => g.slice(a + 1).map((y) => detalhes[chave(x, y)].pontuacao)));
+  const melhores = Object.fromEntries(nomes.map((nome, i) => [nome,
+    nomes.map((outro, j) => [outro, matriz[i][j]]).filter((_, j) => j !== i).sort(([na, a], [nb, b]) => b - a || compararTexto(na, nb))]));
+  return {
+    nomes, matriz, pares, detalhes, melhores,
+    pontuacao_media_pares: pontuacoes.length ? pontuacoes.reduce((s, v) => s + v, 0) / pontuacoes.length : 0,
+  };
+}

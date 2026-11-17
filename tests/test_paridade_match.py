@@ -41,7 +41,10 @@ def _py(pessoas: list[tuple[str, Path]], opcoes: dict) -> dict:
         False,
         bool(opcoes.get('deduplicar', False)),
     )
+    from conciliacao import conciliar
+
     perfis = [perfil_de_arquivos(str(c), n, config) for n, c in pessoas]
+    r = conciliar(perfis)
     pares = []
     for i, a in enumerate(perfis):
         for b in perfis[i + 1 :]:
@@ -59,6 +62,11 @@ def _py(pessoas: list[tuple[str, Path]], opcoes: dict) -> dict:
             for p in perfis
         ],
         'pares': pares,
+        'conciliacao': {
+            'pares': [list(g) for g in r.pares],
+            'melhores': {n: [list(x) for x in v] for n, v in r.melhores.items()},
+            'media': r.pontuacao_media_pares,
+        },
     }
 
 
@@ -80,3 +88,32 @@ def test_match_igual_ao_python(arquivos, chaves, opcoes):  # noqa: F811
 
 def test_sem_plays_validos_falha_igual(arquivos):  # noqa: F811
     assert 'pelo menos 30 segundos' in _js([('Ana', arquivos['curtos'])], {})['erro']
+
+
+def test_emparelhamento_igual_ao_python():
+    """Matrizes aleatórias com muitos empates (valores inteiros pequenos), de 1 a 9 pessoas."""
+    import random
+
+    import pandas as pd
+
+    from conciliacao import emparelhamento_otimo
+
+    sorteio = random.Random(7)
+    casos = []
+    for n in [1, 2, 3, 4, 5, 6, 7, 8, 9] * 6:
+        nomes = [f'P{k}' for k in range(n)]
+        valores = [[100.0] * n for _ in range(n)]
+        for i in range(n):
+            for j in range(i + 1, n):
+                valores[i][j] = valores[j][i] = float(sorteio.choice([0, 1, 2, 5, 12.5]))
+        casos.append({'nomes': nomes, 'valores': valores})
+    saida = subprocess.run(
+        [NODE, 'tests/js/rodar_match.mjs', json.dumps({'_matrizes': casos})],
+        cwd=RAIZ,
+        capture_output=True,
+        check=True,
+    )
+    js = json.loads(saida.stdout)
+    for caso, grupos in zip(casos, js, strict=True):
+        m = pd.DataFrame(caso['valores'], index=caso['nomes'], columns=caso['nomes'])
+        assert [list(g) for g in emparelhamento_otimo(m)] == grupos, caso

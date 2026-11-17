@@ -391,3 +391,10 @@ section[id] { scroll-margin-top: 6rem; }
 .hero h1 { letter-spacing: -.045em; }
 .titulo-secao { letter-spacing: -.04em; }
 .caixa h3 { font-weight: 900; letter-spacing: -.035em; }
+/* Batalha e Match no bento (1.18): texto ao lado de um story vivo, como a Dupla. Os mocks medem em cqw dentro da
+   própria moldura 9:16 (.mock, container-type), então pódio e coração se ajustam ao tamanho real do cartão. */
+.caixa.batalha, .caixa.match { display: grid; align-items: center; gap: 1.25rem; }
+@media (min-width: 640px) { .caixa.batalha, .caixa.match { grid-template-columns: minmax(0, 1fr) clamp(10rem, 16vw, 12rem); } }
+.caixa.batalha .mock, .caixa.match .mock { max-width: 12rem; }
+/* O pódio fica na base do story; o título "Quem levou" no alto. */
+.mock .sb .st-conteudo { height: 100%; }

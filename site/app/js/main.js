@@ -11,7 +11,9 @@ import { TelaAtiva } from './stories/player.js';
 import { Wrapped } from './wrapped.js';
 import { rodarNoWorker } from './worker.js';
 
-const DEMO = [['demo-wrapped.zip', 'Ana (fictícia)'], ['demo-bruno.zip', 'Bruno (fictício)']]; // os mesmos de ponte.arquivos_demo
+// Os mesmos históricos de ponte.arquivos_demo. Nomes curtos, como na demo da Batalha: o botão já diz "dados fictícios"
+// e o nome longo quebrava no primeiro story.
+const DEMO = [['demo-wrapped.zip', 'Ana'], ['demo-bruno.zip', 'Bruno']];
 
 // A comparação roda em JavaScript num Worker (dupla-worker.js), sem baixar o Python. Um Worker por
 // comparação: ao terminar, o navegador devolve toda a memória (importa no celular).
@@ -133,9 +135,8 @@ function App() {
     <header class="app-topo shell">${marca}</header>
     <nav class="nav-app" aria-label="Modos">
       ${marca}
-      <ul>${MODOS.map(([id, rotulo, icone, breve]) => html`<li>${breve
-        ? html`<span class="nav-item" aria-disabled="true">${icone}<span>${rotulo}</span> <small>em breve</small></span>`
-        : html`<a class="nav-item" href=${`#${id}`} aria-current=${modo === id ? 'page' : null}>${icone}<span>${rotulo}</span></a>`}</li>`)}</ul>
+      <ul>${MODOS.map(([id, rotulo, icone]) => html`<li>
+        <a class="nav-item" href=${`#${id}`} aria-current=${modo === id ? 'page' : null}>${icone}<span>${rotulo}</span></a></li>`)}</ul>
       <p class="nav-selo"><span class="ponto" aria-hidden="true"></span>Tudo roda no seu aparelho</p>
       <a class="nav-site" href="../">← Voltar ao site</a>
     </nav>
@@ -157,8 +158,7 @@ const MODOS = [
   ['dupla', 'Dupla', icone(html`<circle cx="9" cy="12" r="6" /><circle cx="15" cy="12" r="6" />`)],
   ['wrapped', 'Wrapped', icone(html`<rect x="6" y="2.5" width="12" height="19" rx="2.5" /><path d="M9 6h6" />`)],
   ['batalha', 'Batalha', icone(html`<circle cx="12" cy="7.5" r="3.5" /><circle cx="6" cy="16.5" r="3.5" /><circle cx="18" cy="16.5" r="3.5" />`)],
-  ['match', 'Match', icone(html`<path d="M4 8h13l-3-3M20 16H7l3 3" />`), true],
-];
+]; // O Match ainda não existe no navegador: a página inicial avisa, a barra só mostra o que funciona.
 
 // O aviso "Carregando o SyncUp…" do index.html sai: o render do Preact não apaga o que ele não criou.
 // O Safari do iOS só aplica :active (toque nos botões e na barra) se a página ouvir touchstart.

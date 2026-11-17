@@ -104,6 +104,14 @@ export function destravarSom() {
 // Ao voltar, o player retoma no próximo movimento do story.
 export function pausarSom() { som?.el.pause(); }
 
+// Ícones dos botões de som: o mesmo traço (2 px, pontas redondas) dos ícones da barra de modos.
+const svg = (corpo) => html`<svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${corpo}</svg>`;
+const ICONE = {
+  nota: svg(html`<path d="M9 18V5l11-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="17" cy="16" r="3" />`),
+  som: svg(html`<path d="M11 5 6 9H3v6h3l5 4z" /><path d="M15.5 8.5a5 5 0 0 1 0 7" /><path d="M18.5 5.5a9 9 0 0 1 0 13" />`),
+  mudo: svg(html`<path d="M11 5 6 9H3v6h3l5 4z" /><path d="m22 9-6 6" /><path d="m16 9 6 6" />`),
+};
+
 // `nota`: o que sai do aparelho para o som. O Wrapped usa o texto padrão (capas e trechos); a Dupla, o dela.
 export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
   const trilhaPronta = useRef(null);
@@ -225,9 +233,9 @@ export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
   return html`
     <div class="som-stories vidro">
       <div class="acoes">${estado === 'sem'
-        ? html`<button type="button" class="btn btn-verde" onClick=${comecar}>♪ Ligar capas e som</button>`
+        ? html`<button type="button" class="btn btn-verde" onClick=${comecar}>${ICONE.nota}Ligar capas e som</button>`
         : html`<button type="button" class="btn btn-borda vidro" aria-pressed=${mudo} disabled=${estado !== 'tocando'} onClick=${() => setMudo((m) => !m)}>
-            ${estado === 'carregando' ? 'Buscando capas e trechos…' : mudo ? '🔇 Ligar som' : '🔊 Silenciar'}</button>`}
+            ${estado === 'carregando' ? 'Buscando capas e trechos…' : mudo ? html`${ICONE.mudo}Ligar som` : html`${ICONE.som}Silenciar`}</button>`}
       </div>
       <p class="nota">${nota}</p>
       ${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}

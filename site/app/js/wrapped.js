@@ -13,7 +13,7 @@ import { CapasCtx, chaveCapa, NOVOS } from './stories/slides.js';
 import { tiposDoWrapped } from './stories/logica.js';
 import { rodarNoWorker } from './worker.js';
 
-const DEMO = 'Ana (fictícia)'; // demo-wrapped.zip: o mesmo histórico fictício da demo da Dupla
+const DEMO = 'Ana'; // demo-wrapped.zip: o mesmo histórico fictício da demo da Dupla
 const segundos = (ms) => (ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 
 // Um Worker por montagem: ao terminar, o navegador devolve toda a memória (importa no celular).

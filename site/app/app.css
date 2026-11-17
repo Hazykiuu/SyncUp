@@ -479,3 +479,15 @@ body::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-even
 /* Celular: o dock fica acima da barra de modos. */
 @media (max-width: 899px) { .dock { bottom: calc(4.75rem + env(safe-area-inset-bottom)); } }
 @media (max-width: 479px) { .dock-poster { padding-inline: 1rem; } .dock.com-trecho .dock-poster { font-size: 0; gap: 0; } .dock.com-trecho .dock-poster svg { font-size: 1.1rem; } }
+/* Match: caixa de convites, código para copiar e o porquê de cada par. */
+.app-corpo[data-modo="match"] { background-image: radial-gradient(60% 100% at 0% 0%, rgb(245 115 160 / .18), transparent 70%), radial-gradient(60% 100% at 100% 0%, rgb(30 215 96 / .16), transparent 70%); }
+.match-colar, .match-codigo { display: flex; flex-direction: column; gap: var(--e2); margin-top: var(--vao); }
+.match-colar { padding: var(--pad-cartao); border-radius: var(--r-cartao); }
+.match-colar small { color: var(--sub); font-weight: 400; }
+.match-colar textarea, .match-codigo textarea { width: 100%; box-sizing: border-box; font: .9rem/1.4 ui-monospace, monospace; color: var(--texto); background: rgb(0 0 0 / .25); border: 1px solid var(--linha); border-radius: var(--r-campo); padding: var(--e2) var(--e3); resize: vertical; word-break: break-all; }
+.match-convite { margin-top: var(--vao); }
+.match-convite > * + * { margin-top: var(--e3); }
+.match-detalhe + .match-detalhe { margin-top: var(--e4); padding-top: var(--e4); border-top: 1px solid var(--linha); }
+.match-detalhe p { margin: var(--e1) 0 0; overflow-wrap: anywhere; }
+.match-detalhe small { color: var(--sub); margin-right: .4em; }
+.match-x { color: var(--sub); }

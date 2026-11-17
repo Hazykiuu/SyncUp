@@ -126,6 +126,8 @@ export function compararPerfis(a, b, nExemplos = 8) {
 }
 
 export const MAXIMO_PESSOAS = 16;
+// Chave de um par em `detalhes` (a ordem dos dois nomes não importa).
+export const chave = (x, y) => [x, y].sort(compararTexto).join('\u0000');
 
 // (total, -índices em ordem) como chave de desempate, igual ao max() do Python (o primeiro máximo fica).
 function maior(x, y) {
@@ -179,7 +181,6 @@ export function conciliar(perfis) {
   if (new Set(nomes).size !== nomes.length) throw new Error('Cada pessoa precisa de um nome diferente.');
   const matriz = nomes.map(() => nomes.map(() => 100));
   const detalhes = {}; // sem funções no resultado: ele atravessa o postMessage do Worker
-  const chave = (x, y) => [x, y].sort(compararTexto).join('\u0000');
   for (let i = 0; i < perfis.length; i++) for (let j = i + 1; j < perfis.length; j++) {
     const c = compararPerfis(perfis[i], perfis[j]);
     detalhes[chave(nomes[i], nomes[j])] = c;

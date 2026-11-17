@@ -1,5 +1,10 @@
 # Changelog — SyncUp
 
+## [1.18.1] — 2026-11-17
+
+### Mudado
+- **Pôsteres em PNG no tema novo dos stories** (Wrapped, Dupla, Batalha e Match): fundo "capa de playlist" (a cor vem do alto e se apaga no escuro), cartões e pílulas de vidro com borda de luz e o kicker no estilo do Spotify. Era a pendência da 1.18.0.
+
 ## [1.18.0] — 2026-11-17
 
 Os stories entram no tema novo, ganham painéis no computador e a página inicial fica viva.

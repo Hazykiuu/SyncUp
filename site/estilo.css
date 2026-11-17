@@ -255,7 +255,7 @@ section[id] { scroll-margin-top: 6rem; }
 .rodape .shell { padding-top: 5rem; padding-bottom: 2.5rem; }
 .rodape-cta { position: relative; display: flex; flex-direction: column; gap: 2rem; border-bottom: 1px solid var(--linha); padding-bottom: 4rem; }
 .rodape-cta > :not(.pauta) { position: relative; z-index: 1; }
-/* Pauta: 5 linhas finas atrás da chamada; as 4 barras do logo (verde → violeta) são as notas, sentadas na última linha. */
+/* Pauta: 5 linhas finas atrás da chamada; as 4 barras do logo (verde → violeta) são as notas, paradas na última linha. */
 .pauta { position: absolute; inset: auto 0 4.5rem; height: 89px; pointer-events: none;
   background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, .1) 0 1px, transparent 1px 22px); }
 .pauta i { position: absolute; bottom: -3px; width: 10px; border-radius: 6px; }
@@ -263,13 +263,6 @@ section[id] { scroll-margin-top: 6rem; }
 .pauta i:nth-child(2) { right: 74px; height: 88px; background: color-mix(in srgb, var(--verde), var(--roxo) 33%); }
 .pauta i:nth-child(3) { right: 52px; height: 35px; background: color-mix(in srgb, var(--verde), var(--roxo) 67%); }
 .pauta i:nth-child(4) { right: 30px; height: 66px; background: var(--roxo); }
-@keyframes nota-cai { from { opacity: 0; transform: translateY(-60px); } }
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .pauta i { animation: nota-cai linear both; animation-timeline: view(); animation-range: entry 20% cover 45%; }
-    .pauta i:nth-child(2) { animation-range: entry 24% cover 49%; } .pauta i:nth-child(3) { animation-range: entry 28% cover 53%; } .pauta i:nth-child(4) { animation-range: entry 32% cover 57%; }
-  }
-}
 @media (max-width: 639px) { .pauta i { display: none; } }
 /* No computador a chamada e o botão ficam lado a lado: a pauta fica só sob a chamada, sem cruzar o botão. */
 @media (min-width: 1024px) { .pauta { right: 42%; } }
@@ -357,52 +350,3 @@ section[id] { scroll-margin-top: 6rem; }
 /* O pódio fica na base do story; o título "Quem levou" no alto. */
 .mock .sb .st-conteudo { height: 100%; }
 
-/* Página inicial viva (1.18). Só na página inicial (body.inicio): o app também carrega este arquivo.
-   Aurora: duas luzes em radial-gradient (sem blur) num fundo fixo; a cor muda com a rolagem, por propriedades
-   registradas (verde no topo e na Dupla, violeta no espectro, laranja na Batalha, rosa no Match, verde no fim).
-   Vinil: o trilho (div) anda e cresce com a rolagem; o disco (svg) só gira. Cada um anima a sua propriedade. */
-@property --aurora-a { syntax: '<color>'; inherits: false; initial-value: rgb(30 215 96 / .2); }
-@property --aurora-b { syntax: '<color>'; inherits: false; initial-value: rgb(196 183 255 / .1); }
-.fundo-vivo { display: none; }
-body.inicio .fundo-vivo { display: block; position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
-  background: radial-gradient(60% 50% at 12% 8%, var(--aurora-a), transparent 70%), radial-gradient(55% 45% at 92% 70%, var(--aurora-b), transparent 70%); }
-.vinil-trilho { position: absolute; top: 6vh; right: -14vmin; width: 62vmin; aspect-ratio: 1; opacity: .5; }
-.vinil { width: 100%; height: 100%; fill: none; stroke: rgb(255 255 255 / .07); stroke-width: 1; }
-.vinil-selo { fill: color-mix(in srgb, var(--verde) 14%, transparent); stroke: rgb(255 255 255 / .12); }
-/* Pontos medidos em 1440 px (centro de cada seção na tela): Dupla 36%, Wrapped 42%, espectro 48%,
-   Batalha e Match lado a lado em 60%, passos 74%. Em telas estreitas as seções descem, mas a ordem é a mesma. */
-@keyframes aurora {
-  0%, 42% { --aurora-a: rgb(30 215 96 / .2); --aurora-b: rgb(196 183 255 / .1); }
-  48% { --aurora-a: rgb(196 183 255 / .22); --aurora-b: rgb(30 215 96 / .1); }
-  57%, 64% { --aurora-a: rgb(255 164 43 / .2); --aurora-b: rgb(245 115 160 / .18); }
-  74%, 100% { --aurora-a: rgb(30 215 96 / .18); --aurora-b: rgb(196 183 255 / .12); }
-}
-@keyframes vinil-anda { from { translate: 0 0; scale: 1; } to { translate: -38vw 46vh; scale: 1.5; } }
-@keyframes vinil-gira { to { rotate: 1turn; } }
-@keyframes surge { from { opacity: 0; translate: 0 28px; } }
-@keyframes surge-cartao { from { opacity: 0; translate: 0 36px; scale: .97; } }
-@keyframes acende { from { opacity: .15; } }
-@media (prefers-reduced-motion: no-preference) {
-  body.inicio .vinil { animation: vinil-gira 40s linear infinite; }
-  @supports (animation-timeline: scroll()) {
-    body.inicio .fundo-vivo { animation: aurora linear both; animation-timeline: scroll(root); }
-    body.inicio .vinil-trilho { animation: vinil-anda linear both; animation-timeline: scroll(root); }
-  }
-  /* Uma entrada por seção, ligada à rolagem; termina em 85% da entrada, então o fim da página entra inteiro. */
-  @supports (animation-timeline: view()) {
-    body.inicio :is(.titulo-secao, .titulo-prateleira, .cabeca .etiqueta, .filtros) {
-      animation: surge linear both; animation-timeline: view(); animation-range: entry 0% entry 85%; }
-    body.inicio .bento > .caixa { animation: surge-cartao linear both; animation-timeline: view(); animation-range: entry 0% entry 85%; }
-    /* Capas da prateleira e itens das listas: em cascata, cada um entrando um pouco depois (mola curta nas capas). */
-    body.inicio .prateleira > li { animation: surge-cartao both; animation-timeline: view();
-      animation-timing-function: linear(0, .3 12%, .75 28%, 1.04 45%, 1.06 55%, 1.01 72%, 1);
-      animation-range: entry calc(var(--n, 0) * 7%) entry calc(60% + var(--n, 0) * 7%); }
-    body.inicio :is(.tracklist, .colunas) > * { animation: surge linear both; animation-timeline: view();
-      animation-range: entry calc(var(--n, 0) * 8%) entry calc(60% + var(--n, 0) * 8%); }
-    body.inicio .tracklist > li { animation-name: acende; }
-    body.inicio :is(.prateleira, .tracklist, .colunas) > :nth-child(2) { --n: 1; }
-    body.inicio :is(.prateleira, .tracklist, .colunas) > :nth-child(3) { --n: 2; }
-    body.inicio :is(.prateleira, .tracklist, .colunas) > :nth-child(n + 4) { --n: 3; }
-  }
-}
-@media (prefers-reduced-transparency: reduce) { body.inicio .fundo-vivo { background: none; } .vinil-trilho { display: none; } }

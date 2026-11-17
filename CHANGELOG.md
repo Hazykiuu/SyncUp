@@ -1,5 +1,25 @@
 # Changelog — SyncUp
 
+## [1.17.0] — 2026-11-17
+
+Visual: o vidro ficou de verdade e o SyncUp ficou com mais cara de Spotify.
+
+### Novo
+- **Topo de playlist:** cada modo do app abre como a página de uma playlist, com a faixa de cor do modo descendo do alto, uma "capa" com o ícone do modo e o título grande.
+- **Prateleira "Comece por aqui"** na página inicial: uma capa por modo; o botão verde de play aparece ao passar o mouse (no celular, sempre visível) e abre o modo direto.
+- **Filtros em pílulas** nos recursos da página inicial (Tudo, Dupla, Wrapped, Batalha, Match), feitos só com CSS e rádios de verdade, que funcionam com teclado e leitor de tela.
+- **Progresso do trecho no dock:** uma linha verde mostra os 30 s do trecho que está tocando.
+
+### Mudado
+- **Vidro de verdade:** borda com luz (clara no alto, apagada embaixo), brilho no topo e a cor do modo vazando no vidro (verde, laranja ou rosa; na página inicial, cada recurso com a sua). Na página inicial, uma faixa de luz atravessa o cartão ao passar o mouse.
+- **Barra de modos:** a página atual virou uma gota de vidro com brilho verde, no lugar do bloco branco.
+- **Blur só no que flutua** (topo, barra de modos, dock e a placa do palco). Os cartões do meio ficam translúcidos sem blur, mais leves para celular simples.
+- **Títulos** mais pesados e apertados.
+- **Página inicial:** o título dos recursos inclui o Match.
+
+### Corrigido
+- **Campos de nome do Match sem rótulo:** repetiam os IDs da Batalha (as duas telas ficam carregadas juntas); tocar em "Nome" levava ao campo escondido da Batalha e o leitor de tela lia o campo sem nome.
+
 ## [1.16.0] — 2026-11-17
 
 O Match chega ao navegador, com cara de cartão de namoro, e a Batalha ganha som nos stories.

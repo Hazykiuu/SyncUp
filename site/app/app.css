@@ -58,7 +58,6 @@ a.nav-item:hover { color: var(--texto); }
   .nav-app ul { flex-direction: column; gap: var(--e1); }
   .nav-item { padding: 0 var(--e3); border-radius: var(--r-campo); }
   a.nav-item:hover { background: rgba(255, 255, 255, .06); }
-  .nav-item[aria-current="page"] { background: var(--texto); color: #000; }
   .nav-selo { margin-top: auto; padding-inline: var(--e3); }
   .nav-site { padding: var(--e2) var(--e3); }
   .app-corpo { margin-left: var(--lateral); padding-bottom: 6rem; }
@@ -75,12 +74,19 @@ a.nav-item:hover { color: var(--texto); }
   .gr-trilho-t { border: 1px solid CanvasText; } .gr-trilho-t s { background: CanvasText; }
 }
 
-/* Cabeçalho do modo: o degradê tem sentido (Dupla = as duas pessoas, verde e violeta; Wrapped = verde)
-   e se dissolve no fundo antes do conteúdo. */
-.app-corpo { background-repeat: no-repeat; background-size: 100% 28rem; }
-.app-corpo[data-modo="dupla"] { background-image: radial-gradient(60% 100% at 0% 0%, rgb(30 215 96 / .22), transparent 70%), radial-gradient(60% 100% at 100% 0%, rgb(196 183 255 / .2), transparent 70%); }
-.app-corpo[data-modo="wrapped"] { background-image: radial-gradient(80% 100% at 0% 0%, rgb(30 215 96 / .24), transparent 70%); }
-.app-corpo[data-modo="batalha"] { background-image: radial-gradient(60% 100% at 0% 0%, color-mix(in srgb, var(--laranja) 16%, transparent), transparent 70%), radial-gradient(60% 100% at 100% 0%, rgb(245 115 160 / .16), transparent 70%); }
+/* Cascata (1.18): uma luz só no topo de cada modo, com a cor do modo (--tinta) e uma segunda com sentido
+   (--tinta-2: na Dupla, o violeta da pessoa B). Só radiais indo a transparente, sem máscara nem blur: some sem borda.
+   Cresce para a esquerda, por baixo da barra lateral fixa (z 60), e nunca para a direita: sem rolagem lateral.
+   Sem isolation nem z-index no corpo, para não criar um contexto de empilhamento novo. */
+.app-corpo { position: relative; --tinta-2: var(--tinta); }
+.app-corpo::before { content: ''; position: absolute; z-index: -1; top: -6rem; left: 0; right: 0; height: 42rem; pointer-events: none; /* sobe por trás do topo do celular: sem linha entre o topo e o corpo */
+  background:
+    radial-gradient(70% 90% at 34% -14%, rgb(var(--tinta) / .5), rgb(var(--tinta) / .18) 42%, rgb(var(--tinta) / .05) 70%, transparent 92%),
+    radial-gradient(50% 75% at 92% -18%, rgb(var(--tinta-2) / .28), rgb(var(--tinta-2) / .10) 50%, transparent 88%); }
+@media (min-width: 900px) { .app-corpo::before { left: calc(-1 * var(--lateral)); } }
+.app-corpo[data-modo="dupla"] { --tinta-2: 196 183 255; }
+.app-corpo[data-modo="batalha"] { --tinta-2: 245 115 160; }
+.app-corpo[data-modo="match"] { --tinta-2: 255 164 200; }
 .app-cabeca { display: flex; flex-direction: column; gap: var(--e3); padding-block: 2rem 2.5rem; }
 @media (min-width: 900px) { .app-cabeca { padding-block: 4rem 3rem; } }
 .app-cabeca h1 { text-wrap: balance; font-size: clamp(2.2rem, 6vw, 3.6rem); font-weight: 900; letter-spacing: -.03em; line-height: 1; }
@@ -590,7 +596,6 @@ body::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-even
 @keyframes amor-chuva { 0% { opacity: 0; bottom: 60%; translate: 0 0; scale: .3; } 25% { opacity: 1; scale: 1.2; } 100% { opacity: 0; bottom: 60%; translate: calc((var(--k) - 2.5) * 70px) -160px; scale: 1; } }
 
 /* A área inteira do Match na mesma estética: moldura rosa, renda e o botão principal em rosa. */
-.app-corpo[data-modo="match"] { background-image: radial-gradient(70% 100% at 0% 0%, rgb(245 115 160 / .3), transparent 70%), radial-gradient(60% 100% at 100% 10%, rgb(255 164 200 / .18), transparent 70%); }
 .app-corpo[data-modo="match"] .app-cabeca h1 { text-shadow: 0 0 28px rgb(245 115 160 / .5); }
 .app-corpo[data-modo="match"] .app-cabeca h1::after { content: ' ♥'; color: var(--rosa); }
 .match-area .pessoa.vidro::before { background: linear-gradient(135deg, rgb(245 115 160 / .85), color-mix(in srgb, var(--cor) 50%, transparent) 40%, rgb(245 115 160 / .25)); }
@@ -635,8 +640,6 @@ body::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-even
 /* Cara de Spotify (1.17): o topo de cada modo é a capa de uma playlist. Faixa de cor do modo descendo do alto,
    a "capa" (o ícone do modo num quadrado com degradê), o tipo e o título enorme e apertado. */
 .app-cabeca { position: relative; flex-direction: row; align-items: flex-end; gap: var(--e5); }
-/* A faixa é uma sombra interna do corpo: cobre a largura toda sem passar da borda (nada de 100vw com a barra lateral). */
-.app-corpo { box-shadow: inset 0 22rem 16rem -9rem rgb(var(--tinta) / .3); }
 .app-cabeca-texto { display: flex; flex-direction: column; gap: var(--e3); min-width: 0; }
 .app-tipo { font-size: .8rem; font-weight: 700; letter-spacing: .02em; color: var(--texto); }
 .app-capa { display: none; flex: none; place-items: center; width: clamp(8rem, 14vw, 12rem); aspect-ratio: 1; border-radius: var(--r-campo); color: #000;

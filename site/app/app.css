@@ -487,7 +487,75 @@ body::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-even
 .match-colar textarea, .match-codigo textarea { width: 100%; box-sizing: border-box; font: .9rem/1.4 ui-monospace, monospace; color: var(--texto); background: rgb(0 0 0 / .25); border: 1px solid var(--linha); border-radius: var(--r-campo); padding: var(--e2) var(--e3); resize: vertical; word-break: break-all; }
 .match-convite { margin-top: var(--vao); }
 .match-convite > * + * { margin-top: var(--e3); }
-.match-detalhe + .match-detalhe { margin-top: var(--e4); padding-top: var(--e4); border-top: 1px solid var(--linha); }
-.match-detalhe p { margin: var(--e1) 0 0; overflow-wrap: anywhere; }
-.match-detalhe small { color: var(--sub); margin-right: .4em; }
-.match-x { color: var(--sub); }
+
+/* Match romântico: cartão de namoro com renda, fita, corações e bilhetinhos. Rosa puxa; cada pessoa mantém a sua cor. */
+.amor-titulo { font-size: clamp(1.9rem, 6vw, 3rem); font-weight: 900; letter-spacing: -.02em; line-height: 1.05; color: var(--texto); text-shadow: 0 0 28px rgb(245 115 160 / .55); text-wrap: balance; }
+.amor-titulo::after { content: ' ♥'; color: var(--rosa); }
+.amores { display: grid; gap: var(--e6); margin-block: var(--e5); }
+.amor { position: relative; isolation: isolate; overflow: hidden; display: grid; gap: var(--e5); padding: calc(var(--pad-cartao) + 18px) var(--pad-cartao) calc(var(--pad-cartao) + 18px);
+  border-radius: var(--r-cartao); color: var(--texto);
+  background: radial-gradient(120% 80% at 0% 0%, color-mix(in srgb, var(--a) 26%, transparent), transparent 60%),
+    radial-gradient(120% 80% at 100% 100%, color-mix(in srgb, var(--rosa) 34%, transparent), transparent 60%),
+    linear-gradient(160deg, #2a1220, #170b13 70%);
+  border: 1px solid rgb(245 115 160 / .45); box-shadow: 0 0 0 4px rgb(245 115 160 / .08), 0 24px 60px -24px rgb(245 115 160 / .55); }
+/* Renda: meias-luas no alto e embaixo. */
+.amor::before, .amor::after { content: ''; position: absolute; inset-inline: 0; height: 14px; z-index: -1;
+  background: radial-gradient(circle at 10px 0, rgb(245 115 160 / .55) 6px, transparent 7px) 0 0 / 20px 14px repeat-x,
+    radial-gradient(circle at 10px 0, rgb(255 255 255 / .18) 2px, transparent 3px) 0 6px / 20px 14px repeat-x; }
+.amor::before { top: 0; }
+.amor::after { bottom: 0; rotate: 180deg; }
+.amor svg { width: 1em; height: 1em; fill: currentColor; flex: none; }
+
+.amor-topo { display: flex; flex-direction: column; align-items: center; gap: var(--e3); text-align: center; }
+.amor-casal { display: flex; align-items: center; }
+.amor-avatar { display: grid; place-items: center; width: 76px; height: 76px; border-radius: 50%; font-size: 2rem; font-weight: 900; color: #120810;
+  background: var(--lut); box-shadow: 0 0 0 4px #1d0d17, 0 0 0 6px rgb(245 115 160 / .6), 0 0 32px color-mix(in srgb, var(--lut) 60%, transparent); }
+.amor-elo { z-index: 1; margin-inline: -14px; font-size: 2.6rem; color: var(--rosa); filter: drop-shadow(0 0 10px rgb(245 115 160 / .9)); animation: amor-bate 1.4s ease-in-out infinite; }
+@keyframes amor-bate { 0%, 100% { scale: 1; } 15% { scale: 1.18; } 30% { scale: 1; } 45% { scale: 1.12; } }
+.amor-nomes { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: .3em; font-size: clamp(1.6rem, 5vw, 2.4rem); font-weight: 900; letter-spacing: -.01em; line-height: 1.1; overflow-wrap: anywhere; }
+.amor-e { color: var(--rosa); font-weight: 300; }
+
+.amor-par { display: grid; gap: var(--e4); justify-items: center; text-align: center; }
+.amor-par + .amor-par { padding-top: var(--e5); border-top: 1px dashed rgb(245 115 160 / .4); }
+.amor-subpar { font-weight: 800; color: var(--sub); }
+.amor-nota { display: flex; flex-direction: column; align-items: center; gap: var(--e2); }
+.amor-nota b { font-size: clamp(3.4rem, 13vw, 5.5rem); font-weight: 900; line-height: .95; letter-spacing: -.03em;
+  background: linear-gradient(180deg, #fff 10%, #ffc2d9 55%, var(--rosa)); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 22px rgb(245 115 160 / .5)); }
+/* Fita com pontas recortadas. */
+.fita { display: inline-block; padding: .4em 1.4em; font-size: .8rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #2a0a1a;
+  background: linear-gradient(180deg, #ffd0e1, var(--rosa)); clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 50%, 100% 100%, 0 100%, 10px 50%); }
+.fita-trio { font-size: .65rem; align-self: center; }
+.amor-medidor { display: flex; gap: .25em; font-size: 1.7rem; color: rgb(255 255 255 / .16); }
+.amor-medidor .cheio { color: var(--rosa); filter: drop-shadow(0 0 6px rgb(245 115 160 / .8)); }
+.amor-frase { max-width: 34ch; font-size: 1.05rem; line-height: 1.5; color: #f6dce6; text-wrap: pretty; }
+
+.amor-comum { display: grid; gap: var(--e3); justify-items: center; width: 100%; }
+.amor-rotulo { font-size: .8rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--rosa); }
+.amor-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--e2); }
+.amor-chips li { display: inline-flex; align-items: center; gap: .4em; padding: .45em .9em; border-radius: 999px; font-weight: 700;
+  background: rgb(245 115 160 / .16); border: 1px solid rgb(245 115 160 / .5); transition: translate .15s, background .15s; }
+.amor-chips li svg { color: var(--rosa); font-size: .85em; }
+.amor-chips li:hover { translate: 0 -2px; background: rgb(245 115 160 / .28); }
+.amor-musicas { font-size: .95rem; color: var(--sub); }
+
+/* Bilhetinhos: papel claro, borda tracejada e um selo de coração. */
+.amor-bilhetes { display: grid; gap: var(--e4); width: 100%; }
+@media (min-width: 640px) { .amor-bilhetes { grid-template-columns: 1fr 1fr; } }
+.bilhete { position: relative; padding: var(--e4) var(--e4) var(--e4); border-radius: var(--r-campo); text-align: left; color: #3a1426;
+  background: #fff3f7; outline: 2px dashed rgb(245 115 160 / .7); outline-offset: -7px; box-shadow: 0 10px 24px -12px rgb(0 0 0 / .6); }
+.bilhete::after { content: '♥'; position: absolute; top: -12px; right: 14px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
+  font-size: .9rem; color: #fff; background: var(--rosa); box-shadow: 0 0 0 3px #fff3f7; }
+.bilhete-de { margin-bottom: var(--e2); font-size: .8rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #b8326a; }
+.bilhete ul { display: grid; gap: .3em; font-weight: 700; }
+.bilhete li::before { content: '♪ '; color: var(--rosa); }
+
+/* Corações subindo devagar ao fundo (só decoração; parados com "menos movimento"). */
+.amor-flutua { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+.amor-flutua i { position: absolute; bottom: -30px; left: calc(8% + var(--k) * 16%); font-size: calc(14px + var(--k) * 3px); color: rgb(245 115 160 / .35);
+  animation: amor-sobe calc(7s + var(--k) * 1.3s) linear calc(var(--k) * -1.7s) infinite; }
+@keyframes amor-sobe { from { translate: 0 0; opacity: 0; } 15% { opacity: 1; } to { translate: 12px -620px; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .amor-elo, .amor-flutua i { animation: none; }
+  .amor-flutua { display: none; }
+}

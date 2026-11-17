@@ -1,5 +1,18 @@
 # Changelog — SyncUp
 
+## [1.19.1] — 2026-11-17
+
+### Mudado
+- **Resumo do Wrapped (último story) e pôster PNG refeitos:**
+  - o período fica embaixo do logo (antes ficava sob o botão de pausa);
+  - "Sua retrospectiva" aparece com as iniciais;
+  - as horas ficam em destaque;
+  - o fundo é escuro, com a luz da capa atrás do Artista da vida;
+  - os blocos se distribuem pela altura.
+
+### Corrigido
+- **Nenhum texto é mais cortado com reticências** no resumo e no pôster. Nomes e músicas longos quebram a linha ou diminuem a fonte, e as cinco músicas viram uma lista.
+
 ## [1.19.0] — 2026-11-17
 
 Menos efeitos, mais personalidade: uma avaliação externa apontou recursos estéticos demais ao mesmo tempo (vidro, gradientes, animações, cartões e etiquetas). O SyncUp fica mais enxuto e editorial, sem mudar cálculos nem funções.

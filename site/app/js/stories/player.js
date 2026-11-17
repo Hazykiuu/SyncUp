@@ -37,6 +37,9 @@ export function Player({ slides, rotulo, aoMudar }) {
   // Para slides interativos (anos do story 11): pausar e retomar por um motivo próprio.
   const controle = { pausar: (motivo) => despachar({ tipo: 'PAUSAR', motivo }), retomar: (motivo) => despachar({ tipo: 'RETOMAR', motivo }) };
   const parado = pausado(estado);
+  // A classe .pausado (que o som.js observa) ignora o modo escondido: ao voltar para o modo, o som
+  // só retoma no próximo movimento do story, como antes. O relógio usa `parado`, que conta tudo.
+  const paradoVisivel = estado.fim || estado.motivos.some((m) => m !== 'escondido');
 
   useEffect(() => { aoMudar?.({ i: estado.i, tipo: slides[estado.i].tipo, pausado: parado, volta: estado.volta }); }, [estado.i, parado, estado.volta]);
   const raiz = useRef(null);
@@ -132,7 +135,7 @@ export function Player({ slides, rotulo, aoMudar }) {
 
   return html`
     ${MEDIR_FPS && html`<${Fps} />`}
-    <div ref=${raiz} class=${`su-stories su-js st-player${parado ? ' pausado' : ''}${limpo ? ' limpo' : ''}`} onFocusIn=${acordar} tabindex="0" role="region"
+    <div ref=${raiz} class=${`su-stories su-js st-player${paradoVisivel ? ' pausado' : ''}${limpo ? ' limpo' : ''}`} onFocusIn=${acordar} tabindex="0" role="region"
       aria-roledescription="stories" aria-label=${rotulo} onKeyDown=${tecla}
       onPointerDown=${baixo} onPointerUp=${cima} onPointerCancel=${cancelar} onPointerLeave=${cancelar}>
       <div class="st-barra vidro-ctrl" aria-hidden="true">
@@ -143,7 +146,7 @@ export function Player({ slides, rotulo, aoMudar }) {
         <span class="st-contador" aria-live="polite">${estado.i + 1}/${slides.length}</span>
         <button type="button" class="st-botao vidro-ctrl sr-only-foco" aria-label="Story anterior" onClick=${() => despachar({ tipo: 'VOLTAR' })}>‹</button>
         <button type="button" class="st-botao vidro-ctrl sr-only-foco" aria-label="Próximo story" onClick=${() => despachar({ tipo: 'AVANCAR' })}>›</button>
-        <button type="button" class=${`st-botao st-pausa vidro-ctrl${parado ? ' parado' : ''}`} aria-label=${parado ? 'Continuar' : 'Pausar'}
+        <button type="button" class=${`st-botao st-pausa vidro-ctrl${paradoVisivel ? ' parado' : ''}`} aria-label=${paradoVisivel ? 'Continuar' : 'Pausar'}
           onClick=${() => despachar({ tipo: estado.fim ? 'REPLAY' : 'ALTERNAR' })}></button>
       </div>
       <div class="su-stories-frame">

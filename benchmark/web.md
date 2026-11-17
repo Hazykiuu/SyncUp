@@ -74,3 +74,57 @@ Dupla demo 5 vezes seguidas, `usedJSHeapSize` 10 s depois de cada uma: 9,1 → 7
 - **H2:** com o modo escondido, a animação da barra some; ao voltar, o mesmo story recomeça o segmento do zero (`currentTime` 5003 ms → 261 ms, ainda em 3/7). O relógio em JS deve manter isso.
 - **P8:** com o foco em "Próximo story", o Espaço **pausou** em vez de avançar.
 - **P12 (360 px):** sem rolagem horizontal, mas os 12 nomes de `.su-arch-detail` ficam com **0 px** de largura. `.sb-titulo` fica com 8,64 px.
+
+## Depois: v1.14 (mesmo ambiente, mesmos cenários)
+
+### Motor (Node, mediana de 3)
+
+O código do motor não mudou na v1.14 (só constantes passaram a vir de `calculo.js`). As diferenças abaixo são a variação entre execuções da mesma máquina: com uma diferença de até cerca de 30%, nenhuma mudança de desempenho menor que isso pode ser afirmada.
+
+| Cenário | Leitura (ms) | Wrapped (ms) | Heap depois (MB) |
+|---|---:|---:|---:|
+| P | 80 | 58 | 19 |
+| M | 377 | 100 | 57 |
+| G | 1 243 | 321 | 160 |
+| GG | 3 997 | 897 | 243 |
+
+Dupla G + G2: **4 557 ms**.
+
+### Carregamento inicial
+
+- Os recursos terminam de chegar em cerca de 45 ms localmente: 23 módulos JS, um a mais que antes (`js/worker.js`, 2 KB).
+- Sem long tasks na carga e CLS 0.
+- **FCP e LCP não são confiáveis neste painel.** A primeira pintura depende de o painel estar visível: deu 652 ms antes e 3 352 ms agora, com todos os recursos prontos aos 45 ms. Para esses dois números, use o Lighthouse do Chrome no site publicado (medição manual).
+
+### Processamento (navegador)
+
+| Caso | Antes | Depois | Long tasks no main thread (depois) |
+|---|---:|---:|---|
+| Dupla, demo | 628 ms | 606 ms | nenhuma |
+| Dupla G + G2 | 3 285 ms | 3 901 ms | nenhuma |
+| Wrapped G | 1 138 ms | 1 292 ms | nenhuma |
+| Wrapped GG | 3 263 ms | 3 516 ms | nenhuma |
+| Batalha P + M + G + G2 | 4 030 ms | 4 319 ms | nenhuma |
+
+As diferenças ficam dentro da variação: o processamento roda nos mesmos Workers, com o mesmo código.
+
+### Memória em execuções repetidas
+
+Dupla demo 5 vezes, heap 10 s depois de cada uma: 16,7 → 9,2 → 8,8 → 10,8 → 9,1 MB. A primeira medida inclui o que sobrou das execuções grandes anteriores. A tendência é estável e não há crescimento contínuo, então não foi preciso comparar heap snapshots.
+
+### Limites de arquivo
+
+- **49,71 MB, válido:** o histórico G mais uma entrada `.bin` de enchimento. Foi aceito e processado (1,3 s), e a entrada que não é JSON foi ignorada.
+- **50 MB + 1 byte:** recusado na hora com "Passou de 50 MB para esta pessoa".
+- **ZIP malicioso:** coberto em `tests/js/historico.test.mjs`. Recusa o ZIP truncado, o cabeçalho que mente o tamanho, a entrada acima de 64 MB e, agora, a soma declarada acima de 1 GiB.
+
+### Conclusão da etapa de desempenho
+
+Nenhuma otimização entrou na v1.14:
+
+- nenhuma long task do app passou de 100 ms (a maior, antes, foi de 53 ms);
+- o main thread fica livre durante o processamento;
+- a memória não cresce entre execuções.
+
+Os candidatos do plano (`import()` das telas, leitura do `File` dentro do Worker na Dupla) não têm problema medido que justifique a mudança.
+

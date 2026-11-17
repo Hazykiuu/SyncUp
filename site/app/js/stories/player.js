@@ -87,8 +87,10 @@ export function Player({ slides, rotulo, aoMudar }) {
   // O som recomeça os stories do primeiro slide quando a trilha fica pronta.
   useEffect(() => {
     const el = raiz.current, replay = () => despachar({ tipo: 'REPLAY' });
+    const ir = (e) => despachar({ tipo: 'IR', i: e.detail }); // a fila do palco (stories/palco.js)
     el.addEventListener('st-replay', replay);
-    return () => el.removeEventListener('st-replay', replay);
+    el.addEventListener('st-ir', ir);
+    return () => { el.removeEventListener('st-replay', replay); el.removeEventListener('st-ir', ir); };
   }, []);
   useEffect(() => {
     const aba = () => despachar({ tipo: document.hidden ? 'PAUSAR' : 'RETOMAR', motivo: 'oculta' });

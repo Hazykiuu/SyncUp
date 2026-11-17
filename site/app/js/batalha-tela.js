@@ -11,6 +11,7 @@ import { fmtNum } from './stories/logica.js';
 import { Player } from './stories/player.js';
 import { abrirWorker } from './worker.js';
 import { Dock } from './stories/dock.js';
+import { Palco } from './stories/palco.js';
 
 const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos pessoas.';
 const DEMO = [['demo-wrapped.zip', 'Ana'], ['demo-bruno.zip', 'Bruno'], ['demo-carla.zip', 'Carla'], ['demo-davi.zip', 'Davi']];
@@ -114,12 +115,15 @@ function ResultadoBatalha({ b, nomes, comum }) {
   return html`
     <section class="resultado batalha-res" aria-labelledby="titulo-batalha">
       <h2 id="titulo-batalha" class="sr-only">Resultado da batalha</h2>
-      <div ref=${stories} class="nucleo"><${Player} key=${b} slides=${slides} rotulo=${`Batalha de ${nomes.join(', ')}`} /></div>
+      <${Palco} alvo=${stories} slides=${slides} comSom=${!!b.trilha} lado=${html`
       <div class="compartilhar"><div class="acoes">
+        <button type="button" class="btn btn-verde" onClick=${poster} disabled=${ocupado}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></svg>${ocupado ? 'Gerando…' : 'Baixar pôster'}</button>
         <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
       </div>${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
       <${Dock} alvo=${stories} aoPoster=${poster} ocupado=${ocupado} comSom=${!!b.trilha} /></div>
-      ${b.trilha && html`<${SomStories} key=${b} trilha=${b.trilha} alvo=${stories} nota=${NOTA_SOM} />`}
+      ${b.trilha && html`<${SomStories} key=${b} trilha=${b.trilha} alvo=${stories} nota=${NOTA_SOM} />`}`}>
+        <${Player} key=${b} slides=${slides} rotulo=${`Batalha de ${nomes.join(', ')}`} />
+      <//>
       <p class="batalha-resumo">${b.resenha}</p>
       <${Rodadas} b=${b} nomes=${nomes} />
       <${Podio} b=${b} nomes=${nomes} ordem=${b.lutadores.map((l, i) => i).sort(porMedalhas(b))} />

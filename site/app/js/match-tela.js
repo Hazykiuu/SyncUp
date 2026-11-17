@@ -8,6 +8,7 @@ import { chave, melhorPar, trilhaMatch } from './match.js';
 import { compartilhar, desenharPosterMatch } from './poster.js';
 import { destravarSom, SomStories } from './som.js';
 import { Dock } from './stories/dock.js';
+import { Palco } from './stories/palco.js';
 import { slidesDoMatch } from './stories/match.js';
 import { Player } from './stories/player.js';
 import { fmtNum } from './stories/logica.js';
@@ -86,12 +87,15 @@ function ResultadoMatch({ dados: { r, fontes, fora } }) {
   };
   return html`<section class="resultado" aria-labelledby="titulo-match">
     <h2 id="titulo-match" class="amor-titulo">Quem combina com quem</h2>
-    <div ref=${stories} class="nucleo"><${Player} key=${r} slides=${slides} rotulo=${`Match de ${r.nomes.join(', ')}`} /></div>
+    <${Palco} alvo=${stories} slides=${slides} comSom=${trilha.fila.length > 0} lado=${html`
     <div class="compartilhar"><div class="acoes">
+      <button type="button" class="btn btn-verde" onClick=${poster} disabled=${ocupado}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></svg>${ocupado ? 'Gerando…' : 'Baixar pôster'}</button>
       <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
     </div>${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
     <${Dock} alvo=${stories} aoPoster=${poster} ocupado=${ocupado} comSom=${!!trilha.fila.length} /></div>
-    ${trilha.fila.length > 0 && html`<${SomStories} key=${r} trilha=${trilha} alvo=${stories} nota=${NOTA_SOM} />`}
+    ${trilha.fila.length > 0 && html`<${SomStories} key=${r} trilha=${trilha} alvo=${stories} nota=${NOTA_SOM} />`}`}>
+      <${Player} key=${r} slides=${slides} rotulo=${`Match de ${r.nomes.join(', ')}`} />
+    <//>
     <p class="batalha-resumo">Média dos pares: <b>${pct(r.pontuacao_media_pares)}</b>. Os pares somam a maior compatibilidade possível do grupo${r.nomes.length % 2 ? '; com número ímpar, uma pessoa entra no par onde mais combina e vira trio' : ''}.</p>
     <ul class="amores">${r.pares.map((g, n) => html`<${Par} g=${g} r=${r} cores=${cores} n=${n} />`)}</ul>
     <details class="vidro detalhe"><summary>Com quem cada um mais combina</summary>

@@ -150,7 +150,7 @@ function Podio({ b, i }) {
 export function slidesDaBatalha(b) {
   return [
     { tipo: 'abertura', render: (p) => html`<${Abertura} b=${b} ...${p} />` },
-    ...b.rodadas.map((r) => ({ tipo: `rodada-${r.chave}`, render: (p) => html`<${Rodada} b=${b} r=${r} ...${p} />` })),
+    ...b.rodadas.map((r) => ({ tipo: `rodada-${r.chave}`, titulo: r.titulo, render: (p) => html`<${Rodada} b=${b} r=${r} ...${p} />` })),
     { tipo: 'afinada', render: (p) => html`<${Afinada} b=${b} ...${p} />` },
     { tipo: 'medalhas', render: (p) => html`<${Quadro} b=${b} ...${p} />` },
     { tipo: 'podio', render: (p) => html`<${Podio} b=${b} ...${p} />` },

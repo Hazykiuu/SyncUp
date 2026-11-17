@@ -10,6 +10,7 @@ import { Opcoes, PADRAO } from './opcoes.js';
 import { SomStories, destravarSom } from './som.js';
 import { Player } from './stories/player.js';
 import { Dock } from './stories/dock.js';
+import { Palco } from './stories/palco.js';
 import { CapasCtx, chaveCapa, NOVOS } from './stories/slides.js';
 import { tiposDoWrapped } from './stories/logica.js';
 import { rodarNoWorker } from './worker.js';
@@ -153,21 +154,22 @@ export function Wrapped() {
     </div>
     <div id="resultado-wrapped">${fase.tipo === 'resultado' && html`
       <section ref=${chegar} class="resultado" aria-label=${`Wrapped de ${fase.r.nome}`}>
+        <${Palco} alvo=${stories} slides=${slides} comSom lado=${html`
         <${SomStories} key=${fase.r} trilha=${fase.r.trilha} alvo=${stories} aoLigar=${() => ligarCapas(fase.r.dados)} />
-        <div ref=${stories} class="nucleo">
-          <${CapasCtx.Provider} value=${capas}>
-            <${Player} key=${`${rodada.current}-${capas !== null}`} slides=${slides} rotulo=${`Wrapped de ${fase.r.nome}`} />
-          <//>
-          ${fase.r.dados.avisos.map((a) => html`<p class="su-note">${a}</p>`)}
-        </div>
         <div class="compartilhar"><div class="acoes">
+          <button type="button" class="btn btn-verde" onClick=${png} disabled=${baixando}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></svg>${baixando ? 'Gerando…' : 'Baixar pôster'}</button>
           <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
           <button type="button" class="btn btn-borda vidro" onClick=${apagarCapas}>Apagar capas guardadas</button>
         </div>
         ${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
         <p class="nota">Montado em ${segundos(fase.ms)} s, no seu aparelho.</p>
         <${Dock} alvo=${stories} aoPoster=${png} ocupado=${baixando} comSom />
-        <p class="nota">Dica: no último story, tire um print para postar nos stories e chamar os amigos para comparar.</p></div>
+        <p class="nota">Dica: no último story, tire um print para postar nos stories e chamar os amigos para comparar.</p></div>`}>
+          <${CapasCtx.Provider} value=${capas}>
+            <${Player} key=${`${rodada.current}-${capas !== null}`} slides=${slides} rotulo=${`Wrapped de ${fase.r.nome}`} />
+          <//>
+          ${fase.r.dados.avisos.map((a) => html`<p class="su-note">${a}</p>`)}
+        <//>
         <details class="vidro detalhe"><summary>Como o arquétipo foi calculado</summary><${ArquetiposDetalhe} arquetipos=${fase.r.dados.arquetipos} /></details>
       </section>`}</div>`;
 }

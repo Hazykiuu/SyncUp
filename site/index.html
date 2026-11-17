@@ -22,7 +22,9 @@
 <!-- Os stories do topo e dos recursos usam o mesmo CSS dos stories do app. -->
 <link rel="stylesheet" href="app/stories.css">
 </head>
-<body>
+<body class="inicio">
+<!-- Fundo vivo (1.18): a aurora muda de cor com a seção na tela e o vinil gira devagar. Só decoração. -->
+<div class="fundo-vivo" aria-hidden="true"><div class="vinil-trilho"><svg class="vinil" viewBox="0 0 400 400"><circle cx="200" cy="200" r="60" /><circle cx="200" cy="200" r="74" /><circle cx="200" cy="200" r="88" /><circle cx="200" cy="200" r="102" /><circle cx="200" cy="200" r="116" /><circle cx="200" cy="200" r="130" /><circle cx="200" cy="200" r="144" /><circle cx="200" cy="200" r="158" /><circle cx="200" cy="200" r="172" /><circle cx="200" cy="200" r="186" /><circle class="vinil-selo" cx="200" cy="200" r="34" /></svg></div></div>
 <a class="pular" href="#principal">Pular para o conteúdo</a>
 
 <header class="topo">
@@ -163,8 +165,49 @@
           </div>
           <p class="espectro-legenda"><span class="a">Ana</span><span class="b">Bruno</span></p>
         </article>
-        <article class="caixa batalha vidro"><h3>Batalha</h3><p>De 3 a 6 pessoas disputam rodadas com os números do período: pódio, medalhas e pôster.</p><a href="app/#batalha">Abrir a Batalha</a></article>
-        <article class="caixa match vidro"><h3>Match</h3><p>De 2 a 16 pessoas, por ZIP ou convite: os pares que mais combinam, em stories com som e pôster. O Grupo segue no app para PC.</p><a href="app/#match">Abrir o Match</a></article>
+        <article class="caixa batalha vidro">
+          <div>
+            <h3>Batalha</h3>
+            <p>De 3 a 6 pessoas disputam rodadas com os números do período: pódio, medalhas e pôster.</p>
+            <div class="tags"><span>Até 10 rodadas</span><span>Medalhas</span></div>
+            <a href="app/#batalha">Abrir a Batalha</a>
+          </div>
+          <div class="mock" aria-hidden="true">
+            <div class="st-slot ativo"><section class="su-story ativo st s-podio sb" style="--capa: 30 215 96">
+              <div class="st-fundo"></div><div class="st-veu"></div>
+              <div class="st-conteudo">
+                <span class="entra st-kicker" style="--i:0">Quem levou</span>
+                <div class="entra st-titulo sb-vence" style="--i:1">Ana</div>
+                <ol class="sb-podio">
+                  <li class="p2" style="--lut:#c4b7ff;--k:1"><span class="sb-avatar">B</span><b class="sb-nome">Bruno</b><span class="sb-medalhas"><span class="sb-med ouro" aria-hidden="true"><i></i>2</span><span class="sb-med prata" aria-hidden="true"><i></i>3</span><span class="sb-med bronze" aria-hidden="true"><i></i>1</span></span><span class="sb-bloco"><span>2º</span></span></li>
+                  <li class="p1" style="--lut:#1ed760;--k:2"><span class="sb-avatar">A</span><b class="sb-nome">Ana</b><small class="sb-titulo">Trator de Plays</small><span class="sb-medalhas"><span class="sb-med ouro" aria-hidden="true"><i></i>4</span><span class="sb-med prata" aria-hidden="true"><i></i>1</span><span class="sb-med bronze" aria-hidden="true"><i></i>2</span></span><span class="sb-bloco"><span>1º</span></span></li>
+                  <li class="p3" style="--lut:#f573a0;--k:0"><span class="sb-avatar">C</span><b class="sb-nome">Carla</b><span class="sb-medalhas"><span class="sb-med ouro" aria-hidden="true"><i></i>1</span><span class="sb-med prata" aria-hidden="true"><i></i>2</span><span class="sb-med bronze" aria-hidden="true"><i></i>3</span></span><span class="sb-bloco"><span>3º</span></span></li>
+                </ol>
+              </div>
+            </section></div>
+          </div>
+        </article>
+        <article class="caixa match vidro">
+          <div>
+            <h3>Match</h3>
+            <p>De 2 a 16 pessoas, por ZIP ou convite: os pares que mais combinam, em stories com som e pôster. O Grupo segue no app para PC.</p>
+            <div class="tags"><span>Convite por código</span><span>Pares e trio</span></div>
+            <a href="app/#match">Abrir o Match</a>
+          </div>
+          <div class="mock" aria-hidden="true">
+            <div class="st-slot ativo"><section class="su-story ativo st s-par-0 sm" style="--capa: 245 115 160">
+              <div class="st-fundo"></div><div class="st-veu"></div>
+              <div class="st-conteudo">
+                <span class="entra st-kicker" style="--i:0">Par nº 1</span>
+                <div class="entra" style="--i:1"><span class="sm-casal"><span class="sm-avatar" style="--lut:#1ed760">A</span><span class="sm-elo"><svg viewBox="0 0 24 24" class="sm-coracao" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.4C.9 8 3.1 4 6.9 4c2.2 0 3.7 1.2 5.1 3 1.4-1.8 2.9-3 5.1-3 3.8 0 6 4 4.5 7.6C19.5 16.4 12 21 12 21Z" /></svg></span><span class="sm-avatar" style="--lut:#c4b7ff">B</span></span></div>
+                <div class="entra st-titulo menor" style="--i:2">Ana &amp; Bruno</div>
+                <div class="entra st-cartao st-vidro sm-nota" style="--i:3"><div class="st-mega num">18,4%</div><span class="sm-fita">Alta compatibilidade</span>
+                  <span class="sm-medidor"><svg viewBox="0 0 24 24" class="sm-coracao cheio" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.4C.9 8 3.1 4 6.9 4c2.2 0 3.7 1.2 5.1 3 1.4-1.8 2.9-3 5.1-3 3.8 0 6 4 4.5 7.6C19.5 16.4 12 21 12 21Z" /></svg><svg viewBox="0 0 24 24" class="sm-coracao cheio" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.4C.9 8 3.1 4 6.9 4c2.2 0 3.7 1.2 5.1 3 1.4-1.8 2.9-3 5.1-3 3.8 0 6 4 4.5 7.6C19.5 16.4 12 21 12 21Z" /></svg><svg viewBox="0 0 24 24" class="sm-coracao cheio" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.4C.9 8 3.1 4 6.9 4c2.2 0 3.7 1.2 5.1 3 1.4-1.8 2.9-3 5.1-3 3.8 0 6 4 4.5 7.6C19.5 16.4 12 21 12 21Z" /></svg><svg viewBox="0 0 24 24" class="sm-coracao cheio" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.4C.9 8 3.1 4 6.9 4c2.2 0 3.7 1.2 5.1 3 1.4-1.8 2.9-3 5.1-3 3.8 0 6 4 4.5 7.6C19.5 16.4 12 21 12 21Z" /></svg><svg viewBox="0 0 24 24" class="sm-coracao" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.4C.9 8 3.1 4 6.9 4c2.2 0 3.7 1.2 5.1 3 1.4-1.8 2.9-3 5.1-3 3.8 0 6 4 4.5 7.6C19.5 16.4 12 21 12 21Z" /></svg></span></div>
+                <p class="entra sm-unidos" style="--i:4">Unidos por <b>Djavan, Marisa Monte</b></p>
+              </div>
+            </section></div>
+          </div>
+        </article>
       </div>
     </div>
   </section>

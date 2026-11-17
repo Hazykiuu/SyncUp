@@ -22,6 +22,25 @@ test('avança, volta e para no fim', () => {
   assert.equal(player(e, { tipo: 'IR', i: 99 }).i, 2);
 });
 
+test('IR (fila do palco): pula mantendo tocando ou pausado e recomeça a barra', () => {
+  const tocando = player(inicial(5), { tipo: 'IR', i: 3 });
+  assert.equal(tocando.i, 3);
+  assert.ok(!pausado(tocando));
+  const parado = player(player(inicial(5), { tipo: 'PAUSAR', motivo: 'usuario' }), { tipo: 'IR', i: 2 });
+  assert.equal(parado.i, 2);
+  assert.deepEqual(parado.motivos, ['usuario']); // a pausa de propósito continua
+  assert.equal(player(inicial(5), { tipo: 'IR', i: -4 }).i, 0); // fora do intervalo: limita
+  assert.equal(player(inicial(5), { tipo: 'IR', i: 99 }).i, 4);
+  const fimAntes = player(player(player(inicial(2), { tipo: 'AVANCAR' }), { tipo: 'AVANCAR' }), { tipo: 'IR', i: 0 });
+  assert.ok(!fimAntes.fim);
+  const ultimo = player(inicial(3), { tipo: 'IR', i: 2 });
+  assert.ok(!ultimo.fim && !pausado(ultimo)); // o último toca até o fim antes de parar
+  // Mesmo story: a chave do relógio (i-volta) muda e a barra recomeça do zero; outro story já muda a chave pelo i.
+  const e = inicial(4);
+  assert.equal(player(e, { tipo: 'IR', i: 0 }).volta, e.volta + 1);
+  assert.equal(player(e, { tipo: 'IR', i: 1 }).volta, e.volta);
+});
+
 test('soltar o dedo não retoma a pausa feita de propósito', () => {
   let e = inicial(5);
   e = player(e, { tipo: 'PAUSAR', motivo: 'usuario' });

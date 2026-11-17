@@ -55,7 +55,7 @@ export function slidesDoMatch(r) {
   const cor = (n) => CORES[r.nomes.indexOf(n) % CORES.length];
   return [
     { tipo: 'abertura', render: (p) => html`<${Abertura} r=${r} cor=${cor} ...${p} />` },
-    ...r.pares.map((g, n) => ({ tipo: `par-${n}`, render: (p) => html`<${Par} r=${r} g=${g} n=${n} cor=${cor} ...${p} />` })),
-    { tipo: 'poster', render: (p) => html`<${Poster} r=${r} cor=${cor} ...${p} />` },
+    ...r.pares.map((g, n) => ({ tipo: `par-${n}`, titulo: g.join(g.length === 3 ? ', ' : ' & '), render: (p) => html`<${Par} r=${r} g=${g} n=${n} cor=${cor} ...${p} />` })),
+    { tipo: 'poster', titulo: 'O casal do grupo', render: (p) => html`<${Poster} r=${r} cor=${cor} ...${p} />` },
   ];
 }

@@ -401,23 +401,64 @@
 
 /* Stories do Match: o mesmo cartão de namoro da tela (casal, coração batendo, fita e corações), em cqw. */
 .sm { --capa: 245 115 160; }
-.sm .st-veu { background: radial-gradient(90% 60% at 50% 0%, rgb(245 115 160 / .35), transparent 70%), linear-gradient(180deg, rgb(23 11 19 / .55), rgb(23 11 19 / .85)); }
-.sm .st-kicker { color: #ffc2d9; }
+.sm .st-kicker { color: var(--rosa-claro); }
 .sm-casal { display: flex; align-items: center; }
-.sm-avatar { display: grid; place-items: center; flex: none; width: 18cqw; aspect-ratio: 1; border-radius: 50%; background: var(--lut); color: #120810;
-  font-size: 8cqw; font-weight: 900; box-shadow: 0 0 0 1.2cqw #1d0d17, 0 0 0 1.8cqw rgb(245 115 160 / .6); }
+.sm-avatar { display: grid; place-items: center; flex: none; width: 18cqw; aspect-ratio: 1; border-radius: 50%; background: var(--lut); color: var(--rosa-noite);
+  font-size: 8cqw; font-weight: 900; box-shadow: 0 0 0 1.2cqw var(--sup-1), 0 0 0 1.8cqw rgb(245 115 160 / .6); }
 .sm-avatar.mini { width: 9cqw; font-size: 4cqw; box-shadow: 0 0 0 .6cqw rgb(245 115 160 / .6); }
-.sm-elo { z-index: 1; margin-inline: -3.5cqw; font-size: 11cqw; line-height: 0; color: #f573a0; filter: drop-shadow(0 0 2cqw rgb(245 115 160 / .9)); }
+.sm-elo { z-index: 1; margin-inline: -3.5cqw; font-size: 11cqw; line-height: 0; color: var(--rosa); filter: drop-shadow(0 0 2cqw rgb(245 115 160 / .9)); }
 .sm-coracao { width: 1em; height: 1em; fill: currentColor; }
 .st-slot.ativo .sm-elo { animation: amor-bate 1.4s ease-in-out infinite; }
 .sm-elenco { display: flex; flex-wrap: wrap; gap: 3cqw 2cqw; }
 .sm-elenco > span { display: flex; flex-direction: column; align-items: center; gap: 1.4cqw; width: 22cqw; min-width: 0; }
 .sm-elenco b { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 3.6cqw; }
 .sm-nota { display: flex; flex-direction: column; align-items: flex-start; gap: 2.4cqw; }
-.sm-nota .st-mega { background: linear-gradient(180deg, #fff 10%, #ffc2d9 55%, #f573a0); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.sm-fita { padding: 1cqw 5cqw; font-size: 3.2cqw; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #2a0a1a;
-  background: linear-gradient(180deg, #ffd0e1, #f573a0); clip-path: polygon(0 0, 100% 0, calc(100% - 2.4cqw) 50%, 100% 100%, 0 100%, 2.4cqw 50%); }
+.sm-nota .st-mega { background: linear-gradient(180deg, #fff 10%, var(--rosa-claro) 55%, var(--rosa)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sm-fita { padding: 1cqw 5cqw; font-size: 3.2cqw; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--rosa-noite);
+  background: linear-gradient(180deg, var(--rosa-papel), var(--rosa)); clip-path: polygon(0 0, 100% 0, calc(100% - 2.4cqw) 50%, 100% 100%, 0 100%, 2.4cqw 50%); }
 .sm-medidor { display: flex; gap: 1cqw; font-size: 7cqw; color: rgb(255 255 255 / .18); }
-.sm-medidor .cheio { color: #f573a0; filter: drop-shadow(0 0 1.2cqw rgb(245 115 160 / .8)); }
-.sm-unidos b { font-weight: 900; color: #ffc2d9; }
+.sm-medidor .cheio { color: var(--rosa); filter: drop-shadow(0 0 1.2cqw rgb(245 115 160 / .8)); }
+.sm-unidos b { font-weight: 900; color: var(--rosa-claro); }
 @media (prefers-reduced-motion: reduce) { .st-slot.ativo .sm-elo { animation: none; } }
+
+/* 9. Tema único (1.18): todos os modos na mesma moldura, "capa de playlist" com vidro de verdade.
+   A cor do story (--capa) vem do alto e se apaga em --sup-1 (#121212), como a página de uma playlist do Spotify.
+   O véu escurece o alto o bastante para o kicker e o título passarem no contraste mesmo com a capa mais clara
+   (medido: ver o commit). Cada peça de vidro usa a borda com luz e a capa como tinta. */
+:root {
+  --rosa-claro: color-mix(in srgb, var(--rosa) 45%, #fff); --rosa-papel: color-mix(in srgb, var(--rosa) 30%, #fff);
+  --rosa-noite: color-mix(in srgb, var(--rosa) 12%, #000);
+}
+.st-fundo { background:
+  radial-gradient(140% 70% at 22% -8%, rgb(var(--capa) / .95), rgb(var(--capa) / .45) 42%, rgb(var(--capa) / .08) 70%, transparent 88%),
+  radial-gradient(90% 50% at 100% 105%, rgb(var(--capa) / .22), transparent 70%), var(--sup-1); }
+.st-veu { background: linear-gradient(180deg, rgb(0 0 0 / .42) 0%, rgb(18 18 18 / .5) 45%, rgb(18 18 18 / .82) 100%); }
+/* Dupla: verde de A no alto; o violeta de B fica só no canto de baixo (e nas cores das pessoas), sem o fundo dividido. */
+.st-duo .st-fundo { background:
+  radial-gradient(140% 70% at 22% -8%, rgb(var(--capa) / .95), rgb(var(--capa) / .45) 42%, rgb(var(--capa) / .08) 70%, transparent 88%),
+  radial-gradient(80% 45% at 100% 105%, rgb(196 183 255 / .3), transparent 70%), var(--sup-1); }
+.st-duo .st-veu { background: linear-gradient(180deg, rgb(0 0 0 / .42) 0%, rgb(18 18 18 / .5) 45%, rgb(18 18 18 / .8) 100%); }
+/* Kicker do Spotify: peso 700, tracking curto, sempre branco cheio (o rosa-claro do Match é a exceção, conferida). */
+.st-kicker { font-weight: 700; letter-spacing: .06em; color: #fff; }
+.sb-selo, .sb-titulo { letter-spacing: .06em; }
+/* Vidro de verdade nos stories: face translúcida com a capa vazando e borda com luz. */
+.st-vidro, .vidro-ctrl, .sb-bloco {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / .13), rgb(255 255 255 / .03) 40%, rgb(255 255 255 / .05)) padding-box,
+    radial-gradient(120% 90% at 0% 0%, rgb(var(--capa, 255 255 255) / .2), transparent 60%) padding-box,
+    linear-gradient(rgb(18 18 20 / .45), rgb(18 18 20 / .45)) padding-box,
+    linear-gradient(160deg, rgb(255 255 255 / .55), rgb(255 255 255 / .1) 32%, rgb(255 255 255 / .04) 62%, rgb(var(--capa, 255 255 255) / .45)) border-box;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .22), 0 2cqw 6cqw -2cqw rgb(0 0 0 / .55); }
+.st-duo .st-vidro { border-color: transparent; }
+/* O lado de cada pessoa tinge o próprio vidro. */
+.st-lado-a { --capa: 30 215 96; } .st-lado-b { --capa: 196 183 255; }
+/* Bloco do pódio: o vidro com a cor do lutador. */
+.sb-bloco {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--lut) 50%, transparent), color-mix(in srgb, var(--lut) 14%, transparent)) padding-box,
+    linear-gradient(160deg, rgb(255 255 255 / .6), rgb(255 255 255 / .12) 40%, color-mix(in srgb, var(--lut) 60%, transparent)) border-box; }
+/* Listas no jeito do Spotify: linhas com superfície própria e número à esquerda. */
+.st-lista > li, .sb-quadro > li { padding: 1.6cqw 2.4cqw; border-radius: 2cqw; background: rgb(255 255 255 / .06); }
+@media (prefers-reduced-transparency: reduce) { .st-vidro, .vidro-ctrl, .sb-bloco { background: var(--sup-2); } }
+@media (prefers-contrast: more) { .st-vidro, .vidro-ctrl, .sb-bloco { background: var(--sup-2) padding-box, #fff border-box; } }

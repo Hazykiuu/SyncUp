@@ -58,7 +58,6 @@ a.nav-item:hover { color: var(--texto); }
   .nav-app ul { flex-direction: column; gap: var(--e1); }
   .nav-item { padding: 0 var(--e3); border-radius: var(--r-campo); }
   a.nav-item:hover { background: rgba(255, 255, 255, .06); }
-  .nav-item[aria-current="page"] { background: var(--texto); color: #000; }
   .nav-selo { margin-top: auto; padding-inline: var(--e3); }
   .nav-site { padding: var(--e2) var(--e3); }
   .app-corpo { margin-left: var(--lateral); padding-bottom: 6rem; }
@@ -75,12 +74,19 @@ a.nav-item:hover { color: var(--texto); }
   .gr-trilho-t { border: 1px solid CanvasText; } .gr-trilho-t s { background: CanvasText; }
 }
 
-/* Cabeçalho do modo: o degradê tem sentido (Dupla = as duas pessoas, verde e violeta; Wrapped = verde)
-   e se dissolve no fundo antes do conteúdo. */
-.app-corpo { background-repeat: no-repeat; background-size: 100% 28rem; }
-.app-corpo[data-modo="dupla"] { background-image: radial-gradient(60% 100% at 0% 0%, rgb(30 215 96 / .22), transparent 70%), radial-gradient(60% 100% at 100% 0%, rgb(196 183 255 / .2), transparent 70%); }
-.app-corpo[data-modo="wrapped"] { background-image: radial-gradient(80% 100% at 0% 0%, rgb(30 215 96 / .24), transparent 70%); }
-.app-corpo[data-modo="batalha"] { background-image: radial-gradient(60% 100% at 0% 0%, color-mix(in srgb, var(--laranja) 16%, transparent), transparent 70%), radial-gradient(60% 100% at 100% 0%, rgb(245 115 160 / .16), transparent 70%); }
+/* Cascata (1.18): uma luz só no topo de cada modo, com a cor do modo (--tinta) e uma segunda com sentido
+   (--tinta-2: na Dupla, o violeta da pessoa B). Só radiais indo a transparente, sem máscara nem blur: some sem borda.
+   Cresce para a esquerda, por baixo da barra lateral fixa (z 60), e nunca para a direita: sem rolagem lateral.
+   Sem isolation nem z-index no corpo, para não criar um contexto de empilhamento novo. */
+.app-corpo { position: relative; --tinta-2: var(--tinta); }
+.app-corpo::before { content: ''; position: absolute; z-index: -1; top: -6rem; left: 0; right: 0; height: 42rem; pointer-events: none; /* sobe por trás do topo do celular: sem linha entre o topo e o corpo */
+  background:
+    radial-gradient(70% 90% at 34% -14%, rgb(var(--tinta) / .5), rgb(var(--tinta) / .18) 42%, rgb(var(--tinta) / .05) 70%, transparent 92%),
+    radial-gradient(50% 75% at 92% -18%, rgb(var(--tinta-2) / .28), rgb(var(--tinta-2) / .10) 50%, transparent 88%); }
+@media (min-width: 900px) { .app-corpo::before { left: calc(-1 * var(--lateral)); } }
+.app-corpo[data-modo="dupla"] { --tinta-2: 196 183 255; }
+.app-corpo[data-modo="batalha"] { --tinta-2: 245 115 160; }
+.app-corpo[data-modo="match"] { --tinta-2: 255 164 200; }
 .app-cabeca { display: flex; flex-direction: column; gap: var(--e3); padding-block: 2rem 2.5rem; }
 @media (min-width: 900px) { .app-cabeca { padding-block: 4rem 3rem; } }
 .app-cabeca h1 { text-wrap: balance; font-size: clamp(2.2rem, 6vw, 3.6rem); font-weight: 900; letter-spacing: -.03em; line-height: 1; }
@@ -590,7 +596,6 @@ body::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-even
 @keyframes amor-chuva { 0% { opacity: 0; bottom: 60%; translate: 0 0; scale: .3; } 25% { opacity: 1; scale: 1.2; } 100% { opacity: 0; bottom: 60%; translate: calc((var(--k) - 2.5) * 70px) -160px; scale: 1; } }
 
 /* A área inteira do Match na mesma estética: moldura rosa, renda e o botão principal em rosa. */
-.app-corpo[data-modo="match"] { background-image: radial-gradient(70% 100% at 0% 0%, rgb(245 115 160 / .3), transparent 70%), radial-gradient(60% 100% at 100% 10%, rgb(255 164 200 / .18), transparent 70%); }
 .app-corpo[data-modo="match"] .app-cabeca h1 { text-shadow: 0 0 28px rgb(245 115 160 / .5); }
 .app-corpo[data-modo="match"] .app-cabeca h1::after { content: ' ♥'; color: var(--rosa); }
 .match-area .pessoa.vidro::before { background: linear-gradient(135deg, rgb(245 115 160 / .85), color-mix(in srgb, var(--cor) 50%, transparent) 40%, rgb(245 115 160 / .25)); }
@@ -635,8 +640,6 @@ body::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-even
 /* Cara de Spotify (1.17): o topo de cada modo é a capa de uma playlist. Faixa de cor do modo descendo do alto,
    a "capa" (o ícone do modo num quadrado com degradê), o tipo e o título enorme e apertado. */
 .app-cabeca { position: relative; flex-direction: row; align-items: flex-end; gap: var(--e5); }
-/* A faixa é uma sombra interna do corpo: cobre a largura toda sem passar da borda (nada de 100vw com a barra lateral). */
-.app-corpo { box-shadow: inset 0 22rem 16rem -9rem rgb(var(--tinta) / .3); }
 .app-cabeca-texto { display: flex; flex-direction: column; gap: var(--e3); min-width: 0; }
 .app-tipo { font-size: .8rem; font-weight: 700; letter-spacing: .02em; color: var(--texto); }
 .app-capa { display: none; flex: none; place-items: center; width: clamp(8rem, 14vw, 12rem); aspect-ratio: 1; border-radius: var(--r-campo); color: #000;
@@ -652,3 +655,37 @@ body::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-even
 .dock-progresso.parado i { animation-play-state: paused; }
 @keyframes dock-trecho { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @media (prefers-reduced-motion: reduce) { .dock-progresso { display: none; } }
+
+/* Palco dos stories (1.18, stories/palco.js). No celular e em telas médias: uma coluna (player, e embaixo o som e os
+   botões), com o dock. A partir de 1240 px: fila | player | tocando agora, como o Spotify; o dock some. */
+.palco-fila, .palco-agora { display: none; }
+.st-palco { align-self: stretch; } /* o .resultado é flex: sem isto o palco encolhe até o conteúdo */
+.palco-lado { display: grid; gap: var(--vao); }
+@media (min-width: 1240px) {
+  .st-palco { display: grid; grid-template-columns: minmax(13rem, 18rem) 430px minmax(15rem, 20rem); justify-content: center; align-items: start; gap: var(--e5); }
+  .st-palco > .nucleo { min-width: 0; }
+  .palco-fila, .palco-lado { position: sticky; top: var(--e5); }
+  .palco-fila { display: block; padding: var(--e4); border-radius: var(--r-cartao); max-height: calc(100dvh - 2 * var(--e5)); overflow-y: auto; scrollbar-width: thin; }
+  .palco-agora { display: grid; gap: var(--e3); padding: var(--e4); border-radius: var(--r-cartao); }
+  .st-palco .dock { display: none; }
+  .palco-lado .compartilhar .acoes { display: grid; gap: var(--e2); }
+  .palco-lado .compartilhar .acoes .btn { width: 100%; justify-content: center; text-wrap: balance; text-align: center; }
+  .palco-lado .som-stories { margin: 0; }
+}
+.palco-rotulo { margin-bottom: var(--e2); font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--sub); }
+.palco-fila ol { display: grid; gap: 2px; }
+.palco-fila button { display: grid; grid-template-columns: 1.75rem minmax(0, 1fr); align-items: center; gap: var(--e2); width: 100%; min-height: 44px; padding: 0 var(--e2);
+  border-radius: var(--r-campo); color: var(--sub); text-align: left; font-weight: 700; cursor: pointer; transition: background .15s, color .15s; }
+.palco-fila button:hover { background: rgb(255 255 255 / .07); color: var(--texto); }
+.palco-fila button.atual { color: var(--verde); background: rgb(255 255 255 / .05); }
+.palco-fila button:focus-visible { outline: 2px solid var(--verde); outline-offset: 1px; }
+.palco-n { justify-self: center; font-variant-numeric: tabular-nums; font-size: .9rem; }
+.palco-titulo { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.palco-capa { width: 100%; aspect-ratio: 1; border-radius: var(--r-campo); object-fit: cover; box-shadow: 0 16px 40px -12px rgb(0 0 0 / .7); }
+.palco-capa.vazia { display: grid; place-items: center; color: rgb(var(--tinta, 30 215 96)); background: radial-gradient(90% 90% at 30% 20%, rgb(var(--tinta, 30 215 96) / .35), transparent 70%), var(--sup-2); }
+.palco-capa.vazia .ic { width: 30%; height: auto; }
+.palco-faixa { display: grid; gap: 2px; min-width: 0; }
+.palco-faixa b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 1.15rem; font-weight: 900; letter-spacing: -.02em; }
+.palco-faixa small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--sub); }
+.palco-progresso { position: static; display: block; }
+.palco-mudo { justify-content: center; gap: var(--e2); }

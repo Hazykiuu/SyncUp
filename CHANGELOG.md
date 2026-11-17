@@ -1,5 +1,33 @@
 # Changelog — SyncUp
 
+## [1.15.0] — 2026-11-17
+
+Um visual novo, Liquid Glass, na página inicial e no app, sem mudar o que o SyncUp calcula.
+
+### Novo
+- **Página inicial:**
+  - O topo tem um palco em 3 camadas: a luz das capas, uma placa de vidro com o "tocando agora" e o story da Dupla na frente. As capas são abstratas e do próprio projeto, nunca capas reais.
+  - Os recursos viraram um bento: Dupla, Wrapped, o espectro de escuta das 24 horas e a Batalha. O espectro agora é interativo: mouse, toque ou setas mostram os plays de cada hora.
+  - "Como usar" virou uma tracklist: o número da faixa vira ▶ quando você passa por cima.
+  - A privacidade aparece em três colunas, sem caixas. Licença, testes e releases foram para o rodapé.
+- **Upload:** o espaço de soltar arquivos é um slot de vidro. Assim que o arquivo entra, ele mostra o período e o número de reproduções. Se o arquivo estiver errado, você vê o erro ali mesmo, antes de comparar.
+- **Dock dos stories:** uma cápsula fixa na base mostra a música que está tocando (com a capa), o botão de mudo e "Baixar pôster".
+- **Luz ambiente:** o fundo acende com as cores da capa que está na tela. Só a cor sai da capa; a capa em si continua nítida.
+- **Abertura do app:** um esqueleto com o logo pulsando aparece enquanto o app carrega.
+
+### Mudado
+- **Vidro:** tokens novos (fundo #0a0a0c, superfícies #121212 e #181818, verde #1ed760 com hover #3be477, raio de 26 px, botões em cápsula). Todos os cartões têm blur, com fundo sólido para quem pede menos transparência no sistema.
+- **Fundo:** saíram as manchas de cor fixas.
+- **Ícones:** desenhados no lugar dos emoji nos controles de som.
+- **Barra de baixo do app:** mostra só os modos que funcionam no navegador.
+- **Demos:** usam "Ana" e "Bruno".
+- **Página inicial:** passa a mostrar a Batalha. Match e Grupo ficaram num cartão só, "Só no app para PC".
+- **Bordas:** o arredondamento segue uma escala única (campo, cartão e painel).
+
+### Desempenho
+- **Leitura dupla:** cada histórico agora é lido duas vezes, uma para o resumo do upload e outra para o cálculo (veja `benchmark/web.md`).
+- **Blur:** o FPS com blur em todos os cartões ainda precisa ser medido num celular.
+
 ## [1.14.0] — 2026-11-16
 
 Uma versão de cuidado com o app no navegador: acessibilidade, ciclo de vida e medições, sem recursos novos.

@@ -63,8 +63,12 @@ def texto_periodo(resultado: ResultadoComparacao) -> str:
     """Apresenta o recorte sem extrair informações de texto ou HTML."""
     periodo = resultado.periodo
     if periodo.comum:
-        return f'{periodo.inicio:%d/%m/%Y} a {periodo.fim:%d/%m/%Y} (fuso {periodo.fuso_horario})'
-    return f'Históricos completos, com coberturas potencialmente diferentes. Fuso: {periodo.fuso_horario}.'
+        texto = f'{periodo.inicio:%d/%m/%Y} a {periodo.fim:%d/%m/%Y} (fuso {periodo.fuso_horario})'
+    else:
+        texto = f'Históricos completos, com coberturas potencialmente diferentes. Fuso: {periodo.fuso_horario}.'
+    return texto + (
+        ' Sintonia com mais peso no que vocês ouvem agora.' if resultado.recente else ''
+    )
 
 
 def perfil_card(perfil: PerfilComparado, cor: str, wrapped: Wrapped | None = None) -> str:
@@ -109,7 +113,7 @@ def resumo_markdown(resultado: ResultadoComparacao) -> str:
     """Mantém a apresentação textual da v0.4 para o benchmark e a regressão."""
     m, a, b = resultado.metricas, resultado.perfil_a, resultado.perfil_b
     texto = f"""## Similaridade musical: {fmt_pct(m.cosseno)}
-**Cosseno:** compara o padrão de frequência por artista. **Jaccard geral:** {fmt_pct(m.jaccard)}. **Jaccard do Top 20:** {fmt_pct(m.jaccard_top20)}.
+**Cosseno:** compara o padrão de frequência por artista. **Jaccard geral:** {fmt_pct(m.jaccard)}. **Favoritos em comum (RBO do top 50, pesa mais o topo):** {fmt_pct(m.rbo_top50)}.
 
 Período: {escape_markdown(texto_periodo(resultado))}
 

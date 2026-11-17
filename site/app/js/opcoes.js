@@ -1,7 +1,7 @@
 // Opções de dados, recolhidas por padrão (os padrões servem para quase todo mundo).
 import { html } from 'preact-htm';
 
-export const PADRAO = { comum: true, ponderacao: 'log1p', fuso: 'America/Sao_Paulo', musicas: '', artistas: '', varios: 'manter', deduplicar: false };
+export const PADRAO = { comum: true, ponderacao: 'log1p', fuso: 'America/Sao_Paulo', musicas: '', artistas: '', varios: 'manter', deduplicar: false, recente: false };
 
 const FUSOS = ['America/Sao_Paulo', 'America/Manaus', 'America/Fortaleza', 'America/Noronha', 'America/Rio_Branco', 'Europe/Lisbon', 'UTC'];
 
@@ -13,6 +13,8 @@ export function Opcoes({ valor, aoMudar, desabilitado, comPeriodo = true, comPon
       <fieldset disabled=${desabilitado}>
         ${comPeriodo && html`<label class="marcar"><input type="checkbox" checked=${valor.comum} onChange=${muda('comum')} />
           Comparar só o período em comum <small>(recomendado: todos os históricos no mesmo intervalo)</small></label>`}
+        ${comPonderacao && html`<label class="marcar"><input type="checkbox" checked=${!!valor.recente} onChange=${muda('recente')} />
+          Dar mais peso ao que vocês ouvem agora <small>(uma escuta de 1 ano atrás vale metade)</small></label>`}
         <div class="grade-opcoes">
           ${comPonderacao && html`<label class="campo">Ponderação do cosseno
             <select class="entrada" value=${valor.ponderacao} onChange=${muda('ponderacao')}>

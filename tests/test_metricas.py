@@ -16,6 +16,7 @@ from metricas import (
     jaccard_ponderado,
     metricas,
     ponderar_contagens,
+    rbo,
 )
 
 
@@ -146,3 +147,18 @@ def test_pesos_finitos_extremos_nao_estouram_nem_viram_norma_zero(peso: float) -
     assert sum(contribuicoes.values()) == pytest.approx(1)
     assert entropia_normalizada(vetor) == pytest.approx(1)
     assert gini(vetor) == 0
+
+
+def test_rbo_casos_de_borda_e_topo_pesa_mais() -> None:
+    """RBO (Favoritos em comum): iguais 1, sem nada em comum 0, vazio None; trocar o topo custa mais que o fim."""
+    assert rbo(list('abcde'), list('abcde')) == pytest.approx(1)
+    assert rbo(list('abc'), list('xyz')) == 0
+    assert rbo([], list('abc')) is None
+    troca_topo = rbo(list('abcdefgh'), list('bacdefgh'))
+    troca_fim = rbo(list('abcdefgh'), list('abcdefhg'))
+    assert troca_topo is not None and troca_fim is not None and troca_topo < troca_fim < 1
+    # Listas de tamanhos diferentes: as duas são cortadas na menor profundidade.
+    assert rbo(list('abcde'), list('abc')) == pytest.approx(1)
+    # Os mesmos números do dupla.js (tests/js/rbo.test.mjs).
+    assert rbo(list('abcdefg'), list('bacdegf')) == 0.8901585000000001
+    assert rbo(list('abcde'), list('xaybz')) == 0.37089000000000005

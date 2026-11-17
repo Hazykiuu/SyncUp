@@ -1,5 +1,21 @@
 # Changelog — SyncUp
 
+## [1.20.0] — 2026-11-17
+
+Duas mudanças de cálculo na Dupla, escolhidas depois de um estudo com 12 históricos reais. Valem no app web e no app de PC, com o mesmo número nos dois.
+
+### Mudado
+- **"Favoritos em comum" passa a usar o RBO dos 50 artistas mais ouvidos** no lugar do Jaccard do top 20. O RBO compara os rankings e pesa mais o topo. No estudo, reconheceu a mesma pessoa em 95,8% dos casos, contra 83,3% do Jaccard.
+  - **O número muda de escala** para quem já comparou antes: não dá para comparar com o valor antigo.
+  - O campo da API `jaccard_top20` virou `rbo_top50`.
+
+### Novo
+- **Opção "Dar mais peso ao que vocês ouvem agora"**, nas Opções de dados (desligada por padrão).
+  - Com ela, uma escuta de 1 ano atrás vale metade no cosseno, no Ruzicka e nos favoritos.
+  - No estudo, prevendo os últimos 30 dias, o acerto subiu de 91,7% para 95,8%.
+  - O resultado avisa quando a opção está ligada.
+  - A API `comparar_dupla` do app de PC ganha a entrada `recente`.
+
 ## [1.19.1] — 2026-11-17
 
 ### Mudado

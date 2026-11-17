@@ -81,6 +81,7 @@ def comparar_dupla(
         bool(o.get('comum', True)),
         configuracao=config,
         ponderacao=o.get('ponderacao') or 'bruta',
+        recente=bool(o.get('recente', False)),
     )
     _ultimo['dupla'] = r
     a, b = r.perfil_a, r.perfil_b
@@ -97,7 +98,7 @@ def comparar_dupla(
         'metricas': {
             'cosseno': m.cosseno,
             'jaccard': m.jaccard,
-            'jaccard_top20': m.jaccard_top20,
+            'rbo_top50': m.rbo_top50,
             'ruzicka': m.jaccard_ponderado,
         },
         'html': {

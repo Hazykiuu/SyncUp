@@ -363,6 +363,11 @@ def criar_interface() -> gr.Blocks:
                         value='bruta',
                         label='Ponderação do cosseno e Ruzicka',
                     )
+                    recente = gr.Checkbox(
+                        value=False,
+                        label='Dar mais peso ao que vocês ouvem agora',
+                        info='Uma escuta de 1 ano atrás vale metade (cosseno, Ruzicka e favoritos).',
+                    )
                     with gr.Column(min_width=260):
                         botao = gr.Button(
                             'Comparar históricos', variant='primary', elem_classes='su-play'
@@ -533,7 +538,7 @@ def criar_interface() -> gr.Blocks:
                 ]
                 botao.click(
                     executar_dupla,
-                    [fa, fb, na, nb, comum, peso, *opcoes],
+                    [fa, fb, na, nb, comum, peso, *opcoes, recente],
                     saidas,
                     api_name='comparar_dupla',
                     scroll_to_output=True,

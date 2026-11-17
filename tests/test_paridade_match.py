@@ -117,3 +117,36 @@ def test_emparelhamento_igual_ao_python():
     for caso, grupos in zip(casos, js, strict=True):
         m = pd.DataFrame(caso['valores'], index=caso['nomes'], columns=caso['nomes'])
         assert [list(g) for g in emparelhamento_otimo(m)] == grupos, caso
+
+
+def _node(script: str, entrada: str) -> str:
+    saida = subprocess.run(
+        [NODE, '--input-type=module', '-e', script],
+        cwd=RAIZ,
+        input=entrada.encode('utf-8'),
+        capture_output=True,
+        check=True,
+    )
+    return saida.stdout.decode('utf-8')
+
+
+LER = """import { lerConvite } from './site/app/js/convite.js';
+let s = ''; for await (const c of process.stdin) s += c;
+process.stdout.write(JSON.stringify(await lerConvite(s)));"""
+GERAR = """import { gerarConvite } from './site/app/js/convite.js';
+let s = ''; for await (const c of process.stdin) s += c;
+process.stdout.write(await gerarConvite(JSON.parse(s)));"""
+
+
+def test_convite_do_pc_abre_no_navegador_e_vice_versa(arquivos):  # noqa: F811
+    from convite import gerar_convite, ler_convite
+    from perfil_gosto import perfil_de_arquivos
+
+    perfil = perfil_de_arquivos(str(arquivos['a']), 'Ana 🎸')
+    rankings = {'top_artistas': perfil.top_artistas, 'top_musicas': perfil.top_musicas}
+    no_js = json.loads(_node(LER, gerar_convite(perfil)))
+    assert {k: no_js[k] for k in rankings} == rankings and no_js['nome'] == 'Ana 🎸'
+    codigo = _node(GERAR, json.dumps({'nome': perfil.nome, **rankings}))
+    no_py = ler_convite(codigo)
+    assert no_py.nome == 'Ana 🎸'
+    assert {'top_artistas': no_py.top_artistas, 'top_musicas': no_py.top_musicas} == rankings

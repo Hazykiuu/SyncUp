@@ -308,3 +308,86 @@ section[id] { scroll-margin-top: 6rem; }
 /* Transição entre a página inicial e o app (as duas páginas carregam este arquivo). Com a cortina acima cobrindo as duas,
    o fade entre elas não aparece; quem não suporta navega normalmente. */
 @media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }
+
+/* Vidro de verdade (1.17): borda com luz (clara no alto à esquerda, apagada embaixo), um brilho especular no topo,
+   a cor do modo vazando no vidro (--tinta) e blur só no que flutua (topo, barra de modos, dock, placa do palco).
+   Cartões do meio da página ficam translúcidos sem blur: mais leves no celular simples. */
+:root { --tinta: 30 215 96; }
+.vidro {
+  --vidro-face: linear-gradient(180deg, rgb(255 255 255 / .10), rgb(255 255 255 / .02) 38%, rgb(255 255 255 / .04)),
+    radial-gradient(120% 90% at 0% 0%, rgb(var(--tinta) / .10), transparent 55%),
+    radial-gradient(90% 70% at 100% 100%, rgb(var(--tinta) / .06), transparent 60%),
+    linear-gradient(rgb(18 18 20 / .55), rgb(18 18 20 / .55));
+  --vidro-aro: linear-gradient(160deg, rgb(255 255 255 / .55), rgb(255 255 255 / .10) 30%, rgb(255 255 255 / .04) 60%, rgb(var(--tinta) / .35));
+  border: 1px solid transparent;
+  background: var(--vidro-face) padding-box, var(--vidro-aro) border-box;
+  background-clip: padding-box, padding-box, padding-box, padding-box, border-box; /* 4 camadas do vidro, a 5ª é o aro */
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .22), inset 0 0 0 1px rgb(255 255 255 / .03), inset 0 -12px 24px -18px rgb(var(--tinta) / .35),
+    0 1px 2px rgb(0 0 0 / .4), 0 24px 48px -16px rgb(0 0 0 / .7);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+/* Só o que flutua sobre conteúdo borra. */
+.palco-placa.vidro, .topo-barra { -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur); }
+/* Botões de vidro: a mesma borda com luz, numa pílula. */
+.btn-borda.vidro { background: linear-gradient(180deg, rgb(255 255 255 / .12), rgb(255 255 255 / .03)) padding-box, var(--vidro-aro) border-box; }
+.btn-borda.vidro:hover { background: linear-gradient(180deg, rgb(255 255 255 / .18), rgb(255 255 255 / .06)) padding-box, var(--vidro-aro) border-box; }
+/* Brilho que atravessa o cartão quando o ponteiro chega: uma faixa de luz no próprio fundo, levada por --brilho. */
+@property --brilho { syntax: '<percentage>'; inherits: false; initial-value: 130%; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .caixa.vidro { transition: transform .2s var(--sai), --brilho .9s var(--sai);
+    background: linear-gradient(115deg, transparent calc(var(--brilho) - 14%), rgb(255 255 255 / .08) var(--brilho), transparent calc(var(--brilho) + 14%)) padding-box,
+      var(--vidro-face) padding-box, var(--vidro-aro) border-box;
+    background-clip: padding-box, padding-box, padding-box, padding-box, padding-box, border-box; }
+  .caixa.vidro:hover { --brilho: -30%; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .palco-placa.vidro { background: var(--sup-2); } }
+@media (prefers-reduced-transparency: reduce) { .vidro { background: var(--sup-2) padding-box, var(--vidro-linha) border-box; } }
+@media (prefers-contrast: more) { .vidro { background: var(--sup-2) padding-box, #fff border-box; } }
+/* Página inicial: cada recurso com a luz do seu modo atrás do vidro (no preto, vidro sem luz some). */
+.caixa.vidro { --vidro-face: linear-gradient(180deg, rgb(255 255 255 / .09), rgb(255 255 255 / .02) 40%, rgb(255 255 255 / .03)),
+  radial-gradient(90% 120% at 100% 0%, rgb(var(--tinta) / .22), transparent 60%),
+  radial-gradient(70% 90% at 0% 100%, rgb(var(--tinta) / .10), transparent 65%), linear-gradient(rgb(18 18 20 / .6), rgb(18 18 20 / .6)); }
+.caixa.dupla, .caixa.wrapped { --tinta: 30 215 96; }
+.caixa.espectro { --tinta: 196 183 255; }
+.caixa.batalha { --tinta: 255 164 43; }
+.caixa.match { --tinta: 245 115 160; }
+
+/* Cara de Spotify (1.17). Prateleira: capas quadradas; o cartão clareia e o botão verde de play sobe ao passar o
+   mouse ou focar com o teclado (no toque ele fica sempre visível, sem hover para revelar). */
+.atalhos { padding-block: clamp(2rem, 5vw, 3.5rem) 0; }
+.titulo-prateleira { margin-bottom: 1rem; font-size: 1.5rem; font-weight: 900; letter-spacing: -.03em; }
+.prateleira { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
+@media (max-width: 720px) { .prateleira { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tile { display: flex; flex-direction: column; gap: .35rem; padding: .75rem; border-radius: 12px; transition: background .2s; }
+.tile:hover, .tile:focus-visible { background: rgb(255 255 255 / .07); }
+.tile-arte { position: relative; display: grid; place-items: center; aspect-ratio: 1; border-radius: 8px; overflow: hidden; color: #000;
+  background: linear-gradient(135deg, rgb(var(--tinta)), color-mix(in srgb, rgb(var(--tinta)) 40%, #000)); box-shadow: 0 8px 24px rgb(0 0 0 / .5); }
+.tile-arte.escura { color: rgb(var(--tinta)); background: radial-gradient(90% 90% at 30% 20%, rgb(var(--tinta) / .45), transparent 70%), #121212; }
+.tile-arte > svg { width: 38%; height: auto; }
+.tile-arte b { position: absolute; left: .7rem; bottom: .55rem; font-size: clamp(1rem, 2.2vw, 1.5rem); font-weight: 900; letter-spacing: -.04em; }
+.tile-play { position: absolute; right: .6rem; bottom: .6rem; display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 50%;
+  color: #000; background: var(--verde); box-shadow: 0 8px 16px rgb(0 0 0 / .45); transition: opacity .2s, translate .2s var(--sai), scale .1s; }
+.tile-play svg { width: 1.3rem; height: 1.3rem; }
+@media (hover: hover) {
+  .tile:not(:hover, :focus-visible) .tile-play { opacity: 0; translate: 0 .5rem; }
+  .tile:hover .tile-play { scale: 1.04; }
+}
+.tile:active .tile-play { scale: .95; }
+.tile-nome { font-weight: 800; }
+.tile-sub { color: var(--sub); font-size: .9rem; line-height: 1.35; }
+/* Filtros em pílulas: rádios de verdade (teclado e leitor de tela de graça), desenhados como as do Spotify. */
+.filtros { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 1.5rem; padding: 0; border: 0; }
+.filtros input { position: absolute; opacity: 0; pointer-events: none; }
+.filtros span { display: inline-flex; align-items: center; min-height: 44px; padding: 0 1.1rem; border-radius: var(--pilula); cursor: pointer;
+  background: rgb(255 255 255 / .08); font-size: .9rem; font-weight: 700; transition: background .15s, color .15s; }
+.filtros label:hover span { background: rgb(255 255 255 / .14); }
+.filtros input:checked + span { background: var(--texto); color: #000; }
+.filtros input:focus-visible + span { outline: 2px solid var(--verde); outline-offset: 2px; }
+.recursos:has(input[value="dupla"]:checked) .caixa:not(.dupla, .espectro),
+.recursos:has(input[value="wrapped"]:checked) .caixa:not(.wrapped),
+.recursos:has(input[value="batalha"]:checked) .caixa:not(.batalha),
+.recursos:has(input[value="match"]:checked) .caixa:not(.match) { display: none; }
+/* Tipografia: títulos mais pesados e apertados, como os do Spotify. */
+.hero h1 { letter-spacing: -.045em; }
+.titulo-secao { letter-spacing: -.04em; }
+.caixa h3 { font-weight: 900; letter-spacing: -.035em; }

@@ -83,13 +83,33 @@
     </div>
   </section>
 
+  <!-- Prateleira no jeito do Spotify: uma capa por modo; o botão de play aparece ao passar o mouse ou focar. -->
+  <section class="atalhos" aria-labelledby="atalhos-titulo">
+    <div class="shell">
+      <h2 id="atalhos-titulo" class="titulo-prateleira">Comece por aqui</h2>
+      <ul class="prateleira">
+        <li><a class="tile" href="app/#dupla" style="--tinta: 30 215 96"><span class="tile-arte" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="6" /><circle cx="15" cy="12" r="6" /></svg><b>Dupla</b><span class="tile-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor" /></svg></span></span><span class="tile-nome">Dupla</span><span class="tile-sub">Duas pessoas, sete stories</span></a></li>
+        <li><a class="tile" href="app/#wrapped" style="--tinta: 30 215 96"><span class="tile-arte escura" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5" /><path d="M9 6h6" /></svg><b>Wrapped</b><span class="tile-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor" /></svg></span></span><span class="tile-nome">Wrapped</span><span class="tile-sub">A sua vida toda no Spotify</span></a></li>
+        <li><a class="tile" href="app/#batalha" style="--tinta: 255 164 43"><span class="tile-arte" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7.5" r="3.5" /><circle cx="6" cy="16.5" r="3.5" /><circle cx="18" cy="16.5" r="3.5" /></svg><b>Batalha</b><span class="tile-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor" /></svg></span></span><span class="tile-nome">Batalha</span><span class="tile-sub">De 3 a 6, rodada por rodada</span></a></li>
+        <li><a class="tile" href="app/#match" style="--tinta: 245 115 160"><span class="tile-arte" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" /></svg><b>Match</b><span class="tile-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor" /></svg></span></span><span class="tile-nome">Match</span><span class="tile-sub">Quem combina com quem</span></a></li>
+      </ul>
+    </div>
+  </section>
 
   <section class="recursos" id="recursos" aria-labelledby="recursos-titulo">
     <div class="shell">
       <div class="cabeca">
         <span class="etiqueta">No navegador, sem instalar</span>
-        <h2 id="recursos-titulo" class="titulo-secao">Dupla, Wrapped e Batalha</h2>
+        <h2 id="recursos-titulo" class="titulo-secao">Dupla, Wrapped, Batalha e Match</h2>
       </div>
+      <!-- Filtros em pílulas: só CSS (:has), sem script. "Quando cada um ouve" é parte da Dupla. -->
+      <fieldset class="filtros"><legend class="sr-only">Mostrar</legend>
+        <label><input type="radio" name="filtro" value="tudo" checked><span>Tudo</span></label>
+        <label><input type="radio" name="filtro" value="dupla"><span>Dupla</span></label>
+        <label><input type="radio" name="filtro" value="wrapped"><span>Wrapped</span></label>
+        <label><input type="radio" name="filtro" value="batalha"><span>Batalha</span></label>
+        <label><input type="radio" name="filtro" value="match"><span>Match</span></label>
+      </fieldset>
       <div class="bento">
         <article class="caixa dupla vidro">
           <div>
@@ -143,8 +163,8 @@
           </div>
           <p class="espectro-legenda"><span class="a">Ana</span><span class="b">Bruno</span></p>
         </article>
-        <article class="caixa vidro"><h3>Batalha</h3><p>De 3 a 6 pessoas disputam rodadas com os números do período: pódio, medalhas e pôster.</p><a href="app/#batalha">Abrir a Batalha</a></article>
-        <article class="caixa vidro"><h3>Match</h3><p>De 2 a 16 pessoas, por ZIP ou convite: os pares que mais combinam, em stories com som e pôster. O Grupo segue no app para PC.</p><a href="app/#match">Abrir o Match</a></article>
+        <article class="caixa batalha vidro"><h3>Batalha</h3><p>De 3 a 6 pessoas disputam rodadas com os números do período: pódio, medalhas e pôster.</p><a href="app/#batalha">Abrir a Batalha</a></article>
+        <article class="caixa match vidro"><h3>Match</h3><p>De 2 a 16 pessoas, por ZIP ou convite: os pares que mais combinam, em stories com som e pôster. O Grupo segue no app para PC.</p><a href="app/#match">Abrir o Match</a></article>
       </div>
     </div>
   </section>

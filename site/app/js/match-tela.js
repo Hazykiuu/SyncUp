@@ -196,7 +196,7 @@ export function Match() {
     <div class="pessoas">
       ${nomes.map((nome, i) => html`
         <div class="lutador" style=${{ '--lut': cor(i) }}>
-          <${Pessoa} rotulo=${String(i + 1)} cor="lut" exemplo=${EXEMPLOS[i % EXEMPLOS.length]} nome=${nome} aoMudarNome=${(v) => setNomes((n) => mudar(n, i, v))}
+          <${Pessoa} modo="match-" rotulo=${String(i + 1)} cor="lut" exemplo=${EXEMPLOS[i % EXEMPLOS.length]} nome=${nome} aoMudarNome=${(v) => setNomes((n) => mudar(n, i, v))}
             arquivos=${arquivos[i]} aoMudarArquivos=${(v) => setArquivos((a) => mudar(a, i, v))} desabilitado=${ocupado}
             extra=${i >= 1 && html`<button type="button" class="tirar tirar-lutador" aria-label=${`Tirar a pessoa ${i + 1}`} onClick=${() => tirar(i)} disabled=${ocupado}>×</button>`} />
         </div>`)}

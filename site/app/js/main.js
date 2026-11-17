@@ -145,8 +145,12 @@ function App() {
     <main id="principal" class="app-corpo" data-modo=${modo}>
       <div class="shell">
         <div class="app-cabeca">
-          <h1>${CABECA[modo][0]}</h1>
-          <p class="sub">${CABECA[modo][1]}</p>
+          <div class="app-capa" aria-hidden="true">${MODOS.find(([id]) => id === modo)[2]}</div>
+          <div class="app-cabeca-texto">
+            <span class="app-tipo">Modo · ${MODOS.find(([id]) => id === modo)[1]}</span>
+            <h1>${CABECA[modo][0]}</h1>
+            <p class="sub">${CABECA[modo][1]}</p>
+          </div>
         </div>
         ${[['dupla', Dupla], ['wrapped', Wrapped], ['batalha', Batalha], ['match', Match]].map(([id, Tela]) => html`
           <div key=${id} hidden=${modo !== id}><${TelaAtiva.Provider} value=${modo === id}><${Tela} /><//></div>`)}

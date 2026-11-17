@@ -143,3 +143,8 @@ Nenhuma otimização entrou na v1.14:
 
 Os candidatos do plano (`import()` das telas, leitura do `File` dentro do Worker na Dupla) não têm problema medido que justifique a mudança.
 
+
+## v1.15 (redesign Liquid Glass)
+
+- **Leitura antecipada no upload:** cada histórico agora é lido duas vezes, uma no cartão (`resumo-worker.js`) e outra no cálculo. O custo extra é o tempo de leitura medido acima no motor: cerca de 0,1 s (P), 0,4–0,5 s (M), 1,2–1,7 s (G) e 4,0–4,4 s (GG) por pessoa. Ele acontece enquanto a pessoa preenche o resto da tela, numa fila: uma pessoa por vez.
+- **Blur em todos os cartões (pedido em 16/11/2026):** **não medido.** O FPS dos stories (`?fps=1`) e as long tasks na rolagem precisam do painel do navegador visível, e ele ficou oculto nesta sessão. Referência anterior registrada em `app.css`: num Redmi, blur em cerca de 15 painéis caiu de 85–90 para 30–40 fps (12/11). Medição manual pendente num celular.

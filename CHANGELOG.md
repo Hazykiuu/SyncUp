@@ -1,5 +1,35 @@
 # Changelog — SyncUp
 
+## [1.18.0] — 2026-11-17
+
+Os stories entram no tema novo, ganham painéis no computador e a página inicial fica viva.
+
+### Novo
+- **Stories no computador (a partir de 1240 px):** três colunas, como o Spotify.
+  - Esquerda: a fila dos stories. Clicar pula para o story; se estava pausado, continua pausado.
+  - Meio: o player.
+  - Direita: "Tocando agora", com a capa grande do trecho, faixa, progresso e silenciar, mais os botões e a nota do som.
+  - Abaixo de 1240 px fica uma coluna só, como antes. Redimensionar a janela não reinicia a música nem o story.
+- **Página inicial viva:**
+  - a luz do fundo muda de cor com a seção (verde na Dupla, violeta no espectro, laranja e rosa na Batalha e no Match);
+  - um vinil gira devagar ao fundo;
+  - cada seção entra com uma animação ligada à rolagem.
+  - Tudo fica parado com "menos movimento".
+- **Batalha e Match na página inicial** com um story de verdade no cartão: o pódio e o cartão do par.
+
+### Mudado
+- **Tema único nos stories:** todos os modos usam a mesma moldura, a "capa de playlist", com a cor do story vindo do alto e se apagando no escuro. Os cartões têm o vidro com borda de luz, e as listas viram linhas no estilo do Spotify.
+  - A Dupla deixa o fundo dividido em verde e violeta; o violeta fica na pessoa B.
+  - O contraste do texto no topo dos slides passa de 8:1 (6,6:1 no rosa-claro do Match).
+- **Cascata:** a faixa de cor do topo de cada modo virou uma luz só, que passa por baixo da barra lateral e some sem borda.
+- **"Baixar pôster"** também fica nos botões embaixo dos stories.
+
+### Corrigido
+- **Dock no celular:** ele cobria "Ver de novo" e "Playlist comum · CSV". Agora some quando os botões estão na tela.
+
+### Pendente conhecido
+- **Pôsteres em PNG:** continuam no visual antigo e vão para o tema novo na **1.18.1**.
+
 ## [1.17.0] — 2026-11-17
 
 Visual: o vidro ficou de verdade e o SyncUp ficou com mais cara de Spotify.

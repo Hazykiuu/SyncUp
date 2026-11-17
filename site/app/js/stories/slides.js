@@ -346,8 +346,9 @@ export function Resumo({ d, ativo, i }) {
       <small>${mesAno(d.inicio)} → ${mesAno(d.fim)}</small>
     <//>
     <${Entra} i=${1} classe="st-poster-nome">
+      <p class="st-poster-quem"><span class="st-poster-avatar" aria-hidden="true">${([...d.nome.trim()][0] || '?').toUpperCase()}</span><span>Sua retrospectiva</span></p>
       <h2 class="st-nome-xxl">${d.nome}</h2>
-      <p><b class="st-poster-horas"><${Contador} valor=${d.horas} ativo=${ativo} /></b> horas de música · ${fmtNum(d.horas / 24)} dias sem parar</p>
+      <p class="st-poster-tempo"><b class="st-poster-horas"><${Contador} valor=${d.horas} ativo=${ativo} /> horas</b><span>de música · ${fmtNum(d.horas / 24)} dias sem parar</span></p>
     <//>
     <${Entra} i=${2} classe="st-poster-artista">
       <${Capa} item=${a} tipo="artista" classe="grande" />

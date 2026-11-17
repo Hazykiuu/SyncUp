@@ -202,13 +202,21 @@ a.nav-item:hover { color: var(--texto); }
 /* Contorno transparente em vez de nenhum: no alto contraste do sistema ele aparece; aqui fica o anel verde. */
 .entrada:focus { outline: 2px solid transparent; border-color: var(--verde); box-shadow: 0 0 0 3px rgba(30, 215, 96, .25); }
 textarea.entrada { resize: vertical; }
-.soltar { display: flex; flex-direction: column; align-items: center; gap: var(--e3); text-align: center; border: 1.5px dashed rgba(255, 255, 255, .22); border-radius: var(--r-campo); padding: var(--e5) var(--e4); transition: border-color .2s, background .2s; }
-.soltar.sobre { border-color: var(--cor); background: color-mix(in srgb, var(--cor) 8%, transparent); }
-/* Com arquivos já escolhidos, a área encolhe para uma linha: a lista fala por ela. */
-.soltar.tem { flex-direction: row; justify-content: space-between; padding: var(--e3) var(--e4); text-align: left; }
-.soltar.tem > small { display: none; }
-.soltar.tem > p:not(.erro) { font-size: .9rem; }
-@media (max-width: 479px) { .soltar.tem > p:not(.erro) { display: none; } .soltar.tem { justify-content: center; } }
+/* Deck de upload: um slot côncavo de vidro escuro (sombra por dentro, brilho fino no topo), sem borda tracejada.
+   Arrastando por cima, acende na cor da pessoa; pronto, mostra período e plays com um brilho suave. */
+.soltar { display: flex; flex-direction: column; align-items: center; gap: var(--e3); text-align: center; border-radius: var(--r-campo); padding: var(--e5) var(--e4);
+  border: 1px solid var(--vidro-linha); background: linear-gradient(180deg, rgba(0, 0, 0, .38), rgba(255, 255, 255, .025));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), inset 0 10px 24px -8px rgba(0, 0, 0, .6); transition: border-color .2s, box-shadow .2s; }
+.soltar.sobre { border-color: var(--cor); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), inset 0 10px 24px -8px rgba(0, 0, 0, .6), 0 0 0 3px color-mix(in srgb, var(--cor) 22%, transparent); }
+.soltar.pronto { border-color: color-mix(in srgb, var(--cor) 55%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 0 36px -10px color-mix(in srgb, var(--cor) 70%, transparent); }
+.soltar.erro { border-color: color-mix(in srgb, var(--rosa) 60%, transparent); }
+.deck-icone { font-size: 2rem; color: var(--cor); }
+.deck { display: flex; flex-direction: column; align-items: center; gap: var(--e2); }
+.selo-deck { display: inline-flex; align-items: center; gap: var(--e2); padding: .3rem .8rem; border-radius: var(--pilula); background: rgba(255, 255, 255, .07); font-size: .85rem; font-weight: 700; color: var(--sub); }
+.selo-deck.ok { background: color-mix(in srgb, var(--cor) 18%, transparent); color: var(--cor); }
+.deck-periodo { font-size: 1.15rem; font-weight: 800; color: var(--texto) !important; }
+.deck-plays b { color: var(--texto); font-size: 1.05rem; }
 .soltar p { color: var(--sub); text-wrap: balance; } .soltar small { color: var(--fraco); }
 .lista-arquivos { display: flex; flex-direction: column; gap: var(--e2); }
 .lista-arquivos li { display: flex; align-items: center; gap: var(--e2); padding: var(--e1) var(--e1) var(--e1) var(--e3); border-radius: var(--r-campo); background: rgba(255, 255, 255, .05); font-size: .9rem; }
@@ -432,3 +440,11 @@ html:active-view-transition-type(modo)::view-transition-new(barra) { animation: 
   .resultado .su-race-name { font-size: 13px; }
   .resultado .su-race-bar { max-width: calc(100% - 5.5ch - 10px); }
 }
+
+/* Esqueleto da primeira tela (index.html): o mesmo desenho do topo e dos dois cartões de pessoa. */
+.esqueleto { display: flex; flex-direction: column; gap: var(--e4); padding-block: var(--e5) var(--e7); }
+.esqueleto .marca { font-size: 1.25rem; min-height: 44px; }
+.esq-linha { height: 1rem; width: min(26rem, 80%); border-radius: var(--pilula); background: rgba(255, 255, 255, .07); }
+.esq-titulo { height: 2.5rem; width: min(32rem, 90%); margin-top: var(--e5); }
+.esq-cartao { height: 15rem; border-radius: var(--r-cartao); }
+@media (min-width: 900px) { .esqueleto { padding-left: calc(var(--e7) + 15rem); } }

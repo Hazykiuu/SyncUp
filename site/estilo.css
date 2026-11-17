@@ -1,7 +1,15 @@
 /* Estilo compartilhado pela página inicial (index.html) e pelo app (app/). */
 @font-face { font-family: 'Figtree'; src: url('assets/Figtree.ttf') format('truetype'); font-weight: 300 900; font-display: swap; }
 :root {
-  --bg: #121212; --texto: #ffffff; --sub: #b3b3b3; --fraco: #8a8a8a;
+  /* Canvas e superfícies (escala do Spotify): o fundo é o mais escuro; cartões sólidos em --sup-1/--sup-2. */
+  --canvas: #0a0a0c; --sup-1: #121212; --sup-2: #181818; --verde-hover: #3be477;
+  --bg: var(--canvas); --texto: #ffffff; --sub: #b3b3b3; --fraco: #8a8a8a;
+  /* Liquid Glass: refração (gradiente direcional), borda fina, reflexo especular em cima e embaixo, profundidade. */
+  --vidro-fundo: linear-gradient(145deg, rgba(255, 255, 255, .11) 0%, rgba(255, 255, 255, .03) 50%, rgba(255, 255, 255, .06) 100%);
+  --vidro-linha: rgba(255, 255, 255, .14);
+  --vidro-sombra: inset 0 1px 0 0 rgba(255, 255, 255, .32), inset 0 -1px 0 0 rgba(255, 255, 255, .05), 0 24px 48px -12px rgba(0, 0, 0, .72);
+  --vidro-blur: blur(28px) saturate(185%);
+  --r-vidro: 26px;
   --linha: rgba(255, 255, 255, .1);
   /* Cor com sentido fixo: verde = pessoa A, violeta = pessoa B, rosa = os dois juntos. */
   --verde: #1ed760; --roxo: #c4b7ff; --rosa: #f573a0;
@@ -11,7 +19,7 @@
   --vidro-1: rgba(255, 255, 255, .06); --vidro-2: rgba(255, 255, 255, .10);
   --vidro-borda: rgba(255, 255, 255, .18); --vidro-brilho: rgba(255, 255, 255, .14);
   --veu-a: rgba(0, 0, 0, .55); --veu-b: rgba(0, 0, 0, .78);
-  --pilula: 999px; --cartao: 24px;
+  --pilula: 9999px; --cartao: var(--r-vidro);
   --sai: cubic-bezier(.22, 1, .36, 1);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -41,7 +49,8 @@ p { text-wrap: pretty; } /* sem palavra sozinha no fim do parágrafo */
 .btn-verde .seta { background: #000; color: var(--verde); }
 .btn-borda { border: 1px solid rgba(255, 255, 255, .25); color: var(--texto); padding: .875rem 1.5rem; }
 @media (hover: hover) {
-  .btn:hover { transform: scale(1.04); }
+  .btn:hover { transform: scale(1.03); }
+  .btn-verde:hover:not(:disabled) { background: var(--verde-hover); }
   .btn:hover .seta { transform: translate(2px, -2px); }
   .btn-borda:hover { background: rgba(255, 255, 255, .06); }
 }
@@ -66,16 +75,16 @@ p { text-wrap: pretty; } /* sem palavra sozinha no fim do parágrafo */
 .vivo .logo i:nth-child(2) { animation-delay: -.5s; } .vivo .logo i:nth-child(3) { animation-delay: -.9s; } .vivo .logo i:nth-child(4) { animation-delay: -.3s; }
 @keyframes eq { 0% { transform: scaleY(.45); } 100% { transform: scaleY(1); } }
 
-/* Vidro e fundo (o app refina o vidro em app.css). Manchas paradas: verde = A no alto, violeta = B embaixo. */
-.vidro { position: relative; isolation: isolate; background: linear-gradient(135deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .025) 55%, rgba(255, 255, 255, .06));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), inset 0 0 0 1px rgba(255, 255, 255, .1), 0 18px 50px -20px rgba(0, 0, 0, .7); }
-@media (hover: hover) and (pointer: fine) { .vidro { -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%); } }
-.btn-borda.vidro { background: rgba(255, 255, 255, .07); }
-.bolhas { position: fixed; inset: -20%; z-index: -1; pointer-events: none; filter: blur(90px) saturate(140%); opacity: .3; }
-.bolhas i { position: absolute; border-radius: 50%; }
-.bolhas i:nth-child(1) { width: 42vw; height: 42vw; left: 30%; top: 10%; background: radial-gradient(circle, rgba(30, 215, 96, .55), transparent 65%); }
-.bolhas i:nth-child(2) { width: 36vw; height: 36vw; left: 68%; top: 45%; background: radial-gradient(circle, rgba(196, 183, 255, .45), transparent 65%); }
-.bolhas i:nth-child(3) { width: 30vw; height: 30vw; left: 20%; top: 60%; background: radial-gradient(circle, rgba(30, 215, 96, .25), transparent 65%); }
+/* Liquid Glass (os mesmos tokens na página inicial e no app). Vidro dentro de vidro não borra de novo.
+   Sem backdrop-filter ou com "menos transparência": superfície sólida, legível. */
+.vidro { position: relative; isolation: isolate; background: var(--vidro-fundo); border: 1px solid var(--vidro-linha); box-shadow: var(--vidro-sombra);
+  -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur); }
+.vidro .vidro { -webkit-backdrop-filter: none; backdrop-filter: none; }
+.btn-borda.vidro { background: var(--vidro-fundo); border-color: var(--vidro-linha); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .vidro { background: var(--sup-2); } }
+@media (prefers-reduced-transparency: reduce) { .vidro { background: var(--sup-2); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+/* Números de dados (porcentagens, horas, plays): largura fixa e mais juntos. */
+.num { font-variant-numeric: tabular-nums; letter-spacing: -.04em; }
 
 /* ---------- Página inicial ---------- */
 section[id] { scroll-margin-top: 6rem; }
@@ -87,8 +96,8 @@ section[id] { scroll-margin-top: 6rem; }
 /* Topo fixo em vidro escuro (fundo ≥ 72%: capa que passa por baixo não aparece borrada) */
 .topo { position: fixed; inset-inline: 0; top: .75rem; z-index: 50; padding-inline: clamp(.75rem, 3vw, 3rem); }
 .topo-barra { max-width: 80rem; margin-inline: auto; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; min-height: 4rem;
-  padding: .5rem .5rem .5rem 1.5rem; border-radius: var(--pilula); border: 1px solid var(--linha); background: rgba(14, 14, 14, .78);
-  -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%); }
+  padding: .5rem .5rem .5rem 1.5rem; border-radius: var(--pilula); border: 1px solid var(--vidro-linha); background: rgba(14, 14, 14, .74);
+  box-shadow: var(--vidro-sombra); -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%); }
 .topo .marca { font-size: 1.25rem; min-height: 44px; }
 .nav-principal { display: none; gap: 2rem; font-size: .95rem; font-weight: 600; }
 .nav-principal a { display: inline-flex; align-items: center; min-height: 44px; color: rgba(255, 255, 255, .78); transition: color .2s; }

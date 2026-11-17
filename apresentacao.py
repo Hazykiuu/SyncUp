@@ -63,8 +63,12 @@ def texto_periodo(resultado: ResultadoComparacao) -> str:
     """Apresenta o recorte sem extrair informações de texto ou HTML."""
     periodo = resultado.periodo
     if periodo.comum:
-        return f'{periodo.inicio:%d/%m/%Y} a {periodo.fim:%d/%m/%Y} (fuso {periodo.fuso_horario})'
-    return f'Históricos completos, com coberturas potencialmente diferentes. Fuso: {periodo.fuso_horario}.'
+        texto = f'{periodo.inicio:%d/%m/%Y} a {periodo.fim:%d/%m/%Y} (fuso {periodo.fuso_horario})'
+    else:
+        texto = f'Históricos completos, com coberturas potencialmente diferentes. Fuso: {periodo.fuso_horario}.'
+    return texto + (
+        ' Sintonia com mais peso no que vocês ouvem agora.' if resultado.recente else ''
+    )
 
 
 def perfil_card(perfil: PerfilComparado, cor: str, wrapped: Wrapped | None = None) -> str:

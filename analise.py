@@ -40,13 +40,23 @@ from recursos import (
 TEMPO_MINIMO_PLAY_MS = 30_000
 QUANTIDADE_TOP_ARTISTAS = 20
 QUANTIDADE_TOP_MUSICAS = 20
-PROFUNDIDADE_RBO = (
-    50  # "Favoritos em comum": RBO nos 50 artistas mais ouvidos (estudo com 12 históricos)
-)
+# "Favoritos em comum": RBO nos 50 artistas mais ouvidos (estudo com 12 históricos).
+PROFUNDIDADE_RBO = 50
+# Opção "mais peso ao que vocês ouvem agora": uma escuta de 1 ano atrás vale metade.
+MEIA_VIDA_DIAS = 365
 QUANTIDADE_ARTISTAS_GRAFICO = 12
 StatusArquivos = Literal[
     'bytes_identicos', 'historicos_identicos', 'recorte_identico', 'diferentes'
 ]
+
+
+def contagens_recentes(plays: pd.DataFrame, referencia: pd.Timestamp) -> pd.Series:
+    """Plays por artista, cada um valendo 0,5^(idade/meia-vida), com a idade contada da referência."""
+    idade = (referencia - plays.data_utc).dt.total_seconds() / 86_400  # em dias
+    pesos = 0.5 ** (idade / MEIA_VIDA_DIAS)
+    serie = pesos.groupby(plays.artista, observed=True, sort=True).sum()
+    serie.index = pd.Index(serie.index.astype(object), name='artista')
+    return serie
 
 
 def ranking_artistas(contagens: pd.Series, n: int = PROFUNDIDADE_RBO) -> list[str]:
@@ -116,6 +126,7 @@ class ResultadoComparacao:
     duplicados_removidos_a: int
     duplicados_removidos_b: int
     ponderacao: str = 'bruta'
+    recente: bool = False  # cosseno, Ruzicka e RBO com mais peso no que se ouve agora
     contribuicoes: pd.DataFrame = field(default_factory=pd.DataFrame)
     momentos_artistas: MomentosSincronizados | None = None
     momentos_musicas: MomentosSincronizados | None = None
@@ -246,6 +257,7 @@ def comparar(
     deduplicar: bool | None = None,
     configuracao: ConfiguracaoCarga | None = None,
     ponderacao: str = 'bruta',
+    recente: bool = False,
 ) -> ResultadoComparacao:
     """Compara dois arquivos, preservando os cinco argumentos da API anterior.
 
@@ -305,9 +317,16 @@ def comparar(
     rb.index = pd.Index(rb.index.astype(object), name='artista')
     fa = va.groupby(['musica', 'artista'], observed=True, sort=True).size()
     fb = vb.groupby(['musica', 'artista'], observed=True, sort=True).size()
-    pesos_a, pesos_b = ponderar_contagens(ra, ponderacao), ponderar_contagens(rb, ponderacao)
+    # Com "recente", o cosseno, o Ruzicka e o RBO usam plays com peso pelo tempo; o resto segue por contagem.
+    # A idade conta do fim do recorte comum (igual para os dois) ou, sem ele, do último play de cada um.
+    if recente:
+        qa = contagens_recentes(va, fim_utc if periodo_comum else va.data_utc.max())
+        qb = contagens_recentes(vb, fim_utc if periodo_comum else vb.data_utc.max())
+    else:
+        qa, qb = ra, rb
+    pesos_a, pesos_b = ponderar_contagens(qa, ponderacao), ponderar_contagens(qb, ponderacao)
     cosine, jac = metricas(pesos_a, pesos_b)
-    top = rbo(ranking_artistas(ra), ranking_artistas(rb), k=PROFUNDIDADE_RBO)
+    top = rbo(ranking_artistas(qa), ranking_artistas(qb), k=PROFUNDIDADE_RBO)
     ponderado = jaccard_ponderado(pesos_a, pesos_b)
     # Há plays nos dois perfis: todas as quatro métricas possuem denominadores positivos.
     if cosine is None or jac is None or top is None or ponderado is None:
@@ -378,6 +397,7 @@ def comparar(
         duplicados_removidos_a=ha.duplicados_removidos,
         duplicados_removidos_b=hb.duplicados_removidos,
         ponderacao=ponderacao,
+        recente=recente,
         contribuicoes=_ordenar_contribuicoes(contribuicoes_cosseno(pesos_a, pesos_b)),
         momentos_artistas=momentos_sincronizados(va, vb, 'artista'),
         momentos_musicas=momentos_sincronizados(va, vb, 'musica'),

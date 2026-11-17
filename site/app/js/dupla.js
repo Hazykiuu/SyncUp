@@ -73,6 +73,13 @@ export function rbo(a, b, p = 0.9, k = 50) {
   return (acordo / k) * p ** k + ((1 - p) / p) * soma;
 }
 const PROFUNDIDADE_RBO = 50; // "Favoritos em comum" (analise.PROFUNDIDADE_RBO)
+// Opção "mais peso ao que vocês ouvem agora" (analise.contagens_recentes): cada play vale 0,5^(idade/meia-vida).
+const MEIA_VIDA_DIAS = 365, DIA_MS = 86_400_000;
+function contagensRecentes(c, plays, referencia) {
+  const m = new Map();
+  for (const i of plays) m.set(c.artista[i], (m.get(c.artista[i]) || 0) + 0.5 ** ((referencia - c.utc[i]) / DIA_MS / MEIA_VIDA_DIAS));
+  return ordenado(m);
+}
 const rankingArtistas = (contagens) => [...contagens].sort(porContagem).slice(0, PROFUNDIDADE_RBO).map(([k]) => k);
 
 // Ruzicka: soma dos mínimos / soma dos máximos, com o mesmo divisor nos dois perfis.
@@ -394,12 +401,18 @@ export function compararDupla(ca, cb, nomeA, nomeB, opcoes = {}, ids = [{ sha256
   const pa = perfil(ca, ia, nomeA), pb = perfil(cb, ib, nomeB);
   if (!pa.plays.length || !pb.plays.length) throw new Error('Não há reproduções de pelo menos 30 segundos para os dois perfis nesse período.');
   const ra = pa.contagens, rb = pb.contagens;
-  const pesosA = ponderar(ra, modo), pesosB = ponderar(rb, modo);
+  // Com "recente", o cosseno, o Ruzicka e o RBO usam plays com peso pelo tempo; o resto segue por contagem.
+  // A idade conta do fim do recorte comum (igual para os dois) ou, sem ele, do último play de cada um.
+  const recente = !!opcoes.recente;
+  const ultimo = (c, plays) => plays.reduce((m, i) => Math.max(m, c.utc[i]), -Infinity);
+  const qa = recente ? contagensRecentes(ca, pa.plays, comum ? periodo.fimUtc : ultimo(ca, pa.plays)) : ra;
+  const qb = recente ? contagensRecentes(cb, pb.plays, comum ? periodo.fimUtc : ultimo(cb, pb.plays)) : rb;
+  const pesosA = ponderar(qa, modo), pesosB = ponderar(qb, modo);
   const positivos = (m) => [...m].filter(([, v]) => v > 0).map(([k]) => k);
   const metricas = {
     cosseno: cosseno(pesosA, pesosB),
     jaccard: jaccard(positivos(pesosA), positivos(pesosB)),
-    rbo_top50: rbo(rankingArtistas(ra), rankingArtistas(rb)),
+    rbo_top50: rbo(rankingArtistas(qa), rankingArtistas(qb)),
     ruzicka: ruzicka(pesosA, pesosB),
   };
   if (Object.values(metricas).some((v) => v === null)) throw new Error('Não há dados suficientes para calcular as similaridades.');
@@ -429,6 +442,7 @@ export function compararDupla(ca, cb, nomeA, nomeB, opcoes = {}, ids = [{ sha256
     contribuicoes: contribuicoes(pesosA, pesosB).sort(([a, x], [b, y]) => Number(y.toFixed(15)) - Number(x.toFixed(15)) || compararTexto(a, b)),
     playlist,
     ponderacao: modo,
+    recente,
     quase_artistas: momentosSincronizados(ca, pa.plays, cb, pb.plays, 'artista'),
     quase_musicas: quaseMusicas,
     sintonia: sintoniaJson(sintoniaEntre(ca, pa.plays, cb, pb.plays), quaseMusicas.total_pares),
@@ -599,9 +613,10 @@ export function respostaDupla(r) {
   const colunasDiagnostico = Object.keys(r.diagnostico[0]);
   return {
     nomes: [a.nome, b.nome],
-    periodo: r.periodo.comum
+    periodo: (r.periodo.comum
       ? `${dataBr(r.periodo.inicio)} a ${dataBr(r.periodo.fim)} (fuso ${r.fuso})`
-      : `Históricos completos, com coberturas potencialmente diferentes. Fuso: ${r.fuso}.`,
+      : `Históricos completos, com coberturas potencialmente diferentes. Fuso: ${r.fuso}.`)
+      + (r.recente ? ' Sintonia com mais peso no que vocês ouvem agora.' : ''),
     aviso: r.aviso,
     dupla: duplaJson(r),
     metricas: r.metricas,

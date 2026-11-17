@@ -156,3 +156,23 @@ def test_grupo_matriz_simetrica_e_diagonal(
     pd.testing.assert_frame_equal(r.matriz, r.matriz.T)
     assert all(r.matriz.iloc[i, i] == 1 for i in range(quantidade))
     assert r.matriz.iloc[0, 1] == pytest.approx(0.5)
+
+
+def test_contagens_recentes_meia_vida_de_um_ano() -> None:
+    """Opção "mais peso ao que vocês ouvem agora": um play de 365 dias atrás vale 0,5; o de hoje, 1."""
+    import pandas as pd
+
+    from analise import contagens_recentes
+
+    fim = pd.Timestamp('2025-06-01T12:00:00Z')
+    plays = pd.DataFrame(
+        {
+            'data_utc': pd.to_datetime(
+                ['2025-06-01T12:00:00Z', '2024-06-01T12:00:00Z', '2023-06-02T12:00:00Z']
+            ),
+            'artista': ['Ana', 'Bia', 'Bia'],
+        }
+    )
+    pesos = contagens_recentes(plays, fim)
+    assert pesos['Ana'] == pytest.approx(1)
+    assert pesos['Bia'] == pytest.approx(0.5 + 0.25)

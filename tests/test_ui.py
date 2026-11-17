@@ -104,7 +104,16 @@ class InterfaceTest(unittest.TestCase):
 
             resultado = executar(
                 'comparar_dupla',
-                [[uploads[0], uploads[1]], [uploads[2]], '<b>A</b>', 'B', False, 'log1p', *opcoes],
+                [
+                    [uploads[0], uploads[1]],
+                    [uploads[2]],
+                    '<b>A</b>',
+                    'B',
+                    False,
+                    'log1p',
+                    *opcoes,
+                    False,
+                ],
             )
             # 26 saídas históricas + 7 blocos da v0.6 + Wrapped da dupla (v0.7).
             self.assertEqual(len(resultado), 34)

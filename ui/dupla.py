@@ -68,6 +68,7 @@ def executar_dupla(
     varios: str,
     disco: bool,
     deduplicar: bool,
+    recente: bool = False,
     progress: gr.Progress = gr.Progress(),
 ) -> list[Any]:
     """Executa o núcleo e prepara componentes; progressos representam etapas reais."""
@@ -83,6 +84,7 @@ def executar_dupla(
             bool(comum),
             configuracao=config,
             ponderacao=ponderacao or 'bruta',
+            recente=bool(recente),
         )
         progress(0.75, desc='Preparando gráficos e tabelas')
         contribuicoes = r.contribuicoes.head(100).copy()

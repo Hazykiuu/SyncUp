@@ -48,6 +48,7 @@ def _py(a: list[Path], b: list[Path], nomes: tuple[str, str], opcoes: dict) -> d
         bool(opcoes.get('comum', True)),
         configuracao=config,
         ponderacao=opcoes.get('ponderacao') or 'bruta',
+        recente=bool(opcoes.get('recente', False)),
     )
     from web import ponte
 
@@ -92,6 +93,7 @@ def _py(a: list[Path], b: list[Path], nomes: tuple[str, str], opcoes: dict) -> d
             for ar, mu, x, y, link in r.playlist.itertuples(index=False)
         ],
         'ponderacao': r.ponderacao,
+        'recente': r.recente,
         'quase_artistas': quase(r.momentos_artistas),
         'quase_musicas': quase(r.momentos_musicas),
         'sintonia': ponte._simples(ponte._sintonia_json(r)),
@@ -163,6 +165,9 @@ CASOS = {
         {'varios': 'ignorar', 'deduplicar': True, 'artistas': 'zé', 'fuso': 'Europe/Lisbon'},
     ),
     'mesmo_arquivo': (['a'], ['a'], ('Ana', 'Ana 2'), {'ponderacao': 'log1p'}),
+    # Peso pelo tempo (meia-vida de 1 ano): do fim do recorte comum e, sem ele, do último play de cada um.
+    'recente': (['a'], ['b'], ('Ana', 'Bia'), {'ponderacao': 'log1p', 'recente': True}),
+    'recente_sem_periodo': (['a'], ['b'], ('Ana', 'Bia'), {'comum': False, 'recente': True}),
 }
 
 
@@ -209,7 +214,15 @@ def _sem_binario(valor):
     return valor
 
 
-CASOS_RESPOSTA = ['padrao', 'log', 'sem_periodo_comum', 'borda', 'borda_opcoes', 'mesmo_arquivo']
+CASOS_RESPOSTA = [
+    'padrao',
+    'log',
+    'sem_periodo_comum',
+    'borda',
+    'borda_opcoes',
+    'mesmo_arquivo',
+    'recente',
+]
 
 
 def _ponte(a: list[Path], b: list[Path], nomes: tuple[str, str], opcoes: dict) -> dict:

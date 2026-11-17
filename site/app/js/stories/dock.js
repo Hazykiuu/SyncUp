@@ -19,11 +19,26 @@ function useNaTela(alvo) {
   return visivel;
 }
 
+// Os botões embaixo dos stories (pôster, ver de novo…) estão na tela? Então o dock some: nunca cobre os botões
+// e não repete o "Baixar pôster" que já está à vista.
+function useAcoesNaTela(alvo) {
+  const [visivel, setVisivel] = useState(false);
+  useEffect(() => {
+    const el = alvo.current?.closest('.palco')?.querySelector('.compartilhar .acoes');
+    if (!el) return undefined;
+    const obs = new IntersectionObserver(([e]) => setVisivel(e.isIntersecting));
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [alvo.current]);
+  return visivel;
+}
+
 export function Dock({ alvo, aoPoster, ocupado = false, comSom = false }) {
   const ativo = useContext(TelaAtiva);
   const naTela = useNaTela(alvo);
+  const acoesNaTela = useAcoesNaTela(alvo);
   const { trecho, tocando, mudo } = useSom();
-  const visivel = ativo && naTela;
+  const visivel = ativo && naTela && !acoesNaTela;
   const t = comSom ? trecho : null;
   return html`
     <div class=${`dock vidro${visivel ? ' visivel' : ''}${t ? ' com-trecho' : ''}`} role="region" aria-label="Controles dos stories" inert=${!visivel}>

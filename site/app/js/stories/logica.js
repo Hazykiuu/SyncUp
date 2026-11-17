@@ -19,8 +19,11 @@ export function player(estado, acao) {
       return i < total - 1 ? { ...estado, i: i + 1, fim: false } : { ...estado, fim: true };
     case 'VOLTAR':
       return { ...estado, i: Math.max(0, i - 1), fim: false, volta: estado.volta + (i === 0 ? 1 : 0) };
-    case 'IR':
-      return { ...estado, i: Math.max(0, Math.min(total - 1, acao.i)), fim: false };
+    case 'IR': {
+      // Mantém tocando/pausado (os motivos não mudam). Ir ao mesmo story recomeça a barra: `volta` muda a chave do relógio.
+      const destino = Math.max(0, Math.min(total - 1, Number.isInteger(acao.i) ? acao.i : i));
+      return { ...estado, i: destino, fim: false, volta: estado.volta + (destino === i ? 1 : 0) };
+    }
     case 'PAUSAR':
       return motivos.includes(acao.motivo) ? estado : { ...estado, motivos: [...motivos, acao.motivo] };
     case 'RETOMAR':

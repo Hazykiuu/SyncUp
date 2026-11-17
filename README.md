@@ -109,7 +109,7 @@ Um arquivo por pessoa. Mostra uma matriz de compatibilidade de todos com todos, 
 
 - **Fica no computador:** os históricos enviados (apagados em até 1 hora) e o cache. Para ver e apagar, abra *Opções de dados → Meus dados*.
 - **Vai para a internet só se você pedir:** o ListenBrainz (o nome de usuário digitado) e o MusicBrainz (nomes de artistas, só com a caixa de estilo marcada).
-- **App no navegador, Wrapped:** para as capas e o som (o Wrapped começa com eles), o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify (capas e fotos), o nome dos seus artistas para o MusicBrainz e para a Apple/iTunes, e os nomes das músicas para a Apple/iTunes (trechos de 30 s), além do seu endereço IP. O histórico e o seu nome não saem do aparelho. O navegador guarda só os endereços das capas, por até 30 dias; o botão "Apagar capas guardadas" limpa na hora.
+- **App no navegador, Wrapped:** para as capas e o som (o Wrapped começa com eles), o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify (capas e fotos), o nome dos seus artistas para o MusicBrainz e para a Apple/iTunes, e os nomes das músicas para a Apple/iTunes (trechos de 30 s), além do seu endereço IP. O histórico e o seu nome não saem do aparelho. O navegador guarda só os endereços das capas, por até 30 dias; o botão "Apagar capas guardadas" limpa na hora. A escolha de "Silenciar" também fica guardada no navegador.
 - **App no navegador, Dupla:** para o som dos stories, o SyncUp envia à Apple/iTunes os nomes das músicas e dos artistas em comum das duas pessoas (trechos de 30 s), além do endereço IP. Os históricos e os nomes não saem do aparelho.
 - **Nunca é guardado:** o IP e o modelo do aparelho.
 
@@ -121,6 +121,16 @@ Um arquivo por pessoa. Mostra uma matriz de compatibilidade de todos com todos, 
 - Arquétipos são regras simples e visíveis na tela (por exemplo, top 2 artistas com 60% ou mais dos plays). Amostras pequenas podem distorcer.
 - Coincidências no tempo não provam influência. Nomes de artistas iguais escritos de jeitos diferentes não são unidos automaticamente.
 - A similaridade não é uma recomendação validada com usuários reais.
+
+### Por que não há login com o Spotify
+
+As regras do Spotify em novembro de 2026 tornam o login inviável num site público:
+
+- um app novo funciona para no máximo 5 contas, cadastradas à mão pelo dono;
+- o dono precisa de Premium;
+- o uso público só é liberado para empresas com 250 mil usuários ativos por mês.
+
+Além disso, a Web API não entrega o histórico completo: o ZIP continua sendo a fonte. As fontes oficiais e a decisão estão em [docs/decisao-spotify.md](docs/decisao-spotify.md).
 
 ## Para desenvolvedores
 

@@ -1,8 +1,12 @@
-// Player dos stories do Wrapped (Preact). A máquina de estados fica em logica.js (testada);
-// aqui só entram os gestos: toque (esquerda volta, direita avança), segurar pausa, arrastar troca,
-// teclado (← → espaço) e aba oculta. Quem marca o tempo é a animação CSS do segmento ativo.
-import { html, useEffect, useReducer, useRef, useState } from 'preact-htm';
-import { inicial, pausado, player } from './logica.js';
+// Player dos stories (Wrapped, Dupla e Batalha), em Preact. A máquina de estados e o relógio ficam em
+// logica.js (testados); aqui entram os gestos: toque (esquerda volta, direita avança), segurar pausa,
+// arrastar troca, teclado (← → espaço), aba oculta e modo escondido. O tempo é do relógio em JS:
+// a barra só o mostra, então "menos movimento" (sem animação) não trava o avanço.
+import { createContext, html, useContext, useEffect, useReducer, useRef, useState } from 'preact-htm';
+import { correr, duracaoMs, inicial, parar, pausado, player, relogio, restanteEm } from './logica.js';
+
+// Os modos ficam montados e escondidos (main.js): cada um diz ao seu player se está na tela.
+export const TelaAtiva = createContext(true);
 
 const SEGURAR_MS = 250;
 const ARRASTO_PX = 40;
@@ -36,6 +40,40 @@ export function Player({ slides, rotulo, aoMudar }) {
 
   useEffect(() => { aoMudar?.({ i: estado.i, tipo: slides[estado.i].tipo, pausado: parado, volta: estado.volta }); }, [estado.i, parado, estado.volta]);
   const raiz = useRef(null);
+  const barra = useRef(null); // o <i> do segmento atual
+  const anim = useRef(null);
+  const tempo = useRef(null); // { chave, r }: o relógio do segmento atual
+  const ativo = useContext(TelaAtiva);
+  const saiu = useRef(false);
+
+  // Modo escondido pausa; ao voltar, o segmento recomeça do zero (como a animação CSS fazia antes).
+  useEffect(() => {
+    if (!ativo) { saiu.current = true; despachar({ tipo: 'PAUSAR', motivo: 'escondido' }); return; }
+    if (saiu.current) { saiu.current = false; tempo.current = null; despachar({ tipo: 'RETOMAR', motivo: 'escondido' }); }
+  }, [ativo]);
+
+  // Relógio: recomeça a cada slide (ou replay), corre ou para com o estado e avança sozinho no fim.
+  // A barra (WAAPI) recebe o mesmo tempo restante a cada mudança; sem animação com "menos movimento".
+  useEffect(() => {
+    const agora = performance.now(), chave = `${estado.i}-${estado.volta}`;
+    if (tempo.current?.chave !== chave) tempo.current = { chave, r: relogio(duracaoMs(getComputedStyle(raiz.current).getPropertyValue('--dur-story'))) };
+    const t = tempo.current;
+    t.r = parado ? parar(t.r, agora) : correr(t.r, agora);
+    const el = barra.current;
+    if (el && !reduzido()) {
+      if (anim.current?.effect?.target !== el) {
+        anim.current?.cancel();
+        anim.current = el.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: t.r.dur, fill: 'forwards' });
+      }
+      anim.current.currentTime = t.r.dur - restanteEm(t.r, agora);
+      parado ? anim.current.pause() : anim.current.play();
+    }
+    if (parado) return undefined;
+    const timer = setTimeout(() => despachar({ tipo: 'TEMPO' }), restanteEm(t.r, agora));
+    return () => clearTimeout(timer);
+  }, [estado.i, estado.volta, parado]);
+  useEffect(() => () => anim.current?.cancel(), []);
+
   // O som recomeça os stories do primeiro slide quando a trilha fica pronta.
   useEffect(() => {
     const el = raiz.current, replay = () => despachar({ tipo: 'REPLAY' });
@@ -97,8 +135,7 @@ export function Player({ slides, rotulo, aoMudar }) {
       onPointerDown=${baixo} onPointerUp=${cima} onPointerCancel=${cancelar} onPointerLeave=${cancelar}>
       <div class="st-barra vidro-ctrl" aria-hidden="true">
         ${slides.map((_, k) => html`<span class=${`st-seg${k < estado.i || (estado.fim && k === estado.i) ? ' feito' : ''}`}>${k === estado.i && !estado.fim && html`
-          <i key=${`${estado.i}-${estado.volta}`} style=${{ animationPlayState: parado ? 'paused' : 'running' }}
-            onAnimationEnd=${() => despachar({ tipo: 'TEMPO' })}></i>`}</span>`)}
+          <i key=${`${estado.i}-${estado.volta}`} ref=${barra}></i>`}</span>`)}
       </div>
       <div class="st-controles">
         <span class="st-contador" aria-live="polite">${estado.i + 1}/${slides.length}</span>

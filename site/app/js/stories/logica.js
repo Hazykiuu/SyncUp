@@ -35,6 +35,19 @@ export function player(estado, acao) {
 
 export const pausado = (estado) => estado.fim || estado.motivos.length > 0;
 
+/* ---------- Relógio do story: a única fonte do tempo (a barra só mostra) ---------- */
+// `agora` vem de quem chama (performance.now() no navegador): testável sem DOM.
+// --dur-story do CSS: "10s", "13.5s" ou "13000ms"; qualquer outra coisa (ou CSS ausente) vira o padrão.
+export function duracaoMs(texto, padrao = 10000) {
+  const m = /^\s*(\d+(?:\.\d+)?)\s*(ms|s)\s*$/i.exec(String(texto ?? ''));
+  const ms = m ? Number(m[1]) * (m[2].toLowerCase() === 's' ? 1000 : 1) : 0;
+  return ms > 0 ? ms : padrao;
+}
+export const relogio = (dur) => ({ dur, restante: dur, desde: null });
+export const restanteEm = (r, agora) => Math.max(0, r.desde === null ? r.restante : r.restante - (agora - r.desde));
+export const correr = (r, agora) => (r.desde === null ? { ...r, desde: agora } : r);
+export const parar = (r, agora) => (r.desde === null ? r : { ...r, restante: restanteEm(r, agora), desde: null });
+
 /* ---------- Formatação (mesmas regras de formatacao.py / wrapped.py) ---------- */
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 

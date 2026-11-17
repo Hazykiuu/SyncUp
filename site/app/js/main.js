@@ -7,6 +7,7 @@ import { Batalha } from './batalha-tela.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { Resultado } from './resultado.js';
+import { TelaAtiva } from './stories/player.js';
 import { Wrapped } from './wrapped.js';
 import { rodarNoWorker } from './worker.js';
 
@@ -144,9 +145,8 @@ function App() {
           <h1>${CABECA[modo][0]}</h1>
           <p class="sub">${CABECA[modo][1]}</p>
         </div>
-        <div hidden=${modo !== 'dupla'}><${Dupla} /></div>
-        <div hidden=${modo !== 'wrapped'}><${Wrapped} /></div>
-        <div hidden=${modo !== 'batalha'}><${Batalha} /></div>
+        ${[['dupla', Dupla], ['wrapped', Wrapped], ['batalha', Batalha]].map(([id, Tela]) => html`
+          <div key=${id} hidden=${modo !== id}><${TelaAtiva.Provider} value=${modo === id}><${Tela} /><//></div>`)}
       </div>
     </main>`;
 }

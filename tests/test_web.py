@@ -57,6 +57,15 @@ def test_nucleo_css_tem_regra_para_cada_classe_su_do_app() -> None:
     assert sorted(com_regra - usadas) == []
 
 
+def test_tempo_dos_stories_nao_depende_de_animacao_css() -> None:
+    """Com "menos movimento" o CSS zera as animações: o avanço tem de vir do relógio em JS."""
+    app = RAIZ / 'site' / 'app'
+    player = (app / 'js' / 'stories' / 'player.js').read_text(encoding='utf-8')
+    assert 'onAnimationEnd' not in player and 'TEMPO' in player
+    regra = re.search(r'\.st-seg i \{([^}]*)\}', (app / 'stories.css').read_text(encoding='utf-8'))
+    assert regra and 'animation' not in regra.group(1)
+
+
 def test_ponte_nao_importa_gradio_nem_rede() -> None:
     codigo = (
         'import sys, web.ponte; '

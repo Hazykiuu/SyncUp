@@ -16,7 +16,8 @@
 .vidro-ctrl { background: rgba(255, 255, 255, .14); -webkit-backdrop-filter: blur(16px) saturate(1.4); backdrop-filter: blur(16px) saturate(1.4); }
 .st-barra { position: absolute; z-index: 4; top: 3cqw; left: 3cqw; right: 3cqw; display: flex; gap: 1cqw; padding: 1.2cqw; border-radius: 99px; }
 .st-seg { flex: 1; height: max(.8cqw, 3px); border-radius: 99px; background: rgba(255, 255, 255, .3); overflow: hidden; }
-.st-seg i { display: block; height: 100%; background: #fff; transform-origin: left; animation: st-progresso var(--dur-story) linear forwards; }
+.st-seg i { display: block; height: 100%; background: #fff; transform-origin: left; transform: scaleX(0); } /* o player anima (WAAPI) pelo relógio */
+@media (prefers-reduced-motion: reduce) { .st-seg i { transform: none; opacity: .45; } } /* sem animação: o segmento atual fica cheio e fraco */
 .st-seg.feito { background: #fff; }
 .st-controles { position: absolute; z-index: 4; top: 8.5cqw; left: 3cqw; right: 3cqw; display: flex; align-items: center; gap: 2cqw; }
 .st-contador { margin-right: auto; font-size: 3cqw; font-weight: 800; opacity: .85; text-shadow: 0 1px 6px rgba(0, 0, 0, .5); }
@@ -231,7 +232,6 @@
 .s-poster .st-poster-fatos span { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display: inline-block; }
 
 /* 5. Movimento: só opacity e transform; só o slide ativo anima */
-@keyframes st-progresso { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes st-entra { from { opacity: 0; transform: translateY(16px); } }
 @keyframes st-cresce-x { from { transform: scaleX(0); } }
 .st-slot.ativo .entra { animation: st-entra .6s var(--sai-st) both; animation-delay: calc(150ms + var(--i, 0) * var(--passo)); }

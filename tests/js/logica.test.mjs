@@ -2,7 +2,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { ajustarCor, centsDe, dataBr, fmtNum, fmtPct, hashNome, inicial, mesAno, pausado, player, textoCents } from '../../site/app/js/stories/logica.js';
+import {
+  ajustarCor, centsDe, correr, dataBr, duracaoMs, fmtNum, fmtPct, hashNome, inicial, mesAno, parar, pausado, player, relogio, restanteEm, textoCents,
+} from '../../site/app/js/stories/logica.js';
 
 test('avança, volta e para no fim', () => {
   let e = inicial(3);
@@ -134,4 +136,43 @@ test('cents da sintonia', () => {
   assert.equal(centsDe(0.73), -14);
   assert.equal(textoCents(0.73), '−14 cents');
   assert.equal(textoCents(0.995), 'afinados');
+});
+
+test('duração dos stories lida do CSS: s, ms, decimal e padrão', () => {
+  assert.equal(duracaoMs('10s'), 10000);
+  assert.equal(duracaoMs(' 13s '), 13000);
+  assert.equal(duracaoMs('13.5s'), 13500);
+  assert.equal(duracaoMs('13000ms'), 13000);
+  assert.equal(duracaoMs('13000MS'), 13000);
+  for (const ruim of ['', undefined, null, '10', 'abc', '0s', '-5s', 'calc(10s)']) assert.equal(duracaoMs(ruim), 10000, String(ruim));
+  assert.equal(duracaoMs('', 7000), 7000);
+});
+
+test('relógio: corre, pausa guardando o restante e retoma descontando só o tempo corrido', () => {
+  let r = relogio(10000);
+  assert.equal(restanteEm(r, 0), 10000);
+  r = correr(r, 1000);
+  assert.equal(restanteEm(r, 4000), 7000);
+  r = parar(r, 4000);
+  assert.equal(restanteEm(r, 99999), 7000); // parado não anda
+  assert.equal(parar(r, 50000), r); // pausar de novo não muda nada
+  r = correr(r, 60000);
+  assert.equal(correr(r, 61000), r); // correr de novo não reinicia
+  assert.equal(restanteEm(r, 62000), 5000);
+  assert.equal(restanteEm(r, 80000), 0); // nunca negativo
+  assert.deepEqual(relogio(r.dur), { dur: 10000, restante: 10000, desde: null });
+});
+
+test('modo escondido pausa junto com os outros motivos', () => {
+  let e = inicial(3);
+  e = player(e, { tipo: 'PAUSAR', motivo: 'escondido' });
+  e = player(e, { tipo: 'PAUSAR', motivo: 'oculta' });
+  e = player(e, { tipo: 'RETOMAR', motivo: 'escondido' });
+  assert.ok(pausado(e)); // a aba ainda está oculta
+  e = player(e, { tipo: 'RETOMAR', motivo: 'oculta' });
+  assert.ok(!pausado(e));
+  e = player(e, { tipo: 'ALTERNAR' });
+  e = player(e, { tipo: 'PAUSAR', motivo: 'escondido' });
+  e = player(e, { tipo: 'RETOMAR', motivo: 'escondido' });
+  assert.ok(pausado(e)); // a pausa da pessoa continua
 });

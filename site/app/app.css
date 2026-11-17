@@ -631,3 +631,24 @@ body::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-even
     linear-gradient(160deg, rgb(255 255 255 / .5), rgb(255 255 255 / .08) 40%, rgb(255 255 255 / .2)) border-box;
   box-shadow: inset 0 1px 0 rgb(255 255 255 / .25), 0 18px 40px -12px rgb(0 0 0 / .8); }
 @media (prefers-contrast: more) { .nav-item[aria-current="page"] { background: var(--texto); color: #000; } }
+
+/* Cara de Spotify (1.17): o topo de cada modo é a capa de uma playlist. Faixa de cor do modo descendo do alto,
+   a "capa" (o ícone do modo num quadrado com degradê), o tipo e o título enorme e apertado. */
+.app-cabeca { position: relative; flex-direction: row; align-items: flex-end; gap: var(--e5); }
+/* A faixa é uma sombra interna do corpo: cobre a largura toda sem passar da borda (nada de 100vw com a barra lateral). */
+.app-corpo { box-shadow: inset 0 22rem 16rem -9rem rgb(var(--tinta) / .3); }
+.app-cabeca-texto { display: flex; flex-direction: column; gap: var(--e3); min-width: 0; }
+.app-tipo { font-size: .8rem; font-weight: 700; letter-spacing: .02em; color: var(--texto); }
+.app-capa { display: none; flex: none; place-items: center; width: clamp(8rem, 14vw, 12rem); aspect-ratio: 1; border-radius: var(--r-campo); color: #000;
+  background: linear-gradient(135deg, rgb(var(--tinta)), color-mix(in srgb, rgb(var(--tinta)) 45%, #000)); box-shadow: 0 16px 48px -8px rgb(0 0 0 / .6); }
+.app-capa svg { width: 46%; height: auto; stroke-width: 1.6; }
+@media (min-width: 640px) { .app-capa { display: grid; } }
+.app-cabeca h1 { font-size: clamp(2.4rem, 7vw, 5rem); letter-spacing: -.045em; line-height: .95; }
+/* Dock como a barra "tocando agora": uma linha de progresso dos 30 s do trecho na base da cápsula.
+   shortcut: anima 30 s a partir da troca de música, sem ler o tempo do <audio>; ler o currentTime se o trecho vier mais curto. */
+.dock { overflow: hidden; }
+.dock-progresso { position: absolute; left: 1.5rem; right: 1.5rem; bottom: 3px; height: 3px; border-radius: 2px; background: rgb(255 255 255 / .15); pointer-events: none; }
+.dock-progresso i { display: block; height: 100%; width: 100%; border-radius: inherit; background: var(--verde); transform-origin: left; animation: dock-trecho 30s linear forwards; }
+.dock-progresso.parado i { animation-play-state: paused; }
+@keyframes dock-trecho { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .dock-progresso { display: none; } }

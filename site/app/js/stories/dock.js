@@ -30,7 +30,8 @@ export function Dock({ alvo, aoPoster, ocupado = false, comSom = false }) {
       ${t && html`
         <img class="dock-capa" src=${t.capa} alt="" width="100" height="100" crossorigin="anonymous" onLoad=${(e) => luzAmbiente(e.target)} />
         <span class="dock-faixa"><b>${t.faixa}</b><small>${t.artista} · trecho de 30 s</small></span>
-        <span class=${`eq${tocando && !mudo ? ' tocando' : ''}`} aria-hidden="true"><i></i><i></i><i></i><i></i></span>`}
+        <span class=${`eq${tocando && !mudo ? ' tocando' : ''}`} aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span key=${t.url} class=${`dock-progresso${tocando ? '' : ' parado'}`} aria-hidden="true"><i></i></span>`}
       ${comSom && html`
         <button type="button" class="dock-mudo" aria-pressed=${mudo} aria-label=${mudo ? 'Ligar o som' : 'Silenciar'}
           onClick=${() => definirMudo(!mudo)}>${mudo ? ICONE.mudo : ICONE.som}</button>`}

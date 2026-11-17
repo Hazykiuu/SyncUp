@@ -5,6 +5,8 @@
   --linha: rgba(255, 255, 255, .1);
   /* Cor com sentido fixo: verde = pessoa A, violeta = pessoa B, rosa = os dois juntos. */
   --verde: #1ed760; --roxo: #c4b7ff; --rosa: #f573a0;
+  /* Batalha: medalhas e o laranja do fundo (poster.js e batalha.js repetem os valores no Canvas e em JS). */
+  --ouro: #f5c542; --prata: #c9d1d9; --bronze: #d08b4f; --laranja: #ffa42b;
   /* Vidro (painéis, stories) e véu sobre o fundo. */
   --vidro-1: rgba(255, 255, 255, .06); --vidro-2: rgba(255, 255, 255, .10);
   --vidro-borda: rgba(255, 255, 255, .18); --vidro-brilho: rgba(255, 255, 255, .14);

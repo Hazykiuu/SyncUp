@@ -1,7 +1,7 @@
 /* Núcleo do app web: só as regras do styles.css (app para PC) que o app no navegador usa.
    Listas dos Rankings, corrida dos artistas, moldura dos stories e detalhe dos arquétipos.
    Copiadas à mão do styles.css, na mesma ordem; o tests/test_web.py confere as classes su-. */
-:root { --su-card: #181818; --su-line: #2a2a2a; --su-sub: #b3b3b3; --su-green: #1ed760; --su-radius: 16px; }
+:root { --su-card: #181818; --su-line: #2a2a2a; --su-sub: var(--sub); --su-green: var(--verde); --su-radius: 16px; }
 
 .su-race-progress:focus-visible { outline: 3px solid var(--su-green) !important; outline-offset: 3px; }
 .su-has-ripple { position: relative; overflow: hidden; }
@@ -48,7 +48,7 @@
 .su-race-time { color: var(--su-sub); font-size: 13px; min-width: 64px; font-variant-numeric: tabular-nums; }
 .su-race-now { text-align: right; }
 .su-race-progress { position: relative; flex: 1; height: 6px; border-radius: 6px; background: #4d4d4d; cursor: pointer; touch-action: none; }
-.su-race-progress::before { content: ''; position: absolute; inset: -12px 0; }
+.su-race-progress::before { content: ''; position: absolute; inset: -19px 0; } /* área de toque de 44 px */
 .su-race-fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; background: #fff; transition: width var(--race-step, 450ms) linear; }
 .su-race-knob { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff; opacity: 0; transition: left var(--race-step, 450ms) linear, opacity .2s; box-shadow: 0 2px 6px rgba(0, 0, 0, .5); }
 .su-race-progress:hover .su-race-fill { background: var(--su-green); }
@@ -88,6 +88,16 @@
 @media (max-width: 640px) {
   .su-tracklist a { grid-template-columns: 26px 40px minmax(0, 1fr) 54px; }
   .su-mini { display: none; }
+}
+/* Celular estreito: a barra do arquétipo desce para uma linha própria e o nome ganha a largura. */
+@media (max-width: 479px) {
+  .su-arch-detail li { grid-template-columns: 34px minmax(0, 1fr) auto; row-gap: 6px; }
+  .su-ad-bar { grid-column: 2 / -1; grid-row: 2; }
+}
+/* Alto contraste: barras de dados com as cores do sistema (sem forced-color-adjust: none). */
+@media (forced-colors: active) {
+  .su-race-bar, .su-mini i, .su-ad-bar i, .su-race-fill { background: CanvasText; }
+  .su-mini, .su-ad-bar, .su-race-progress { border: 1px solid CanvasText; }
 }
 @keyframes su-slide-in {from { opacity: 0; transform: translateX(-14px); } to { opacity: 1; transform: none; }}
 @keyframes su-fill {from { width: 0; }}

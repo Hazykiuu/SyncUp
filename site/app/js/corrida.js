@@ -1,9 +1,10 @@
 // Corrida dos artistas e onda nos botões: o mesmo do syncup.js (app para PC), como módulo do app web.
-// Sem MutationObserver: a corrida é ligada pelo ref de quem a desenha (ligarCorrida).
+// Sem MutationObserver: quem a desenha liga ao montar e desliga ao desmontar (ligarCorrida).
+import { MESES } from './stories/logica.js';
+
 const reduz = matchMedia('(prefers-reduced-motion: reduce)');
 const semMovimento = () => reduz.matches;
 const fmt = (v, casas) => v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
-const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const nomeMes = (iso) => {
   const [a, m] = iso.split('-');
   return `${MESES[Number(m) - 1]}/${a}`;
@@ -32,7 +33,7 @@ function montarCorrida(raiz) {
   try {
     dados = JSON.parse(raiz.dataset.race);
   } catch {
-    return false;
+    return null;
   }
   raiz.dataset.suRaceReady = '1';
   const topo = dados.topo || 8;
@@ -80,7 +81,7 @@ function montarCorrida(raiz) {
   player.innerHTML = `
     <button type="button" class="su-race-play" aria-label="Reproduzir corrida"><span class="su-icon-play"></span></button>
     <span class="su-race-time su-race-now"></span>
-    <div class="su-race-progress" role="slider" tabindex="0" aria-label="Mês da corrida"><div class="su-race-fill"></div><div class="su-race-knob"></div></div>
+    <div class="su-race-progress" role="slider" tabindex="0" aria-label="Mês da corrida" aria-valuemin="0" aria-valuemax="${dados.meses.length - 1}"><div class="su-race-fill"></div><div class="su-race-knob"></div></div>
     <span class="su-race-time">${nomeMes(dados.meses[dados.meses.length - 1])}</span>`;
   const mesGrande = document.createElement('div');
   mesGrande.className = 'su-race-month';
@@ -104,6 +105,7 @@ function montarCorrida(raiz) {
     agora.textContent = nomeMes(dados.meses[quadro]);
     mesGrande.textContent = nomeMes(dados.meses[quadro]);
     progresso.setAttribute('aria-valuenow', String(quadro));
+    progresso.setAttribute('aria-valuetext', nomeMes(dados.meses[quadro]));
     for (const { perfil, linhas } of estados) {
       const valores = perfil.valores.map((serie) => serie[quadro]);
       const ordem = valores
@@ -148,16 +150,23 @@ function montarCorrida(raiz) {
     const t = Math.min(1, Math.max(0, (ev.clientX - caixa.left) / caixa.width));
     desenhar(Math.round(t * (total - 1)));
   };
+  // Arraste com captura: pointermove fica no próprio trilho e qualquer fim (soltar, cancelar, perder a captura) encerra.
   progresso.addEventListener('pointerdown', (ev) => {
     parar();
     buscar(ev);
-    const mover = (e) => buscar(e);
-    window.addEventListener('pointermove', mover);
-    window.addEventListener('pointerup', () => window.removeEventListener('pointermove', mover), { once: true });
+    progresso.setPointerCapture?.(ev.pointerId);
+    progresso.addEventListener('pointermove', buscar);
   });
+  const soltar = () => progresso.removeEventListener('pointermove', buscar);
+  for (const fim of ['pointerup', 'pointercancel', 'lostpointercapture']) progresso.addEventListener(fim, soltar);
+  // Teclas do padrão ARIA de slider; mexer pelo teclado pausa, como arrastar.
+  const PASSOS = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 12, PageDown: -12 };
   progresso.addEventListener('keydown', (ev) => {
-    if (ev.key === 'ArrowRight') desenhar(quadro + 1);
-    if (ev.key === 'ArrowLeft') desenhar(quadro - 1);
+    const alvo = ev.key === 'Home' ? 0 : ev.key === 'End' ? total - 1 : ev.key in PASSOS ? quadro + PASSOS[ev.key] : null;
+    if (alvo === null) return;
+    ev.preventDefault();
+    parar();
+    desenhar(alvo);
   });
   raiz.__suPlay = () => {
     if (semMovimento()) return desenhar(total - 1);
@@ -165,7 +174,16 @@ function montarCorrida(raiz) {
     tocar();
   };
   desenhar(semMovimento() ? total - 1 : 0);
-  return true;
+  // Para de vez (sair da aba Gráficos ou trocar de resultado). Chamar de novo não faz nada.
+  let desligada = false;
+  return () => {
+    if (desligada) return;
+    desligada = true;
+    raiz.__suPlay = null; // um início agendado pelo observador não toca mais
+    parar();
+    soltar();
+    observador.unobserve(raiz); // o observador é de todas as corridas: só esta raiz sai
+  };
 }
 
 // Começa sozinha quando um quarto dela aparece na tela, uma vez.
@@ -177,8 +195,11 @@ const observador = new IntersectionObserver((entradas) => {
   }
 }, { threshold: 0.25 });
 
-// ref do Preact (função de módulo, estável): recebe o elemento que contém a .su-race[data-race], e null ao desmontar.
+// Liga a corrida dentro de `el` (quem a desenha chama ao montar) e devolve como desligá-la (ao desmontar).
 export function ligarCorrida(el) {
   const raiz = el?.querySelector('.su-race[data-race]');
-  if (raiz && !raiz.dataset.suRaceReady && montarCorrida(raiz)) observador.observe(raiz);
+  if (!raiz || raiz.dataset.suRaceReady) return undefined;
+  const desligar = montarCorrida(raiz);
+  if (desligar) observador.observe(raiz);
+  return desligar;
 }

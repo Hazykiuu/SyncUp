@@ -1,12 +1,11 @@
 // PNG do pôster (último story) desenhado em Canvas no navegador: 1080×1920, rápido mesmo no
 // celular e sem Pillow. Mesmo layout do story; capas nítidas e nada por cima (regras do Spotify).
-import { capaTeste, chaveCapa } from './stories/slides.js';
-import { ajustarCor, corReserva, cortar, fmtNum, hashNome, mesAno } from './stories/logica.js';
+import { capaTeste, chaveCapa, corMedia, doSpotify } from './stories/slides.js';
+import { corReserva, cortar, fmtNum, hashNome, mesAno } from './stories/logica.js';
 
 const L = 1080, A = 1920, M = 90, UTIL = L - 2 * M;
 const VERDE = '#1ed760';
 const FONTE = (peso, px) => `${peso} ${px}px Figtree, system-ui, sans-serif`;
-const doSpotify = (url) => /^https:\/\/[^/]*(scdn\.co|spotifycdn\.com)\//.test(url || '');
 
 function imagem(src) {
   if (!src) return Promise.resolve(null);
@@ -26,16 +25,7 @@ function retangulo(ctx, x, y, w, h, r) {
 }
 
 // Cor média da foto (como no story), ou a de reserva.
-function corDe(img) {
-  if (!img) return corReserva(0);
-  try {
-    const c = Object.assign(document.createElement('canvas'), { width: 16, height: 16 }).getContext('2d');
-    c.drawImage(img, 0, 0, 16, 16);
-    const px = c.getImageData(0, 0, 16, 16).data, soma = [0, 0, 0];
-    for (let k = 0; k < px.length; k += 4) { soma[0] += px[k]; soma[1] += px[k + 1]; soma[2] += px[k + 2]; }
-    return ajustarCor(...soma.map((s) => s / 256));
-  } catch { return corReserva(0); }
-}
+const corDe = (img) => (img && corMedia(img)) || corReserva(0);
 
 // Capa nítida (cantos arredondados), ou a capa tipográfica com a mesma matiz do story.
 function capa(ctx, img, nome, x, y, lado, raio) {
@@ -233,7 +223,7 @@ export async function desenharPosterDupla(d) {
 
 // Pôster da Batalha (o pódio, último story): campeão, título de classe, pódio de vidro e, no rodapé, a dupla mais
 // afinada numa linha própria, com respiro antes do convite (mesma sobriedade do pôster da Dupla).
-const MEDALHA = { ouro: '#f5c542', prata: '#c9d1d9', bronze: '#d08b4f' };
+const MEDALHA = { ouro: '#f5c542', prata: '#c9d1d9', bronze: '#d08b4f' }; // os mesmos de --ouro/--prata/--bronze (estilo.css)
 const rgba = (hex, a) => `rgba(${[1, 3, 5].map((k) => parseInt(hex.slice(k, k + 2), 16)).join(',')},${a})`;
 export async function desenharPosterBatalha(b) {
   await Promise.all([FONTE(900, 64), FONTE(800, 36), FONTE(400, 36)].map((f) => document.fonts.load(f).catch(() => null)));

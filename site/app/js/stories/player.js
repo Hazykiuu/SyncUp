@@ -1,8 +1,12 @@
-// Player dos stories do Wrapped (Preact). A máquina de estados fica em logica.js (testada);
-// aqui só entram os gestos: toque (esquerda volta, direita avança), segurar pausa, arrastar troca,
-// teclado (← → espaço) e aba oculta. Quem marca o tempo é a animação CSS do segmento ativo.
-import { html, useEffect, useReducer, useRef, useState } from 'preact-htm';
-import { inicial, pausado, player } from './logica.js';
+// Player dos stories (Wrapped, Dupla e Batalha), em Preact. A máquina de estados e o relógio ficam em
+// logica.js (testados); aqui entram os gestos: toque (esquerda volta, direita avança), segurar pausa,
+// arrastar troca, teclado (← → Home End espaço), aba oculta e modo escondido. O tempo é do relógio em JS:
+// a barra só o mostra, então "menos movimento" (sem animação) não trava o avanço.
+import { createContext, html, useContext, useEffect, useReducer, useRef, useState } from 'preact-htm';
+import { correr, duracaoMs, inicial, parar, pausado, player, relogio, restanteEm } from './logica.js';
+
+// Os modos ficam montados e escondidos (main.js): cada um diz ao seu player se está na tela.
+export const TelaAtiva = createContext(true);
 
 const SEGURAR_MS = 250;
 const ARRASTO_PX = 40;
@@ -33,9 +37,46 @@ export function Player({ slides, rotulo, aoMudar }) {
   // Para slides interativos (anos do story 11): pausar e retomar por um motivo próprio.
   const controle = { pausar: (motivo) => despachar({ tipo: 'PAUSAR', motivo }), retomar: (motivo) => despachar({ tipo: 'RETOMAR', motivo }) };
   const parado = pausado(estado);
+  // A classe .pausado (que o som.js observa) ignora o modo escondido: ao voltar para o modo, o som
+  // só retoma no próximo movimento do story, como antes. O relógio usa `parado`, que conta tudo.
+  const paradoVisivel = estado.fim || estado.motivos.some((m) => m !== 'escondido');
 
   useEffect(() => { aoMudar?.({ i: estado.i, tipo: slides[estado.i].tipo, pausado: parado, volta: estado.volta }); }, [estado.i, parado, estado.volta]);
   const raiz = useRef(null);
+  const barra = useRef(null); // o <i> do segmento atual
+  const anim = useRef(null);
+  const tempo = useRef(null); // { chave, r }: o relógio do segmento atual
+  const ativo = useContext(TelaAtiva);
+  const saiu = useRef(false);
+
+  // Modo escondido pausa; ao voltar, o segmento recomeça do zero (como a animação CSS fazia antes).
+  useEffect(() => {
+    if (!ativo) { saiu.current = true; despachar({ tipo: 'PAUSAR', motivo: 'escondido' }); return; }
+    if (saiu.current) { saiu.current = false; tempo.current = null; despachar({ tipo: 'RETOMAR', motivo: 'escondido' }); }
+  }, [ativo]);
+
+  // Relógio: recomeça a cada slide (ou replay), corre ou para com o estado e avança sozinho no fim.
+  // A barra (WAAPI) recebe o mesmo tempo restante a cada mudança; sem animação com "menos movimento".
+  useEffect(() => {
+    const agora = performance.now(), chave = `${estado.i}-${estado.volta}`;
+    if (tempo.current?.chave !== chave) tempo.current = { chave, r: relogio(duracaoMs(getComputedStyle(raiz.current).getPropertyValue('--dur-story'))) };
+    const t = tempo.current;
+    t.r = parado ? parar(t.r, agora) : correr(t.r, agora);
+    const el = barra.current;
+    if (el && !reduzido()) {
+      if (anim.current?.effect?.target !== el) {
+        anim.current?.cancel();
+        anim.current = el.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: t.r.dur, fill: 'forwards' });
+      }
+      anim.current.currentTime = t.r.dur - restanteEm(t.r, agora);
+      parado ? anim.current.pause() : anim.current.play();
+    }
+    if (parado) return undefined;
+    const timer = setTimeout(() => despachar({ tipo: 'TEMPO' }), restanteEm(t.r, agora));
+    return () => clearTimeout(timer);
+  }, [estado.i, estado.volta, parado]);
+  useEffect(() => () => anim.current?.cancel(), []);
+
   // O som recomeça os stories do primeiro slide quando a trilha fica pronta.
   useEffect(() => {
     const el = raiz.current, replay = () => despachar({ tipo: 'REPLAY' });
@@ -86,25 +127,26 @@ export function Player({ slides, rotulo, aoMudar }) {
   const tecla = (e) => {
     acordar();
     if (e.target.closest('[data-interativo]')) return; // lá dentro as setas são dos chips
-    const acao = { ArrowRight: 'AVANCAR', ArrowLeft: 'VOLTAR', ' ': 'ALTERNAR' }[e.key];
-    if (acao) { e.preventDefault(); despachar({ tipo: acao }); }
+    if ((e.key === ' ' || e.key === 'Enter') && e.target.closest('button, a')) return; // o botão faz a ação dele
+    const acao = { ArrowRight: { tipo: 'AVANCAR' }, ArrowLeft: { tipo: 'VOLTAR' }, ' ': { tipo: 'ALTERNAR' },
+      Home: { tipo: 'IR', i: 0 }, End: { tipo: 'IR', i: slides.length - 1 } }[e.key];
+    if (acao) { e.preventDefault(); despachar(acao); }
   };
 
   return html`
     ${MEDIR_FPS && html`<${Fps} />`}
-    <div ref=${raiz} class=${`su-stories su-js st-player${parado ? ' pausado' : ''}${limpo ? ' limpo' : ''}`} onFocusIn=${acordar} tabindex="0" role="region"
+    <div ref=${raiz} class=${`su-stories su-js st-player${paradoVisivel ? ' pausado' : ''}${limpo ? ' limpo' : ''}`} onFocusIn=${acordar} tabindex="0" role="region"
       aria-roledescription="stories" aria-label=${rotulo} onKeyDown=${tecla}
       onPointerDown=${baixo} onPointerUp=${cima} onPointerCancel=${cancelar} onPointerLeave=${cancelar}>
       <div class="st-barra vidro-ctrl" aria-hidden="true">
         ${slides.map((_, k) => html`<span class=${`st-seg${k < estado.i || (estado.fim && k === estado.i) ? ' feito' : ''}`}>${k === estado.i && !estado.fim && html`
-          <i key=${`${estado.i}-${estado.volta}`} style=${{ animationPlayState: parado ? 'paused' : 'running' }}
-            onAnimationEnd=${() => despachar({ tipo: 'TEMPO' })}></i>`}</span>`)}
+          <i key=${`${estado.i}-${estado.volta}`} ref=${barra}></i>`}</span>`)}
       </div>
       <div class="st-controles">
         <span class="st-contador" aria-live="polite">${estado.i + 1}/${slides.length}</span>
         <button type="button" class="st-botao vidro-ctrl sr-only-foco" aria-label="Story anterior" onClick=${() => despachar({ tipo: 'VOLTAR' })}>‹</button>
         <button type="button" class="st-botao vidro-ctrl sr-only-foco" aria-label="Próximo story" onClick=${() => despachar({ tipo: 'AVANCAR' })}>›</button>
-        <button type="button" class=${`st-botao st-pausa vidro-ctrl${parado ? ' parado' : ''}`} aria-label=${parado ? 'Continuar' : 'Pausar'}
+        <button type="button" class=${`st-botao st-pausa vidro-ctrl${paradoVisivel ? ' parado' : ''}`} aria-label=${paradoVisivel ? 'Continuar' : 'Pausar'}
           onClick=${() => despachar({ tipo: estado.fim ? 'REPLAY' : 'ALTERNAR' })}></button>
       </div>
       <div class="su-stories-frame">

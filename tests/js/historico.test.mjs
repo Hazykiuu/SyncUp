@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { deflateRawSync } from 'node:zlib';
 
-import { LIMITE_ENTRADA, entradaIgnorada, familiaPlataforma, instanteUtc, lerHistorico, normalizarNome } from '../../site/app/js/historico.js';
+import { LIMITE_BYTES, LIMITE_ENTRADA, entradaIgnorada, familiaPlataforma, instanteUtc, lerHistorico, normalizarNome } from '../../site/app/js/historico.js';
 
 // ZIP mínimo (sem CRC: o leitor não confere). `mentir` declara um tamanho menor que o real.
 function zip(arquivos, { metodo = 8, mentir = false, declarar } = {}) {
@@ -99,6 +99,9 @@ test('erros com as mensagens do Python', async () => {
   await assert.rejects(ler({ 'a.zip': zip({ 'a.json': json([ev('2024-01-01T12:00:00Z', 'Ana', 'Uma música com nome comprido')]) }, { mentir: true }) }), /ZIP está inválido/);
   // Entrada declarada acima do teto: recusada antes de alocar (sem precisar de 65 MB de verdade).
   await assert.rejects(ler({ 'a.zip': zip({ 'a.json': '[]' }, { declarar: LIMITE_ENTRADA + 1 }) }), /grande demais para o navegador/);
+  // Zip bomb: cada entrada abaixo do teto, mas a soma declarada passa de 1 GiB (recusa antes de descompactar).
+  const muitas = Object.fromEntries(Array.from({ length: Math.ceil(LIMITE_BYTES / LIMITE_ENTRADA) + 1 }, (_, k) => [`p${k}.json`, '[]']));
+  await assert.rejects(ler({ 'a.zip': zip(muitas, { declarar: LIMITE_ENTRADA }) }), /passa de 1 GB descompactado/);
   await assert.rejects(ler({ 'a.zip': zip({ 'a.json': '[{"ts": ' }) }), /JSON inválido/);
   await assert.rejects(ler({ 'a.json': new Uint8Array([0x5b, 0xff, 0x5d]) }), /UTF-8/);
   await assert.rejects(ler({ 'a.json': Buffer.from(json([{ ts: '2024-01-01T12:00:00Z', ms_played: 1 }])) }), /histórico estendido/);

@@ -1,27 +1,21 @@
 // App do SyncUp no navegador: casca (topo, modos) e a tela Dupla.
 import { html, render, useEffect, useRef, useState } from 'preact-htm';
-import { chegarPouco } from './chegada.js';
+import { chegarPouco, rolarAte } from './chegada.js';
 import { ligarOndas } from './corrida.js';
 import { audioCtx, destravarSom, pausarSom, silenciado } from './som.js';
 import { Batalha } from './batalha-tela.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { Resultado } from './resultado.js';
+import { TelaAtiva } from './stories/player.js';
 import { Wrapped } from './wrapped.js';
+import { rodarNoWorker } from './worker.js';
 
-const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos arquivos.';
 const DEMO = [['demo-wrapped.zip', 'Ana (fictícia)'], ['demo-bruno.zip', 'Bruno (fictício)']]; // os mesmos de ponte.arquivos_demo
 
 // A comparação roda em JavaScript num Worker (dupla-worker.js), sem baixar o Python. Um Worker por
 // comparação: ao terminar, o navegador devolve toda a memória (importa no celular).
-function compararNoWorker(a, b, nomes, opcoes) {
-  return new Promise((ok, erro) => {
-    const w = new Worker('dupla-worker.js', { type: 'module' });
-    w.onmessage = ({ data }) => { w.terminate(); data.ok ? ok(data.dados) : erro(new Error(data.erro)); };
-    w.onerror = (e) => { e.preventDefault?.(); w.terminate(); erro(new Error(SEM_RESPOSTA)); };
-    w.postMessage({ a, b, nomes, opcoes }, [...a, ...b].map((x) => x.bytes));
-  });
-}
+const compararNoWorker = (a, b, nomes, opcoes) => rodarNoWorker('dupla-worker.js', { a, b, nomes, opcoes }, [...a, ...b].map((x) => x.bytes));
 
 const lerArquivos = (lista) => Promise.all(lista.map(async (f) => ({ nome: f.name, bytes: await f.arrayBuffer() })));
 
@@ -43,8 +37,8 @@ function Dupla() {
       const [a, b] = await ler();
       const r = await compararNoWorker(a, b, nomesUsados, opcoes);
       setFase({ tipo: 'resultado', r });
-      requestAnimationFrame(() => document.getElementById('resultado')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-    } catch (e) { setFase({ tipo: 'erro', mensagem: e.message }); }
+      requestAnimationFrame(() => rolarAte(document.getElementById('resultado')));
+    } catch (e) { if (e.name !== 'AbortError') setFase({ tipo: 'erro', mensagem: e.message }); }
   };
   const comparar = () => {
     ultima.current = 'comparar';
@@ -86,8 +80,8 @@ function Dupla() {
     <div id="resultado">${fase.tipo === 'resultado' && html`<${Resultado} r=${fase.r} />`}</div>`;
 }
 
-// Clique do fader na troca de modo: um toque de 40 ms, bem baixo. Para o Wrapped sobe (sol, 1568 Hz);
-// para a Dupla desce (ré, 1175 Hz), uma quinta abaixo: os dois lados do crossfader. Um por troca.
+// Clique do fader na troca de modo: um toque de 40 ms, bem baixo. Para a direita na barra (Dupla → Wrapped
+// → Batalha) sobe (sol, 1568 Hz); para a esquerda desce (ré, 1175 Hz), uma quinta abaixo. Um por troca.
 // Usa o mesmo AudioContext dos stories e respeita o "Silenciar" deles.
 function cliqueFader(paraDireita) {
   const audio = audioCtx();
@@ -151,9 +145,8 @@ function App() {
           <h1>${CABECA[modo][0]}</h1>
           <p class="sub">${CABECA[modo][1]}</p>
         </div>
-        <div hidden=${modo !== 'dupla'}><${Dupla} /></div>
-        <div hidden=${modo !== 'wrapped'}><${Wrapped} /></div>
-        <div hidden=${modo !== 'batalha'}><${Batalha} /></div>
+        ${[['dupla', Dupla], ['wrapped', Wrapped], ['batalha', Batalha]].map(([id, Tela]) => html`
+          <div key=${id} hidden=${modo !== id}><${TelaAtiva.Provider} value=${modo === id}><${Tela} /><//></div>`)}
       </div>
     </main>`;
 }

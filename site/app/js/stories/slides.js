@@ -23,7 +23,19 @@ function useCapa(item, tipo) {
 
 // Regras do Spotify: com capa dele na tela, o logo oficial (kit de marca, fora da licença MIT) e,
 // quando o slide é de um item só, o link de volta. data-interativo: o toque não troca de story.
-const doSpotify = (url) => /^https:\/\/[^/]*(scdn\.co|spotifycdn\.com)\//.test(url || '');
+export const doSpotify = (url) => /^https:\/\/[^/]*(scdn\.co|spotifycdn\.com)\//.test(url || '');
+
+// Cor média de uma imagem (16×16), já ajustada para fundo de story; null se a imagem não tiver CORS.
+// Usada aqui (fundo do slide) e no pôster.
+export function corMedia(img) {
+  try {
+    const c = Object.assign(document.createElement('canvas'), { width: 16, height: 16 }).getContext('2d', { willReadFrequently: true });
+    c.drawImage(img, 0, 0, 16, 16);
+    const px = c.getImageData(0, 0, 16, 16).data, soma = [0, 0, 0];
+    for (let k = 0; k < px.length; k += 4) { soma[0] += px[k]; soma[1] += px[k + 1]; soma[2] += px[k + 2]; }
+    return ajustarCor(...soma.map((s) => s / 256));
+  } catch { return null; } // imagem sem CORS
+}
 const Marca = ({ link }) => html`<div class="st-marca">
   <img src="marcas/spotify-logo-branco.svg" alt="Spotify" width="80" height="22" />
   ${link && html`<a class="st-spotify st-vidro" href=${link} target="_blank" rel="noopener" data-interativo>ABRIR NO SPOTIFY</a>`}
@@ -47,16 +59,7 @@ export function Contador({ valor, casas = 0, ativo }) {
 export function Slide({ tipo, i, capa, link, cor: corInicial, classe = '', children }) {
   const raiz = useRef(null);
   const [cor, setCor] = useState(corInicial || corReserva(i));
-  const lerCor = (e) => {
-    try {
-      const c = Object.assign(document.createElement('canvas'), { width: 16, height: 16 }).getContext('2d', { willReadFrequently: true });
-      c.drawImage(e.target, 0, 0, 16, 16);
-      const px = c.getImageData(0, 0, 16, 16).data;
-      const soma = [0, 0, 0];
-      for (let k = 0; k < px.length; k += 4) { soma[0] += px[k]; soma[1] += px[k + 1]; soma[2] += px[k + 2]; }
-      setCor(ajustarCor(...soma.map((s) => s / 256)));
-    } catch { /* imagem sem CORS: fica a cor de reserva */ }
-  };
+  const lerCor = (e) => { const c = corMedia(e.target); if (c) setCor(c); }; // sem CORS: fica a cor de reserva
   return html`
     <section ref=${raiz} class=${`su-story ativo st s-${tipo} ${classe}`} style=${{ '--capa': cor.join(' ') }}>
       <div class="st-fundo" aria-hidden="true">${capa && html`<img src=${capa} alt="" crossorigin="anonymous" onLoad=${lerCor} />`}</div>
@@ -267,7 +270,8 @@ export function Fiel({ d, ativo, i, controle }) {
       <div data-interativo role="group" aria-label="Anos: toque para ver o top daquele ano">
         ${d.anos.map((a, k) => html`<button type="button" ref=${(el) => (chips.current[k] = el)}
           class=${`st-vidro${d.fiel_anos.includes(a.ano) ? ' on' : ''}`} aria-pressed=${aberto === a.ano}
-          onClick=${() => (aberto === a.ano ? fechar() : abrir(a.ano))} onKeyDown=${(e) => tecla(e, k)}>${a.ano}</button>`)}
+          onClick=${() => (aberto === a.ano ? fechar() : abrir(a.ano))} onKeyDown=${(e) => tecla(e, k)}>${a.ano}${d.fiel_anos.includes(a.ano)
+            && html`<span aria-hidden="true"> ★</span><span class="sr-only">, no top 5</span>`}</button>`)}
       </div>
     <//>
     <div class="st-painel-ano" aria-live="polite">${ano && html`

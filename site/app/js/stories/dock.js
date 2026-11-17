@@ -41,7 +41,7 @@ export function Dock({ alvo, aoPoster, ocupado = false, comSom = false }) {
   const visivel = ativo && naTela && !acoesNaTela;
   const t = comSom ? trecho : null;
   return html`
-    <div class=${`dock vidro${visivel ? ' visivel' : ''}${t ? ' com-trecho' : ''}`} role="region" aria-label="Controles dos stories" inert=${!visivel}>
+    <div class=${`dock${visivel ? ' visivel' : ''}${t ? ' com-trecho' : ''}`} role="region" aria-label="Controles dos stories" inert=${!visivel}>
       ${t && html`
         <img class="dock-capa" src=${t.capa} alt="" width="100" height="100" crossorigin="anonymous" onLoad=${(e) => luzAmbiente(e.target)} />
         <span class="dock-faixa"><b>${t.faixa}</b><small>${t.artista} · trecho de 30 s</small></span>

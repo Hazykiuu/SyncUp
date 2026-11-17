@@ -144,12 +144,12 @@ export function Wrapped() {
     <div class="barra-acao">
       <button type="button" class="btn btn-verde" onClick=${montar} disabled=${ocupado || !arquivos.length}>
         ${ocupado ? 'Montando…' : 'Montar meu Wrapped'}<span class="seta" aria-hidden="true">→</span></button>
-      <button type="button" class="btn btn-borda vidro" onClick=${demo} disabled=${ocupado}>Testar com dados fictícios</button>
+      <button type="button" class="btn btn-borda superficie" onClick=${demo} disabled=${ocupado}>Testar com dados fictícios</button>
     </div>
     <div aria-live="polite">
-      ${ocupado && html`<p ref=${chegarPouco} class="processando vidro"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
-      ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro vidro" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
-        ${ultima.current && html`<button type="button" class="btn btn-borda vidro" onClick=${ultima.current === 'demo' ? demo : montar}>Tentar de novo</button>`}</div>`}
+      ${ocupado && html`<p ref=${chegarPouco} class="processando superficie"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
+      ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro superficie" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
+        ${ultima.current && html`<button type="button" class="btn btn-borda superficie" onClick=${ultima.current === 'demo' ? demo : montar}>Tentar de novo</button>`}</div>`}
       ${fase.tipo === 'resultado' && html`<p class="sr-only">Wrapped de ${fase.r.nome} pronto, logo abaixo.</p>`}
     </div>
     <div id="resultado-wrapped">${fase.tipo === 'resultado' && html`
@@ -158,8 +158,8 @@ export function Wrapped() {
         <${SomStories} key=${fase.r} trilha=${fase.r.trilha} alvo=${stories} aoLigar=${() => ligarCapas(fase.r.dados)} />
         <div class="compartilhar"><div class="acoes">
           <button type="button" class="btn btn-verde" onClick=${png} disabled=${baixando}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></svg>${baixando ? 'Gerando…' : 'Baixar pôster'}</button>
-          <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
-          <button type="button" class="btn btn-borda vidro" onClick=${apagarCapas}>Apagar capas guardadas</button>
+          <button type="button" class="btn btn-borda superficie" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
+          <button type="button" class="btn btn-borda superficie" onClick=${apagarCapas}>Apagar capas guardadas</button>
         </div>
         ${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
         <p class="nota">Montado em ${segundos(fase.ms)} s, no seu aparelho.</p>
@@ -170,6 +170,6 @@ export function Wrapped() {
           <//>
           ${fase.r.dados.avisos.map((a) => html`<p class="su-note">${a}</p>`)}
         <//>
-        <details class="vidro detalhe"><summary>Como o arquétipo foi calculado</summary><${ArquetiposDetalhe} arquetipos=${fase.r.dados.arquetipos} /></details>
+        <details class="superficie detalhe"><summary>Como o arquétipo foi calculado</summary><${ArquetiposDetalhe} arquetipos=${fase.r.dados.arquetipos} /></details>
       </section>`}</div>`;
 }

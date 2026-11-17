@@ -54,15 +54,9 @@ p { text-wrap: pretty; } /* sem palavra sozinha no fim do parágrafo */
   .btn:hover .seta { transform: translate(2px, -2px); }
   .btn-borda:hover { background: rgba(255, 255, 255, .06); }
 }
-/* Resposta ao toque: o botão aperta (rápido, ao pressionar) e, ao passar o mouse, um brilho atravessa
-   o botão cheio uma vez. Só transform/translate/scale: não pesa. Sem movimento com "menos movimento". */
+/* Resposta ao toque: o botão aperta (rápido, ao pressionar). Só scale: não pesa. */
 .btn { position: relative; isolation: isolate; overflow: hidden; transition: transform .35s cubic-bezier(.2, .8, .2, 1), scale .1s ease-out, background .2s, box-shadow .2s; }
 .btn:active:not(:disabled) { scale: .97; }
-.btn-verde::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; translate: -110% 0;
-  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / .5) 50%, transparent 70%); }
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .btn-verde:hover:not(:disabled)::after { translate: 110% 0; transition: translate .7s cubic-bezier(.2, .8, .2, 1); }
-}
 
 /* Marca: as 4 barras vão do verde (A) ao violeta (B). Não lembra o logo do Spotify. */
 .marca { display: inline-flex; align-items: center; gap: .6rem; font-weight: 900; letter-spacing: -.02em; }
@@ -75,14 +69,13 @@ p { text-wrap: pretty; } /* sem palavra sozinha no fim do parágrafo */
 .vivo .logo i:nth-child(2) { animation-delay: -.5s; } .vivo .logo i:nth-child(3) { animation-delay: -.9s; } .vivo .logo i:nth-child(4) { animation-delay: -.3s; }
 @keyframes eq { 0% { transform: scaleY(.45); } 100% { transform: scaleY(1); } }
 
-/* Liquid Glass (os mesmos tokens na página inicial e no app). Vidro dentro de vidro não borra de novo.
-   Sem backdrop-filter ou com "menos transparência": superfície sólida, legível. */
-.vidro { position: relative; isolation: isolate; background: var(--vidro-fundo); border: 1px solid var(--vidro-linha); box-shadow: var(--vidro-sombra);
-  -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur); }
-.vidro .vidro { -webkit-backdrop-filter: none; backdrop-filter: none; }
-.btn-borda.vidro { background: var(--vidro-fundo); border-color: var(--vidro-linha); }
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .vidro { background: var(--sup-2); } }
-@media (prefers-reduced-transparency: reduce) { .vidro { background: var(--sup-2); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+/* Superfície (1.19): sólida como no Spotify (#181818), fio de 1 px e uma sombra curta. Sem blur, sem aro de luz,
+   sem brilho e sem a cor do modo vazando. O blur fica só no que flutua, com regras próprias: .topo-barra, .nav-app,
+   .dock, .vidro-ctrl (stories) e .palco-placa. */
+.superficie { position: relative; isolation: isolate; background: var(--sup-2); border: 1px solid var(--linha); box-shadow: 0 1px 3px rgb(0 0 0 / .45); }
+.btn-borda.superficie { background: transparent; border-color: rgb(255 255 255 / .28); box-shadow: none; }
+.btn-borda.superficie:hover:not(:disabled) { background: rgb(255 255 255 / .08); border-color: rgb(255 255 255 / .5); }
+@media (prefers-contrast: more) { .superficie { border-color: #fff; } }
 /* Números de dados (porcentagens, horas, plays): largura fixa e mais juntos. */
 .num { font-variant-numeric: tabular-nums; letter-spacing: -.04em; }
 
@@ -177,27 +170,30 @@ section[id] { scroll-margin-top: 6rem; }
   .palco-placa { animation: sobe .7s var(--sai) both; animation-delay: .6s; }
 }
 
-/* Recursos em bento: Dupla (grande), Wrapped (alto), espectro 0h–23h, Batalha e o que só existe no PC. */
+/* Recursos (1.19): cada modo é uma faixa editorial, separada por fios, sem caixa. Número grande, nome, texto,
+   uma linha de fatos em texto corrido, o mock vivo e o link. No PC o mock alterna de lado; no celular a ordem é
+   fixa: número e título, texto, fatos, mock e link. */
 .recursos { padding-block: 6rem; }
-.recursos .cabeca { display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 3rem; }
-.bento { display: grid; gap: 1rem; }
-@media (min-width: 1024px) {
-  .bento { grid-template-columns: repeat(12, 1fr); grid-auto-flow: dense; }
-  .caixa.dupla { grid-column: span 7; } .caixa.wrapped { grid-column: span 5; grid-row: span 2; }
-  .caixa.espectro { grid-column: span 7; } .caixa:not(.dupla, .wrapped, .espectro) { grid-column: span 6; }
+.recursos .cabeca { display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2rem; }
+.modos { border-top: 1px solid var(--linha); }
+.modo { display: grid; grid-template-areas: "texto" "mock" "link"; gap: 1.25rem; padding-block: clamp(2rem, 5vw, 3.5rem); border-bottom: 1px solid var(--linha); }
+.modo-texto { grid-area: texto; display: grid; gap: .6rem; align-content: start; }
+.modo .mock { grid-area: mock; width: 100%; max-width: 13rem; justify-self: start; }
+.modo-abrir { grid-area: link; width: fit-content; min-height: 44px; display: inline-flex; align-items: center; gap: .4em; font-weight: 700; color: var(--verde); }
+.modo-abrir:hover { text-decoration: underline; text-underline-offset: .2em; }
+.modo-n { font-size: clamp(3rem, 7vw, 5rem); font-weight: 900; line-height: .9; color: var(--fraco); }
+.modo h3 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -.035em; line-height: 1; }
+.modo p { max-width: 34rem; font-size: 1.05rem; line-height: 1.55; color: var(--sub); }
+.modo .modo-fatos { font-size: .95rem; font-weight: 700; color: var(--texto); }
+@media (min-width: 768px) {
+  .modo { grid-template-columns: minmax(0, 1fr) 13rem; grid-template-areas: "texto mock" "link mock"; column-gap: clamp(2rem, 6vw, 6rem); align-items: center; }
+  .modo-abrir { align-self: start; }
+  .modo:nth-child(even) { grid-template-columns: 13rem minmax(0, 1fr); grid-template-areas: "mock texto" "mock link"; }
 }
-.caixa { display: flex; flex-direction: column; gap: 1rem; border-radius: var(--r-vidro); padding: clamp(1.5rem, 3vw, 2.25rem); transition: transform .2s var(--sai); }
-@media (hover: hover) and (pointer: fine) { .caixa:hover { transform: translateY(-2px); } }
-.caixa h3 { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; }
-.caixa.dupla h3, .caixa.wrapped h3 { font-size: 1.75rem; }
-.caixa p { max-width: 32rem; font-size: 1rem; line-height: 1.55; color: var(--sub); }
-.caixa > a { width: fit-content; min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; text-decoration: underline; text-underline-offset: .2em; }
-.caixa.dupla { display: grid; align-items: center; }
-@media (min-width: 640px) { .caixa.dupla { grid-template-columns: 1fr 13rem; } }
-.caixa .mock { width: 100%; max-width: 13rem; justify-self: center; align-self: center; }
-.caixa.wrapped .mock { max-width: 15rem; margin-block: auto; }
-.tags { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.25rem; }
-.tags span { padding: .4rem .9rem; border-radius: var(--pilula); border: 1px solid var(--vidro-linha); background: rgba(255, 255, 255, .04); font-size: .85rem; }
+/* Espectro: o gráfico sem caixa, título e legenda em linha. */
+.espectro { display: grid; gap: 1rem; padding-block: clamp(2rem, 5vw, 3.5rem); }
+.espectro h3 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 900; letter-spacing: -.03em; }
+.espectro p { max-width: 40rem; color: var(--sub); line-height: 1.55; }
 .selo { width: fit-content; padding: .25rem .75rem; border-radius: var(--pilula); background: rgba(196, 183, 255, .14); color: var(--roxo); font-size: .75rem; font-weight: 700; }
 /* Capinhas abstratas do projeto no story "O que une vocês" e colagem desfocada atrás do Wrapped. */
 .mock .st-comuns b { display: flex; align-items: center; gap: 2cqw; }
@@ -220,7 +216,7 @@ section[id] { scroll-margin-top: 6rem; }
 .duracao { font-size: .9rem; color: var(--sub); text-align: right; white-space: nowrap; }
 @media (max-width: 479px) { .tracklist li { grid-template-columns: 2rem minmax(0, 1fr); } .duracao { grid-column: 2; text-align: left; } }
 
-/* Espectro de escuta (no bento): 24 horas de Ana (verde) e Bruno (violeta). Cada hora é um botão: o mouse,
+/* Espectro de escuta: 24 horas de Ana (verde) e Bruno (violeta). Cada hora é um botão: o mouse,
    o toque e as setas mostram os plays daquela hora na dica. Sem Hz: hora de escuta não é frequência. */
 .espectro-cabeca { display: grid; gap: .75rem; }
 .espectro-grafico { position: relative; margin-top: .5rem; }
@@ -262,7 +258,7 @@ section[id] { scroll-margin-top: 6rem; }
 .rodape .shell { padding-top: 5rem; padding-bottom: 2.5rem; }
 .rodape-cta { position: relative; display: flex; flex-direction: column; gap: 2rem; border-bottom: 1px solid var(--linha); padding-bottom: 4rem; }
 .rodape-cta > :not(.pauta) { position: relative; z-index: 1; }
-/* Pauta: 5 linhas finas atrás da chamada; as 4 barras do logo (verde → violeta) são as notas, sentadas na última linha. */
+/* Pauta: 5 linhas finas atrás da chamada; as 4 barras do logo (verde → violeta) são as notas, paradas na última linha. */
 .pauta { position: absolute; inset: auto 0 4.5rem; height: 89px; pointer-events: none;
   background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, .1) 0 1px, transparent 1px 22px); }
 .pauta i { position: absolute; bottom: -3px; width: 10px; border-radius: 6px; }
@@ -270,13 +266,6 @@ section[id] { scroll-margin-top: 6rem; }
 .pauta i:nth-child(2) { right: 74px; height: 88px; background: color-mix(in srgb, var(--verde), var(--roxo) 33%); }
 .pauta i:nth-child(3) { right: 52px; height: 35px; background: color-mix(in srgb, var(--verde), var(--roxo) 67%); }
 .pauta i:nth-child(4) { right: 30px; height: 66px; background: var(--roxo); }
-@keyframes nota-cai { from { opacity: 0; transform: translateY(-60px); } }
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .pauta i { animation: nota-cai linear both; animation-timeline: view(); animation-range: entry 20% cover 45%; }
-    .pauta i:nth-child(2) { animation-range: entry 24% cover 49%; } .pauta i:nth-child(3) { animation-range: entry 28% cover 53%; } .pauta i:nth-child(4) { animation-range: entry 32% cover 57%; }
-  }
-}
 @media (max-width: 639px) { .pauta i { display: none; } }
 /* No computador a chamada e o botão ficam lado a lado: a pauta fica só sob a chamada, sem cruzar o botão. */
 @media (min-width: 1024px) { .pauta { right: 42%; } }
@@ -309,142 +298,17 @@ section[id] { scroll-margin-top: 6rem; }
    o fade entre elas não aparece; quem não suporta navega normalmente. */
 @media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }
 
-/* Vidro de verdade (1.17): borda com luz (clara no alto à esquerda, apagada embaixo), um brilho especular no topo,
-   a cor do modo vazando no vidro (--tinta) e blur só no que flutua (topo, barra de modos, dock, placa do palco).
-   Cartões do meio da página ficam translúcidos sem blur: mais leves no celular simples. */
+/* Cor do modo (--tinta): só na cascata do topo e nas capas de playlist, nunca nas superfícies. */
 :root { --tinta: 30 215 96; }
-.vidro {
-  --vidro-face: linear-gradient(180deg, rgb(255 255 255 / .10), rgb(255 255 255 / .02) 38%, rgb(255 255 255 / .04)),
-    radial-gradient(120% 90% at 0% 0%, rgb(var(--tinta) / .10), transparent 55%),
-    radial-gradient(90% 70% at 100% 100%, rgb(var(--tinta) / .06), transparent 60%),
-    linear-gradient(rgb(18 18 20 / .55), rgb(18 18 20 / .55));
-  --vidro-aro: linear-gradient(160deg, rgb(255 255 255 / .55), rgb(255 255 255 / .10) 30%, rgb(255 255 255 / .04) 60%, rgb(var(--tinta) / .35));
-  border: 1px solid transparent;
-  background: var(--vidro-face) padding-box, var(--vidro-aro) border-box;
-  background-clip: padding-box, padding-box, padding-box, padding-box, border-box; /* 4 camadas do vidro, a 5ª é o aro */
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / .22), inset 0 0 0 1px rgb(255 255 255 / .03), inset 0 -12px 24px -18px rgb(var(--tinta) / .35),
-    0 1px 2px rgb(0 0 0 / .4), 0 24px 48px -16px rgb(0 0 0 / .7);
-  -webkit-backdrop-filter: none; backdrop-filter: none;
-}
-/* Só o que flutua sobre conteúdo borra. */
-.palco-placa.vidro, .topo-barra { -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur); }
-/* Botões de vidro: a mesma borda com luz, numa pílula. */
-.btn-borda.vidro { background: linear-gradient(180deg, rgb(255 255 255 / .12), rgb(255 255 255 / .03)) padding-box, var(--vidro-aro) border-box; }
-.btn-borda.vidro:hover { background: linear-gradient(180deg, rgb(255 255 255 / .18), rgb(255 255 255 / .06)) padding-box, var(--vidro-aro) border-box; }
-/* Brilho que atravessa o cartão quando o ponteiro chega: uma faixa de luz no próprio fundo, levada por --brilho. */
-@property --brilho { syntax: '<percentage>'; inherits: false; initial-value: 130%; }
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .caixa.vidro { transition: transform .2s var(--sai), --brilho .9s var(--sai);
-    background: linear-gradient(115deg, transparent calc(var(--brilho) - 14%), rgb(255 255 255 / .08) var(--brilho), transparent calc(var(--brilho) + 14%)) padding-box,
-      var(--vidro-face) padding-box, var(--vidro-aro) border-box;
-    background-clip: padding-box, padding-box, padding-box, padding-box, padding-box, border-box; }
-  .caixa.vidro:hover { --brilho: -30%; }
-}
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .palco-placa.vidro { background: var(--sup-2); } }
-@media (prefers-reduced-transparency: reduce) { .vidro { background: var(--sup-2) padding-box, var(--vidro-linha) border-box; } }
-@media (prefers-contrast: more) { .vidro { background: var(--sup-2) padding-box, #fff border-box; } }
-/* Página inicial: cada recurso com a luz do seu modo atrás do vidro (no preto, vidro sem luz some). */
-.caixa.vidro { --vidro-face: linear-gradient(180deg, rgb(255 255 255 / .09), rgb(255 255 255 / .02) 40%, rgb(255 255 255 / .03)),
-  radial-gradient(90% 120% at 100% 0%, rgb(var(--tinta) / .22), transparent 60%),
-  radial-gradient(70% 90% at 0% 100%, rgb(var(--tinta) / .10), transparent 65%), linear-gradient(rgb(18 18 20 / .6), rgb(18 18 20 / .6)); }
-.caixa.dupla, .caixa.wrapped { --tinta: 30 215 96; }
-.caixa.espectro { --tinta: 196 183 255; }
-.caixa.batalha { --tinta: 255 164 43; }
-.caixa.match { --tinta: 245 115 160; }
+/* Placa do palco no hero: o único vidro da página além do topo (flutua sobre as capas). */
+.palco-placa { background: rgb(18 18 20 / .55); border: 1px solid var(--vidro-linha); box-shadow: 0 12px 32px -12px rgb(0 0 0 / .7);
+  -webkit-backdrop-filter: var(--vidro-blur); backdrop-filter: var(--vidro-blur); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .palco-placa { background: var(--sup-2); } }
+@media (prefers-reduced-transparency: reduce) { .palco-placa { background: var(--sup-2); -webkit-backdrop-filter: none; backdrop-filter: none; } }
 
-/* Cara de Spotify (1.17). Prateleira: capas quadradas; o cartão clareia e o botão verde de play sobe ao passar o
-   mouse ou focar com o teclado (no toque ele fica sempre visível, sem hover para revelar). */
-.atalhos { padding-block: clamp(2rem, 5vw, 3.5rem) 0; }
-.titulo-prateleira { margin-bottom: 1rem; font-size: 1.5rem; font-weight: 900; letter-spacing: -.03em; }
-.prateleira { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
-@media (max-width: 720px) { .prateleira { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.tile { display: flex; flex-direction: column; gap: .35rem; padding: .75rem; border-radius: 12px; transition: background .2s; }
-.tile:hover, .tile:focus-visible { background: rgb(255 255 255 / .07); }
-.tile-arte { position: relative; display: grid; place-items: center; aspect-ratio: 1; border-radius: 8px; overflow: hidden; color: #000;
-  background: linear-gradient(135deg, rgb(var(--tinta)), color-mix(in srgb, rgb(var(--tinta)) 40%, #000)); box-shadow: 0 8px 24px rgb(0 0 0 / .5); }
-.tile-arte.escura { color: rgb(var(--tinta)); background: radial-gradient(90% 90% at 30% 20%, rgb(var(--tinta) / .45), transparent 70%), #121212; }
-.tile-arte > svg { width: 38%; height: auto; }
-.tile-arte b { position: absolute; left: .7rem; bottom: .55rem; font-size: clamp(1rem, 2.2vw, 1.5rem); font-weight: 900; letter-spacing: -.04em; }
-.tile-play { position: absolute; right: .6rem; bottom: .6rem; display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 50%;
-  color: #000; background: var(--verde); box-shadow: 0 8px 16px rgb(0 0 0 / .45); transition: opacity .2s, translate .2s var(--sai), scale .1s; }
-.tile-play svg { width: 1.3rem; height: 1.3rem; }
-@media (hover: hover) {
-  .tile:not(:hover, :focus-visible) .tile-play { opacity: 0; translate: 0 .5rem; }
-  .tile:hover .tile-play { scale: 1.04; }
-}
-.tile:active .tile-play { scale: .95; }
-.tile-nome { font-weight: 800; }
-.tile-sub { color: var(--sub); font-size: .9rem; line-height: 1.35; }
-/* Filtros em pílulas: rádios de verdade (teclado e leitor de tela de graça), desenhados como as do Spotify. */
-.filtros { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 1.5rem; padding: 0; border: 0; }
-.filtros input { position: absolute; opacity: 0; pointer-events: none; }
-.filtros span { display: inline-flex; align-items: center; min-height: 44px; padding: 0 1.1rem; border-radius: var(--pilula); cursor: pointer;
-  background: rgb(255 255 255 / .08); font-size: .9rem; font-weight: 700; transition: background .15s, color .15s; }
-.filtros label:hover span { background: rgb(255 255 255 / .14); }
-.filtros input:checked + span { background: var(--texto); color: #000; }
-.filtros input:focus-visible + span { outline: 2px solid var(--verde); outline-offset: 2px; }
-.recursos:has(input[value="dupla"]:checked) .caixa:not(.dupla, .espectro),
-.recursos:has(input[value="wrapped"]:checked) .caixa:not(.wrapped),
-.recursos:has(input[value="batalha"]:checked) .caixa:not(.batalha),
-.recursos:has(input[value="match"]:checked) .caixa:not(.match) { display: none; }
 /* Tipografia: títulos mais pesados e apertados, como os do Spotify. */
 .hero h1 { letter-spacing: -.045em; }
 .titulo-secao { letter-spacing: -.04em; }
-.caixa h3 { font-weight: 900; letter-spacing: -.035em; }
-/* Batalha e Match no bento (1.18): texto ao lado de um story vivo, como a Dupla. Os mocks medem em cqw dentro da
-   própria moldura 9:16 (.mock, container-type), então pódio e coração se ajustam ao tamanho real do cartão. */
-.caixa.batalha, .caixa.match { display: grid; align-items: center; gap: 1.25rem; }
-@media (min-width: 640px) { .caixa.batalha, .caixa.match { grid-template-columns: minmax(0, 1fr) clamp(10rem, 16vw, 12rem); } }
-.caixa.batalha .mock, .caixa.match .mock { max-width: 12rem; }
 /* O pódio fica na base do story; o título "Quem levou" no alto. */
 .mock .sb .st-conteudo { height: 100%; }
 
-/* Página inicial viva (1.18). Só na página inicial (body.inicio): o app também carrega este arquivo.
-   Aurora: duas luzes em radial-gradient (sem blur) num fundo fixo; a cor muda com a rolagem, por propriedades
-   registradas (verde no topo e na Dupla, violeta no espectro, laranja na Batalha, rosa no Match, verde no fim).
-   Vinil: o trilho (div) anda e cresce com a rolagem; o disco (svg) só gira. Cada um anima a sua propriedade. */
-@property --aurora-a { syntax: '<color>'; inherits: false; initial-value: rgb(30 215 96 / .2); }
-@property --aurora-b { syntax: '<color>'; inherits: false; initial-value: rgb(196 183 255 / .1); }
-.fundo-vivo { display: none; }
-body.inicio .fundo-vivo { display: block; position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
-  background: radial-gradient(60% 50% at 12% 8%, var(--aurora-a), transparent 70%), radial-gradient(55% 45% at 92% 70%, var(--aurora-b), transparent 70%); }
-.vinil-trilho { position: absolute; top: 6vh; right: -14vmin; width: 62vmin; aspect-ratio: 1; opacity: .5; }
-.vinil { width: 100%; height: 100%; fill: none; stroke: rgb(255 255 255 / .07); stroke-width: 1; }
-.vinil-selo { fill: color-mix(in srgb, var(--verde) 14%, transparent); stroke: rgb(255 255 255 / .12); }
-/* Pontos medidos em 1440 px (centro de cada seção na tela): Dupla 36%, Wrapped 42%, espectro 48%,
-   Batalha e Match lado a lado em 60%, passos 74%. Em telas estreitas as seções descem, mas a ordem é a mesma. */
-@keyframes aurora {
-  0%, 42% { --aurora-a: rgb(30 215 96 / .2); --aurora-b: rgb(196 183 255 / .1); }
-  48% { --aurora-a: rgb(196 183 255 / .22); --aurora-b: rgb(30 215 96 / .1); }
-  57%, 64% { --aurora-a: rgb(255 164 43 / .2); --aurora-b: rgb(245 115 160 / .18); }
-  74%, 100% { --aurora-a: rgb(30 215 96 / .18); --aurora-b: rgb(196 183 255 / .12); }
-}
-@keyframes vinil-anda { from { translate: 0 0; scale: 1; } to { translate: -38vw 46vh; scale: 1.5; } }
-@keyframes vinil-gira { to { rotate: 1turn; } }
-@keyframes surge { from { opacity: 0; translate: 0 28px; } }
-@keyframes surge-cartao { from { opacity: 0; translate: 0 36px; scale: .97; } }
-@keyframes acende { from { opacity: .15; } }
-@media (prefers-reduced-motion: no-preference) {
-  body.inicio .vinil { animation: vinil-gira 40s linear infinite; }
-  @supports (animation-timeline: scroll()) {
-    body.inicio .fundo-vivo { animation: aurora linear both; animation-timeline: scroll(root); }
-    body.inicio .vinil-trilho { animation: vinil-anda linear both; animation-timeline: scroll(root); }
-  }
-  /* Uma entrada por seção, ligada à rolagem; termina em 85% da entrada, então o fim da página entra inteiro. */
-  @supports (animation-timeline: view()) {
-    body.inicio :is(.titulo-secao, .titulo-prateleira, .cabeca .etiqueta, .filtros) {
-      animation: surge linear both; animation-timeline: view(); animation-range: entry 0% entry 85%; }
-    body.inicio .bento > .caixa { animation: surge-cartao linear both; animation-timeline: view(); animation-range: entry 0% entry 85%; }
-    /* Capas da prateleira e itens das listas: em cascata, cada um entrando um pouco depois (mola curta nas capas). */
-    body.inicio .prateleira > li { animation: surge-cartao both; animation-timeline: view();
-      animation-timing-function: linear(0, .3 12%, .75 28%, 1.04 45%, 1.06 55%, 1.01 72%, 1);
-      animation-range: entry calc(var(--n, 0) * 7%) entry calc(60% + var(--n, 0) * 7%); }
-    body.inicio :is(.tracklist, .colunas) > * { animation: surge linear both; animation-timeline: view();
-      animation-range: entry calc(var(--n, 0) * 8%) entry calc(60% + var(--n, 0) * 8%); }
-    body.inicio .tracklist > li { animation-name: acende; }
-    body.inicio :is(.prateleira, .tracklist, .colunas) > :nth-child(2) { --n: 1; }
-    body.inicio :is(.prateleira, .tracklist, .colunas) > :nth-child(3) { --n: 2; }
-    body.inicio :is(.prateleira, .tracklist, .colunas) > :nth-child(n + 4) { --n: 3; }
-  }
-}
-@media (prefers-reduced-transparency: reduce) { body.inicio .fundo-vivo { background: none; } .vinil-trilho { display: none; } }

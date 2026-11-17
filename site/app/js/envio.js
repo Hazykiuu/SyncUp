@@ -57,7 +57,7 @@ export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquiv
   const d = leitura?.dados;
   const estado = !arquivos.length ? 'vazio' : leitura?.erro ? 'erro' : d ? 'pronto' : 'lendo';
   return html`
-    <section class=${`pessoa vidro ${cor}`} aria-labelledby=${idTitulo}>
+    <section class=${`pessoa superficie ${cor}`} aria-labelledby=${idTitulo}>
       <div class="pessoa-topo">
         <span class=${`avatar ${cor}`} aria-hidden="true">${rotulo}</span>
         <div><h2 id=${idTitulo}>${titulo}</h2>${(rotulo === 'A' || rotulo === 'B') && html`<small class="lado">Lado ${rotulo}</small>`}</div>
@@ -80,7 +80,7 @@ export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquiv
             <p class="deck-plays"><b class="num">${d.plays.toLocaleString('pt-BR')}</b> reproduções · ${arquivos.length} ${arquivos.length === 1 ? 'parte' : 'partes'}</p>`}
           ${estado === 'erro' && html`<p class="erro" role="alert">${leitura.erro}</p>`}
         </div>`}
-        <button type="button" class="btn btn-borda vidro" onClick=${() => entrada.current.click()} disabled=${desabilitado}>
+        <button type="button" class="btn btn-borda superficie" onClick=${() => entrada.current.click()} disabled=${desabilitado}>
           ${arquivos.length ? '+ Adicionar mais arquivos' : 'Escolher arquivos'}
         </button>
         <input ref=${entrada} type="file" accept=".zip,.json" multiple hidden

@@ -1,5 +1,26 @@
 # Changelog — SyncUp
 
+## [1.19.0] — 2026-11-17
+
+Menos efeitos, mais personalidade: uma avaliação externa apontou recursos estéticos demais ao mesmo tempo (vidro, gradientes, animações, cartões e etiquetas). O SyncUp fica mais enxuto e editorial, sem mudar cálculos nem funções.
+
+### Mudado
+- **O Match vira dueto.** Cada par aparece com:
+  - os nomes na cor de cada pessoa, ligados por "×";
+  - a nota (a comparação dos rankings, a mesma de antes) e o nível em texto;
+  - duas faixas cujo trecho do meio mostra os artistas em comum;
+  - o "Refrão em comum" e o "Lado B" de cada um.
+  - Tela, stories e pôster usam os mesmos dados.
+  - No trio, cada um dos três pares tem a sua nota; o refrão é o dos três, e o Lado B vem agrupado por quem indica.
+  - Saem a renda, os corações e os bilhetes. "O casal do grupo" vira "O dueto mais afinado".
+- **Vidro só no que flutua:** barra do topo, barra de modos, dock, controles dos stories e a placa do palco. Os cartões viram superfícies sólidas (#181818, com fio de 1 px), sem aro de luz, brilho ou cor vazando. Na Dupla com stories, os elementos com blur caem de 23 para 6.
+- **Só animações funcionais:** saem a aurora e o vinil do fundo, as entradas por rolagem, o brilho dos botões e as notas caindo no rodapé. Ficam os stories, o equalizador, a troca de modo, o progresso do trecho, a entrada do topo e as barras do espectro.
+- **Página inicial editorial:** cada modo é uma faixa com número, texto, fatos em texto corrido, o story de exemplo e o link para abrir. Saem a prateleira "Comece por aqui", os filtros e as caixas. As etiquetas que repetiam o título das seções também saem.
+- **Batalha:** as rodadas viram uma lista com fios. **Palco no computador:** a fila vira uma lista simples.
+
+### Corrigido
+- O story de um trio no Match mostrava só a nota do primeiro par.
+
 ## [1.18.1] — 2026-11-17
 
 ### Mudado

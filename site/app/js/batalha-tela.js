@@ -56,12 +56,12 @@ function Podio({ b, nomes, ordem }) {
   })}</ol>`;
 }
 
-// Um cartão por rodada: vencedor em destaque e uma barra por pessoa (piso de 4 px quando o valor é maior que 0).
+// Uma linha por rodada (lista com fios): vencedor em destaque e uma barra por pessoa (piso de 4 px quando o valor é maior que 0).
 function Rodadas({ b, nomes }) {
   return html`<ul class="rodadas">${b.rodadas.map((r, n) => {
     const maior = Math.max(...r.valores) || 1;
     const venc = r.posicoes.map((p, i) => (p === 1 ? i : -1)).filter((i) => i >= 0);
-    return html`<li class="rodada vidro" style=${{ '--i': Math.min(n, 8) }}>
+    return html`<li class="rodada" style=${{ '--i': Math.min(n, 8) }}>
       <h3>${r.titulo}${r.destaque && html` <span class="selo">${SELOS[r.destaque]}</span>`}</h3>
       <p class="rodada-vence"><span class="lut-ponto" style=${{ '--lut': b.lutadores[venc[0]].cor }} aria-hidden="true"></span>${venc.map((i) => nomes[i]).join(' e ')}
         <b>${fmtNum(r.valores[venc[0]], r.casas)}</b> <small>${r.unidade}${r.menor ? ' (menos vence)' : ''}</small></p>
@@ -118,7 +118,7 @@ function ResultadoBatalha({ b, nomes, comum }) {
       <${Palco} alvo=${stories} slides=${slides} comSom=${!!b.trilha} lado=${html`
       <div class="compartilhar"><div class="acoes">
         <button type="button" class="btn btn-verde" onClick=${poster} disabled=${ocupado}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></svg>${ocupado ? 'Gerando…' : 'Baixar pôster'}</button>
-        <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
+        <button type="button" class="btn btn-borda superficie" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
       </div>${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
       <${Dock} alvo=${stories} aoPoster=${poster} ocupado=${ocupado} comSom=${!!b.trilha} /></div>
       ${b.trilha && html`<${SomStories} key=${b} trilha=${b.trilha} alvo=${stories} nota=${NOTA_SOM} />`}`}>
@@ -127,7 +127,7 @@ function ResultadoBatalha({ b, nomes, comum }) {
       <p class="batalha-resumo">${b.resenha}</p>
       <${Rodadas} b=${b} nomes=${nomes} />
       <${Podio} b=${b} nomes=${nomes} ordem=${b.lutadores.map((l, i) => i).sort(porMedalhas(b))} />
-      <details class="vidro detalhe"><summary>Ver todos os números</summary><${Placar} b=${b} nomes=${nomes} /></details>
+      <details class="superficie detalhe"><summary>Ver todos os números</summary><${Placar} b=${b} nomes=${nomes} /></details>
       ${b.fora.length > 0 && html`<p class="nota">Ficaram de fora: ${b.fora.map((f) => `${f.titulo} (${f.motivo})`).join('; ')}.</p>`}
       ${!comum && html`<p class="nota">Históricos inteiros: quem tem mais tempo de histórico leva vantagem.</p>`}
       <p class="nota">${AVISO}</p>
@@ -199,7 +199,7 @@ export function Batalha() {
   const tirar = (i) => { setNomes((n) => n.filter((_, j) => j !== i)); setArquivos((a) => a.filter((_, j) => j !== i)); };
 
   return html`
-    <div class="arena vidro" aria-label=${`Na batalha: ${nomes.length} de 6 pessoas`}>
+    <div class="arena superficie" aria-label=${`Na batalha: ${nomes.length} de 6 pessoas`}>
       <ol class="arena-lista">${nomes.map((nome, i) => html`${i > 0 && html`<li class="vs" aria-hidden="true">vs</li>`}
         <li style=${{ '--lut': CORES[i] }}><span class="avatar lut" aria-hidden="true">${nome.trim() ? inicial(nome) : i + 1}</span><span class="sr-only">${nome.trim() || `Pessoa ${i + 1}`}</span></li>`)}</ol>
       <small>${nomes.length} de 6</small>
@@ -212,18 +212,18 @@ export function Batalha() {
             extra=${i >= 3 && html`<button type="button" class="tirar tirar-lutador" aria-label=${`Tirar a pessoa ${i + 1}`} onClick=${() => tirar(i)} disabled=${ocupado}>×</button>`} />
         </div>`)}
     </div>
-    ${nomes.length < 6 && html`<button type="button" class="btn btn-borda vidro mais-lutador" onClick=${adicionar} disabled=${ocupado}>+ Adicionar pessoa</button>`}
+    ${nomes.length < 6 && html`<button type="button" class="btn btn-borda superficie mais-lutador" onClick=${adicionar} disabled=${ocupado}>+ Adicionar pessoa</button>`}
     <${Opcoes} valor=${opcoes} aoMudar=${setOpcoes} desabilitado=${ocupado} comPonderacao=${false} />
     <div class="barra-acao">
       <button type="button" class="btn btn-verde" onClick=${batalhar} disabled=${!pode} aria-describedby="dica-batalhar">
         ${ocupado ? 'Batalhando…' : 'Começar a batalha'}<span class="seta" aria-hidden="true">→</span></button>
-      <button type="button" class="btn btn-borda vidro" onClick=${demo} disabled=${ocupado}>Testar com dados fictícios</button>
+      <button type="button" class="btn btn-borda superficie" onClick=${demo} disabled=${ocupado}>Testar com dados fictícios</button>
       <small id="dica-batalhar">${pode || ocupado || fase.tipo === 'resultado' ? '' : 'Envie pelo menos um arquivo para cada pessoa.'}</small>
     </div>
     <div aria-live="polite">
-      ${fase.tipo === 'processando' && html`<p ref=${chegarPouco} class="processando vidro"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
-      ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro vidro" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
-        ${ultima.current && html`<button type="button" class="btn btn-borda vidro" onClick=${ultima.current === 'demo' ? demo : batalhar}>Tentar de novo</button>`}</div>`}
+      ${fase.tipo === 'processando' && html`<p ref=${chegarPouco} class="processando superficie"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
+      ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro superficie" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
+        ${ultima.current && html`<button type="button" class="btn btn-borda superficie" onClick=${ultima.current === 'demo' ? demo : batalhar}>Tentar de novo</button>`}</div>`}
       ${fase.tipo === 'resultado' && html`<p class="sr-only">Resultado da batalha pronto, logo abaixo.</p>`}
     </div>
     <div id="resultado-batalha">${fase.tipo === 'resultado' && html`<${ResultadoBatalha} b=${fase.b} nomes=${fase.nomes} comum=${fase.comum} />`}</div>`;

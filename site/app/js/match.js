@@ -196,7 +196,31 @@ export function conciliar(perfis) {
   };
 }
 
-// O par formado de maior nota (em trio, o melhor dos três pares): o "casal do grupo" do pôster.
+// Um par como dueto: a nota e o nível de compararPerfis, as faixas (jaccard) e o Lado B de cada um. Não calcula nada.
+export function linhaDoPar(r, x, y) {
+  const c = r.detalhes[chave(x, y)];
+  const para = (p) => (p === c.a ? c.recomendacoes_para_a : c.recomendacoes_para_b);
+  return {
+    x, y, pontuacao: c.pontuacao, nivel: c.nivel, descricao: c.descricao, jaccard: c.jaccard_artistas,
+    refrao: c.artistas_comuns, musicas_comuns: c.musicas_comuns,
+    ladoB: [{ para: x, de: y, artistas: para(x) }, { para: y, de: x, artistas: para(y) }],
+  };
+}
+
+// Modelo dos duetos (tela, stories e pôster leem daqui). Trio: uma linha por subpar, sem nota de grupo;
+// refrão = artistas dos três; Lado B de cada pessoa agrupado por origem (as listas que o cálculo já devolve).
+export function duetos(r) {
+  return r.pares.map((g) => {
+    const linhas = g.flatMap((x, a) => g.slice(a + 1).map((y) => linhaDoPar(r, x, y)));
+    const nos = (l) => new Set(l.refrao.map(normalizarNome));
+    const refrao = linhas.length === 1 ? linhas[0].refrao
+      : linhas[0].refrao.filter((n) => nos(linhas[1]).has(normalizarNome(n)) && nos(linhas[2]).has(normalizarNome(n)));
+    const ladoB = g.map((p) => ({ para: p, origens: linhas.flatMap((l) => l.ladoB).filter((o) => o.para === p).map(({ de, artistas }) => ({ de, artistas })) }));
+    return { nomes: g, linhas, refrao, ladoB };
+  });
+}
+
+// O par formado de maior nota (em trio, o melhor dos três pares): o "dueto mais afinado" do pôster.
 // Empate: o que vem primeiro na lista de pares.
 export function melhorPar(r) {
   let melhor = null;
@@ -207,7 +231,7 @@ export function melhorPar(r) {
   return melhor;
 }
 
-// Trilha dos stories (o formato de som.js): cada par toca o artista que mais os une; o pôster, o do casal do grupo.
+// Trilha dos stories (o formato de som.js): cada par toca o artista que mais os une; o pôster, o do dueto mais afinado.
 // Só nomes de artistas em comum vão ao iTunes.
 export function trilhaMatch(r) {
   const comum = (x, y) => r.detalhes[chave(x, y)].artistas_comuns.slice(0, 1).map((artista) => ({ artista }));

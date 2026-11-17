@@ -249,7 +249,7 @@ export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
   useEffect(() => { if (estado === 'tocando') rampa(mudo ? 0 : VOLUME); }, [mudo]);
 
   return html`
-    <div class="som-stories vidro">
+    <div class="som-stories superficie">
       <div class="acoes">${estado === 'sem'
         ? html`<button type="button" class="btn btn-verde" onClick=${comecar}>${ICONE.nota}Ligar capas e som</button>`
         : estado === 'carregando' && html`<p class="nota">Buscando capas e trechos…</p>`}

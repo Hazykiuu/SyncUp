@@ -8,7 +8,7 @@ const FUSOS = ['America/Sao_Paulo', 'America/Manaus', 'America/Fortaleza', 'Amer
 export function Opcoes({ valor, aoMudar, desabilitado, comPeriodo = true, comPonderacao = comPeriodo }) {
   const muda = (campo) => (e) => aoMudar({ ...valor, [campo]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
   return html`
-    <details class="opcoes vidro">
+    <details class="opcoes superficie">
       <summary>Opções de dados <small>período, fuso e filtros</small></summary>
       <fieldset disabled=${desabilitado}>
         ${comPeriodo && html`<label class="marcar"><input type="checkbox" checked=${valor.comum} onChange=${muda('comum')} />

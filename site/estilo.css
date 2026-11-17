@@ -131,29 +131,50 @@ section[id] { scroll-margin-top: 6rem; }
 .hero h1 em { font-style: normal; color: var(--rosa); }
 .hero-sub { max-width: 36rem; font-size: clamp(1.05rem, 1.4vw, 1.25rem); line-height: 1.55; color: rgba(255, 255, 255, .78); text-wrap: pretty; }
 .hero-ctas { display: flex; flex-wrap: wrap; gap: .75rem; }
-.hero-fato { font-size: .875rem; color: var(--fraco); }
 
 /* Moldura de story (9:16) com o mesmo HTML/CSS dos stories do app (app/stories.css) */
 .mock { position: relative; aspect-ratio: 9 / 16; border-radius: 28px; overflow: hidden; container-type: inline-size; background: #0b0b0c; color: #fff; }
 .mock .su-story { position: absolute; inset: 0; display: flex; overflow: hidden; }
 .mock .st-conteudo { justify-content: flex-start; }
 .mock .st-barra { pointer-events: none; }
-.pilha { position: relative; width: min(23rem, 82vw); justify-self: center; }
-.pilha .frente { position: relative; z-index: 1; box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .8), 0 0 0 1px rgba(255, 255, 255, .08); }
-.pilha .tras { position: absolute; inset: 4% -24% auto auto; width: 92%; opacity: .5; }
-.pilha .tras * { animation: none !important; }
-@media (max-width: 767px) { .pilha .tras { display: none; } }
+/* Palco do topo em 3 camadas: 1) luz das capas (as abstratas do projeto, nunca capas reais) bem borrada;
+   2) placa de vidro com o "tocando agora"; 3) o story na frente. Nada inclina. */
+.palco { position: relative; width: min(23rem, 78vw); justify-self: center; isolation: isolate; }
+.palco-luz { position: absolute; inset: -14% -22%; z-index: -1; pointer-events: none; }
+.palco-luz img { position: absolute; width: 62%; aspect-ratio: 1; border-radius: 50%; filter: blur(64px) saturate(170%); opacity: .6; }
+.palco-luz img:nth-child(1) { left: 0; top: 4%; } .palco-luz img:nth-child(2) { right: 0; top: 30%; } .palco-luz img:nth-child(3) { left: 18%; bottom: 0; opacity: .45; }
+.palco-placa { position: absolute; inset: 9% -9% -5% -9%; z-index: 0; border-radius: calc(var(--r-vidro) + 6px); display: flex; align-items: flex-end; padding: 1rem; }
+.palco .frente { position: relative; z-index: 1; width: 100%; margin-bottom: 4.5rem; box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .8), 0 0 0 1px rgba(255, 255, 255, .08); }
+.tocando { display: flex; align-items: center; gap: .75rem; width: 100%; padding: .55rem .9rem .55rem .55rem; border-radius: var(--pilula); background: rgba(0, 0, 0, .35); }
+.tocando img { width: 2.5rem; height: 2.5rem; border-radius: 8px; flex: none; }
+.tocando span:not(.eq) { display: grid; min-width: 0; flex: 1; font-size: .85rem; line-height: 1.25; }
+.tocando b, .tocando small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.tocando small { color: var(--sub); }
+/* Micro-equalizador: 4 barras que sobem e descem enquanto o trecho toca (parado com "menos movimento"). */
+.eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; flex: none; }
+.eq i { width: 3px; height: 100%; border-radius: 2px; background: var(--verde); transform-origin: bottom; transform: scaleY(.5); }
+@media (prefers-reduced-motion: no-preference) {
+  .eq i { animation: eq .9s ease-in-out infinite alternate; } .eq i:nth-child(2) { animation-delay: -.3s; } .eq i:nth-child(3) { animation-delay: -.6s; } .eq i:nth-child(4) { animation-delay: -.15s; }
+}
+.mock .st-controles .eq { height: 3.4cqw; } .mock .st-controles .eq i { width: .8cqw; background: #fff; }
+.st-avatares.foto span { background: var(--foto) center / cover; color: #fff; text-shadow: 0 1px 8px rgba(0, 0, 0, .6); }
+.st-capinhas { display: flex; align-items: center; gap: 2cqw; font-size: 3.6cqw; }
+.st-capinhas img { width: 9cqw; aspect-ratio: 1; border-radius: 1.5cqw; flex: none; }
+.st-capinhas img + img { margin-left: -4cqw; box-shadow: -1cqw 0 2cqw rgba(0, 0, 0, .5); }
+.st-capinhas span { margin-left: 1cqw; }
+.legal a { text-decoration: underline; text-underline-offset: .2em; }
+.legal a:hover { color: var(--texto); }
 
 /* Entrada do topo (aprovada no Figma): o texto sobe em sequência; o story sobe com mola; o de trás sai de trás dele. */
 @keyframes sobe { from { opacity: 0; transform: translateY(var(--dy, 18px)); } }
 @keyframes desce { from { opacity: 0; transform: translateY(-14px); } }
 @keyframes story-sobe { from { opacity: 0; transform: translateY(48px) scale(.95); } }
-@keyframes sai-de-tras { from { opacity: 0; transform: translateX(-45%); } }
+
 @media (prefers-reduced-motion: no-preference) {
   .topo-barra { animation: desce .5s var(--sai) both; }
   .hero-texto > * { animation: sobe .55s var(--sai) both; animation-delay: var(--d, 0ms); }
-  .pilha .frente { animation: story-sobe .8s ease-out both; animation: story-sobe .8s linear(0, .22 8%, .62 20%, .93 32%, 1.07 43%, 1.1 50%, 1.07 58%, 1.01 70%, .99 80%, 1) both; animation-delay: .35s; }
-  .pilha .tras { animation: sai-de-tras .75s ease-out both !important; animation: sai-de-tras .75s linear(0, .22 8%, .62 20%, .93 32%, 1.07 43%, 1.1 50%, 1.07 58%, 1.01 70%, .99 80%, 1) both !important; animation-delay: .7s !important; }
+  .palco .frente { animation: story-sobe .8s ease-out both; animation: story-sobe .8s linear(0, .22 8%, .62 20%, .93 32%, 1.07 43%, 1.1 50%, 1.07 58%, 1.01 70%, .99 80%, 1) both; animation-delay: .35s; }
+  .palco-placa { animation: sobe .7s var(--sai) both; animation-delay: .6s; }
 }
 
 /* Recursos: Dupla e Wrapped em destaque, cada um com o seu story; Match e Grupo menores */

@@ -154,6 +154,22 @@
 /* O convite é um pé discreto: a ênfase do pôster é a pessoa (ou a dupla), não o site. */
 .st-poster-pe { margin-top: auto !important; padding-top: 2.6cqw; border-top: 1px solid rgba(255, 255, 255, .16); font-size: 3.2cqw; color: rgba(255, 255, 255, .72) !important; }
 .st-poster-pe b { color: #fff; font-weight: 800; }
+/* Resumo do Wrapped (1.19.1): período embaixo do logo (o canto direito é do botão de pausa), blocos distribuídos de
+   cima a baixo, identidade com as iniciais (o histórico não traz foto), horas em destaque e fundo escuro com uma luz
+   só, na cor da capa, atrás do Artista da vida. */
+.s-resumo .st-conteudo { justify-content: space-between; gap: 3cqw; padding-top: 14cqw; padding-bottom: 7cqw; }
+.s-resumo .st-conteudo > * { margin-top: 0 !important; }
+.s-resumo .st-poster-topo { flex-direction: column; align-items: flex-start; gap: 1cqw; }
+.s-resumo .st-poster-topo small { opacity: .7; color: #fff; }
+.st-poster-quem { display: flex; align-items: center; gap: 2.4cqw; font-size: 2.9cqw; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.st-poster-quem > span:last-child { opacity: .65; }
+.st-poster-avatar { display: grid; place-items: center; flex: none; width: 9cqw; aspect-ratio: 1; border-radius: 50%; background: var(--verde); color: #0b0b0e; font-size: 4.4cqw; font-weight: 900; letter-spacing: 0; }
+.st-poster-tempo { display: grid; gap: .6cqw; }
+.s-resumo .st-poster-horas { color: #1db954; font-weight: 800; }
+.st-poster-tempo span { font-size: 3.4cqw; font-weight: 500; opacity: .75; }
+.s-resumo .st-fundo { background: radial-gradient(70% 38% at 22% 52%, rgb(var(--capa) / .42), rgb(var(--capa) / .12) 55%, transparent 80%), #0b0b0e; }
+.s-resumo .st-fundo img, .s-resumo .st-fundo::before, .s-resumo .st-fundo::after { display: none; }
+.s-resumo .st-veu { background: none; }
 /* O bloco da pessoa fica no meio: o espaço livre se divide entre o topo e o pé. */
 .st-poster-topo + * { margin-top: auto !important; }
 .st-capa.pequena { width: 14cqw; font-size: 7cqw; border-radius: 50%; }
@@ -461,3 +477,27 @@
 .st-lista > li, .sb-quadro > li { padding: 1.6cqw 2.4cqw; border-radius: 2cqw; background: rgb(255 255 255 / .06); }
 @media (prefers-reduced-transparency: reduce) { .st-vidro, .vidro-ctrl { background: var(--sup-2); } }
 @media (prefers-contrast: more) { .st-vidro, .vidro-ctrl, .sb-bloco { background: var(--sup-2); border-color: #fff; } }
+/* Resumo sem cortes (1.19.1): o nome e o artista encolhem pelo comprimento (--tam) e quebram a linha; as cinco
+   músicas viram uma lista, uma por linha, que também quebra. Nada de reticências. */
+.s-resumo .st-poster-nome .st-nome-xxl { font-size: var(--tam, 12.5cqw); white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; line-height: .95; }
+.s-resumo .st-poster-artista b { font-size: var(--tam, 7cqw); overflow-wrap: anywhere; }
+.s-resumo .st-poster-musicas ol { display: grid; gap: .8cqw; margin-top: 2cqw; font-size: 3cqw; line-height: 1.25; }
+.s-resumo .st-poster-musicas li { display: grid; grid-template-columns: 4cqw minmax(0, 1fr); overflow-wrap: anywhere; }
+.s-resumo .st-poster-musicas li b { color: var(--verde); }
+.s-resumo .st-poster-fatos span { white-space: normal; overflow-wrap: anywhere; }
+/* Tamanhos do resumo multiplicados por --e (1 normalmente; menor quando os nomes não cabem, ver useCaber). */
+.s-resumo .st-poster-topo .marca { font-size: calc(4.6cqw * var(--e, 1)); }
+.s-resumo .st-poster-topo small { font-size: calc(3cqw * var(--e, 1)); }
+.s-resumo .st-poster-quem { font-size: calc(2.9cqw * var(--e, 1)); }
+.s-resumo .st-poster-avatar { width: calc(9cqw * var(--e, 1)); font-size: calc(4.4cqw * var(--e, 1)); }
+.s-resumo .st-poster-nome .st-nome-xxl { font-size: calc(var(--tam, 12.5cqw) * var(--e, 1)); }
+.s-resumo .st-poster-horas { font-size: calc(8cqw * var(--e, 1)); }
+.s-resumo .st-poster-tempo span { font-size: calc(3.4cqw * var(--e, 1)); }
+.s-resumo .st-poster-artista { grid-template-columns: calc(30cqw * var(--e, 1)) minmax(0, 1fr); }
+.s-resumo .st-poster-artista .st-capa { font-size: calc(14cqw * var(--e, 1)); }
+.s-resumo .st-poster-artista b { font-size: calc(var(--tam, 7cqw) * var(--e, 1)); }
+.s-resumo .st-poster-artista small { font-size: calc(3.2cqw * var(--e, 1)); }
+.s-resumo .st-poster-capas { width: calc(100% * var(--e, 1)); }
+.s-resumo .st-poster-musicas ol { font-size: calc(3cqw * var(--e, 1)); }
+.s-resumo .st-poster-fatos span { font-size: calc(3.4cqw * var(--e, 1)); }
+.s-resumo .st-poster-pe { font-size: calc(3.2cqw * var(--e, 1)); }

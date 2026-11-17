@@ -1,6 +1,6 @@
 // Slides novos do Wrapped ("Capa Viva" + "Liquid Glass"), desenhados a partir de `dados` (JSON da ponte).
 // O Gradio continua com o HTML de stories.py; o app web usa só estes.
-import { createContext, html, useContext, useEffect, useRef, useState } from 'preact-htm';
+import { createContext, html, useContext, useEffect, useLayoutEffect, useRef, useState } from 'preact-htm';
 import {
   ajustarCor, CORES_PADRAO, coresVivas, corReserva, dataBr, descobertasCurta, fmtNum, fmtPct, fraseConstancia, fraseRecorde,
   fraseRepeticao, fraseSequencia, habitoDestaque, hashNome, mesAno,
@@ -337,31 +337,55 @@ export function Arquetipo({ d, i }) {
   <//>`;
 }
 
+// Tamanho da fonte (cqw) pelo comprimento do texto: até `folga` caracteres usa o máximo; depois encolhe até o mínimo.
+// O texto ainda quebra a linha se precisar (nunca é cortado).
+const tamanho = (texto, max, min, folga) => `${Math.max(min, Math.min(max, (max * folga) / Math.max(folga, [...texto].length)))}cqw`;
+
 // Último story = o pôster que vai para o Instagram: termina com o convite para comparar no SyncUp.
+// Nomes muito longos: se o conteúdo não couber na altura do story, encolhe tudo por igual (--e) até caber.
+function useCaber(ref, deps) {
+  useLayoutEffect(() => {
+    const c = ref.current?.closest('.st-conteudo');
+    if (!c) return undefined;
+    const ajustar = () => {
+      c.style.setProperty('--e', '1');
+      for (let e = 0.95; c.scrollHeight > c.clientHeight + 1 && e >= 0.5; e -= 0.05) c.style.setProperty('--e', e.toFixed(2));
+    };
+    ajustar();
+    const obs = new ResizeObserver(ajustar); obs.observe(c); for (const filho of c.children) obs.observe(filho); // filhos: o texto mudou de tamanho
+    document.fonts?.ready.then(ajustar);
+    return () => obs.disconnect();
+  }, deps);
+}
+
 export function Resumo({ d, ativo, i }) {
   const p = d.arquetipos.principal, a = d.artista_vida, top = d.top_musicas.slice(0, 5);
+  const medida = useRef(null);
+  useCaber(medida, [d]);
   return html`<${Slide} tipo="resumo" i=${i} capa=${useCapa(a, 'artista')?.url}>
     <${Entra} i=${0} classe="st-poster-topo">
       <span class="marca"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span>SyncUp</span>
       <small>${mesAno(d.inicio)} → ${mesAno(d.fim)}</small>
     <//>
     <${Entra} i=${1} classe="st-poster-nome">
-      <h2 class="st-nome-xxl">${d.nome}</h2>
-      <p><b class="st-poster-horas"><${Contador} valor=${d.horas} ativo=${ativo} /></b> horas de música · ${fmtNum(d.horas / 24)} dias sem parar</p>
+      <p class="st-poster-quem"><span class="st-poster-avatar" aria-hidden="true">${([...d.nome.trim()][0] || '?').toUpperCase()}</span><span>Sua retrospectiva</span></p>
+      <h2 class="st-nome-xxl" style=${{ '--tam': tamanho(d.nome, 12.5, 7, 9) }}>${d.nome}</h2>
+      <p class="st-poster-tempo"><b class="st-poster-horas"><${Contador} valor=${d.horas} ativo=${ativo} /> horas</b><span>de música · ${fmtNum(d.horas / 24)} dias sem parar</span></p>
     <//>
     <${Entra} i=${2} classe="st-poster-artista">
       <${Capa} item=${a} tipo="artista" classe="grande" />
-      <div><span class="st-kicker">Artista da vida</span><b>${a.nome}</b><small>${fmtNum(a.plays)} plays</small></div>
+      <div><span class="st-kicker">Artista da vida</span><b style=${{ '--tam': tamanho(a.nome, 7, 4.6, 16) }}>${a.nome}</b><small>${fmtNum(a.plays)} plays</small></div>
     <//>
     <${Entra} i=${3} classe="st-poster-musicas">
       <div class="st-poster-capas">${top.map((m) => html`<${Capa} item=${m} tipo="faixa" />`)}</div>
-      <p>${top.map((m, k) => html`${k ? ' · ' : ''}<b>${k + 1}</b> ${m.nome}`)}</p>
+      <ol>${top.map((m, k) => html`<li><b>${k + 1}</b>${m.nome}</li>`)}</ol>
     <//>
     <${Entra} i=${4} classe="st-poster-fatos">
       <span class="st-vidro"><${Icone} id=${p.chave} classe="mini" /> ${p.nome}</span>
       <span class="st-vidro">pico às <b>${d.pico_hora}h</b></span>
     <//>
     <${Entra} i=${5} tag="p" classe="st-poster-pe">Compare a sua sintonia comigo · <b>hazykiuu.github.io/SyncUp</b><//>
+    <span ref=${medida} hidden></span>
   <//>`;
 }
 

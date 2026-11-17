@@ -105,8 +105,34 @@ function pilula(ctx, texto, x, y, cor) {
   return x + w + 20;
 }
 
+// Quebra o texto em linhas que cabem na largura (por palavra; palavra maior que a linha é partida). Nunca corta.
+export function quebrar(ctx, texto, largura) {
+  const linhas = []; let linha = '';
+  for (const palavra of String(texto).split(/\s+/).filter(Boolean)) {
+    let w = palavra;
+    while (ctx.measureText(w).width > largura) { // palavra sozinha não cabe: parte no último caractere que cabe
+      let n = w.length; while (n > 1 && ctx.measureText(w.slice(0, n)).width > largura) n--;
+      if (linha) { linhas.push(linha); linha = ''; }
+      linhas.push(w.slice(0, n)); w = w.slice(n);
+    }
+    const t = linha ? `${linha} ${w}` : w;
+    if (linha && ctx.measureText(t).width > largura) { linhas.push(linha); linha = w; } else linha = t;
+  }
+  if (linha) linhas.push(linha);
+  return linhas.length ? linhas : [''];
+}
+// Encolhe a fonte (de px até min) até o texto caber em maxLinhas; no mínimo, aceita mais linhas (nunca corta).
+function caber(ctx, texto, largura, peso, px, min, maxLinhas) {
+  let linhas;
+  for (; ; px -= 4) { ctx.font = FONTE(peso, px); linhas = quebrar(ctx, texto, largura); if (linhas.length <= maxLinhas || px - 4 < min) break; }
+  return { linhas, px };
+}
+
+// Pôster do Wrapped = o último story (resumo): período sob o logo, iniciais e "Sua retrospectiva", nome, horas em
+// destaque, o Artista da vida com a luz da capa atrás, as 5 mais tocadas e as pílulas. Nenhum texto é cortado:
+// o que não cabe quebra a linha ou encolhe a fonte, e os blocos se distribuem na altura que sobra.
 export async function desenharPoster(d, capas) {
-  await Promise.all([FONTE(900, 64), FONTE(800, 36), FONTE(400, 36)].map((f) => document.fonts.load(f).catch(() => null)));
+  await Promise.all([FONTE(900, 64), FONTE(800, 36), FONTE(400, 36), FONTE(700, 30), FONTE(500, 38)].map((f) => document.fonts.load(f).catch(() => null)));
   const url = (item, tipo) => capaTeste(item) || capas?.get(chaveCapa(item, tipo))?.url || null;
   const a = d.artista_vida, top = d.top_musicas.slice(0, 5), p = d.arquetipos.principal;
   const [foto, ...capasTop] = await Promise.all([imagem(url(a, 'artista')), ...top.map((m) => imagem(url(m, 'faixa')))]);
@@ -115,49 +141,86 @@ export async function desenharPoster(d, capas) {
 
   const canvas = Object.assign(document.createElement('canvas'), { width: L, height: A });
   const ctx = canvas.getContext('2d');
-  const [r, g, b] = corDe(foto);
+  const cor = corDe(foto);
 
-  fundoPlaylist(ctx, [r, g, b]);
+  // Medidas de cada bloco antes de desenhar. Se tudo não couber entre o topo e o pé, encolhe tudo por igual (e)
+  // até caber; o espaço que sobra é distribuído entre os blocos.
+  const topoFim = 230, baseLivre = A - 260 - (logo ? 90 : 0);
+  const medir = (e) => {
+    const m = { e };
+    m.nome = caber(ctx, d.nome.toUpperCase(), UTIL, 900, Math.round(150 * e), Math.round(64 * e), 2);
+    m.lado = Math.round(380 * e); m.xt = M + m.lado + 48; m.wt = L - M - m.xt;
+    m.artista = caber(ctx, a.nome, m.wt, 900, Math.round(78 * e), Math.round(36 * e), 3);
+    m.lc = Math.round(((UTIL - 4 * 24) / 5) * Math.min(1, e + 0.15));
+    m.fm = Math.round(32 * Math.max(e, 0.6)); m.lm = Math.round(m.fm * 1.3);
+    ctx.font = FONTE(400, m.fm);
+    m.musicas = top.map((x) => quebrar(ctx, x.nome, UTIL - 40));
+    m.horasPx = Math.round(104 * e);
+    m.hNome = 60 + m.nome.linhas.length * m.nome.px * 0.95 + m.horasPx * 1.08 + 52;
+    m.hArtista = Math.max(m.lado, 110 + m.artista.linhas.length * m.artista.px * 1.08 + 50);
+    m.hMusicas = m.lc + 30 + m.musicas.flat().length * m.lm;
+    ctx.font = FONTE(800, 36);
+    m.emDuas = M + ctx.measureText(p.nome).width + 64 + 20 + ctx.measureText(`pico às ${d.pico_hora}h`).width + 64 > L - M;
+    m.hPilulas = m.emDuas ? 172 : 76;
+    m.total = m.hNome + m.hArtista + m.hMusicas + m.hPilulas;
+    return m;
+  };
+  let med = medir(1);
+  for (let e = 0.95; med.total + 5 * 16 > baseLivre - topoFim && e >= 0.5; e -= 0.05) med = medir(e);
+  const { nome, lado, xt, artista, lc, fm, lm, musicas, horasPx, hNome, hArtista, hMusicas, hPilulas, emDuas: pilulasEmDuas } = med;
+  const vao = Math.max(16, (baseLivre - topoFim - med.total) / 5);
+  let y = topoFim + vao;
+  const yArt = y + hNome + vao;
 
-  topo(ctx, d);
+  // Fundo escuro com uma luz só, na cor da capa, atrás do Artista da vida.
+  ctx.fillStyle = '#0b0b0e'; ctx.fillRect(0, 0, L, A);
+  const luz = ctx.createRadialGradient(M + lado / 2, yArt + lado / 2, 0, M + lado / 2, yArt + lado / 2, 900);
+  luz.addColorStop(0, rgbTexto(cor, 0.42)); luz.addColorStop(0.5, rgbTexto(cor, 0.12)); luz.addColorStop(1, rgbTexto(cor, 0));
+  ctx.fillStyle = luz; ctx.fillRect(0, 0, L, A);
 
-  // Nome e horas.
-  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 150);
-  ctx.fillText(cortar(ctx, d.nome.toUpperCase(), UTIL), M, 345);
-  ctx.font = FONTE(900, 112); ctx.fillStyle = VERDE;
-  const horas = fmtNum(d.horas);
-  ctx.fillText(horas, M, 485);
-  const xh = M + ctx.measureText(horas).width + 20;
-  ctx.font = FONTE(400, 38); ctx.fillStyle = 'rgba(255,255,255,.88)';
-  ctx.fillText(cortar(ctx, 'horas de música', L - M - xh), xh, 440);
-  ctx.fillText(cortar(ctx, `${fmtNum(d.horas / 24)} dias sem parar`, L - M - xh), xh, 485);
+  // Topo: logo e, embaixo, o período.
+  [0.55, 1, 0.4, 0.75].forEach((h, k) => { ctx.fillStyle = BARRAS[k]; retangulo(ctx, M + k * 16, 150 - 48 * h, 10, 48 * h, 5); ctx.fill(); });
+  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 48); ctx.fillText('SyncUp', M + 78, 150);
+  ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = FONTE(400, 32); ctx.fillText(`${mesAno(d.inicio)} → ${mesAno(d.fim)}`, M, 205);
 
-  // Artista da vida: foto à esquerda, texto ao lado (nunca por cima).
-  const yA = 570, lado = 380;
-  capa(ctx, foto, a.nome, M, yA, lado, 16);
-  const xt = M + lado + 48, wt = L - M - xt;
-  kickerEm(ctx, 'Artista da vida', xt, yA + 110);
-  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 78);
-  const palavras = a.nome.split(' '); let linha = '', linhas = [];
-  for (const w of palavras) { const t = linha ? `${linha} ${w}` : w; if (ctx.measureText(t).width > wt && linha) { linhas.push(linha); linha = w; } else linha = t; }
-  linhas.push(linha); linhas = linhas.slice(0, 2);
-  linhas.forEach((l, k) => ctx.fillText(cortar(ctx, l, wt), xt, yA + 195 + k * 84));
-  ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = FONTE(400, 36);
-  ctx.fillText(`${fmtNum(a.plays)} plays`, xt, yA + 195 + linhas.length * 84 + 10);
+  // Identidade: iniciais + "Sua retrospectiva", o nome e as horas.
+  ctx.beginPath(); ctx.arc(M + 30, y + 22, 30, 0, 2 * Math.PI); ctx.fillStyle = VERDE; ctx.fill();
+  ctx.fillStyle = '#0b0b0e'; ctx.font = FONTE(900, 32); ctx.textAlign = 'center'; ctx.fillText(([...d.nome.trim()][0] || '?').toUpperCase(), M + 30, y + 34); ctx.textAlign = 'left';
+  kickerEm(ctx, 'Sua retrospectiva', M + 80, y + 33, 'rgba(255,255,255,.65)');
+  y += 60;
+  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, nome.px);
+  nome.linhas.forEach((l) => { y += nome.px * 0.95; ctx.fillText(l, M, y); });
+  y += horasPx * 1.08; ctx.fillStyle = '#1db954'; ctx.font = FONTE(800, horasPx); ctx.fillText(`${fmtNum(d.horas)} horas`, M, y);
+  y += 52; ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.font = FONTE(500, 38); ctx.fillText(`de música · ${fmtNum(d.horas / 24)} dias sem parar`, M, y);
 
-  // Top 5 músicas: capas lado a lado + legenda numerada.
-  const yC = 1040, gap = 24, lc = (UTIL - 4 * gap) / 5;
-  top.forEach((m, k) => capa(ctx, capasTop[k], m.nome, M + k * (lc + gap), yC, lc, 10));
-  ctx.font = FONTE(400, 32); ctx.fillStyle = 'rgba(255,255,255,.88)';
-  ctx.fillText(cortar(ctx, top.map((m, k) => `${k + 1} ${m.nome}`).join(' · '), UTIL), M, yC + lc + 56);
+  // Artista da vida: foto à esquerda, texto ao lado (nunca por cima), o nome em quantas linhas precisar.
+  y = yArt;
+  capa(ctx, foto, a.nome, M, y, lado, 16);
+  kickerEm(ctx, 'Artista da vida', xt, y + 70);
+  ctx.fillStyle = '#fff'; ctx.font = FONTE(900, artista.px);
+  let ya = y + 70;
+  artista.linhas.forEach((l) => { ya += artista.px * 1.08; ctx.fillText(l, xt, ya); });
+  ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.font = FONTE(400, 36); ctx.fillText(`${fmtNum(a.plays)} plays`, xt, ya + 50);
+  y += hArtista + vao;
 
-  // Arquétipo e pico.
-  const yP = yC + lc + 110;
-  pilula(ctx, `pico às ${d.pico_hora}h`, pilula(ctx, p.nome, M, yP, [r, g, b]), yP, [r, g, b]);
+  // Top 5: capas lado a lado e a lista numerada, uma música por linha (quebra se for longa).
+  const gc = (UTIL - 5 * lc) / 4;
+  top.forEach((m, k) => capa(ctx, capasTop[k], m.nome, M + k * (lc + gc), y, lc, 10));
+  let ym = y + lc + 30;
+  ctx.font = FONTE(400, fm);
+  musicas.forEach((ls, k) => ls.forEach((l, j) => {
+    ym += lm;
+    if (j === 0) { ctx.fillStyle = VERDE; ctx.font = FONTE(800, fm); ctx.fillText(`${k + 1}`, M, ym); ctx.font = FONTE(400, fm); }
+    ctx.fillStyle = 'rgba(255,255,255,.88)'; ctx.fillText(l, M + 40, ym);
+  }));
+  y += hMusicas + vao;
+
+  // Arquétipo e pico (o segundo desce de linha se não couber ao lado).
+  const x2 = pilula(ctx, p.nome, M, y, cor);
+  if (pilulasEmDuas) pilula(ctx, `pico às ${d.pico_hora}h`, M, y + 96, cor); else pilula(ctx, `pico às ${d.pico_hora}h`, x2, y, cor);
 
   // Logo do Spotify (regra das capas), só se alguma capa veio dele.
-  if (logo) ctx.drawImage(logo, M, yP + 140, 240, 240 * (225.25 / 823.46));
-
+  if (logo) ctx.drawImage(logo, M, A - 330, 240, 240 * (225.25 / 823.46));
   pe(ctx);
 
   return new Promise((ok, falha) => canvas.toBlob((blob) => (blob ? ok(blob) : falha(new Error('Não deu para gerar a imagem.'))), 'image/png'));

@@ -1,6 +1,6 @@
-# SyncUp v1.15
+# SyncUp v1.16
 
-Compare o seu histórico do Spotify com o dos amigos e veja com quem você está em sintonia, em stories. **Use direto no navegador**, no computador ou no celular: sem instalar, sem conta, sem anúncios, e o histórico não sai do seu aparelho. Há também um app para PC com o Match e o Grupo. Projeto de ciência de dados, **código aberto** ([licença MIT](LICENSE)).
+Compare o seu histórico do Spotify com o dos amigos e veja com quem você está em sintonia, em stories. **Use direto no navegador**, no computador ou no celular: sem instalar, sem conta, sem anúncios, e o histórico não sai do seu aparelho. Há também um app para PC com o Grupo e as fontes extras do Match (ListenBrainz e gêneros). Projeto de ciência de dados, **código aberto** ([licença MIT](LICENSE)).
 
 [![Testes](https://github.com/Hazykiuu/SyncUp/actions/workflows/testes.yml/badge.svg)](https://github.com/Hazykiuu/SyncUp/actions/workflows/testes.yml)
 [![Lint](https://github.com/Hazykiuu/SyncUp/actions/workflows/lint.yml/badge.svg)](https://github.com/Hazykiuu/SyncUp/actions/workflows/lint.yml)
@@ -20,7 +20,7 @@ Compare o seu histórico do Spotify com o dos amigos e veja com quem você está
 2. Abra <https://hazykiuu.github.io/SyncUp/app/> no computador ou no celular.
 3. Envie o ZIP: na **Dupla**, o de duas pessoas; no **Wrapped**, o seu; na **Batalha**, o de 3 a 6 pessoas. Não precisa extrair.
 
-Sem histórico ainda? Use **"Testar com dados fictícios"**. O Match e o Grupo (matriz de compatibilidade), por enquanto, só existem no app para PC.
+Sem histórico ainda? Use **"Testar com dados fictícios"**. O Grupo (matriz de compatibilidade), por enquanto, só existe no app para PC.
 
 ## Como rodar o SyncUp na sua máquina
 
@@ -81,13 +81,15 @@ No navegador, a Dupla vira 7 stories: o quanto a escuta se parece (num afinador:
 
 ![Dupla e Wrapped no navegador](docs/img/recursos.jpg)
 
-### Match: quem combina com quem (app para PC)
+### Match: quem combina com quem
 
 Junte a galera por qualquer fonte. O SyncUp compara todos com todos, forma as duplas que mais combinam (com número ímpar, uma vira trio), mostra a **dupla mais sincronizada** e gera pôsteres e uma playlist da festa.
 
 ![Match](docs/img/match.jpg)
 
-Fontes aceitas, que podem ser misturadas:
+No navegador (desde a 1.16), o Match junta de 2 a 16 pessoas por ZIP ou convite e mostra cada par num cartão de namoro: a nota em corações, os artistas que os dois amam e um bilhetinho com o que cada um deveria ouvir. Tem stories com som e pôster do "casal do grupo". O convite gerado no navegador abre no app para PC e vice-versa.
+
+Fontes aceitas no app para PC, que podem ser misturadas:
 
 - **Histórico ZIP:** sem limite de pessoas.
 - **ListenBrainz:** só o nome de usuário. A pessoa conecta o Spotify uma vez em [listenbrainz.org](https://listenbrainz.org).

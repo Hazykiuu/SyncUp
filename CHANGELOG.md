@@ -1,5 +1,19 @@
 # Changelog — SyncUp
 
+## [1.16.0] — 2026-11-17
+
+O Match chega ao navegador, com cara de cartão de namoro, e a Batalha ganha som nos stories.
+
+### Novo
+- **Match no navegador:** de 2 a 16 pessoas, por histórico ZIP ou por convite colado. O SyncUp compara todos com todos e forma os pares que somam a maior compatibilidade do grupo (com número ímpar, um trio). O cálculo é o mesmo do app para PC, conferido em teste com os mesmos arquivos.
+- **Convite no navegador:** "Gerar o meu convite" cria o código `SYNCUP1.` a partir do seu ZIP, com botão de copiar. Só os rankings viajam. Um código feito no navegador abre no app para PC e vice-versa; código cortado ou alterado fica de fora com o motivo, sem derrubar os outros.
+- **Visual do Match:** cada par é um cartão de namoro, com renda, as iniciais dos dois e um coração batendo, a nota em porcentagem e em cinco corações, a fita do nível, "Vocês dois amam" e bilhetinhos com o que cada um deveria ouvir. Os cartões entram animados (parados com "menos movimento"), e a área inteira do Match fica em rosa.
+- **Stories, som e pôster do Match:** abertura, um story por par e o "casal do grupo" por último. Cada par toca um trecho do artista que mais os une; o pôster em PNG traz o casal do grupo.
+- **Som nos stories da Batalha:** cada rodada toca o artista favorito de quem venceu, a dupla mais afinada toca o artista que une os dois e o pódio, o favorito do campeão. Só os nomes dos artistas vão à Apple (iTunes), como diz a nota abaixo dos stories.
+
+### Fora desta versão
+- No navegador, o Match ainda não tem ListenBrainz, gêneros nem a sintonia (ouvir junto). Continuam no app para PC.
+
 ## [1.15.0] — 2026-11-17
 
 Um visual novo, Liquid Glass, na página inicial e no app, sem mudar o que o SyncUp calcula.

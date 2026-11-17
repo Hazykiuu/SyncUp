@@ -4,6 +4,7 @@ import { chegarPouco, rolarAte } from './chegada.js';
 import { ligarOndas } from './corrida.js';
 import { audioCtx, destravarSom, pausarSom, silenciado } from './som.js';
 import { Batalha } from './batalha-tela.js';
+import { Match } from './match-tela.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { Resultado } from './resultado.js';
@@ -100,13 +101,14 @@ function cliqueFader(paraDireita) {
 const CABECA = {
   dupla: ['Compare dois históricos', 'Envie o Histórico Estendido do Spotify de duas pessoas. Nada é enviado para nenhum servidor.'],
   wrapped: ['Seu Wrapped da vida toda', 'Envie o seu Histórico Estendido do Spotify e veja a sua vida musical em stories. O histórico não sai do seu aparelho.'],
+  match: ['Match do grupo', 'Junte históricos e convites de 2 a 16 pessoas e veja quem combina com quem. Nada sai do seu aparelho.'],
   batalha: ['Batalha de históricos', 'Junte de 3 a 6 históricos do Spotify e veja quem leva cada rodada. Nada sai do seu aparelho.'],
 };
 
 function App() {
   // As telas ficam montadas (hidden): trocar de aba não perde o resultado.
   // Só hash conhecido troca de modo: "Pular para o conteúdo" (#principal) fica onde a pessoa está.
-  const lerModo = (atual = 'dupla') => ({ '#wrapped': 'wrapped', '#batalha': 'batalha', '#dupla': 'dupla', '': 'dupla' })[location.hash] ?? atual;
+  const lerModo = (atual = 'dupla') => ({ '#wrapped': 'wrapped', '#batalha': 'batalha', '#match': 'match', '#dupla': 'dupla', '': 'dupla' })[location.hash] ?? atual;
   const [modo, setModo] = useState(() => lerModo());
   const modoAtual = useRef(modo); // o efeito abaixo roda uma vez só e não enxerga o `modo` novo
   useEffect(() => {
@@ -119,8 +121,8 @@ function App() {
       modoAtual.current = novo;
       pausarSom(); // um só <audio> para os dois modos: troca de modo pausa, e quem voltar a andar retoma o seu
       if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) { setModo(novo); return; }
-      // Na ordem da barra (Dupla, Wrapped, Batalha): para a direita o conteúdo entra pela direita e o clique sobe.
-      const ordem = ['dupla', 'wrapped', 'batalha'], volta = ordem.indexOf(novo) < ordem.indexOf(antigo);
+      // Na ordem da barra (Dupla, Wrapped, Batalha, Match): para a direita o conteúdo entra pela direita e o clique sobe.
+      const ordem = ['dupla', 'wrapped', 'batalha', 'match'], volta = ordem.indexOf(novo) < ordem.indexOf(antigo);
       cliqueFader(!volta);
       const update = async () => { setModo(novo); await new Promise((r) => setTimeout(r)); }; // espera o Preact desenhar
       let vt;
@@ -146,7 +148,7 @@ function App() {
           <h1>${CABECA[modo][0]}</h1>
           <p class="sub">${CABECA[modo][1]}</p>
         </div>
-        ${[['dupla', Dupla], ['wrapped', Wrapped], ['batalha', Batalha]].map(([id, Tela]) => html`
+        ${[['dupla', Dupla], ['wrapped', Wrapped], ['batalha', Batalha], ['match', Match]].map(([id, Tela]) => html`
           <div key=${id} hidden=${modo !== id}><${TelaAtiva.Provider} value=${modo === id}><${Tela} /><//></div>`)}
       </div>
     </main>`;
@@ -158,7 +160,8 @@ const MODOS = [
   ['dupla', 'Dupla', icone(html`<circle cx="9" cy="12" r="6" /><circle cx="15" cy="12" r="6" />`)],
   ['wrapped', 'Wrapped', icone(html`<rect x="6" y="2.5" width="12" height="19" rx="2.5" /><path d="M9 6h6" />`)],
   ['batalha', 'Batalha', icone(html`<circle cx="12" cy="7.5" r="3.5" /><circle cx="6" cy="16.5" r="3.5" /><circle cx="18" cy="16.5" r="3.5" />`)],
-]; // O Match ainda não existe no navegador: a página inicial avisa, a barra só mostra o que funciona.
+  ['match', 'Match', icone(html`<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" />`)],
+];
 
 // O aviso "Carregando o SyncUp…" do index.html sai: o render do Preact não apaga o que ele não criou.
 // O Safari do iOS só aplica :active (toque nos botões e na barra) se a página ouvir touchstart.

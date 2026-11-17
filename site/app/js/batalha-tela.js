@@ -5,7 +5,7 @@ import { chegarPouco, rolarAte } from './chegada.js';
 import { Pessoa } from './envio.js';
 import { compartilhar, desenharPosterBatalha } from './poster.js';
 import { Opcoes, PADRAO } from './opcoes.js';
-import { destravarSom } from './som.js';
+import { destravarSom, SomStories } from './som.js';
 import { slidesDaBatalha } from './stories/batalha.js';
 import { fmtNum } from './stories/logica.js';
 import { Player } from './stories/player.js';
@@ -14,6 +14,7 @@ import { Dock } from './stories/dock.js';
 
 const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos pessoas.';
 const DEMO = [['demo-wrapped.zip', 'Ana'], ['demo-bruno.zip', 'Bruno'], ['demo-carla.zip', 'Carla'], ['demo-davi.zip', 'Davi']];
+const NOTA_SOM = 'Para o som, o SyncUp envia à Apple (iTunes) o nome do artista favorito de cada pessoa da batalha, além do seu endereço IP. Os históricos e os nomes de vocês não saem do aparelho. Trechos: iTunes.';
 const AVISO = 'É uma brincadeira com os números do período: não mede gosto nem personalidade.';
 const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 const EXEMPLOS = ['Ana', 'Bia', 'Caio', 'Duda', 'Edu', 'Fabi'];
@@ -117,7 +118,8 @@ function ResultadoBatalha({ b, nomes, comum }) {
       <div class="compartilhar"><div class="acoes">
         <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
       </div>${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
-      <${Dock} alvo=${stories} aoPoster=${poster} ocupado=${ocupado} /></div>
+      <${Dock} alvo=${stories} aoPoster=${poster} ocupado=${ocupado} comSom=${!!b.trilha} /></div>
+      ${b.trilha && html`<${SomStories} key=${b} trilha=${b.trilha} alvo=${stories} nota=${NOTA_SOM} />`}
       <p class="batalha-resumo">${b.resenha}</p>
       <${Rodadas} b=${b} nomes=${nomes} />
       <${Podio} b=${b} nomes=${nomes} ordem=${b.lutadores.map((l, i) => i).sort(porMedalhas(b))} />

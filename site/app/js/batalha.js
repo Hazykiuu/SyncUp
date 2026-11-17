@@ -177,6 +177,30 @@ export function resenha(b, nomes) {
   return fatos.join(' ');
 }
 
+// Artista mais tocado de cada um (empate: ordem de ponto de código).
+export function favorito(contagens) {
+  let melhor = null, n = 0;
+  for (const [k, v] of contagens) if (v > n || (v === n && compararTexto(k, melhor) < 0)) { melhor = k; n = v; }
+  return melhor;
+}
+
+// Trilha dos stories (o mesmo formato da Dupla, lido por som.js): cada rodada toca o favorito de quem venceu,
+// a dupla afinada o artista que une os dois e o pódio o favorito do campeão. Só nomes de artistas vão ao iTunes.
+export function trilhaBatalha(b, favoritos) {
+  const de = (i) => (favoritos[i] ? [{ artista: favoritos[i] }] : []);
+  const slides = {
+    abertura: b.afinada.artistaComum ? [{ artista: b.afinada.artistaComum }] : de(b.campeoes[0]),
+    ...Object.fromEntries(b.rodadas.map((r) => [`rodada-${r.chave}`, de(r.posicoes.indexOf(1))])),
+    afinada: b.afinada.artistaComum ? [{ artista: b.afinada.artistaComum }] : [],
+    medalhas: favoritos.flatMap((_, i) => de(i)),
+    podio: de(b.campeoes[0]),
+  };
+  return {
+    slides: Object.fromEntries(Object.entries(slides).filter(([, c]) => c.length)),
+    fila: [...new Set(favoritos.filter(Boolean))].map((artista) => ({ artista })),
+  };
+}
+
 // `lutadores`: [{ nome, numeros, contagens }] na ordem do formulário. Devolve o JSON da tela.
 export function montarBatalha(lutadores) {
   const { dentro, fora } = rodadas(lutadores);
@@ -195,5 +219,6 @@ export function montarBatalha(lutadores) {
   b.titulo = tituloCampeao(b);
   b.detalhe = decididoNoDetalhe(b);
   b.resenha = resenha(b, nomes);
+  b.trilha = trilhaBatalha(b, lutadores.map((l) => favorito(l.contagens)));
   return b;
 }

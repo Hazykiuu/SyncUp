@@ -398,3 +398,26 @@
   .st-seg { border: 1px solid CanvasText; }
   .st-seg i, .st-seg.feito, .st-colunas i { background: CanvasText; }
 }
+
+/* Stories do Match: o mesmo cartão de namoro da tela (casal, coração batendo, fita e corações), em cqw. */
+.sm { --capa: 245 115 160; }
+.sm .st-veu { background: radial-gradient(90% 60% at 50% 0%, rgb(245 115 160 / .35), transparent 70%), linear-gradient(180deg, rgb(23 11 19 / .55), rgb(23 11 19 / .85)); }
+.sm .st-kicker { color: #ffc2d9; }
+.sm-casal { display: flex; align-items: center; }
+.sm-avatar { display: grid; place-items: center; flex: none; width: 18cqw; aspect-ratio: 1; border-radius: 50%; background: var(--lut); color: #120810;
+  font-size: 8cqw; font-weight: 900; box-shadow: 0 0 0 1.2cqw #1d0d17, 0 0 0 1.8cqw rgb(245 115 160 / .6); }
+.sm-avatar.mini { width: 9cqw; font-size: 4cqw; box-shadow: 0 0 0 .6cqw rgb(245 115 160 / .6); }
+.sm-elo { z-index: 1; margin-inline: -3.5cqw; font-size: 11cqw; line-height: 0; color: #f573a0; filter: drop-shadow(0 0 2cqw rgb(245 115 160 / .9)); }
+.sm-coracao { width: 1em; height: 1em; fill: currentColor; }
+.st-slot.ativo .sm-elo { animation: amor-bate 1.4s ease-in-out infinite; }
+.sm-elenco { display: flex; flex-wrap: wrap; gap: 3cqw 2cqw; }
+.sm-elenco > span { display: flex; flex-direction: column; align-items: center; gap: 1.4cqw; width: 22cqw; min-width: 0; }
+.sm-elenco b { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 3.6cqw; }
+.sm-nota { display: flex; flex-direction: column; align-items: flex-start; gap: 2.4cqw; }
+.sm-nota .st-mega { background: linear-gradient(180deg, #fff 10%, #ffc2d9 55%, #f573a0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sm-fita { padding: 1cqw 5cqw; font-size: 3.2cqw; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #2a0a1a;
+  background: linear-gradient(180deg, #ffd0e1, #f573a0); clip-path: polygon(0 0, 100% 0, calc(100% - 2.4cqw) 50%, 100% 100%, 0 100%, 2.4cqw 50%); }
+.sm-medidor { display: flex; gap: 1cqw; font-size: 7cqw; color: rgb(255 255 255 / .18); }
+.sm-medidor .cheio { color: #f573a0; filter: drop-shadow(0 0 1.2cqw rgb(245 115 160 / .8)); }
+.sm-unidos b { font-weight: 900; color: #ffc2d9; }
+@media (prefers-reduced-motion: reduce) { .st-slot.ativo .sm-elo { animation: none; } }

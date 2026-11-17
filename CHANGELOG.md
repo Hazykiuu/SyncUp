@@ -1,5 +1,32 @@
 # Changelog — SyncUp
 
+## [1.14.0] — 2026-11-16
+
+Uma versão de cuidado com o app no navegador: acessibilidade, ciclo de vida e medições, sem recursos novos.
+
+### Corrigido
+- **Stories com "menos movimento":** eles não avançavam mais, porque o tempo dependia de uma animação CSS que essa preferência desliga. Agora um relógio em JavaScript marca o tempo, e a barra só mostra o progresso.
+- **Espaço e Enter** nos botões dos stories fazem a ação do botão (antes pausavam).
+- **Celular estreito (360 px):** os nomes dos arquétipos voltam a aparecer, com a barra numa linha própria.
+- **Corrida dos artistas:** para de vez ao sair da aba Gráficos. Um arraste cancelado não deixa mais o controle preso.
+
+### Mudado
+- **Corrida pelo teclado:** setas, PageUp/PageDown e Home/End. O leitor de tela anuncia o mês, e a área de toque tem 44 px.
+- **Home e End nos stories:** vão ao primeiro e ao último story.
+- **Rolagem até o resultado:** respeita "menos movimento".
+- **Alto contraste do Windows:** as barras de progresso e de dados usam as cores do sistema.
+- **Sinais além da cor:** os anos do top 5 ganham ★; o placar da Batalha escreve as medalhas ("2 ouros, 1 prata").
+- **"Silenciar":** fica guardado no navegador entre visitas.
+- **Workers:** os três modos falam com eles por um módulo só (`js/worker.js`). Cancelar tem fim definido, e uma resposta ilegível vira mensagem clara.
+
+### Interno
+- **Constantes e tokens:** constantes repetidas, a cor média das capas e tokens de cor passam a ter uma fonte só. Os dois `fmtNum` continuam separados, de propósito (paridade de cada lado com o Python).
+- **Testes novos:** contrato dos Workers, relógio dos stories, zip bomb pela soma declarada, e um teste de que o tempo dos stories não volta a depender de CSS.
+
+### Documentação
+- **Benchmark do app no navegador:** `benchmark/web.md`, antes e depois, com cenários reproduzíveis. Nenhuma otimização foi necessária.
+- **Login com o Spotify:** README e `docs/decisao-spotify.md` explicam por que não há login (regras do Spotify em novembro de 2026, com as fontes).
+
 ## [1.13.0] — 2026-11-16
 
 A Batalha chega ao app no navegador: de 3 a 6 pessoas disputam rodadas com os números do período.

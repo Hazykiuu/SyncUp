@@ -170,27 +170,30 @@ section[id] { scroll-margin-top: 6rem; }
   .palco-placa { animation: sobe .7s var(--sai) both; animation-delay: .6s; }
 }
 
-/* Recursos em bento: Dupla (grande), Wrapped (alto), espectro 0h–23h, Batalha e o que só existe no PC. */
+/* Recursos (1.19): cada modo é uma faixa editorial, separada por fios, sem caixa. Número grande, nome, texto,
+   uma linha de fatos em texto corrido, o mock vivo e o link. No PC o mock alterna de lado; no celular a ordem é
+   fixa: número e título, texto, fatos, mock e link. */
 .recursos { padding-block: 6rem; }
-.recursos .cabeca { display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 3rem; }
-.bento { display: grid; gap: 1rem; }
-@media (min-width: 1024px) {
-  .bento { grid-template-columns: repeat(12, 1fr); grid-auto-flow: dense; }
-  .caixa.dupla { grid-column: span 7; } .caixa.wrapped { grid-column: span 5; grid-row: span 2; }
-  .caixa.espectro { grid-column: span 7; } .caixa:not(.dupla, .wrapped, .espectro) { grid-column: span 6; }
+.recursos .cabeca { display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2rem; }
+.modos { border-top: 1px solid var(--linha); }
+.modo { display: grid; grid-template-areas: "texto" "mock" "link"; gap: 1.25rem; padding-block: clamp(2rem, 5vw, 3.5rem); border-bottom: 1px solid var(--linha); }
+.modo-texto { grid-area: texto; display: grid; gap: .6rem; align-content: start; }
+.modo .mock { grid-area: mock; width: 100%; max-width: 13rem; justify-self: start; }
+.modo-abrir { grid-area: link; width: fit-content; min-height: 44px; display: inline-flex; align-items: center; gap: .4em; font-weight: 700; color: var(--verde); }
+.modo-abrir:hover { text-decoration: underline; text-underline-offset: .2em; }
+.modo-n { font-size: clamp(3rem, 7vw, 5rem); font-weight: 900; line-height: .9; color: var(--fraco); }
+.modo h3 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -.035em; line-height: 1; }
+.modo p { max-width: 34rem; font-size: 1.05rem; line-height: 1.55; color: var(--sub); }
+.modo .modo-fatos { font-size: .95rem; font-weight: 700; color: var(--texto); }
+@media (min-width: 768px) {
+  .modo { grid-template-columns: minmax(0, 1fr) 13rem; grid-template-areas: "texto mock" "link mock"; column-gap: clamp(2rem, 6vw, 6rem); align-items: center; }
+  .modo-abrir { align-self: start; }
+  .modo:nth-child(even) { grid-template-columns: 13rem minmax(0, 1fr); grid-template-areas: "mock texto" "mock link"; }
 }
-.caixa { display: flex; flex-direction: column; gap: 1rem; border-radius: var(--r-vidro); padding: clamp(1.5rem, 3vw, 2.25rem); transition: transform .2s var(--sai); }
-@media (hover: hover) and (pointer: fine) { .caixa:hover { transform: translateY(-2px); } }
-.caixa h3 { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; }
-.caixa.dupla h3, .caixa.wrapped h3 { font-size: 1.75rem; }
-.caixa p { max-width: 32rem; font-size: 1rem; line-height: 1.55; color: var(--sub); }
-.caixa > a { width: fit-content; min-height: 44px; display: inline-flex; align-items: center; font-weight: 700; text-decoration: underline; text-underline-offset: .2em; }
-.caixa.dupla { display: grid; align-items: center; }
-@media (min-width: 640px) { .caixa.dupla { grid-template-columns: 1fr 13rem; } }
-.caixa .mock { width: 100%; max-width: 13rem; justify-self: center; align-self: center; }
-.caixa.wrapped .mock { max-width: 15rem; margin-block: auto; }
-.tags { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.25rem; }
-.tags span { padding: .4rem .9rem; border-radius: var(--pilula); border: 1px solid var(--vidro-linha); background: rgba(255, 255, 255, .04); font-size: .85rem; }
+/* Espectro: o gráfico sem caixa, título e legenda em linha. */
+.espectro { display: grid; gap: 1rem; padding-block: clamp(2rem, 5vw, 3.5rem); }
+.espectro h3 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 900; letter-spacing: -.03em; }
+.espectro p { max-width: 40rem; color: var(--sub); line-height: 1.55; }
 .selo { width: fit-content; padding: .25rem .75rem; border-radius: var(--pilula); background: rgba(196, 183, 255, .14); color: var(--roxo); font-size: .75rem; font-weight: 700; }
 /* Capinhas abstratas do projeto no story "O que une vocês" e colagem desfocada atrás do Wrapped. */
 .mock .st-comuns b { display: flex; align-items: center; gap: 2cqw; }
@@ -213,7 +216,7 @@ section[id] { scroll-margin-top: 6rem; }
 .duracao { font-size: .9rem; color: var(--sub); text-align: right; white-space: nowrap; }
 @media (max-width: 479px) { .tracklist li { grid-template-columns: 2rem minmax(0, 1fr); } .duracao { grid-column: 2; text-align: left; } }
 
-/* Espectro de escuta (no bento): 24 horas de Ana (verde) e Bruno (violeta). Cada hora é um botão: o mouse,
+/* Espectro de escuta: 24 horas de Ana (verde) e Bruno (violeta). Cada hora é um botão: o mouse,
    o toque e as setas mostram os plays daquela hora na dica. Sem Hz: hora de escuta não é frequência. */
 .espectro-cabeca { display: grid; gap: .75rem; }
 .espectro-grafico { position: relative; margin-top: .5rem; }
@@ -303,50 +306,9 @@ section[id] { scroll-margin-top: 6rem; }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .palco-placa { background: var(--sup-2); } }
 @media (prefers-reduced-transparency: reduce) { .palco-placa { background: var(--sup-2); -webkit-backdrop-filter: none; backdrop-filter: none; } }
 
-/* Cara de Spotify (1.17). Prateleira: capas quadradas; o cartão clareia e o botão verde de play sobe ao passar o
-   mouse ou focar com o teclado (no toque ele fica sempre visível, sem hover para revelar). */
-.atalhos { padding-block: clamp(2rem, 5vw, 3.5rem) 0; }
-.titulo-prateleira { margin-bottom: 1rem; font-size: 1.5rem; font-weight: 900; letter-spacing: -.03em; }
-.prateleira { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
-@media (max-width: 720px) { .prateleira { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.tile { display: flex; flex-direction: column; gap: .35rem; padding: .75rem; border-radius: 12px; transition: background .2s; }
-.tile:hover, .tile:focus-visible { background: rgb(255 255 255 / .07); }
-.tile-arte { position: relative; display: grid; place-items: center; aspect-ratio: 1; border-radius: 8px; overflow: hidden; color: #000;
-  background: linear-gradient(135deg, rgb(var(--tinta)), color-mix(in srgb, rgb(var(--tinta)) 40%, #000)); box-shadow: 0 8px 24px rgb(0 0 0 / .5); }
-.tile-arte.escura { color: rgb(var(--tinta)); background: radial-gradient(90% 90% at 30% 20%, rgb(var(--tinta) / .45), transparent 70%), #121212; }
-.tile-arte > svg { width: 38%; height: auto; }
-.tile-arte b { position: absolute; left: .7rem; bottom: .55rem; font-size: clamp(1rem, 2.2vw, 1.5rem); font-weight: 900; letter-spacing: -.04em; }
-.tile-play { position: absolute; right: .6rem; bottom: .6rem; display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 50%;
-  color: #000; background: var(--verde); box-shadow: 0 8px 16px rgb(0 0 0 / .45); transition: opacity .2s, translate .2s var(--sai), scale .1s; }
-.tile-play svg { width: 1.3rem; height: 1.3rem; }
-@media (hover: hover) {
-  .tile:not(:hover, :focus-visible) .tile-play { opacity: 0; translate: 0 .5rem; }
-  .tile:hover .tile-play { scale: 1.04; }
-}
-.tile:active .tile-play { scale: .95; }
-.tile-nome { font-weight: 800; }
-.tile-sub { color: var(--sub); font-size: .9rem; line-height: 1.35; }
-/* Filtros em pílulas: rádios de verdade (teclado e leitor de tela de graça), desenhados como as do Spotify. */
-.filtros { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 1.5rem; padding: 0; border: 0; }
-.filtros input { position: absolute; opacity: 0; pointer-events: none; }
-.filtros span { display: inline-flex; align-items: center; min-height: 44px; padding: 0 1.1rem; border-radius: var(--pilula); cursor: pointer;
-  background: rgb(255 255 255 / .08); font-size: .9rem; font-weight: 700; transition: background .15s, color .15s; }
-.filtros label:hover span { background: rgb(255 255 255 / .14); }
-.filtros input:checked + span { background: var(--texto); color: #000; }
-.filtros input:focus-visible + span { outline: 2px solid var(--verde); outline-offset: 2px; }
-.recursos:has(input[value="dupla"]:checked) .caixa:not(.dupla, .espectro),
-.recursos:has(input[value="wrapped"]:checked) .caixa:not(.wrapped),
-.recursos:has(input[value="batalha"]:checked) .caixa:not(.batalha),
-.recursos:has(input[value="match"]:checked) .caixa:not(.match) { display: none; }
 /* Tipografia: títulos mais pesados e apertados, como os do Spotify. */
 .hero h1 { letter-spacing: -.045em; }
 .titulo-secao { letter-spacing: -.04em; }
-.caixa h3 { font-weight: 900; letter-spacing: -.035em; }
-/* Batalha e Match no bento (1.18): texto ao lado de um story vivo, como a Dupla. Os mocks medem em cqw dentro da
-   própria moldura 9:16 (.mock, container-type), então pódio e coração se ajustam ao tamanho real do cartão. */
-.caixa.batalha, .caixa.match { display: grid; align-items: center; gap: 1.25rem; }
-@media (min-width: 640px) { .caixa.batalha, .caixa.match { grid-template-columns: minmax(0, 1fr) clamp(10rem, 16vw, 12rem); } }
-.caixa.batalha .mock, .caixa.match .mock { max-width: 12rem; }
 /* O pódio fica na base do story; o título "Quem levou" no alto. */
 .mock .sb .st-conteudo { height: 100%; }
 

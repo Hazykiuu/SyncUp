@@ -56,12 +56,12 @@ function Podio({ b, nomes, ordem }) {
   })}</ol>`;
 }
 
-// Um cartão por rodada: vencedor em destaque e uma barra por pessoa (piso de 4 px quando o valor é maior que 0).
+// Uma linha por rodada (lista com fios): vencedor em destaque e uma barra por pessoa (piso de 4 px quando o valor é maior que 0).
 function Rodadas({ b, nomes }) {
   return html`<ul class="rodadas">${b.rodadas.map((r, n) => {
     const maior = Math.max(...r.valores) || 1;
     const venc = r.posicoes.map((p, i) => (p === 1 ? i : -1)).filter((i) => i >= 0);
-    return html`<li class="rodada superficie" style=${{ '--i': Math.min(n, 8) }}>
+    return html`<li class="rodada" style=${{ '--i': Math.min(n, 8) }}>
       <h3>${r.titulo}${r.destaque && html` <span class="selo">${SELOS[r.destaque]}</span>`}</h3>
       <p class="rodada-vence"><span class="lut-ponto" style=${{ '--lut': b.lutadores[venc[0]].cor }} aria-hidden="true"></span>${venc.map((i) => nomes[i]).join(' e ')}
         <b>${fmtNum(r.valores[venc[0]], r.casas)}</b> <small>${r.unidade}${r.menor ? ' (menos vence)' : ''}</small></p>

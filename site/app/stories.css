@@ -396,6 +396,19 @@
   .st-seg i, .st-seg.feito, .st-colunas i { background: CanvasText; }
 }
 
+/* Dueto (1.19): nomes e faixas, comuns à tela do Match, aos stories e ao mock da página inicial. */
+.dueto-nomes { margin: 0; font-size: clamp(1.8rem, 5.5vw, 3rem); font-weight: 900; letter-spacing: -.025em; line-height: 1.05; overflow-wrap: anywhere; text-wrap: balance; }
+.dueto-x { color: var(--sub); font-weight: 300; }
+/* Faixas: uma barra por pessoa, sobrepostas no meio; --j = largura do trecho comum (0 a 1). */
+.faixas { position: relative; display: grid; gap: 6px; padding-block: 6px; }
+.faixas i { display: block; height: 6px; border-radius: 3px; width: calc((1 + var(--j)) * 50%); }
+.faixas .faixa-a { background: var(--ca); }
+.faixas .faixa-b { background: var(--cb); justify-self: end; }
+.faixas .faixa-comum { position: absolute; inset-block: 0; left: calc((1 - var(--j)) * 50%); width: calc(var(--j) * 100%); height: auto;
+  border-radius: 4px; box-shadow: inset 0 0 0 2px var(--texto); background: none; }
+.faixas-legenda { font-size: .8rem; color: var(--sub); }
+@media (forced-colors: active) { .faixas i { forced-color-adjust: none; } }
+
 /* Stories do Match em duetos: nomes nas cores, nota do par, faixas e refrão em texto, em cqw. */
 .sm { --capa: 245 115 160; }
 .sm .st-kicker { color: var(--rosa-claro); }

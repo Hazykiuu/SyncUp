@@ -27,22 +27,29 @@ function Bilhete({ de, para, lista }) {
     <ul>${lista.slice(0, 3).map((a) => html`<li>${a}</li>`)}</ul></div>`;
 }
 
-function Par({ g, r, cores }) {
+function Par({ g, r, cores, n }) {
+  const raiz = useRef(null);
+  useEffect(() => {
+    const el = raiz.current;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { el.classList.add('em-cena'); obs.disconnect(); } }, { threshold: 0.2 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
   const pares = g.flatMap((x, a) => g.slice(a + 1).map((y) => [x, y, r.detalhes[chave(x, y)]]));
   const nomes = g.length === 3 ? `${g[0]}, ${g[1]} e ${g[2]}` : `${g[0]} e ${g[1]}`;
-  return html`<li class="amor" style=${{ '--a': cores[g[0]], '--b': cores[g[1]] }}>
+  return html`<li ref=${raiz} class="amor" style=${{ '--a': cores[g[0]], '--b': cores[g[1]], '--n': Math.min(n, 3) }}>
     <span class="amor-flutua" aria-hidden="true">${[0, 1, 2, 3, 4, 5].map((k) => html`<i style=${{ '--k': k }}><${Coracao} /></i>`)}</span>
     <div class="amor-topo">
-      <div class="amor-casal" aria-hidden="true">${g.map((n, k) => html`${k > 0 && html`<span class="amor-elo"><${Coracao} /></span>`}<span class="amor-avatar" style=${{ '--lut': cores[n] }}>${inicial(n)}</span>`)}</div>
+      <div class="amor-casal" aria-hidden="true">${g.map((n, k) => html`${k > 0 && html`<span class="amor-elo"><${Coracao} /></span>`}<span class="amor-avatar" style=${{ '--lut': cores[n], '--lado': k === 0 ? -1 : 1 }}>${inicial(n)}</span>`)}</div>
       <h3 class="amor-nomes">${g.map((n, k) => html`${k > 0 && html`<span class="amor-e">${k === g.length - 1 ? '&' : ','}</span>`}${n}`)}${g.length === 3 && html`<span class="fita fita-trio">Trio</span>`}</h3>
     </div>
     ${pares.map(([x, y, c]) => html`<div class="amor-par">
       ${g.length === 3 && html`<p class="amor-subpar">${x} & ${y}</p>`}
       <p class="amor-nota"><b>${pct(c.pontuacao)}</b><span class="fita">${c.nivel}</span></p>
-      <p class="amor-medidor" role="img" aria-label=${`${coracoes(c.pontuacao)} de 5 corações`}>${[1, 2, 3, 4, 5].map((k) => html`<${Coracao} cheio=${k <= coracoes(c.pontuacao)} />`)}</p>
+      <p class="amor-medidor" role="img" aria-label=${`${coracoes(c.pontuacao)} de 5 corações`}>${[1, 2, 3, 4, 5].map((k) => html`<span style=${{ '--j': k }}><${Coracao} cheio=${k <= coracoes(c.pontuacao)} /></span>`)}</p>
       <p class="amor-frase">${c.descricao}</p>
       ${c.artistas_comuns.length > 0 && html`<div class="amor-comum"><p class="amor-rotulo">${g.length === 3 ? `${x} e ${y} amam` : 'Vocês dois amam'}</p>
-        <ul class="amor-chips">${c.artistas_comuns.slice(0, 6).map((a) => html`<li><${Coracao} />${a}</li>`)}</ul>
+        <ul class="amor-chips">${c.artistas_comuns.slice(0, 6).map((a, j) => html`<li style=${{ '--j': j }}><${Coracao} />${a}</li>`)}</ul>
         ${c.musicas_comuns > 0 && html`<p class="amor-musicas">e ${c.musicas_comuns === 1 ? 'uma música favorita' : `${c.musicas_comuns} músicas favoritas`} em comum</p>`}</div>`}
       <div class="amor-bilhetes">
         <${Bilhete} de=${y} para=${x} lista=${c.recomendacoes_para_a} />
@@ -58,7 +65,7 @@ function ResultadoMatch({ dados: { r, fontes, fora } }) {
   return html`<section class="resultado" aria-labelledby="titulo-match">
     <h2 id="titulo-match" class="amor-titulo">Quem combina com quem</h2>
     <p class="batalha-resumo">Média dos pares: <b>${pct(r.pontuacao_media_pares)}</b>. Os pares somam a maior compatibilidade possível do grupo${r.nomes.length % 2 ? '; com número ímpar, uma pessoa entra no par onde mais combina e vira trio' : ''}.</p>
-    <ul class="amores">${r.pares.map((g) => html`<${Par} g=${g} r=${r} cores=${cores} />`)}</ul>
+    <ul class="amores">${r.pares.map((g, n) => html`<${Par} g=${g} r=${r} cores=${cores} n=${n} />`)}</ul>
     <details class="vidro detalhe"><summary>Com quem cada um mais combina</summary>
       <div class="tabela-rolagem" role="region" aria-label="Com quem cada um mais combina" tabindex="0">
         <table class="placar"><thead><tr><th scope="col">Pessoa</th><th scope="col">Fonte</th><th scope="col">1º match</th><th scope="col">2º match</th></tr></thead>
@@ -155,7 +162,7 @@ export function Match() {
   const adicionar = () => { setNomes((n) => [...n, '']); setArquivos((a) => [...a, []]); };
   const tirar = (i) => { setNomes((n) => n.filter((_, j) => j !== i)); setArquivos((a) => a.filter((_, j) => j !== i)); };
 
-  return html`
+  return html`<div class="match-area">
     <div class="pessoas">
       ${nomes.map((nome, i) => html`
         <div class="lutador" style=${{ '--lut': cor(i) }}>
@@ -181,5 +188,5 @@ export function Match() {
         ${ultima.current && html`<button type="button" class="btn btn-borda vidro" onClick=${ultima.current === 'demo' ? demo : combinar}>Tentar de novo</button>`}</div>`}
       ${fase.tipo === 'resultado' && html`<p class="sr-only">Resultado do Match pronto, logo abaixo.</p>`}
     </div>
-    <div id="resultado-match">${fase.tipo === 'resultado' && html`<${ResultadoMatch} dados=${fase.dados} />`}</div>`;
+    <div id="resultado-match">${fase.tipo === 'resultado' && html`<${ResultadoMatch} dados=${fase.dados} />`}</div></div>`;
 }

@@ -24,7 +24,7 @@ function useNaTela(alvo) {
 function useAcoesNaTela(alvo) {
   const [visivel, setVisivel] = useState(false);
   useEffect(() => {
-    const el = alvo.current?.closest('.palco')?.querySelector('.compartilhar .acoes');
+    const el = alvo.current?.closest('.st-palco')?.querySelector('.compartilhar .acoes');
     if (!el) return undefined;
     const obs = new IntersectionObserver(([e]) => setVisivel(e.isIntersecting));
     obs.observe(el);

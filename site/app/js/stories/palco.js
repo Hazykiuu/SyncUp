@@ -56,7 +56,7 @@ export function Palco({ alvo, slides, comSom = false, lado = null, children }) {
   const atual = useAtual(alvo);
   const ativa = useContext(TelaAtiva);
   const ir = (k) => alvo.current?.querySelector('.st-player')?.dispatchEvent(new CustomEvent('st-ir', { detail: k }));
-  return html`<div class="palco">
+  return html`<div class="st-palco">
     <nav class="palco-fila vidro" aria-label="Fila dos stories">
       <p class="palco-rotulo">Fila</p>
       <ol>${slides.map((s, k) => html`<li><button type="button" class=${k === atual ? 'atual' : ''} aria-current=${k === atual ? 'step' : null} onClick=${() => ir(k)} tabindex=${ativa ? 0 : -1}>

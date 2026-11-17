@@ -659,15 +659,15 @@ body::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-even
 /* Palco dos stories (1.18, stories/palco.js). No celular e em telas médias: uma coluna (player, e embaixo o som e os
    botões), com o dock. A partir de 1240 px: fila | player | tocando agora, como o Spotify; o dock some. */
 .palco-fila, .palco-agora { display: none; }
-.palco { align-self: stretch; width: 100%; } /* o .resultado é flex: sem isto o palco encolhe até o conteúdo */
+.st-palco { align-self: stretch; } /* o .resultado é flex: sem isto o palco encolhe até o conteúdo */
 .palco-lado { display: grid; gap: var(--vao); }
 @media (min-width: 1240px) {
-  .palco { display: grid; grid-template-columns: minmax(13rem, 18rem) 430px minmax(15rem, 20rem); justify-content: center; align-items: start; gap: var(--e5); }
-  .palco > .nucleo { min-width: 0; }
+  .st-palco { display: grid; grid-template-columns: minmax(13rem, 18rem) 430px minmax(15rem, 20rem); justify-content: center; align-items: start; gap: var(--e5); }
+  .st-palco > .nucleo { min-width: 0; }
   .palco-fila, .palco-lado { position: sticky; top: var(--e5); }
   .palco-fila { display: block; padding: var(--e4); border-radius: var(--r-cartao); max-height: calc(100dvh - 2 * var(--e5)); overflow-y: auto; scrollbar-width: thin; }
   .palco-agora { display: grid; gap: var(--e3); padding: var(--e4); border-radius: var(--r-cartao); }
-  .palco .dock { display: none; }
+  .st-palco .dock { display: none; }
   .palco-lado .compartilhar .acoes { display: grid; gap: var(--e2); }
   .palco-lado .compartilhar .acoes .btn { width: 100%; justify-content: center; text-wrap: balance; text-align: center; }
   .palco-lado .som-stories { margin: 0; }

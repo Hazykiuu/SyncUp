@@ -186,6 +186,13 @@ function iguais(a, b) {
  * `arquivos`: [{ nome, bytes: Uint8Array }]. `opcoes`: as do app (fuso, musicas, artistas, varios, deduplicar).
  * Colunas: utc e local (ms), ms, musica, artista, uri, pulada, aleatorio, offline, plataforma, motivo.
  */
+// Resumo para o cartão de upload: primeiro e último play (hora local, em ms) e quantas reproduções válidas.
+export function resumo(c) {
+  let inicio = Infinity, fim = -Infinity;
+  for (const t of c.local) { if (t < inicio) inicio = t; if (t > fim) fim = t; }
+  return c.local.length ? { inicio, fim, plays: c.local.length } : null;
+}
+
 export async function lerHistorico(arquivos, opcoes = {}) {
   if (!arquivos.length) throw falha('nenhum');
   for (let i = 0; i < arquivos.length; i++) {

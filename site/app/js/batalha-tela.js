@@ -10,6 +10,7 @@ import { slidesDaBatalha } from './stories/batalha.js';
 import { fmtNum } from './stories/logica.js';
 import { Player } from './stories/player.js';
 import { abrirWorker } from './worker.js';
+import { Dock } from './stories/dock.js';
 
 const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos pessoas.';
 const DEMO = [['demo-wrapped.zip', 'Ana'], ['demo-bruno.zip', 'Bruno'], ['demo-carla.zip', 'Carla'], ['demo-davi.zip', 'Davi']];
@@ -114,9 +115,9 @@ function ResultadoBatalha({ b, nomes, comum }) {
       <h2 id="titulo-batalha" class="sr-only">Resultado da batalha</h2>
       <div ref=${stories} class="nucleo"><${Player} key=${b} slides=${slides} rotulo=${`Batalha de ${nomes.join(', ')}`} /></div>
       <div class="compartilhar"><div class="acoes">
-        <button type="button" class="btn btn-verde" onClick=${poster} disabled=${ocupado}>${ocupado ? 'Gerando…' : 'Compartilhar pôster'}</button>
         <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
-      </div>${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}</div>
+      </div>${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
+      <${Dock} alvo=${stories} aoPoster=${poster} ocupado=${ocupado} /></div>
       <p class="batalha-resumo">${b.resenha}</p>
       <${Rodadas} b=${b} nomes=${nomes} />
       <${Podio} b=${b} nomes=${nomes} ordem=${b.lutadores.map((l, i) => i).sort(porMedalhas(b))} />

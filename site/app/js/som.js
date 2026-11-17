@@ -20,8 +20,10 @@ async function itunes(params) {
   if (!r.ok) throw new Error(`iTunes ${r.status}`);
   return (await r.json()).results || [];
 }
-// Trecho = { url, id }; o id (artista|faixa do iTunes) evita tocar a mesma música duas vezes.
-const trecho = (x) => ({ url: urlSegura(x.previewUrl, HOSTS_AUDIO), id: `${normalizar(x.artistName)}|${normalizar(x.trackName)}` });
+// Trecho = { url, id, faixa, artista, capa }; o id (artista|faixa do iTunes) evita tocar a mesma música duas vezes.
+// A capa é a arte do próprio iTunes (100 px), só para a miniatura do dock, nítida.
+const trecho = (x) => ({ url: urlSegura(x.previewUrl, HOSTS_AUDIO), id: `${normalizar(x.artistName)}|${normalizar(x.trackName)}`,
+  faixa: x.trackName, artista: x.artistName, capa: urlSegura(x.artworkUrl100, HOSTS_AUDIO) });
 const doArtista = (x, nome) => urlSegura(x.previewUrl, HOSTS_AUDIO) && normalizar(x.artistName).includes(normalizar(nome));
 
 // O cache guarda a promessa, não o resultado: a mesma música pedida por vários slides ao mesmo tempo
@@ -70,6 +72,22 @@ const CHAVE_MUDO = 'syncup-mudo';
 const lerMudo = () => { try { return localStorage.getItem(CHAVE_MUDO) === '1'; } catch { return false; } }; // sem armazenamento: começa com som
 export let silenciado = lerMudo();
 
+// Estado do som que o dock dos stories mostra (stories/dock.js): o trecho atual, se toca e o mudo.
+// Um só para a página: só o modo na tela toca (a troca de modo pausa o <audio>).
+const estadoSom = { trecho: null, tocando: false, mudo: silenciado };
+const ouvintes = new Set();
+const avisar = (mudanca) => { Object.assign(estadoSom, mudanca); ouvintes.forEach((f) => f({ ...estadoSom })); };
+export function useSom() {
+  const [s, setS] = useState(() => ({ ...estadoSom }));
+  useEffect(() => { ouvintes.add(setS); return () => ouvintes.delete(setS); }, []);
+  return s;
+}
+export function definirMudo(mudo) {
+  silenciado = mudo;
+  try { localStorage.setItem(CHAVE_MUDO, mudo ? '1' : '0'); } catch { /* sem armazenamento: vale só nesta visita */ }
+  avisar({ mudo });
+}
+
 // Um só <audio>: um elemento novo precisaria de outro toque no iPhone. Criado no primeiro toque em
 // "Montar", "Comparar" ou "Batalhar" (destravarSom).
 let som = null;
@@ -104,12 +122,20 @@ export function destravarSom() {
 // Ao voltar, o player retoma no próximo movimento do story.
 export function pausarSom() { som?.el.pause(); }
 
+// Ícones dos botões de som: o mesmo traço (2 px, pontas redondas) dos ícones da barra de modos.
+const svg = (corpo) => html`<svg class="ic" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${corpo}</svg>`;
+export const ICONE = {
+  nota: svg(html`<path d="M9 18V5l11-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="17" cy="16" r="3" />`),
+  som: svg(html`<path d="M11 5 6 9H3v6h3l5 4z" /><path d="M15.5 8.5a5 5 0 0 1 0 7" /><path d="M18.5 5.5a9 9 0 0 1 0 13" />`),
+  mudo: svg(html`<path d="M11 5 6 9H3v6h3l5 4z" /><path d="m22 9-6 6" /><path d="m16 9 6 6" />`),
+};
+
 // `nota`: o que sai do aparelho para o som. O Wrapped usa o texto padrão (capas e trechos); a Dupla, o dela.
 export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
   const trilhaPronta = useRef(null);
   const [status, setStatus] = useState('');
   const [estado, setEstado] = useState('carregando'); // carregando | tocando | sem (o Wrapped começa sempre com capas e som)
-  const [mudo, setMudo] = useState(lerMudo);
+  const { mudo } = useSom(); // o botão de mudo fica no dock (stories/dock.js)
   const mudoAgora = useRef(false); // lido pelos ouvintes do player, que não re-renderizam
   mudoAgora.current = mudo;
   const raiz = () => alvo.current?.querySelector('.st-player');
@@ -171,14 +197,15 @@ export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
       if (!t) return null; // sem trecho: este story fica em silêncio
       tocadas.add(t.id);
       slide.dataset.trecho = t.id; // qual música tocou neste story (conferível no DOM)
-      return t.url;
+      return t;
     });
     const volume = () => (mudoAgora.current ? 0 : VOLUME);
     let atual = -1, troca = 0, tentou = false;
-    const trocar = (url) => {
+    const trocar = (t) => {
       const minha = ++troca; // um toque rápido em vários slides cancela as trocas antigas
-      const comecarNova = () => { if (minha !== troca) return; tentou = false; el.src = url; tocar(el); rampa(volume()); };
-      if (!url) { rampa(0, SAI); return; }
+      avisar({ trecho: t || null });
+      const comecarNova = () => { if (minha !== troca) return; tentou = false; el.src = t.url; tocar(el); rampa(volume()); };
+      if (!t) { rampa(0, SAI); return; }
       if (el.paused || el.src.startsWith('blob:')) comecarNova();
       else { rampa(0, SAI); setTimeout(comecarNova, SAI * 1000); }
     };
@@ -192,42 +219,40 @@ export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
       if (i < 0) return;
       if (i !== atual) { atual = i; trocar(musicas[i]); }
       // Voltou para este modo no mesmo story: o <audio> pode estar com a música do outro modo.
-      else if (el.paused && el.src !== musicas[i]) trocar(musicas[i]);
+      else if (el.paused && el.src !== musicas[i]?.url) trocar(musicas[i]);
       else if (el.paused && !el.src.startsWith('blob:')) { tocar(el); rampa(volume()); }
     };
     // Fade out no fim do trecho de 30 s, em vez de cortar seco.
     const fim = () => { if (escondido()) return; if (el.duration && el.duration - el.currentTime < SAI + 0.3) rampa(0, SAI); };
     // Linha de status (diagnóstico no celular) e uma nova tentativa se o trecho falhar ao carregar.
-    const tocando = () => setStatus(`♪ Story ${atual + 1} de ${slides.length}: tocando`);
+    const tocando = () => { avisar({ tocando: true }); setStatus(`♪ Story ${atual + 1} de ${slides.length}: tocando`); };
+    const parou = () => avisar({ tocando: false });
     const erro = () => {
       if (escondido()) return; // o trecho que falhou é do outro modo: não tenta de novo com a música deste
-      if (!tentou && musicas[atual]) { tentou = true; el.src = musicas[atual]; tocar(el); setStatus(`Story ${atual + 1}: tentando de novo…`); }
+      if (!tentou && musicas[atual]) { tentou = true; el.src = musicas[atual].url; tocar(el); setStatus(`Story ${atual + 1}: tentando de novo…`); }
       else setStatus(`Story ${atual + 1}: este trecho não carregou`);
     };
     const obs = new MutationObserver(aoMudar);
     obs.observe(stories, { attributes: true, attributeFilter: ['class'], subtree: true });
     el.addEventListener('timeupdate', fim);
     el.addEventListener('playing', tocando);
+    el.addEventListener('pause', parou);
     el.addEventListener('error', erro);
     aoMudar();
     return () => {
       troca++; obs.disconnect(); el.pause();
-      el.removeEventListener('timeupdate', fim); el.removeEventListener('playing', tocando); el.removeEventListener('error', erro);
+      el.removeEventListener('timeupdate', fim); el.removeEventListener('playing', tocando); el.removeEventListener('pause', parou); el.removeEventListener('error', erro);
+      avisar({ tocando: false, trecho: null });
     };
   }, [estado]);
 
-  useEffect(() => {
-    silenciado = mudo;
-    try { localStorage.setItem(CHAVE_MUDO, mudo ? '1' : '0'); } catch { /* sem armazenamento: vale só nesta visita */ }
-    if (estado === 'tocando') rampa(mudo ? 0 : VOLUME);
-  }, [mudo]);
+  useEffect(() => { if (estado === 'tocando') rampa(mudo ? 0 : VOLUME); }, [mudo]);
 
   return html`
     <div class="som-stories vidro">
       <div class="acoes">${estado === 'sem'
-        ? html`<button type="button" class="btn btn-verde" onClick=${comecar}>♪ Ligar capas e som</button>`
-        : html`<button type="button" class="btn btn-borda vidro" aria-pressed=${mudo} disabled=${estado !== 'tocando'} onClick=${() => setMudo((m) => !m)}>
-            ${estado === 'carregando' ? 'Buscando capas e trechos…' : mudo ? '🔇 Ligar som' : '🔊 Silenciar'}</button>`}
+        ? html`<button type="button" class="btn btn-verde" onClick=${comecar}>${ICONE.nota}Ligar capas e som</button>`
+        : estado === 'carregando' && html`<p class="nota">Buscando capas e trechos…</p>`}
       </div>
       <p class="nota">${nota}</p>
       ${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}

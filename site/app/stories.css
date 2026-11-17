@@ -195,7 +195,7 @@
 .st-comuns li { display: grid; gap: 1.8cqw; }
 .st-comuns b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 5.6cqw; font-weight: 900; }
 .st-par { display: grid; grid-template-columns: 25cqw minmax(0, 1fr) 14cqw; gap: 2.4cqw; align-items: center; font-size: 3.4cqw; }
-.st-par small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: rgba(255, 255, 255, .78); }
+.st-par small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: rgba(255, 255, 255, .9); }
 .st-par em { font-style: normal; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
 .st-par .st-barra-valor { height: 3.4cqw; }
 .st-barra-valor.a { background: var(--verde); } .st-barra-valor.b { background: var(--roxo); }

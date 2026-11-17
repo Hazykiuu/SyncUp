@@ -3,39 +3,24 @@
 /* Tokens do app. Espaço em escala de 4 px; raios aninhados (o de dentro = o de fora − o padding). */
 :root {
   --e1: .25rem; --e2: .5rem; --e3: .75rem; --e4: 1rem; --e5: 1.5rem; --e6: 2rem; --e7: 3rem;
-  --r-campo: 12px; --r-cartao: 20px; --r-painel: 24px;
+  --r-campo: 12px; --r-cartao: var(--r-vidro); --r-painel: var(--r-vidro);
   --pad-cartao: var(--e4); --vao: var(--e3);
 }
-@media (min-width: 900px) { :root { --r-cartao: 24px; --r-painel: 28px; --pad-cartao: var(--e5); --vao: var(--e4); } }
+@media (min-width: 900px) { :root { --pad-cartao: var(--e5); --vao: var(--e4); } }
 
-/* Vidro "Sintonia": a borda é um degradê verde → branco → violeta, as duas pessoas na beirada.
-   Vidro real só no computador: no Redmi o blur em ~15 painéis caiu de 85–90 para 30–40 fps (12/11).
-   No celular os painéis são vidro falso. Fundo parado e um nível de blur só (vidro dentro de vidro não borra). */
-.vidro { background: linear-gradient(160deg, rgba(255, 255, 255, .085), rgba(255, 255, 255, .02) 45%, rgba(255, 255, 255, .045));
-  -webkit-backdrop-filter: none; backdrop-filter: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 24px 48px -28px rgba(0, 0, 0, .85); }
-.vidro::before { content: ''; position: absolute; inset: 0; z-index: -1; padding: 1px; border-radius: inherit; pointer-events: none;
-  background: linear-gradient(135deg, rgba(30, 215, 96, .62), rgba(255, 255, 255, .16) 32%, rgba(255, 255, 255, .06) 62%, rgba(196, 183, 255, .62));
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
-.btn-borda.vidro { border-color: transparent; background: rgba(255, 255, 255, .07);
-  -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%); }
-.btn-borda.vidro:hover { background: rgba(255, 255, 255, .12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .28); }
+/* O vidro vem de estilo.css (Liquid Glass, com blur em todos os cartões; pedido de 16/11/2026).
+   Atenção: em 12/11 o blur em ~15 painéis caiu de 85–90 para 30–40 fps num Redmi; vidro dentro de vidro não borra.
+   A borda das duas pessoas (verde → violeta) fica só nos cartões de pessoa (.pessoa.vidro::before, abaixo). */
+.btn-borda.vidro:hover { background: rgba(255, 255, 255, .12); box-shadow: var(--vidro-sombra), inset 0 0 0 1px rgba(255, 255, 255, .28); }
 /* No app a seta é "→": no hover ela anda para a frente (a da página inicial é ↗ e sobe). */
 @media (hover: hover) { .app-corpo .btn:hover:not(:disabled) .seta { transform: translateX(3px); } }
-@media (hover: hover) and (pointer: fine) { .vidro { -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%); } }
-.vidro .vidro { -webkit-backdrop-filter: none; backdrop-filter: none; }
 /* Fundo com matéria, parado: as duas manchas (verde = A no alto, violeta = B embaixo) um pouco mais presentes
    e um grão fino por cima, que o vidro deixa ver. Nada anima: não custa quadros no celular. */
 body::after { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .06; background-size: 160px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"); }
 @media (prefers-reduced-transparency: reduce) { body::after { display: none; } }
-@supports not ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
-  .vidro::before { display: none; }
-  .vidro { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14), inset 0 1px 0 rgba(255, 255, 255, .16), 0 24px 48px -28px rgba(0, 0, 0, .85); }
-}
-@media (prefers-reduced-transparency: reduce) { .vidro, .btn-borda.vidro { background: #1c1c1c; -webkit-backdrop-filter: none; backdrop-filter: none; } }
-@media (prefers-contrast: more) { .vidro::before { background: #fff; } }
+@supports not ((mask-composite: exclude) or (-webkit-mask-composite: xor)) { .pessoa.vidro::before { display: none; } }
+@media (prefers-contrast: more) { .vidro { border-color: #fff; } .pessoa.vidro::before { background: #fff; } }
 
 /* Casca de app de música: a navegação é uma só; no celular vira a barra de baixo, no computador a lateral.
    Barras fixas em vidro escuro (fundo ≥ 72%): capa que passa por baixo não aparece borrada (regra do Spotify). */
@@ -46,10 +31,8 @@ body::after { content: ''; position: fixed; inset: 0; z-index: -1; pointer-event
 .nav-item { display: flex; align-items: center; gap: var(--e3); min-height: 44px; color: var(--sub); font-weight: 700; transition: background .15s, color .15s; }
 .nav-item svg { font-size: 1.375rem; transition: scale .1s ease-out; }
 a.nav-item:active svg { scale: .92; }
-.nav-item small { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--fraco); }
 a.nav-item:hover { color: var(--texto); }
 .nav-item[aria-current="page"] { color: var(--texto); }
-.nav-item[aria-disabled="true"] { color: var(--fraco); cursor: not-allowed; }
 .nav-selo { display: flex; align-items: center; gap: var(--e2); font-size: .85rem; color: var(--sub); }
 .nav-selo .ponto { width: .5rem; height: .5rem; border-radius: 50%; background: var(--verde); }
 .nav-site { font-weight: 700; color: var(--sub); }
@@ -61,7 +44,6 @@ a.nav-item:hover { color: var(--texto); }
   .nav-app ul { justify-content: space-around; }
   .nav-app li { flex: 1; min-width: 0; } /* os 4 itens cabem em 320 px sem alargar a página */
   .nav-item { flex-direction: column; justify-content: center; gap: 2px; min-height: 56px; font-size: .75rem; text-align: center; }
-  .nav-item small { margin-top: -2px; }
   /* Página atual com forma, não só cor: uma pílula atrás do ícone. */
   .nav-item svg { box-sizing: content-box; padding: 2px var(--e3); border-radius: var(--pilula); }
   .nav-item[aria-current="page"] svg { color: var(--verde); background: rgb(30 215 96 / .16); }
@@ -77,7 +59,6 @@ a.nav-item:hover { color: var(--texto); }
   .nav-item { padding: 0 var(--e3); border-radius: var(--r-campo); }
   a.nav-item:hover { background: rgba(255, 255, 255, .06); }
   .nav-item[aria-current="page"] { background: var(--texto); color: #000; }
-  .nav-item small { margin-left: auto; }
   .nav-selo { margin-top: auto; padding-inline: var(--e3); }
   .nav-site { padding: var(--e2) var(--e3); }
   .app-corpo { margin-left: var(--lateral); padding-bottom: 6rem; }
@@ -110,7 +91,11 @@ a.nav-item:hover { color: var(--texto); }
 /* Cada cartão leva a cor da sua pessoa (verde = A, violeta = B) na borda e ao arrastar um arquivo. */
 .pessoa { --cor: var(--verde); display: flex; flex-direction: column; gap: var(--e3); border-radius: var(--r-cartao); padding: var(--pad-cartao); }
 .pessoa.roxo { --cor: var(--roxo); }
-.pessoa.vidro::before { background: linear-gradient(135deg, color-mix(in srgb, var(--cor) 70%, transparent), rgba(255, 255, 255, .14) 35%, rgba(255, 255, 255, .05)); }
+.pessoa.vidro { border-color: transparent; }
+.pessoa.vidro::before { content: ''; position: absolute; inset: -1px; z-index: -1; padding: 1px; border-radius: inherit; pointer-events: none;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--cor) 70%, transparent), rgba(255, 255, 255, .14) 35%, rgba(255, 255, 255, .05)); }
 .pessoa-topo { display: flex; align-items: center; gap: var(--e3); }
 .pessoa-topo h2 { font-size: 1.3rem; font-weight: 800; }
 .pessoa-topo .lado { font-size: .8rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--cor); }
@@ -217,13 +202,21 @@ a.nav-item:hover { color: var(--texto); }
 /* Contorno transparente em vez de nenhum: no alto contraste do sistema ele aparece; aqui fica o anel verde. */
 .entrada:focus { outline: 2px solid transparent; border-color: var(--verde); box-shadow: 0 0 0 3px rgba(30, 215, 96, .25); }
 textarea.entrada { resize: vertical; }
-.soltar { display: flex; flex-direction: column; align-items: center; gap: var(--e3); text-align: center; border: 1.5px dashed rgba(255, 255, 255, .22); border-radius: var(--r-campo); padding: var(--e5) var(--e4); transition: border-color .2s, background .2s; }
-.soltar.sobre { border-color: var(--cor); background: color-mix(in srgb, var(--cor) 8%, transparent); }
-/* Com arquivos já escolhidos, a área encolhe para uma linha: a lista fala por ela. */
-.soltar.tem { flex-direction: row; justify-content: space-between; padding: var(--e3) var(--e4); text-align: left; }
-.soltar.tem > small { display: none; }
-.soltar.tem > p:not(.erro) { font-size: .9rem; }
-@media (max-width: 479px) { .soltar.tem > p:not(.erro) { display: none; } .soltar.tem { justify-content: center; } }
+/* Deck de upload: um slot côncavo de vidro escuro (sombra por dentro, brilho fino no topo), sem borda tracejada.
+   Arrastando por cima, acende na cor da pessoa; pronto, mostra período e plays com um brilho suave. */
+.soltar { display: flex; flex-direction: column; align-items: center; gap: var(--e3); text-align: center; border-radius: var(--r-campo); padding: var(--e5) var(--e4);
+  border: 1px solid var(--vidro-linha); background: linear-gradient(180deg, rgba(0, 0, 0, .38), rgba(255, 255, 255, .025));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), inset 0 10px 24px -8px rgba(0, 0, 0, .6); transition: border-color .2s, box-shadow .2s; }
+.soltar.sobre { border-color: var(--cor); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), inset 0 10px 24px -8px rgba(0, 0, 0, .6), 0 0 0 3px color-mix(in srgb, var(--cor) 22%, transparent); }
+.soltar.pronto { border-color: color-mix(in srgb, var(--cor) 55%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 0 36px -10px color-mix(in srgb, var(--cor) 70%, transparent); }
+.soltar.erro { border-color: color-mix(in srgb, var(--rosa) 60%, transparent); }
+.deck-icone { font-size: 2rem; color: var(--cor); }
+.deck { display: flex; flex-direction: column; align-items: center; gap: var(--e2); }
+.selo-deck { display: inline-flex; align-items: center; gap: var(--e2); padding: .3rem .8rem; border-radius: var(--pilula); background: rgba(255, 255, 255, .07); font-size: .85rem; font-weight: 700; color: var(--sub); }
+.selo-deck.ok { background: color-mix(in srgb, var(--cor) 18%, transparent); color: var(--cor); }
+.deck-periodo { font-size: 1.15rem; font-weight: 800; color: var(--texto) !important; }
+.deck-plays b { color: var(--texto); font-size: 1.05rem; }
 .soltar p { color: var(--sub); text-wrap: balance; } .soltar small { color: var(--fraco); }
 .lista-arquivos { display: flex; flex-direction: column; gap: var(--e2); }
 .lista-arquivos li { display: flex; align-items: center; gap: var(--e2); padding: var(--e1) var(--e1) var(--e1) var(--e3); border-radius: var(--r-campo); background: rgba(255, 255, 255, .05); font-size: .9rem; }
@@ -447,3 +440,42 @@ html:active-view-transition-type(modo)::view-transition-new(barra) { animation: 
   .resultado .su-race-name { font-size: 13px; }
   .resultado .su-race-bar { max-width: calc(100% - 5.5ch - 10px); }
 }
+
+/* Esqueleto da primeira tela (index.html): o mesmo desenho do topo e dos dois cartões de pessoa. */
+.esqueleto { display: flex; flex-direction: column; gap: var(--e4); padding-block: var(--e5) var(--e7); }
+.esqueleto .marca { font-size: 1.25rem; min-height: 44px; }
+.esq-linha { height: 1rem; width: min(26rem, 80%); border-radius: var(--pilula); background: rgba(255, 255, 255, .07); }
+.esq-titulo { height: 2.5rem; width: min(32rem, 90%); margin-top: var(--e5); }
+.esq-cartao { height: 15rem; border-radius: var(--r-cartao); }
+@media (min-width: 900px) { .esqueleto { padding-left: calc(var(--e7) + 15rem); } }
+
+/* Luz ambiente: as duas cores vivas da capa ativa (stories/slides.js, luzAmbiente) iluminam o fundo atrás do vidro.
+   @property deixa o navegador fazer a transição da cor; sem suporte, a cor só troca. */
+@property --ambient-primary { syntax: '<color>'; inherits: true; initial-value: rgb(30 215 96); }
+@property --ambient-secondary { syntax: '<color>'; inherits: true; initial-value: rgb(196 183 255); }
+html { transition: --ambient-primary .6s ease, --ambient-secondary .6s ease; }
+body::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  background: radial-gradient(55% 45% at 12% 8%, color-mix(in srgb, var(--ambient-primary) 22%, transparent), transparent 70%),
+    radial-gradient(50% 50% at 92% 70%, color-mix(in srgb, var(--ambient-secondary) 16%, transparent), transparent 70%); }
+@media (prefers-reduced-transparency: reduce) { body::before { display: none; } }
+
+/* Dock dos stories (stories/dock.js): cápsula de vidro fixa na base enquanto o player está na tela.
+   Fundo escuro ≥ 72%: a capa do story que passa por baixo não aparece borrada (regra do Spotify). */
+.dock { position: fixed; z-index: 55; left: 50%; bottom: calc(var(--e5) + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: var(--e3);
+  width: min(34rem, calc(100% - 2 * var(--e4))); padding: var(--e2); border-radius: var(--pilula); background: rgba(14, 14, 14, .74);
+  -webkit-backdrop-filter: blur(32px) saturate(200%); backdrop-filter: blur(32px) saturate(200%);
+  translate: -50% 1.5rem; opacity: 0; pointer-events: none; transition: translate .25s var(--sai), opacity .2s ease; }
+.dock.visivel { translate: -50% 0; opacity: 1; pointer-events: auto; }
+.dock:not(.com-trecho) { width: auto; }
+.dock-capa { width: 2.75rem; height: 2.75rem; border-radius: 10px; flex: none; }
+.dock-faixa { display: grid; min-width: 0; flex: 1; font-size: .85rem; line-height: 1.25; }
+.dock-faixa b, .dock-faixa small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.dock-faixa small { color: var(--sub); }
+.dock .eq:not(.tocando) i { animation-play-state: paused; }
+.dock-mudo { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; flex: none; background: rgba(255, 255, 255, .08); transition: background .15s, scale .1s ease-out; }
+.dock-mudo:hover { background: rgba(255, 255, 255, .14); } .dock-mudo:active { scale: .94; }
+.dock-mudo[aria-pressed="true"] { color: var(--sub); }
+.dock-poster { flex: none; min-height: 44px; }
+/* Celular: o dock fica acima da barra de modos. */
+@media (max-width: 899px) { .dock { bottom: calc(4.75rem + env(safe-area-inset-bottom)); } }
+@media (max-width: 479px) { .dock-poster { padding-inline: 1rem; } .dock.com-trecho .dock-poster { font-size: 0; gap: 0; } .dock.com-trecho .dock-poster svg { font-size: 1.1rem; } }

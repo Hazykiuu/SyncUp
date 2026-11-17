@@ -4,6 +4,7 @@
 // a barra só o mostra, então "menos movimento" (sem animação) não trava o avanço.
 import { createContext, html, useContext, useEffect, useReducer, useRef, useState } from 'preact-htm';
 import { correr, duracaoMs, inicial, parar, pausado, player, relogio, restanteEm } from './logica.js';
+import { luzAmbiente } from './slides.js';
 
 // Os modos ficam montados e escondidos (main.js): cada um diz ao seu player se está na tela.
 export const TelaAtiva = createContext(true);
@@ -76,6 +77,12 @@ export function Player({ slides, rotulo, aoMudar }) {
     return () => clearTimeout(timer);
   }, [estado.i, estado.volta, parado]);
   useEffect(() => () => anim.current?.cancel(), []);
+  // Luz ambiente: ao trocar de story, a capa já carregada do novo story acende o fundo (as que ainda
+  // carregam acendem sozinhas, no onLoad do Slide).
+  useEffect(() => {
+    const img = raiz.current?.querySelector('.st-slot.ativo .st-fundo img');
+    if (img?.complete && img.naturalWidth) luzAmbiente(img);
+  }, [estado.i]);
 
   // O som recomeça os stories do primeiro slide quando a trilha fica pronta.
   useEffect(() => {

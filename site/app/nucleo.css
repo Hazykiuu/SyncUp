@@ -1,7 +1,7 @@
 /* Núcleo do app web: só as regras do styles.css (app para PC) que o app no navegador usa.
    Listas dos Rankings, corrida dos artistas, moldura dos stories e detalhe dos arquétipos.
    Copiadas à mão do styles.css, na mesma ordem; o tests/test_web.py confere as classes su-. */
-:root { --su-card: #181818; --su-line: #2a2a2a; --su-sub: var(--sub); --su-green: var(--verde); --su-radius: 16px; }
+:root { --su-card: #181818; --su-line: #2a2a2a; --su-sub: var(--sub); --su-green: var(--verde); --su-radius: var(--r-cartao); /* escala de app.css: campo 12, cartão 20/24, painel 24/28 */ }
 
 .su-race-progress:focus-visible { outline: 3px solid var(--su-green) !important; outline-offset: 3px; }
 .su-has-ripple { position: relative; overflow: hidden; }
@@ -11,7 +11,7 @@
 .su-tracklist-card h3 { margin: 0 8px 10px; font-size: 20px; font-weight: 800; }
 .su-tracklist { list-style: none; margin: 0; padding: 0; }
 .su-tracklist li { animation: su-slide-in .5s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 45ms); }
-.su-tracklist a { display: grid; grid-template-columns: 30px 40px minmax(0, 1fr) 90px 64px; align-items: center; gap: 12px; padding: 6px 8px; border-radius: 8px; color: #fff !important; text-decoration: none !important; min-height: 52px; transition: background .18s; }
+.su-tracklist a { display: grid; grid-template-columns: 30px 40px minmax(0, 1fr) 90px 64px; align-items: center; gap: 12px; padding: 6px 8px; border-radius: var(--r-campo); color: #fff !important; text-decoration: none !important; min-height: 52px; transition: background .18s; }
 .su-tracklist a:hover { background: rgba(255, 255, 255, .08); }
 .su-num { color: var(--su-sub); text-align: right; font-variant-numeric: tabular-nums; grid-column: 1; grid-row: 1; }
 .su-playicon { grid-column: 1; grid-row: 1; justify-self: end; width: 0; height: 0; opacity: 0; border-style: solid; border-width: 7px 0 7px 12px; border-color: transparent transparent transparent #fff; transition: opacity .15s; }
@@ -26,7 +26,7 @@
 .su-mini { height: 4px; border-radius: 4px; background: #3e3e3e; overflow: hidden; }
 .su-mini i { display: block; height: 100%; width: var(--value); background: var(--accent); border-radius: inherit; animation: su-fill 1s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 45ms + 200ms); }
 .su-count { color: var(--su-sub); text-align: right; font-variant-numeric: tabular-nums; font-size: 14px; }
-.su-race { position: relative; background: var(--su-card); border-radius: 20px; padding: 22px 22px 14px; overflow: hidden; }
+.su-race { position: relative; background: var(--su-card); border-radius: var(--r-cartao); padding: 22px 22px 14px; overflow: hidden; }
 .su-race-month { position: absolute; right: 26px; top: 12px; font-size: clamp(30px, 5vw, 64px); font-weight: 900; color: rgba(255, 255, 255, .08); letter-spacing: -.03em; pointer-events: none; font-variant-numeric: tabular-nums; }
 .su-race-lanes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; position: relative; }
 .su-race-title { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; margin-bottom: 12px; }
@@ -53,9 +53,9 @@
 .su-race-knob { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #fff; opacity: 0; transition: left var(--race-step, 450ms) linear, opacity .2s; box-shadow: 0 2px 6px rgba(0, 0, 0, .5); }
 .su-race-progress:hover .su-race-fill { background: var(--su-green); }
 .su-race-progress:hover .su-race-knob, .su-race.playing .su-race-knob { opacity: 1; }
-.su-stories { position: relative; width: min(430px, 100%); aspect-ratio: 9 / 16; margin: 0 auto; border-radius: 22px; overflow: hidden; container-type: inline-size; background: #000; box-shadow: 0 30px 80px rgba(0, 0, 0, .6); outline: none; }
+.su-stories { position: relative; width: min(430px, 100%); aspect-ratio: 9 / 16; margin: 0 auto; border-radius: var(--r-painel); overflow: hidden; container-type: inline-size; background: #000; box-shadow: 0 30px 80px rgba(0, 0, 0, .6); outline: none; }
 .su-stories:not(.su-js) { aspect-ratio: auto; overflow: visible; background: none; box-shadow: none; }
-.su-stories:not(.su-js) .su-story { position: relative; aspect-ratio: 9 / 16; margin-bottom: 16px; border-radius: 22px; }
+.su-stories:not(.su-js) .su-story { position: relative; aspect-ratio: 9 / 16; margin-bottom: 16px; border-radius: var(--r-painel); }
 .su-stories-frame { position: absolute; inset: 0; }
 .su-stories:not(.su-js) .su-stories-frame { position: static; }
 .su-story { position: absolute; inset: 0; display: flex; overflow: hidden; color: #fff; background: radial-gradient(120% 80% at 10% 0%, var(--bg1), transparent 60%), radial-gradient(120% 90% at 100% 100%, color-mix(in srgb, var(--bg1) 60%, #000), transparent 55%), var(--bg2); }
@@ -66,10 +66,10 @@
 .su-story h3 { margin: 0; font-size: 7cqw; line-height: 1.08; font-weight: 900; letter-spacing: -.02em; }
 .s-resumo { background: linear-gradient(180deg, #1ed760 0 22%, #121212 22%) !important; }
 .s-resumo::before { display: none; }
-.su-arch-detail { background: var(--su-card); border-radius: 20px; padding: 22px; flex: 1 1 420px; max-width: 640px; }
+.su-arch-detail { background: var(--su-card); border-radius: var(--r-cartao); padding: 22px; flex: 1 1 420px; max-width: 640px; }
 .su-arch-detail h3 { margin: 0 0 4px; font-size: 22px; font-weight: 900; }
 .su-arch-detail ol { list-style: none; margin: 10px 0; padding: 0; display: grid; gap: 6px; }
-.su-arch-detail li { display: grid; grid-template-columns: 34px minmax(0, 1fr) 110px 86px; gap: 12px; align-items: center; padding: 8px; border-radius: 10px; animation: su-slide-in .5s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 50ms); transition: background .15s; }
+.su-arch-detail li { display: grid; grid-template-columns: 34px minmax(0, 1fr) 110px 86px; gap: 12px; align-items: center; padding: 8px; border-radius: var(--r-campo); animation: su-slide-in .5s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 50ms); transition: background .15s; }
 .su-arch-detail li:hover { background: rgba(255, 255, 255, .06); }
 .su-ad-ic { font-size: 24px; text-align: center; }
 .su-ad-name { min-width: 0; display: flex; flex-direction: column; }

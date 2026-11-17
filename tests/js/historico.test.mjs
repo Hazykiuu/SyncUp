@@ -127,3 +127,13 @@ test('ajudantes: nomes, plataformas, entradas e datas', () => {
   assert.equal(instanteUtc('2024-01-01T10:30'), Date.UTC(2024, 0, 1, 10, 30)); // sem segundos
   for (const ruim of ['2023-02-29T10:00:00Z', '2024-01-01T24:00:00Z', '2024-13-01T00:00:00Z', 'ontem', null]) assert.ok(Number.isNaN(instanteUtc(ruim)), ruim);
 });
+
+test('resumo do cartão de upload: primeiro e último play e total', async () => {
+  const { resumo } = await import('../../site/app/js/historico.js');
+  const c = await ler({ 'a.json': Buffer.from(json([ev('2024-03-01T12:00:00Z', 'Ana'), ev('2023-01-05T08:00:00Z', 'Ana'), ev('2024-12-31T23:00:00Z', 'Bia')])) });
+  const r = resumo(c);
+  assert.equal(r.plays, 3);
+  assert.equal(new Date(r.inicio).getUTCFullYear(), 2023);
+  assert.equal(new Date(r.fim).getUTCFullYear(), 2024);
+  assert.equal(resumo({ local: [] }), null);
+});

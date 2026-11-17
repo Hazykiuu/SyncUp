@@ -9,11 +9,12 @@ import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { SomStories, destravarSom } from './som.js';
 import { Player } from './stories/player.js';
+import { Dock } from './stories/dock.js';
 import { CapasCtx, chaveCapa, NOVOS } from './stories/slides.js';
 import { tiposDoWrapped } from './stories/logica.js';
 import { rodarNoWorker } from './worker.js';
 
-const DEMO = 'Ana (fictícia)'; // demo-wrapped.zip: o mesmo histórico fictício da demo da Dupla
+const DEMO = 'Ana'; // demo-wrapped.zip: o mesmo histórico fictício da demo da Dupla
 const segundos = (ms) => (ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 
 // Um Worker por montagem: ao terminar, o navegador devolve toda a memória (importa no celular).
@@ -160,12 +161,12 @@ export function Wrapped() {
           ${fase.r.dados.avisos.map((a) => html`<p class="su-note">${a}</p>`)}
         </div>
         <div class="compartilhar"><div class="acoes">
-          <button type="button" class="btn btn-verde" onClick=${png} disabled=${baixando}>${baixando ? 'Gerando…' : 'Compartilhar pôster'}</button>
           <button type="button" class="btn btn-borda vidro" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
           <button type="button" class="btn btn-borda vidro" onClick=${apagarCapas}>Apagar capas guardadas</button>
         </div>
         ${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
         <p class="nota">Montado em ${segundos(fase.ms)} s, no seu aparelho.</p>
+        <${Dock} alvo=${stories} aoPoster=${png} ocupado=${baixando} comSom />
         <p class="nota">Dica: no último story, tire um print para postar nos stories e chamar os amigos para comparar.</p></div>
         <details class="vidro detalhe"><summary>Como o arquétipo foi calculado</summary><${ArquetiposDetalhe} arquetipos=${fase.r.dados.arquetipos} /></details>
       </section>`}</div>`;

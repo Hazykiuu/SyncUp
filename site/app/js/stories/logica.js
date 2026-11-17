@@ -36,6 +36,28 @@ export function player(estado, acao) {
 
 export const pausado = (estado) => estado.fim || estado.motivos.length > 0;
 
+/* ---------- Luz ambiente: as duas cores vivas de uma capa ---------- */
+// Recebe os pixels RGBA (16×16) e devolve [primária, secundária] em [r, g, b]: as matizes mais fortes, pesadas
+// pela saturação, separadas por pelo menos 60°. Capa sem cor (cinza, preto, branco): verde e violeta do SyncUp.
+export const CORES_PADRAO = [[30, 215, 96], [196, 183, 255]];
+export function coresVivas(px) {
+  const caixas = Array.from({ length: 12 }, () => ({ peso: 0, r: 0, g: 0, b: 0 }));
+  for (let k = 0; k + 3 < px.length; k += 4) {
+    const r = px[k] / 255, g = px[k + 1] / 255, b = px[k + 2] / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, d = max - min;
+    if (d < 0.12 || l < 0.15 || l > 0.88) continue; // quase cinza, preto ou branco
+    const s = d / (1 - Math.abs(2 * l - 1));
+    const h = (max === r ? ((g - b) / d + 6) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4) * 60;
+    const c = caixas[Math.floor(h / 30) % 12];
+    c.peso += s; c.r += px[k] * s; c.g += px[k + 1] * s; c.b += px[k + 2] * s;
+  }
+  const media = (c) => [c.r, c.g, c.b].map((v) => Math.round(v / c.peso));
+  const ordem = caixas.map((c, i) => ({ ...c, i })).filter((c) => c.peso > 0.5).sort((x, y) => y.peso - x.peso);
+  if (!ordem.length) return CORES_PADRAO;
+  const longe = ordem.find((c) => Math.min(Math.abs(c.i - ordem[0].i), 12 - Math.abs(c.i - ordem[0].i)) >= 2);
+  return [media(ordem[0]), longe ? media(longe) : CORES_PADRAO[1]];
+}
+
 /* ---------- Relógio do story: a única fonte do tempo (a barra só mostra) ---------- */
 // `agora` vem de quem chama (performance.now() no navegador): testável sem DOM.
 // --dur-story do CSS: "10s", "13.5s" ou "13000ms"; qualquer outra coisa (ou CSS ausente) vira o padrão.

@@ -9,6 +9,7 @@ import { SomStories } from './som.js';
 import { SLIDES_DUPLA } from './stories/dupla.js';
 import { tiposDaDupla } from './stories/logica.js';
 import { Player } from './stories/player.js';
+import { Dock } from './stories/dock.js';
 
 // O som da Dupla só busca trechos: nada de capas nem fotos (não vai nada ao Spotify nem ao MusicBrainz).
 const NOTA_DUPLA = 'Para o som, o SyncUp envia à Apple (iTunes) os nomes das músicas e dos artistas em comum de vocês dois, além do seu endereço IP. Os históricos e os nomes de vocês não saem do aparelho. Trechos: iTunes.';
@@ -67,7 +68,7 @@ function Medidas({ metricas }) {
 
 // Ações embaixo dos stories: pôster em PNG (Canvas, no aparelho), playlist em CSV e "ver de novo".
 const segundos = (ms) => (ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
-function Acoes({ d, csv, aoRepetir }) {
+function Acoes({ d, csv, aoRepetir, alvo }) {
   const [ocupado, setOcupado] = useState('');
   const [aviso, setAviso] = useState('');
   const [erro, setErro] = useState('');
@@ -90,12 +91,12 @@ function Acoes({ d, csv, aoRepetir }) {
   });
   return html`
     <div class="compartilhar"><div class="acoes">
-      <button type="button" class="btn btn-verde" onClick=${poster} disabled=${!!ocupado}>${ocupado === 'poster' ? 'Gerando…' : 'Compartilhar pôster'}</button>
       <button type="button" class="btn btn-borda vidro" onClick=${playlist} disabled=${!!ocupado}>${ocupado === 'playlist' ? 'Gerando…' : 'Playlist comum · CSV'}</button>
       <button type="button" class="btn btn-borda vidro" onClick=${aoRepetir}>↺ Ver de novo</button>
     </div>
     ${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
-    ${erro && html`<p ref=${chegarPouco} class="erro vidro" role="alert">Não deu certo: ${erro}</p>`}</div>`;
+    ${erro && html`<p ref=${chegarPouco} class="erro vidro" role="alert">Não deu certo: ${erro}</p>`}
+    <${Dock} alvo=${alvo} aoPoster=${poster} ocupado=${ocupado === 'poster'} comSom=${!!d.trilha} /></div>`;
 }
 
 const ABAS = ['Rankings', 'Gráficos', 'Detalhes técnicos'];
@@ -156,7 +157,7 @@ export function Resultado({ r }) {
       <div ref=${stories} class="nucleo">
         <${Player} key=${r} slides=${slides} rotulo=${`Dupla de ${a} e ${b}`} />
       </div>
-      <${Acoes} d=${r.dupla} csv=${r.csv} aoRepetir=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))} />
+      <${Acoes} d=${r.dupla} csv=${r.csv} alvo=${stories} aoRepetir=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))} />
       <div ref=${lista} class="sub-abas" role="tablist" aria-label="Partes do resultado" onKeyDown=${teclar}>
         ${ABAS.map((rotulo, i) => html`<button ref=${(el) => (botoes.current[i] = el)} role="tab" id=${`aba-${i}`} aria-selected=${aba === i} tabindex=${aba === i ? 0 : -1} onClick=${() => setAba(i)}>${rotulo}</button>`)}
       </div>

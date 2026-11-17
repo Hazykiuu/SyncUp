@@ -78,7 +78,7 @@ def _py(a: list[Path], b: list[Path], nomes: tuple[str, str], opcoes: dict) -> d
         'metricas': {
             'cosseno': m.cosseno,
             'jaccard': m.jaccard,
-            'jaccard_top20': m.jaccard_top20,
+            'rbo_top50': m.rbo_top50,
             'ruzicka': m.jaccard_ponderado,
         },
         'periodo': {'comum': p.comum, 'inicio': data(p.inicio), 'fim': data(p.fim)},

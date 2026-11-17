@@ -4,7 +4,7 @@
 import { compararTexto, DIAS_SEMANA, iso, TEMPO_MINIMO_PLAY_MS } from './calculo.js';
 import { normalizarNome } from './historico.js';
 
-const TOP = 20; // top artistas, top músicas e o Jaccard do top 20
+const TOP = 20; // top artistas e top músicas exibidos
 const SEP = '\u0000'; // separa música e artista nas chaves compostas
 
 const somar = (mapa, chave, valor = 1) => mapa.set(chave, (mapa.get(chave) || 0) + valor);
@@ -55,6 +55,25 @@ export function jaccard(a, b) {
   for (const x of sa) if (sb.has(x)) comum++;
   return uniao.size ? comum / uniao.size : null;
 }
+
+// Rank-biased overlap extrapolado (Webber et al., 2010) nos tops de k, como metricas.rbo: o topo pesa mais.
+// As duas listas são cortadas na mesma profundidade (a menor, até k); lista vazia devolve null.
+export function rbo(a, b, p = 0.9, k = 50) {
+  k = Math.min(k, a.length, b.length);
+  if (!k) return null;
+  const va = new Set(), vb = new Set();
+  let soma = 0, acordo = 0;
+  for (let d = 1; d <= k; d++) {
+    const x = a[d - 1], y = b[d - 1];
+    if (x === y) acordo += 1;
+    else acordo += (vb.has(x) ? 1 : 0) + (va.has(y) ? 1 : 0);
+    va.add(x); vb.add(y);
+    soma += (acordo / d) * p ** d;
+  }
+  return (acordo / k) * p ** k + ((1 - p) / p) * soma;
+}
+const PROFUNDIDADE_RBO = 50; // "Favoritos em comum" (analise.PROFUNDIDADE_RBO)
+const rankingArtistas = (contagens) => [...contagens].sort(porContagem).slice(0, PROFUNDIDADE_RBO).map(([k]) => k);
 
 // Ruzicka: soma dos mínimos / soma dos máximos, com o mesmo divisor nos dois perfis.
 export function ruzicka(a, b) {
@@ -380,7 +399,7 @@ export function compararDupla(ca, cb, nomeA, nomeB, opcoes = {}, ids = [{ sha256
   const metricas = {
     cosseno: cosseno(pesosA, pesosB),
     jaccard: jaccard(positivos(pesosA), positivos(pesosB)),
-    jaccard_top20: jaccard(pa.topArtistas.map(([k]) => k), pb.topArtistas.map(([k]) => k)),
+    rbo_top50: rbo(rankingArtistas(ra), rankingArtistas(rb)),
     ruzicka: ruzicka(pesosA, pesosB),
   };
   if (Object.values(metricas).some((v) => v === null)) throw new Error('Não há dados suficientes para calcular as similaridades.');

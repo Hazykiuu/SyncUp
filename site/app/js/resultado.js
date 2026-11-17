@@ -58,7 +58,7 @@ function Rankings({ nomes, listas }) {
 const MEDIDAS = [
   ['cosseno', 'Escuta em comum', 'Cosseno', 'Compara quanto cada um ouviu de cada artista. É o número da abertura dos stories.'],
   ['jaccard', 'Artistas em comum', 'Jaccard', 'De todos os artistas que aparecem nos dois históricos, quantos os dois ouviram.'],
-  ['jaccard_top20', 'Favoritos em comum', 'Jaccard do top 20', 'A mesma conta, só com os 20 artistas mais ouvidos de cada um.'],
+  ['rbo_top50', 'Favoritos em comum', 'RBO do top 50', 'Compara os rankings dos 50 artistas mais ouvidos de cada um: pesa mais o topo do ranking.'],
   ['ruzicka', 'Plays em comum', 'Ruzicka', 'Como o de artistas em comum, mas pesando pela quantidade de plays.'],
 ];
 function Medidas({ metricas }) {

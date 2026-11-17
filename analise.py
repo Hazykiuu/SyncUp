@@ -15,10 +15,10 @@ from metricas import (
     cosseno,
     entropia_normalizada,
     gini,
-    jaccard,
     jaccard_ponderado,
     metricas,
     ponderar_contagens,
+    rbo,
 )
 from perfis import (
     HORA_FIM_MADRUGADA,
@@ -40,10 +40,18 @@ from recursos import (
 TEMPO_MINIMO_PLAY_MS = 30_000
 QUANTIDADE_TOP_ARTISTAS = 20
 QUANTIDADE_TOP_MUSICAS = 20
+PROFUNDIDADE_RBO = (
+    50  # "Favoritos em comum": RBO nos 50 artistas mais ouvidos (estudo com 12 históricos)
+)
 QUANTIDADE_ARTISTAS_GRAFICO = 12
 StatusArquivos = Literal[
     'bytes_identicos', 'historicos_identicos', 'recorte_identico', 'diferentes'
 ]
+
+
+def ranking_artistas(contagens: pd.Series, n: int = PROFUNDIDADE_RBO) -> list[str]:
+    """Os `n` artistas mais ouvidos; empate pelo nome (ordem de ponto de código), igual ao dupla.js."""
+    return [k for k, _ in sorted(contagens.items(), key=lambda kv: (-kv[1], kv[0]))][:n]
 
 
 @dataclass(frozen=True)
@@ -52,7 +60,7 @@ class MetricasComparacao:
 
     cosseno: float
     jaccard: float
-    jaccard_top20: float
+    rbo_top50: float
     jaccard_ponderado: float
 
 
@@ -299,9 +307,7 @@ def comparar(
     fb = vb.groupby(['musica', 'artista'], observed=True, sort=True).size()
     pesos_a, pesos_b = ponderar_contagens(ra, ponderacao), ponderar_contagens(rb, ponderacao)
     cosine, jac = metricas(pesos_a, pesos_b)
-    top = jaccard(
-        ra.nlargest(QUANTIDADE_TOP_ARTISTAS).index, rb.nlargest(QUANTIDADE_TOP_ARTISTAS).index
-    )
+    top = rbo(ranking_artistas(ra), ranking_artistas(rb), k=PROFUNDIDADE_RBO)
     ponderado = jaccard_ponderado(pesos_a, pesos_b)
     # Há plays nos dois perfis: todas as quatro métricas possuem denominadores positivos.
     if cosine is None or jac is None or top is None or ponderado is None:

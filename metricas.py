@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from math import isfinite
 
 Frequencias = Mapping[str, int | float]
@@ -56,6 +56,30 @@ def jaccard(a: Iterable[str], b: Iterable[str]) -> float | None:
     conjunto_a, conjunto_b = set(a), set(b)
     uniao = conjunto_a | conjunto_b
     return len(conjunto_a & conjunto_b) / len(uniao) if uniao else None
+
+
+def rbo(a: Sequence[str], b: Sequence[str], p: float = 0.9, k: int = 50) -> float | None:
+    """Rank-biased overlap extrapolado (Webber et al., 2010) nos tops de `k`: o topo do ranking pesa mais.
+
+    As duas listas são cortadas na mesma profundidade (a menor delas, até `k`). Lista vazia devolve None.
+    Iguais dão 1; sem nada em comum, 0.
+    """
+    k = min(k, len(a), len(b))
+    if k == 0:
+        return None
+    vistos_a: set[str] = set()
+    vistos_b: set[str] = set()
+    soma, acordo = 0.0, 0
+    for d in range(1, k + 1):
+        x, y = a[d - 1], b[d - 1]
+        if x == y:
+            acordo += 1
+        else:
+            acordo += (x in vistos_b) + (y in vistos_a)
+        vistos_a.add(x)
+        vistos_b.add(y)
+        soma += acordo / d * p**d
+    return acordo / k * p**k + (1 - p) / p * soma
 
 
 def jaccard_ponderado(a: Frequencias, b: Frequencias) -> float | None:

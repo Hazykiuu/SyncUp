@@ -109,7 +109,7 @@ def resumo_markdown(resultado: ResultadoComparacao) -> str:
     """Mantém a apresentação textual da v0.4 para o benchmark e a regressão."""
     m, a, b = resultado.metricas, resultado.perfil_a, resultado.perfil_b
     texto = f"""## Similaridade musical: {fmt_pct(m.cosseno)}
-**Cosseno:** compara o padrão de frequência por artista. **Jaccard geral:** {fmt_pct(m.jaccard)}. **Jaccard do Top 20:** {fmt_pct(m.jaccard_top20)}.
+**Cosseno:** compara o padrão de frequência por artista. **Jaccard geral:** {fmt_pct(m.jaccard)}. **Favoritos em comum (RBO do top 50, pesa mais o topo):** {fmt_pct(m.rbo_top50)}.
 
 Período: {escape_markdown(texto_periodo(resultado))}
 

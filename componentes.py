@@ -69,7 +69,7 @@ def blend_html(resultado: ResultadoComparacao, texto_periodo: str) -> str:
     cards = [
         ('Similaridade musical', m.cosseno, f'Cosseno · ponderação {resultado.ponderacao}'),
         ('Artistas em comum', m.jaccard, 'Jaccard · todos os artistas'),
-        ('Favoritos compartilhados', m.jaccard_top20, 'Jaccard · Top 20'),
+        ('Favoritos compartilhados', m.rbo_top50, 'RBO · Top 50'),
         ('Contagens compartilhadas', m.jaccard_ponderado, 'Ruzicka · ponderação selecionada'),
     ]
     metricas = ''.join(

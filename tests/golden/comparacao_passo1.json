@@ -3,7 +3,7 @@
     "metricas": {
       "cosseno": 0.15488864127525345,
       "jaccard": 1.0,
-      "jaccard_top20": 0.21212121212121213,
+      "rbo_top50": 0.10639575829119971,
       "jaccard_ponderado": 0.21369161868202174
     },
     "perfis": [
@@ -51,7 +51,7 @@
     "metricas": {
       "cosseno": 0.15458083609640622,
       "jaccard": 1.0,
-      "jaccard_top20": 0.21212121212121213,
+      "rbo_top50": 0.10639575829119971,
       "jaccard_ponderado": 0.2134185303514377
     },
     "perfis": [

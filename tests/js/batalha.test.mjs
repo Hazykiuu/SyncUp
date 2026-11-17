@@ -245,3 +245,19 @@ test('montarBatalha traz selos, título, detalhe e resenha', () => {
 test('selos e título de classe (#e6e6e6) legíveis sobre o cartão de vidro mais claro', () => {
   assert.ok(contraste('#e6e6e6', '#2a2a2a') >= 4.5, contraste('#e6e6e6', '#2a2a2a').toFixed(2));
 });
+
+test('trilha da Batalha: favorito de quem venceu cada rodada, artista que une a dupla e o do campeão no pódio', async () => {
+  const { favorito, trilhaBatalha } = await import('../../site/app/js/batalha.js');
+  assert.equal(favorito(new Map([['B', 3], ['A', 3], ['C', 1]])), 'A'); // empate: ordem de ponto de código
+  assert.equal(favorito(new Map()), null);
+  const b = { campeoes: [1], afinada: { artistaComum: 'Zé' }, rodadas: [{ chave: 'horas', posicoes: [2, 1, 3] }, { chave: 'plays', posicoes: [1, 2, 3] }] };
+  const t = trilhaBatalha(b, ['Ana fav', 'Bia fav', null]);
+  assert.deepEqual(t.slides['rodada-horas'], [{ artista: 'Bia fav' }]);
+  assert.deepEqual(t.slides['rodada-plays'], [{ artista: 'Ana fav' }]);
+  assert.deepEqual(t.slides.afinada, [{ artista: 'Zé' }]);
+  assert.deepEqual(t.slides.podio, [{ artista: 'Bia fav' }]);
+  assert.deepEqual(t.fila, [{ artista: 'Ana fav' }, { artista: 'Bia fav' }]);
+  const semComum = trilhaBatalha({ ...b, afinada: { artistaComum: null } }, ['A', 'B', 'C']);
+  assert.equal(semComum.slides.afinada, undefined);
+  assert.deepEqual(semComum.slides.abertura, [{ artista: 'B' }]);
+});

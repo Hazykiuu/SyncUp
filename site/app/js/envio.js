@@ -28,7 +28,8 @@ function lerResumo(arquivos) {
 
 const ICONE_ARQUIVO = html`<svg class="deck-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5" /><path d="M8.5 15v-2M11 17v-6M13.5 16v-4M16 14.5v-1" /></svg>`;
 
-export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquivos, desabilitado, titulo = `Pessoa ${rotulo}`, exemplo = rotulo === 'A' ? 'Ana' : 'Bia', extra = null }) {
+export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquivos, desabilitado, titulo = `Pessoa ${rotulo}`, exemplo = rotulo === 'A' ? 'Ana' : 'Bia', extra = null, modo = '' }) {
+  // `modo`: Batalha e Match ficam montados juntos e numeram as pessoas do mesmo jeito; o prefixo evita IDs repetidos.
   const entrada = useRef(null);
   const [arrastando, setArrastando] = useState(false);
   const [aviso, setAviso] = useState('');
@@ -52,14 +53,14 @@ export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquiv
     setAviso(novos.length < escolhidos.length ? 'Só aceitamos .zip ou .json (o ZIP do Histórico Estendido do Spotify).' : '');
     if (lista.length > arquivos.length) aoMudarArquivos(lista); // nada novo: a lista (e o aviso) ficam como estão
   };
-  const idNome = `nome-${rotulo}`;
+  const idNome = `${modo}nome-${rotulo}`, idTitulo = `${modo}titulo-${rotulo}`;
   const d = leitura?.dados;
   const estado = !arquivos.length ? 'vazio' : leitura?.erro ? 'erro' : d ? 'pronto' : 'lendo';
   return html`
-    <section class=${`pessoa vidro ${cor}`} aria-labelledby=${`titulo-${rotulo}`}>
+    <section class=${`pessoa vidro ${cor}`} aria-labelledby=${idTitulo}>
       <div class="pessoa-topo">
         <span class=${`avatar ${cor}`} aria-hidden="true">${rotulo}</span>
-        <div><h2 id=${`titulo-${rotulo}`}>${titulo}</h2>${(rotulo === 'A' || rotulo === 'B') && html`<small class="lado">Lado ${rotulo}</small>`}</div>
+        <div><h2 id=${idTitulo}>${titulo}</h2>${(rotulo === 'A' || rotulo === 'B') && html`<small class="lado">Lado ${rotulo}</small>`}</div>
         ${extra}
       </div>
       <label class="campo" for=${idNome}>Nome</label>

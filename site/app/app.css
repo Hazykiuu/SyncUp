@@ -99,7 +99,7 @@ a.nav-item:hover { color: var(--texto); }
 .app-corpo { background-repeat: no-repeat; background-size: 100% 28rem; }
 .app-corpo[data-modo="dupla"] { background-image: radial-gradient(60% 100% at 0% 0%, rgb(30 215 96 / .22), transparent 70%), radial-gradient(60% 100% at 100% 0%, rgb(196 183 255 / .2), transparent 70%); }
 .app-corpo[data-modo="wrapped"] { background-image: radial-gradient(80% 100% at 0% 0%, rgb(30 215 96 / .24), transparent 70%); }
-.app-corpo[data-modo="batalha"] { background-image: radial-gradient(60% 100% at 0% 0%, rgb(255 164 43 / .16), transparent 70%), radial-gradient(60% 100% at 100% 0%, rgb(245 115 160 / .16), transparent 70%); }
+.app-corpo[data-modo="batalha"] { background-image: radial-gradient(60% 100% at 0% 0%, color-mix(in srgb, var(--laranja) 16%, transparent), transparent 70%), radial-gradient(60% 100% at 100% 0%, rgb(245 115 160 / .16), transparent 70%); }
 .app-cabeca { display: flex; flex-direction: column; gap: var(--e3); padding-block: 2rem 2.5rem; }
 @media (min-width: 900px) { .app-cabeca { padding-block: 4rem 3rem; } }
 .app-cabeca h1 { text-wrap: balance; font-size: clamp(2.2rem, 6vw, 3.6rem); font-weight: 900; letter-spacing: -.03em; line-height: 1; }
@@ -134,7 +134,7 @@ a.nav-item:hover { color: var(--texto); }
 .medalhas { display: inline-flex; gap: var(--e2); align-items: center; }
 .med { display: inline-flex; align-items: center; gap: .3em; font-weight: 800; font-variant-numeric: tabular-nums; }
 .med i { width: .95em; height: .95em; border-radius: 50%; box-shadow: inset 0 -2px 0 rgb(0 0 0 / .25); }
-.med.ouro i { background: #f5c542; } .med.prata i { background: #c9d1d9; } .med.bronze i { background: #d08b4f; }
+.med.ouro i { background: var(--ouro); } .med.prata i { background: var(--prata); } .med.bronze i { background: var(--bronze); }
 .medalhas-texto { order: 1; font-size: .85em; color: var(--sub); } /* placar: o tipo por escrito, depois dos discos */
 @media (forced-colors: active) { .med i { forced-color-adjust: none; border: 1px solid CanvasText; } }
 /* Pódio: 2º, 1º, 3º. Sobe do 3º ao 1º (suspense), só transform e opacidade. */

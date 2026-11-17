@@ -3,9 +3,10 @@
 // Sem DOM: roda no Worker do Wrapped e no Node (teste de paridade com o Python).
 import { fmtNum, fmtPct } from './stories/logica.js';
 
-const TEMPO_MINIMO_PLAY_MS = 30_000;
+// Fonte única destas duas para o app (dupla.js e batalha.js importam daqui).
+export const TEMPO_MINIMO_PLAY_MS = 30_000; // rankings usam plays de pelo menos 30 s; horas usam todas as execuções
 const HORA = 3_600_000, DIA = 24 * HORA;
-const DIAS_SEMANA = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
+export const DIAS_SEMANA = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
 const PERIODOS = [['Madrugada', 0, 6], ['Manhã', 6, 12], ['Tarde', 12, 18], ['Noite', 18, 24]];
 const MINIMO_CONHECIDOS = 0.5; // fração mínima de eventos com o campo preenchido
 

@@ -1,7 +1,7 @@
-// Batalha (modo Grupo do app web): de 3 a 6 históricos disputam rodadas de números do período.
+// Batalha (no app web, no lugar do Grupo do app para PC): de 3 a 6 históricos disputam rodadas de números do período.
 // Funções puras: o Worker (batalha-worker.js) lê os arquivos e chama numerosDoLutador e montarBatalha.
-import { calcularWrapped, compararTexto } from './calculo.js';
-import { cosseno, ponderar, TEMPO_MINIMO_PLAY_MS } from './dupla.js';
+import { calcularWrapped, compararTexto, TEMPO_MINIMO_PLAY_MS } from './calculo.js';
+import { cosseno, ponderar } from './dupla.js';
 
 // Verde e violeta são os da Dupla; texto sobre elas é sempre preto (teste de contraste em batalha.test.mjs).
 export const CORES = ['#1ed760', '#c4b7ff', '#f573a0', '#ffa42b', '#5cb8ff', '#f5d547'];

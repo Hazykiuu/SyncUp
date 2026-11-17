@@ -1,7 +1,7 @@
 /* Núcleo do app web: só as regras do styles.css (app para PC) que o app no navegador usa.
    Listas dos Rankings, corrida dos artistas, moldura dos stories e detalhe dos arquétipos.
    Copiadas à mão do styles.css, na mesma ordem; o tests/test_web.py confere as classes su-. */
-:root { --su-card: #181818; --su-line: #2a2a2a; --su-sub: #b3b3b3; --su-green: #1ed760; --su-radius: 16px; }
+:root { --su-card: #181818; --su-line: #2a2a2a; --su-sub: var(--sub); --su-green: var(--verde); --su-radius: 16px; }
 
 .su-race-progress:focus-visible { outline: 3px solid var(--su-green) !important; outline-offset: 3px; }
 .su-has-ripple { position: relative; overflow: hidden; }

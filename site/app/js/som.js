@@ -1,4 +1,4 @@
-// Trilha dos stories do Wrapped: trechos de 30 s do iTunes tocando enquanto os slides passam.
+// Trilha dos stories do Wrapped e da Dupla: trechos de 30 s do iTunes tocando enquanto os slides passam.
 // Um único <audio>, desbloqueado pelo toque em "Começar com som" (validado no iPhone),
 // troca de src sozinho. Volume por Web Audio: no iOS o audio.volume é ignorado.
 import { html, useEffect, useRef, useState } from 'preact-htm';
@@ -70,7 +70,8 @@ const CHAVE_MUDO = 'syncup-mudo';
 const lerMudo = () => { try { return localStorage.getItem(CHAVE_MUDO) === '1'; } catch { return false; } }; // sem armazenamento: começa com som
 export let silenciado = lerMudo();
 
-// Um só <audio>: um elemento novo precisaria de outro toque no iPhone. Criado no primeiro "Montar".
+// Um só <audio>: um elemento novo precisaria de outro toque no iPhone. Criado no primeiro toque em
+// "Montar", "Comparar" ou "Batalhar" (destravarSom).
 let som = null;
 function prepararSom() {
   if (!som) {
@@ -99,7 +100,7 @@ export function destravarSom() {
   } catch { /* sem áudio: segue sem som */ }
 }
 
-// O Wrapped fica montado (escondido) quando a pessoa vai para a Dupla: a música para junto.
+// Os modos ficam montados (escondidos) quando a pessoa troca de modo: a música para junto.
 // Ao voltar, o player retoma no próximo movimento do story.
 export function pausarSom() { som?.el.pause(); }
 

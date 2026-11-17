@@ -1,6 +1,6 @@
 // Tela da Batalha: de 3 a 6 pessoas, o Worker em duas fases e o placar (os stories entram por cima dele).
 import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
-import { CORES, janelaComum } from './batalha.js';
+import { CORES, janelaComum, validarNomes } from './batalha.js';
 import { chegarPouco, rolarAte } from './chegada.js';
 import { Pessoa } from './envio.js';
 import { compartilhar, desenharPosterBatalha } from './poster.js';
@@ -169,12 +169,12 @@ export function Batalha() {
       setFase({ tipo: 'erro', mensagem: e.message });
     }
   };
-  const nomesFinais = (lista) => lista.map((n, i) => n.trim() || `Pessoa ${i + 1}`);
   const batalhar = () => {
     ultima.current = 'batalhar';
     destravarSom();
-    if (new Set(nomesFinais(nomes)).size !== nomes.length) { setFase({ tipo: 'erro', mensagem: 'Use nomes diferentes para identificar cada pessoa da batalha.' }); return; }
-    rodar(async () => arquivos, nomesFinais(nomes));
+    let finais;
+    try { finais = validarNomes(nomes); } catch (e) { setFase({ tipo: 'erro', mensagem: e.message }); return; }
+    rodar(async () => arquivos, finais);
   };
   // Quatro históricos fictícios prontos (gerados por tools/empacotar_web.py): nenhum dado real.
   const demo = () => {

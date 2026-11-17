@@ -1,9 +1,10 @@
-// Lógica pura dos stories do Wrapped (sem DOM e sem Preact): testada com `node --test tests/js`.
+// Lógica pura dos stories (sem DOM e sem Preact): testada com `node --test tests/js`.
+// A seção "Formatação" é também a formatação comum do app (pôster, corrida, Batalha, capas).
 
 /* ---------- Player: máquina de estados ---------- */
-// Pausado enquanto houver algum motivo: soltar o dedo ("segurar") não retoma o que a pessoa
-// pausou de propósito ("usuario"). O tempo do slide é a animação CSS; ela avisa com TEMPO.
-export const MOTIVOS = ['usuario', 'segurar', 'interacao', 'oculta'];
+// Pausado enquanto houver algum motivo ('usuario', 'segurar', 'interacao', 'oculta', 'escondido'):
+// soltar o dedo ("segurar") não retoma o que a pessoa pausou de propósito ("usuario").
+// O tempo do slide é o relógio abaixo; o fim dele vira TEMPO.
 
 export function inicial(total, { semMovimento = false } = {}) {
   return { i: 0, total, motivos: semMovimento ? ['usuario'] : [], fim: false, volta: 0 };
@@ -49,8 +50,10 @@ export const correr = (r, agora) => (r.desde === null ? { ...r, desde: agora } :
 export const parar = (r, agora) => (r.desde === null ? r : { ...r, restante: restanteEm(r, agora), desde: null });
 
 /* ---------- Formatação (mesmas regras de formatacao.py / wrapped.py) ---------- */
-const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+export const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
+// Este fmtNum é o do Wrapped (halfEven, como formatacao.py). O da Dupla (dupla.js) arredonda .5 para
+// cima, como o Python da Dupla: são dois de propósito, cada um com a paridade do seu lado.
 // Metade vai para o par, como o format do Python (12,25 → 12,2); navegador antigo ignora e arredonda para cima.
 export function fmtNum(valor, casas = 0) {
   return Number(valor).toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas, roundingMode: 'halfEven' });

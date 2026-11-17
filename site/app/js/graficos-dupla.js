@@ -2,11 +2,11 @@
 // São os mesmos números das figuras de graficos.py (o app para PC): paridade em tests/test_paridade_dupla.py.
 // Aqui também ficam as frases dos títulos e as escalas: funções puras, testadas em tests/js/graficos.test.mjs.
 import { fmtNum } from './dupla.js';
+import { MESES } from './stories/logica.js';
 
 export const VISIVEIS = 8; // artistas à vista em "Quem puxa"; o resto fica no "Ver mais"
 export const LIMIARES = [60, 40, 40]; // perfis.LIMIAR_FAVORITOS, LIMIAR_REPEAT e LIMIAR_MADRUGADA, em %
 const DIAS = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
-const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
 export const mesLongo = (m) => `${MESES[Number(m.slice(5)) - 1]}/${m.slice(0, 4)}`;
 export const mesCurto = (m) => `${MESES[Number(m.slice(5)) - 1]}/${m.slice(2, 4)}`;

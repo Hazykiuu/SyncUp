@@ -1,10 +1,9 @@
 // Comparação da Dupla em JavaScript, sem Python: as mesmas regras de analise.comparar e metricas.py.
 // Entrada: as colunas de historico.lerHistorico para cada pessoa. A paridade com o Python é conferida em
 // tests/test_paridade_dupla.py (mesmos arquivos nos dois lados, números com tolerância de 1e-9).
-import { compararTexto, iso } from './calculo.js';
+import { compararTexto, DIAS_SEMANA, iso, TEMPO_MINIMO_PLAY_MS } from './calculo.js';
 import { normalizarNome } from './historico.js';
 
-export const TEMPO_MINIMO_PLAY_MS = 30_000; // rankings usam plays de pelo menos 30 s; horas usam todas as execuções
 const TOP = 20; // top artistas, top músicas e o Jaccard do top 20
 const SEP = '\u0000'; // separa música e artista nas chaves compostas
 
@@ -153,7 +152,6 @@ export function momentosSincronizados(ca, ia, cb, ib, tipo) {
 
 /* ---------- Sintonia (recursos.escutas e sintonia_entre) ---------- */
 const MINIMO_JUNTOS_MS = 30_000;
-export const DIAS_SEMANA = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
 // normalizar_nome; se sobrar vazio (só pontuação), o nome em casefold.
 const normal = (n) => normalizarNome(n) || n.toUpperCase().toLowerCase();
 
@@ -452,7 +450,8 @@ export function compararDupla(ca, cb, nomeA, nomeB, opcoes = {}, ids = [{ sha256
 export const VERDE = '#1ed760', ROXO = '#c4b7ff';
 const ARTISTAS_CORRIDA = 8, LINHAS_TABELA = 20, TOP_LISTA = 10;
 
-// fmt_num do Python: milhares com ponto, decimais com vírgula.
+// fmt_num do Python: milhares com ponto, decimais com vírgula. Diferente do fmtNum de stories/logica.js
+// (halfEven, o do Wrapped) de propósito: cada um tem a paridade com o seu lado do Python.
 export function fmtNum(valor, casas = 0) {
   const [inteiro, decimais] = Math.abs(valor).toFixed(casas).split('.');
   const sinal = valor < 0 && Number(Math.abs(valor).toFixed(casas)) !== 0 ? '-' : '';

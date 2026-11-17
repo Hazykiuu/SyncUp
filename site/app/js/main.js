@@ -80,8 +80,8 @@ function Dupla() {
     <div id="resultado">${fase.tipo === 'resultado' && html`<${Resultado} r=${fase.r} />`}</div>`;
 }
 
-// Clique do fader na troca de modo: um toque de 40 ms, bem baixo. Para o Wrapped sobe (sol, 1568 Hz);
-// para a Dupla desce (ré, 1175 Hz), uma quinta abaixo: os dois lados do crossfader. Um por troca.
+// Clique do fader na troca de modo: um toque de 40 ms, bem baixo. Para a direita na barra (Dupla → Wrapped
+// → Batalha) sobe (sol, 1568 Hz); para a esquerda desce (ré, 1175 Hz), uma quinta abaixo. Um por troca.
 // Usa o mesmo AudioContext dos stories e respeita o "Silenciar" deles.
 function cliqueFader(paraDireita) {
   const audio = audioCtx();

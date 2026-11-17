@@ -1,9 +1,10 @@
 // Corrida dos artistas e onda nos botões: o mesmo do syncup.js (app para PC), como módulo do app web.
-// Sem MutationObserver: a corrida é ligada pelo ref de quem a desenha (ligarCorrida).
+// Sem MutationObserver: quem a desenha liga ao montar e desliga ao desmontar (ligarCorrida).
+import { MESES } from './stories/logica.js';
+
 const reduz = matchMedia('(prefers-reduced-motion: reduce)');
 const semMovimento = () => reduz.matches;
 const fmt = (v, casas) => v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
-const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const nomeMes = (iso) => {
   const [a, m] = iso.split('-');
   return `${MESES[Number(m) - 1]}/${a}`;

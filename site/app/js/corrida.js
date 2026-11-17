@@ -80,7 +80,7 @@ function montarCorrida(raiz) {
   player.innerHTML = `
     <button type="button" class="su-race-play" aria-label="Reproduzir corrida"><span class="su-icon-play"></span></button>
     <span class="su-race-time su-race-now"></span>
-    <div class="su-race-progress" role="slider" tabindex="0" aria-label="Mês da corrida"><div class="su-race-fill"></div><div class="su-race-knob"></div></div>
+    <div class="su-race-progress" role="slider" tabindex="0" aria-label="Mês da corrida" aria-valuemin="0" aria-valuemax="${dados.meses.length - 1}"><div class="su-race-fill"></div><div class="su-race-knob"></div></div>
     <span class="su-race-time">${nomeMes(dados.meses[dados.meses.length - 1])}</span>`;
   const mesGrande = document.createElement('div');
   mesGrande.className = 'su-race-month';
@@ -104,6 +104,7 @@ function montarCorrida(raiz) {
     agora.textContent = nomeMes(dados.meses[quadro]);
     mesGrande.textContent = nomeMes(dados.meses[quadro]);
     progresso.setAttribute('aria-valuenow', String(quadro));
+    progresso.setAttribute('aria-valuetext', nomeMes(dados.meses[quadro]));
     for (const { perfil, linhas } of estados) {
       const valores = perfil.valores.map((serie) => serie[quadro]);
       const ordem = valores
@@ -157,9 +158,14 @@ function montarCorrida(raiz) {
   });
   const soltar = () => progresso.removeEventListener('pointermove', buscar);
   for (const fim of ['pointerup', 'pointercancel', 'lostpointercapture']) progresso.addEventListener(fim, soltar);
+  // Teclas do padrão ARIA de slider; mexer pelo teclado pausa, como arrastar.
+  const PASSOS = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 12, PageDown: -12 };
   progresso.addEventListener('keydown', (ev) => {
-    if (ev.key === 'ArrowRight') desenhar(quadro + 1);
-    if (ev.key === 'ArrowLeft') desenhar(quadro - 1);
+    const alvo = ev.key === 'Home' ? 0 : ev.key === 'End' ? total - 1 : ev.key in PASSOS ? quadro + PASSOS[ev.key] : null;
+    if (alvo === null) return;
+    ev.preventDefault();
+    parar();
+    desenhar(alvo);
   });
   raiz.__suPlay = () => {
     if (semMovimento()) return desenhar(total - 1);

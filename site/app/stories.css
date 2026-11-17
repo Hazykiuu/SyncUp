@@ -326,7 +326,7 @@
 .sb-podio li { display: flex; flex-direction: column; align-items: center; gap: 1.4cqw; min-width: 0; text-align: center; }
 .sb-podio .sb-avatar { width: 13cqw; font-size: 5.6cqw; } .sb-podio .p1 .sb-avatar { width: 17cqw; font-size: 7.4cqw; }
 .sb-podio .sb-nome { max-width: 100%; font-size: 4cqw; font-weight: 800; }
-.sb-titulo { font-size: 2.4cqw; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #fff; }
+.sb-titulo { font-size: max(10px, 2.4cqw); font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: #fff; }
 .sb-bloco { display: grid; place-items: start center; width: 100%; height: 18cqw; padding-top: 2cqw; border-radius: 3cqw 3cqw 1cqw 1cqw; transform-origin: bottom;
   background: linear-gradient(180deg, color-mix(in srgb, var(--lut) 48%, transparent), color-mix(in srgb, var(--lut) 12%, transparent));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(255, 255, 255, .16); }
@@ -393,3 +393,8 @@
 }
 @media (prefers-reduced-motion: reduce) { .st-slot.ativo .sb-podio .sb-bloco, .st-slot.ativo .sb-podio li > * { animation: none; } }
 @media (forced-colors: active) { .sb-pontos i, .sb-corrente i, .sb-casas i, .sb-tally b, .sb-lombada, .sb-corredor::after, .sb-arco, .sb-hora, .sb-lua { forced-color-adjust: none; } }
+/* Alto contraste: progresso dos stories e colunas com as cores do sistema (sem forced-color-adjust: none). */
+@media (forced-colors: active) {
+  .st-seg { border: 1px solid CanvasText; }
+  .st-seg i, .st-seg.feito, .st-colunas i { background: CanvasText; }
+}

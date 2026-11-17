@@ -10,3 +10,6 @@ const entra = (de, duration, easing = SAI) => (el) => {
 export const chegar = entra({ opacity: 0.6, translate: '0 12px' }, 400); // resultado
 export const chegarPouco = entra({ opacity: 0, translate: '0 4px' }, 200); // avisos e erros
 export const chegarLista = entra({ opacity: 0, scale: 0.97 }, 200); // arquivo aceito
+
+// Rolagem até o resultado: o behavior 'smooth' do JS não obedece ao scroll-behavior do CSS.
+export const rolarAte = (el, block = 'start') => el?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block });

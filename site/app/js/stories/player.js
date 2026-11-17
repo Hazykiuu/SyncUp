@@ -1,6 +1,6 @@
 // Player dos stories (Wrapped, Dupla e Batalha), em Preact. A máquina de estados e o relógio ficam em
 // logica.js (testados); aqui entram os gestos: toque (esquerda volta, direita avança), segurar pausa,
-// arrastar troca, teclado (← → espaço), aba oculta e modo escondido. O tempo é do relógio em JS:
+// arrastar troca, teclado (← → Home End espaço), aba oculta e modo escondido. O tempo é do relógio em JS:
 // a barra só o mostra, então "menos movimento" (sem animação) não trava o avanço.
 import { createContext, html, useContext, useEffect, useReducer, useRef, useState } from 'preact-htm';
 import { correr, duracaoMs, inicial, parar, pausado, player, relogio, restanteEm } from './logica.js';
@@ -124,8 +124,10 @@ export function Player({ slides, rotulo, aoMudar }) {
   const tecla = (e) => {
     acordar();
     if (e.target.closest('[data-interativo]')) return; // lá dentro as setas são dos chips
-    const acao = { ArrowRight: 'AVANCAR', ArrowLeft: 'VOLTAR', ' ': 'ALTERNAR' }[e.key];
-    if (acao) { e.preventDefault(); despachar({ tipo: acao }); }
+    if ((e.key === ' ' || e.key === 'Enter') && e.target.closest('button, a')) return; // o botão faz a ação dele
+    const acao = { ArrowRight: { tipo: 'AVANCAR' }, ArrowLeft: { tipo: 'VOLTAR' }, ' ': { tipo: 'ALTERNAR' },
+      Home: { tipo: 'IR', i: 0 }, End: { tipo: 'IR', i: slides.length - 1 } }[e.key];
+    if (acao) { e.preventDefault(); despachar(acao); }
   };
 
   return html`

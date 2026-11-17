@@ -267,7 +267,8 @@ export function Fiel({ d, ativo, i, controle }) {
       <div data-interativo role="group" aria-label="Anos: toque para ver o top daquele ano">
         ${d.anos.map((a, k) => html`<button type="button" ref=${(el) => (chips.current[k] = el)}
           class=${`st-vidro${d.fiel_anos.includes(a.ano) ? ' on' : ''}`} aria-pressed=${aberto === a.ano}
-          onClick=${() => (aberto === a.ano ? fechar() : abrir(a.ano))} onKeyDown=${(e) => tecla(e, k)}>${a.ano}</button>`)}
+          onClick=${() => (aberto === a.ano ? fechar() : abrir(a.ano))} onKeyDown=${(e) => tecla(e, k)}>${a.ano}${d.fiel_anos.includes(a.ano)
+            && html`<span aria-hidden="true"> ★</span><span class="sr-only">, no top 5</span>`}</button>`)}
       </div>
     <//>
     <div class="st-painel-ano" aria-live="polite">${ano && html`

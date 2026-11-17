@@ -3,7 +3,7 @@
 // troca de src sozinho. Volume por Web Audio: no iOS o audio.volume é ignorado.
 import { html, useEffect, useRef, useState } from 'preact-htm';
 import { HOSTS_AUDIO, urlSegura } from './capas.js';
-import { chegarPouco } from './chegada.js';
+import { chegarPouco, rolarAte } from './chegada.js';
 import { normalizar } from './stories/logica.js';
 
 const VOLUME = 0.2;
@@ -65,8 +65,10 @@ export function audioCtx() {
   try { contexto ||= new (window.AudioContext || window.webkitAudioContext)(); } catch { return null; }
   return contexto;
 }
-// "Silenciar" nos stories vale também para o clique do fader.
-export let silenciado = false;
+// "Silenciar" nos stories vale também para o clique do fader, e fica guardado neste aparelho.
+const CHAVE_MUDO = 'syncup-mudo';
+const lerMudo = () => { try { return localStorage.getItem(CHAVE_MUDO) === '1'; } catch { return false; } }; // sem armazenamento: começa com som
+export let silenciado = lerMudo();
 
 // Um só <audio>: um elemento novo precisaria de outro toque no iPhone. Criado no primeiro "Montar".
 let som = null;
@@ -106,7 +108,7 @@ export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
   const trilhaPronta = useRef(null);
   const [status, setStatus] = useState('');
   const [estado, setEstado] = useState('carregando'); // carregando | tocando | sem (o Wrapped começa sempre com capas e som)
-  const [mudo, setMudo] = useState(false);
+  const [mudo, setMudo] = useState(lerMudo);
   const mudoAgora = useRef(false); // lido pelos ouvintes do player, que não re-renderizam
   mudoAgora.current = mudo;
   const raiz = () => alvo.current?.querySelector('.st-player');
@@ -147,7 +149,7 @@ export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
     trilhaPronta.current = { fila, porSlide };
     setEstado('tocando');
     raiz()?.dispatchEvent(new Event('st-replay')); // recomeça do primeiro slide, já com som
-    raiz()?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    rolarAte(raiz(), 'center');
   };
 
   // Uma música por story: cada slide tem a sua (a própria do slide ou a próxima das mais ouvidas).
@@ -213,7 +215,11 @@ export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
     };
   }, [estado]);
 
-  useEffect(() => { silenciado = mudo; if (estado === 'tocando') rampa(mudo ? 0 : VOLUME); }, [mudo]);
+  useEffect(() => {
+    silenciado = mudo;
+    try { localStorage.setItem(CHAVE_MUDO, mudo ? '1' : '0'); } catch { /* sem armazenamento: vale só nesta visita */ }
+    if (estado === 'tocando') rampa(mudo ? 0 : VOLUME);
+  }, [mudo]);
 
   return html`
     <div class="som-stories vidro">

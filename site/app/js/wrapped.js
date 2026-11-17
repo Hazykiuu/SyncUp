@@ -3,7 +3,7 @@
 import { html, useMemo, useRef, useState } from 'preact-htm';
 import { AVISO_ARQUETIPOS, formatarValor, REGRAS } from './calculo.js';
 import { criarBuscador } from './capas.js';
-import { chegar, chegarPouco } from './chegada.js';
+import { chegar, chegarPouco, rolarAte } from './chegada.js';
 import { compartilhar, desenharPoster } from './poster.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
@@ -99,7 +99,7 @@ export function Wrapped() {
       rodada.current++;
       setCapas(null);
       setFase({ tipo: 'resultado', r, ms: performance.now() - inicio });
-      requestAnimationFrame(() => document.getElementById('resultado-wrapped')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      requestAnimationFrame(() => rolarAte(document.getElementById('resultado-wrapped')));
     } catch (e) { if (e.name !== 'AbortError') setFase({ tipo: 'erro', mensagem: e.message }); }
   };
   const montar = () => { ultima.current = 'montar'; destravarSom(); return rodar(() => Promise.all(arquivos.map(async (f) => ({ nome: f.name, bytes: await f.arrayBuffer() }))), nome || 'Você'); };

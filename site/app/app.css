@@ -135,6 +135,7 @@ a.nav-item:hover { color: var(--texto); }
 .med { display: inline-flex; align-items: center; gap: .3em; font-weight: 800; font-variant-numeric: tabular-nums; }
 .med i { width: .95em; height: .95em; border-radius: 50%; box-shadow: inset 0 -2px 0 rgb(0 0 0 / .25); }
 .med.ouro i { background: #f5c542; } .med.prata i { background: #c9d1d9; } .med.bronze i { background: #d08b4f; }
+.medalhas-texto { order: 1; font-size: .85em; color: var(--sub); } /* placar: o tipo por escrito, depois dos discos */
 @media (forced-colors: active) { .med i { forced-color-adjust: none; border: 1px solid CanvasText; } }
 /* Pódio: 2º, 1º, 3º. Sobe do 3º ao 1º (suspense), só transform e opacidade. */
 .podio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; gap: var(--e3); padding-top: var(--e5); }

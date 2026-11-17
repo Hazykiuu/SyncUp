@@ -1,7 +1,7 @@
 // Tela da Batalha: de 3 a 6 pessoas, o Worker em duas fases e o placar (os stories entram por cima dele).
 import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { CORES, janelaComum } from './batalha.js';
-import { chegarPouco } from './chegada.js';
+import { chegarPouco, rolarAte } from './chegada.js';
 import { Pessoa } from './envio.js';
 import { compartilhar, desenharPosterBatalha } from './poster.js';
 import { Opcoes, PADRAO } from './opcoes.js';
@@ -23,8 +23,9 @@ const porMedalhas = (b) => (i, j) => {
 };
 const mesmoPlacar = (x, y) => x.ouro === y.ouro && x.prata === y.prata && x.bronze === y.bronze;
 
-// Medalhas desenhadas, com o texto para o leitor de tela.
-const Medalhas = ({ m }) => html`<span class="medalhas"><span class="sr-only">${textoMedalhas(m)}</span>
+// Medalhas desenhadas, com o texto para o leitor de tela. `escrito`: o texto também na tela (placar),
+// para o tipo de medalha não depender só da cor.
+const Medalhas = ({ m, escrito = false }) => html`<span class="medalhas"><span class=${escrito ? 'medalhas-texto' : 'sr-only'}>${textoMedalhas(m)}</span>
   ${['ouro', 'prata', 'bronze'].map((t) => m[t] > 0 && html`<span class=${`med ${t}`} aria-hidden="true"><i></i>${m[t]}</span>`)}</span>`;
 
 // Os selos de disputa, na tipografia do Kicker dos stories (etiqueta em caixa alta, sem brilho).
@@ -85,7 +86,7 @@ function Placar({ b, nomes }) {
           ${b.rodadas.map((r) => html`<th scope="col">${r.titulo} <small>${r.unidade}</small></th>`)}</tr></thead>
         <tbody>${ordem.map((i) => html`<tr>
           <th scope="row"><span class="lut-ponto" style=${{ '--lut': b.lutadores[i].cor }} aria-hidden="true"></span>${nomes[i]}</th>
-          <td><${Medalhas} m=${b.lutadores[i].medalhas} /></td>
+          <td><${Medalhas} m=${b.lutadores[i].medalhas} escrito /></td>
           ${b.rodadas.map((r) => html`<td class=${r.posicoes[i] === 1 ? 'venceu' : ''}>${fmtNum(r.valores[i], r.casas)}${r.posicoes[i] === 1 ? html` <small>1º</small>` : ''}</td>`)}
         </tr>`)}</tbody>
       </table>
@@ -161,7 +162,7 @@ export function Batalha() {
       if (minha !== rodada.current) return;
       cancelar();
       setFase({ tipo: 'resultado', b, nomes: nomesUsados, comum: opcoes.comum });
-      requestAnimationFrame(() => document.getElementById('resultado-batalha')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      requestAnimationFrame(() => rolarAte(document.getElementById('resultado-batalha')));
     } catch (e) {
       if (e.name === 'AbortError' || minha !== rodada.current) return; // cancelada: nada a mostrar
       cancelar();

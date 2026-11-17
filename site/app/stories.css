@@ -399,27 +399,27 @@
   .st-seg i, .st-seg.feito, .st-colunas i { background: CanvasText; }
 }
 
-/* Stories do Match: o mesmo cartão de namoro da tela (casal, coração batendo, fita e corações), em cqw. */
+/* Stories do Match em duetos: nomes nas cores, nota do par, faixas e refrão em texto, em cqw. */
 .sm { --capa: 245 115 160; }
 .sm .st-kicker { color: var(--rosa-claro); }
-.sm-casal { display: flex; align-items: center; }
-.sm-avatar { display: grid; place-items: center; flex: none; width: 18cqw; aspect-ratio: 1; border-radius: 50%; background: var(--lut); color: var(--rosa-noite);
-  font-size: 8cqw; font-weight: 900; box-shadow: 0 0 0 1.2cqw var(--sup-1), 0 0 0 1.8cqw rgb(245 115 160 / .6); }
-.sm-avatar.mini { width: 9cqw; font-size: 4cqw; box-shadow: 0 0 0 .6cqw rgb(245 115 160 / .6); }
-.sm-elo { z-index: 1; margin-inline: -3.5cqw; font-size: 11cqw; line-height: 0; color: var(--rosa); filter: drop-shadow(0 0 2cqw rgb(245 115 160 / .9)); }
-.sm-coracao { width: 1em; height: 1em; fill: currentColor; }
-.st-slot.ativo .sm-elo { animation: amor-bate 1.4s ease-in-out infinite; }
-.sm-elenco { display: flex; flex-wrap: wrap; gap: 3cqw 2cqw; }
-.sm-elenco > span { display: flex; flex-direction: column; align-items: center; gap: 1.4cqw; width: 22cqw; min-width: 0; }
-.sm-elenco b { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 3.6cqw; }
-.sm-nota { display: flex; flex-direction: column; align-items: flex-start; gap: 2.4cqw; }
-.sm-nota .st-mega { background: linear-gradient(180deg, #fff 10%, var(--rosa-claro) 55%, var(--rosa)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.sm-fita { padding: 1cqw 5cqw; font-size: 3.2cqw; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--rosa-noite);
-  background: linear-gradient(180deg, var(--rosa-papel), var(--rosa)); clip-path: polygon(0 0, 100% 0, calc(100% - 2.4cqw) 50%, 100% 100%, 0 100%, 2.4cqw 50%); }
-.sm-medidor { display: flex; gap: 1cqw; font-size: 7cqw; color: rgb(255 255 255 / .18); }
-.sm-medidor .cheio { color: var(--rosa); filter: drop-shadow(0 0 1.2cqw rgb(245 115 160 / .8)); }
-.sm-unidos b { font-weight: 900; color: var(--rosa-claro); }
-@media (prefers-reduced-motion: reduce) { .st-slot.ativo .sm-elo { animation: none; } }
+.sm .dueto-nomes { font-size: 9cqw; }
+.sm .dueto-nomes.sm-trio { font-size: 6.6cqw; }
+.s-poster .dueto-nomes { font-size: 11cqw; }
+.sm-elenco { display: flex; flex-wrap: wrap; gap: 1.5cqw 4cqw; font-size: 4.4cqw; }
+.sm-linhas { display: grid; gap: 3cqw; }
+.sm-linha { display: grid; gap: 1cqw; }
+.sm-subpar { font-size: 3.4cqw; font-weight: 800; color: rgb(255 255 255 / .75); overflow-wrap: anywhere; }
+.sm-nota { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3cqw; }
+.sm-pct { font-size: 9cqw; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.sm-nivel { font-size: 4cqw; font-weight: 800; }
+.sm .faixas { gap: 1.4cqw; padding-block: 1.4cqw; }
+.sm .faixas i { height: 1.6cqw; border-radius: 1cqw; }
+.sm .faixas .faixa-comum { height: auto; border-radius: 1.2cqw; box-shadow: inset 0 0 0 .5cqw #fff; }
+.sm .faixas-legenda { font-size: 3cqw; color: rgb(255 255 255 / .75); }
+.sm-refrao, .sm-ladob p { font-size: 3.8cqw; line-height: 1.4; overflow-wrap: anywhere; }
+.sm-refrao span, .sm-ladob span { display: block; font-size: 2.8cqw; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgb(255 255 255 / .75); }
+.sm-ladob { display: grid; gap: 2cqw; }
+
 
 /* 9. Tema único (1.18): todos os modos na mesma moldura, "capa de playlist" com vidro de verdade.
    A cor do story (--capa) vem do alto e se apaga em --sup-1 (#121212), como a página de uma playlist do Spotify.

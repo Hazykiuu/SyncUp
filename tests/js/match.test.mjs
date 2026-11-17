@@ -20,7 +20,7 @@ test('perfilDeHistorico: aguenta um histórico grande (sem estourar a pilha)', (
   assert.equal(p.top_artistas.long_term.length, 50);
 });
 
-test('melhorPar e trilhaMatch: o casal do grupo e um artista em comum por par', async () => {
+test('melhorPar e trilhaMatch: o dueto mais afinado e um artista em comum por par', async () => {
   const { chave, melhorPar, trilhaMatch } = await import('../../site/app/js/match.js');
   const det = (p, comuns) => ({ pontuacao: p, artistas_comuns: comuns });
   const r = {
@@ -37,4 +37,41 @@ test('melhorPar e trilhaMatch: o casal do grupo e um artista em comum por par', 
   assert.equal(t.slides['par-1'], undefined); // Caio e Duda sem artista em comum
   assert.deepEqual(t.slides.poster, [{ artista: 'Z' }]);
   assert.deepEqual(t.fila, [{ artista: 'X' }, { artista: 'Y' }]);
+});
+
+test('duetos: os 7 cenários com os números de compararPerfis, sem métrica nova', async () => {
+  const { chave, conciliar, duetos } = await import('../../site/app/js/match.js');
+  const { GRUPO_1, GRUPO_2 } = await import('./casos_match.mjs');
+  for (const grupo of [GRUPO_1, GRUPO_2]) {
+    const r = conciliar(grupo);
+    const ds = duetos(r);
+    assert.equal(ds.length, r.pares.length);
+    for (const d of ds) for (const l of d.linhas) {
+      const c = r.detalhes[chave(l.x, l.y)];
+      assert.equal(l.pontuacao, c.pontuacao);
+      assert.equal(l.nivel, c.nivel);
+      assert.equal(l.jaccard, c.jaccard_artistas);
+      assert.deepEqual(l.refrao, c.artistas_comuns);
+    }
+  }
+  const [alta, trio] = duetos(conciliar(GRUPO_1));
+  // 1, 6 e 7: sobreposição alta; Bruno ⊂ Ana, então o Lado B de Ana é vazio e o de Bruno vem cheio (8, na ordem).
+  assert.deepEqual(alta.nomes, ['Ana', 'Bruno']);
+  assert.ok(alta.linhas[0].pontuacao >= 25);
+  assert.deepEqual(alta.ladoB.find((p) => p.para === 'Ana').origens, [{ de: 'Bruno', artistas: [] }]);
+  assert.deepEqual(alta.ladoB.find((p) => p.para === 'Bruno').origens[0].artistas, Array.from({ length: 8 }, (_, i) => `Ana Extra ${i + 1}`));
+  // 3 e 5: trio com nome longo; três linhas, refrão só com os três, Lado B por origem.
+  assert.equal(trio.nomes.length, 3);
+  assert.equal(trio.linhas.length, 3);
+  assert.deepEqual([...trio.refrao].sort(), ['Arctic Monkeys', 'Tame Impala', 'The Strokes']);
+  assert.deepEqual(trio.refrao, trio.linhas[0].refrao.filter((a) => trio.refrao.includes(a))); // ordem do primeiro par
+  assert.ok(!trio.refrao.includes('Phoenix')); // Caio e Duda têm, Maria não
+  for (const p of trio.ladoB) assert.deepEqual(p.origens.map((o) => o.de).sort(), trio.nomes.filter((n) => n !== p.para).sort());
+  const [baixa, nada] = duetos(conciliar(GRUPO_2));
+  // 2: baixa sobreposição, um artista só; 4: nenhum artista em comum (jaccard 0, refrão vazio).
+  assert.deepEqual(baixa.refrao, ['Björk']);
+  assert.ok(baixa.linhas[0].jaccard > 0 && baixa.linhas[0].jaccard < 0.1);
+  assert.equal(nada.linhas[0].jaccard, 0);
+  assert.deepEqual(nada.refrao, []);
+  assert.equal(nada.linhas[0].pontuacao, 0);
 });

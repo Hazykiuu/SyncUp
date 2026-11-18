@@ -86,7 +86,7 @@ test('frases de cada faixa (stories 7, 8, 10 e 12)', async () => {
   assert.equal(L.fraseRecorde(11.4), 'Um expediente inteiro de música.');
   assert.equal(L.fraseRecorde(6), 'Dava para ouvir uns 8 álbuns inteiros.');
   assert.equal(L.fraseRecorde(2), 'Um dia intenso, no seu ritmo.');
-  assert.equal(L.fraseRepeticao(23), 'Isso não é ouvir, é estudar.');
+  assert.equal(L.fraseRepeticao(23), 'Ouviu até decorar.');
   assert.equal(L.fraseRepeticao(12), 'Virou a trilha daquele dia.');
   assert.equal(L.fraseRepeticao(3), 'Um dia com trilha sonora definida.');
   assert.equal(L.fraseSequencia(400), 'Um ano inteiro sem um dia de silêncio.');
@@ -99,7 +99,7 @@ test('frases de cada faixa (stories 7, 8, 10 e 12)', async () => {
   assert.equal(L.fraseConstancia(0.4), 'Você escolhe os momentos.');
   assert.deepEqual(L.habitoDestaque({ pulos: 0.42, aleatorio: 0.61, fim_natural: 0.5, offline: null }), { chave: 'pulos', frase: 'Dedo rápido: 42% das faixas puladas.' });
   assert.equal(L.habitoDestaque({ pulos: 0.1, aleatorio: 0.3, fim_natural: 0.5, offline: 0 }).chave, null);
-  assert.equal(L.habitoDestaque({}).frase, 'Equilíbrio: nem pula demais, nem deixa tudo no aleatório.');
+  assert.equal(L.habitoDestaque({}).frase, 'Pula pouco e escolhe o que toca.');
   assert.deepEqual(L.descobertasCurta(0.1), { n: 10, frase: 'Você vive caçando som novo.' });
   assert.equal(L.descobertasCurta(0.02).frase, 'Você sabe do que gosta.');
 });

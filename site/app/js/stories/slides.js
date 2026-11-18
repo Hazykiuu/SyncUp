@@ -1,6 +1,7 @@
 // Slides novos do Wrapped ("Capa Viva" + "Liquid Glass"), desenhados a partir de `dados` (JSON da ponte).
 // O Gradio continua com o HTML de stories.py; o app web usa só estes.
 import { createContext, html, useContext, useEffect, useLayoutEffect, useRef, useState } from 'preact-htm';
+import { AVISO_ARQUETIPOS } from '../calculo.js';
 import {
   ajustarCor, CORES_PADRAO, coresVivas, corReserva, dataBr, descobertasCurta, fmtNum, fmtPct, fraseConstancia, fraseRecorde,
   fraseRepeticao, fraseSequencia, habitoDestaque, hashNome, mesAno,
@@ -248,7 +249,7 @@ export function RelogioSlide({ d, i }) {
   <//>`;
 }
 
-const Icone = ({ id, classe = '' }) => html`<svg class=${`st-icone ${classe}`} viewBox="0 0 64 64" aria-hidden="true"><use href=${`icones/arquetipos.svg#${id}`} /></svg>`;
+export const Icone = ({ id, classe = '' }) => html`<svg class=${`st-icone ${classe}`} viewBox="0 0 64 64" aria-hidden="true"><use href=${`icones/arquetipos.svg#${id}`} /></svg>`;
 
 export function Maratona({ d, ativo, i }) {
   const fracao = d.dias_com_musica / Math.max(d.dias_periodo, 1);
@@ -321,7 +322,6 @@ export function Habitos({ d, i }) {
 }
 
 // Mesmo texto de arquetipos.AVISO_ARQUETIPOS.
-const AVISO_ARQUETIPOS = 'Arquétipos são regras sobre hábitos de escuta neste histórico. Não medem personalidade nem afinidade entre pessoas.';
 
 export function Arquetipo({ d, i }) {
   const a = d.arquetipos, p = a.principal;

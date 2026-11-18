@@ -251,8 +251,9 @@
 .st-slot.ativo .st-barra-valor { animation: st-cresce-x 1.1s var(--sai-st) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo)); }
 
 /* Coreografia aprovada no Figma (12/11): a Dupla respira num ritmo mais calmo; os dois círculos vêm de
-   lados opostos e se encontram com uma mola leve; o cartão do número surge com um "pop"; a barra de B
-   sai 80 ms depois da de A (corrida). Mola = linear() com ~10% de passagem; ease-out antes, de reserva. */
+   lados opostos e se encontram; o cartão do número surge crescendo; a barra de B sai 80 ms depois da de A
+   (corrida). Só a agulha do afinador oscila ao parar, como um afinador de verdade (linear() com ~10% de
+   passagem; ease-out antes, de reserva). Círculos e cartão param sem passar do ponto (18/11). */
 .st-duo, .s-sintonia, .s-sintonia_musica { --passo: 270ms; }
 /* Wrapped: 13 s por story (pedido do Carlos: 10 s era rápido para ler). O player avança no fim da barra. */
 #resultado-wrapped { --dur-story: 13s; }
@@ -273,13 +274,11 @@
 @keyframes st-encontro-b { from { opacity: 0; transform: translateX(13cqw); } }
 @keyframes st-pop { from { opacity: 0; transform: scale(.92); } }
 .st-slot.ativo .st-avatares span {
-  animation: st-encontro-a .7s ease-out both;
-  animation: st-encontro-a .7s linear(0, .22 8%, .62 20%, .93 32%, 1.07 43%, 1.1 50%, 1.07 58%, 1.01 70%, .99 80%, 1) both;
+  animation: st-encontro-a .7s var(--sai-st) both;
   animation-delay: calc(150ms + var(--i, 0) * var(--passo)); }
 .st-slot.ativo .st-avatares span + span { animation-name: st-encontro-b; }
 .st-slot.ativo .st-cartao.entra {
-  animation: st-pop .6s ease-out both;
-  animation: st-pop .6s linear(0, .22 8%, .62 20%, .93 32%, 1.07 43%, 1.1 50%, 1.07 58%, 1.01 70%, .99 80%, 1) both;
+  animation: st-pop .6s var(--sai-st) both;
   animation-delay: calc(150ms + var(--i, 0) * var(--passo)); }
 .st-slot.ativo .st-barra-valor.b { animation-delay: calc(480ms + var(--i, 0) * var(--passo)); }
 

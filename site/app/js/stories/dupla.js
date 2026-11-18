@@ -34,7 +34,7 @@ function Abertura({ d, ativo, i }) {
     <//>
     <${Entra} i=${4} tag="p" classe="st-destaque">${fraseEmComum(d.match)}<//>
     <${Entra} i=${5} tag="p">${plural(d.total_comuns, 'artista', 'artistas')} em comum · ${mesAno(d.inicio)} → ${mesAno(d.fim)}<//>
-    <${Entra} i=${6} tag="p" classe="st-nota">Mede a escuta neste período, não afinidade entre pessoas.<//>
+    <${Entra} i=${6} tag="p" classe="st-nota">Conta só o que vocês ouviram neste período.<//>
   <//>`;
 }
 

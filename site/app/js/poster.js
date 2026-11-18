@@ -4,6 +4,7 @@ import { linhaDoPar } from './match.js';
 import { larguraComum, LIMITE_STORY } from './stories/match.js';
 import { capaTeste, chaveCapa, corMedia, doSpotify } from './stories/slides.js';
 import { corReserva, cortar, fmtNum, hashNome, mesAno } from './stories/logica.js';
+import { MEDIR_FPS } from './stories/player.js';
 
 const L = 1080, A = 1920, M = 90, UTIL = L - 2 * M;
 const VERDE = '#1ed760';
@@ -292,7 +293,7 @@ export async function desenharPosterDupla(d) {
 
   // Regra de ética do projeto: o número fala da escuta, não das pessoas.
   ctx.fillStyle = 'rgba(255,255,255,.6)'; ctx.font = FONTE(400, 30);
-  ctx.fillText('Mede a escuta neste período, não afinidade entre pessoas.', M, A - 270);
+  ctx.fillText('Conta só o que vocês ouviram neste período.', M, A - 270);
 
   pe(ctx);
 
@@ -432,6 +433,11 @@ export async function desenharPosterMatch(r, x, y, _c, cores) {
 }
 
 // Celular: abre a folha de compartilhar (Instagram, WhatsApp…). Sem suporte: baixa o PNG.
+export const segundos = (ms) => (ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+// Recado depois de compartilhar. O tempo só aparece com ?fps=1 (medição no celular), não para quem usa.
+export const avisoPoster = (como, ms, arquivo) => (como === 'cancelado' ? ''
+  : `${como === 'baixado' ? `Pôster salvo como ${arquivo}` : 'Pôster pronto'}${MEDIR_FPS ? ` em ${segundos(ms)} s` : ''}.`);
+
 export async function compartilhar(blob, nome = 'syncup-wrapped.png', titulo = 'Meu SyncUp Wrapped') {
   const arquivo = new File([blob], nome, { type: 'image/png' });
   if (navigator.canShare?.({ files: [arquivo] })) {

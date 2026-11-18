@@ -392,6 +392,8 @@ textarea.entrada { resize: vertical; }
 @media (prefers-reduced-motion: reduce) { .giro { animation: none; } }
 
 /* Wrapped: uma pessoa só e a trilha dos stories. */
+/* Ícone do arquétipo na lista "Como o arquétipo foi calculado": o mesmo SVG dos stories, em tamanho fixo (fora do story não há container). */
+.su-ad-ic .st-icone { width: 24px; height: 24px; stroke-width: 3; }
 @media (min-width: 900px) { .pessoas.uma { grid-template-columns: minmax(0, 40rem); } }
 .som-stories { display: flex; flex-direction: column; gap: var(--e2); margin-bottom: var(--e4); padding: var(--pad-cartao); border-radius: var(--r-cartao); }
 .som-stories .acoes { display: flex; flex-wrap: wrap; gap: var(--e3); }
@@ -417,7 +419,7 @@ html:active-view-transition-type(volta) { --cf: -1; }
 html:active-view-transition-type(modo)::view-transition-old(conteudo) { animation: cf-sai .25s var(--sai) both; }
 html:active-view-transition-type(modo)::view-transition-new(conteudo) { animation: cf-entra .25s var(--sai) both; }
 html:active-view-transition-type(modo)::view-transition-group(conteudo) { animation-duration: .25s; }
-html:active-view-transition-type(modo)::view-transition-group(fader) { animation-duration: .25s; animation-timing-function: linear(0, .22 8%, .62 20%, .93 32%, 1.07 43%, 1.1 50%, 1.07 58%, 1.01 70%, .99 80%, 1); }
+html:active-view-transition-type(modo)::view-transition-group(fader) { animation-duration: .25s; animation-timing-function: var(--sai); }
 /* Barra parada: só o quadro novo, sem fade (os dois quadros somados deixariam a barra mais clara). */
 html:active-view-transition-type(modo)::view-transition-old(barra) { display: none; }
 html:active-view-transition-type(modo)::view-transition-new(barra) { animation: none; }

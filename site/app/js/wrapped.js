@@ -4,19 +4,18 @@ import { html, useMemo, useRef, useState } from 'preact-htm';
 import { AVISO_ARQUETIPOS, formatarValor, REGRAS } from './calculo.js';
 import { criarBuscador } from './capas.js';
 import { chegar, chegarPouco, rolarAte } from './chegada.js';
-import { compartilhar, desenharPoster } from './poster.js';
+import { avisoPoster, compartilhar, desenharPoster, segundos } from './poster.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
-import { SomStories, destravarSom, TRILHA_EXEMPLO } from './som.js';
-import { Player } from './stories/player.js';
+import { ICONE, SomStories, destravarSom, TRILHA_EXEMPLO } from './som.js';
+import { MEDIR_FPS, Player } from './stories/player.js';
 import { Dock } from './stories/dock.js';
 import { Palco } from './stories/palco.js';
-import { capaLocal, CapasCtx, chaveCapa, NOVOS } from './stories/slides.js';
+import { capaLocal, CapasCtx, chaveCapa, Icone, NOVOS } from './stories/slides.js';
 import { tiposDoWrapped } from './stories/logica.js';
 import { rodarNoWorker } from './worker.js';
 
 const DEMO = 'Rafa'; // demo-wrapped.zip: o mesmo histórico de exemplo da Dupla
-const segundos = (ms) => (ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 
 // Um Worker por montagem: ao terminar, o navegador devolve toda a memória (importa no celular).
 const montarNoWorker = (arquivos, nome, opcoes) => rodarNoWorker('wrapped-worker.js', { arquivos, nome, opcoes }, arquivos.map((a) => a.bytes));
@@ -28,7 +27,7 @@ function ArquetiposDetalhe({ arquetipos }) {
     <p class="su-note">A barra é o seu valor; o traço branco é o limiar da regra. Em verde, as regras atingidas.</p>
     <ol>${arquetipos.avaliados.map((a, i) => {
       const r = regras.get(a.chave), escala = Math.max(r.teto, a.valor) || 1;
-      return html`<li class=${a.forca >= 1 ? 'on' : ''} style=${`--i:${i}`}><span class="su-ad-ic">${a.icone}</span>
+      return html`<li class=${a.forca >= 1 ? 'on' : ''} style=${`--i:${i}`}><span class="su-ad-ic"><${Icone} id=${a.chave} /></span>
         <span class="su-ad-name"><b>${a.nome}</b><small>${a.explicacao}</small></span>
         <span class="su-ad-bar"><i style=${`--value:${(Math.min(a.valor / escala, 1) * 100).toFixed(1)}%`}></i><u style=${`left:${((r.limiar / escala) * 100).toFixed(1)}%`} title="limiar"></u></span>
         <em>${formatarValor(a.valor, r.formato)}<small>limiar ${formatarValor(r.limiar, r.formato)}</small></em></li>`;
@@ -114,7 +113,7 @@ export function Wrapped() {
     setNome(DEMO); setArquivos([]);
     rodar(async () => {
       const resposta = await fetch('demo-wrapped.zip').catch(() => null);
-      if (!resposta?.ok) throw new Error('Não deu para baixar o histórico fictício. Confira a internet e tente de novo.');
+      if (!resposta?.ok) throw new Error('Não deu para baixar o exemplo. Confira a internet e tente de novo.');
       return [{ nome: 'demo-wrapped.zip', bytes: await resposta.arrayBuffer() }];
     }, DEMO, true);
   };
@@ -135,7 +134,7 @@ export function Wrapped() {
       const blob = await desenharPoster(fase.r.dados, capas);
       const ms = Math.round(performance.now() - inicio);
       const como = await compartilhar(blob);
-      setAviso(como === 'cancelado' ? '' : `Pôster pronto em ${segundos(ms)} s${como === 'baixado' ? ' (baixado como syncup-wrapped.png)' : ''}.`);
+      setAviso(avisoPoster(como, ms, 'syncup-wrapped.png'));
     } catch (e) { setAviso(`Não deu para gerar o pôster: ${e.message}`); } finally { setBaixando(false); }
   };
 
@@ -147,7 +146,7 @@ export function Wrapped() {
     <div class="barra-acao">
       <button type="button" class="btn btn-verde" onClick=${montar} disabled=${ocupado || !arquivos.length}>
         ${ocupado ? 'Montando…' : 'Montar meu Wrapped'}<span class="seta" aria-hidden="true">→</span></button>
-      <button type="button" class="btn btn-borda superficie" onClick=${demo} disabled=${ocupado}>Testar com dados fictícios</button>
+      <button type="button" class="btn btn-borda superficie" onClick=${demo} disabled=${ocupado}>Ver um exemplo</button>
     </div>
     <div aria-live="polite">
       ${ocupado && html`<p ref=${chegarPouco} class="processando superficie"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
@@ -161,11 +160,11 @@ export function Wrapped() {
         <${SomStories} key=${fase.r} trilha=${fase.r.trilha} alvo=${stories} aoLigar=${() => ligarCapas(fase.r.dados, fase.exemplo)} />
         <div class="compartilhar"><div class="acoes">
           <button type="button" class="btn btn-verde" onClick=${png} disabled=${baixando}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></svg>${baixando ? 'Gerando…' : 'Baixar pôster'}</button>
-          <button type="button" class="btn btn-borda superficie" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
+          <button type="button" class="btn btn-borda superficie" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>${ICONE.repetir}Ver de novo</button>
           <button type="button" class="btn btn-borda superficie" onClick=${apagarCapas}>Apagar capas guardadas</button>
         </div>
         ${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
-        <p class="nota">Montado em ${segundos(fase.ms)} s, no seu aparelho.</p>
+        ${MEDIR_FPS && html`<p class="nota">Montado em ${segundos(fase.ms)} s.</p>`}
         <${Dock} alvo=${stories} aoPoster=${png} ocupado=${baixando} comSom />
         <p class="nota">Dica: no último story, tire um print para postar nos stories e chamar os amigos para comparar.</p></div>`}>
           <${CapasCtx.Provider} value=${capas}>

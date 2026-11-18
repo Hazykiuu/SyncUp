@@ -5,8 +5,8 @@ import { chegarPouco, rolarAte } from './chegada.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { duetos, melhorPar, trilhaMatch } from './match.js';
-import { compartilhar, desenharPosterMatch } from './poster.js';
-import { destravarSom, SomStories, TRILHA_EXEMPLO } from './som.js';
+import { avisoPoster, compartilhar, desenharPosterMatch } from './poster.js';
+import { destravarSom, ICONE, SomStories, TRILHA_EXEMPLO } from './som.js';
 import { Dock } from './stories/dock.js';
 import { Palco } from './stories/palco.js';
 import { Faixas, Nomes, slidesDoMatch } from './stories/match.js';
@@ -17,8 +17,7 @@ import { abrirWorker } from './worker.js';
 const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos pessoas.';
 const DEMO = [['demo-wrapped.zip', 'Rafa'], ['demo-bruno.zip', 'Lu'], ['demo-carla.zip', 'Teo'], ['demo-davi.zip', 'Nina']];
 const NOTA_SOM = 'Para o som, o SyncUp envia à Apple (iTunes) os nomes dos artistas em comum de cada par, além do seu endereço IP. Os históricos e os nomes de vocês não saem do aparelho. Trechos: iTunes.';
-const segundos = (ms) => (ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
-const AVISO = 'O Match compara só os rankings de artistas e músicas. Não mede afinidade pessoal.';
+const AVISO = 'O Match compara só os rankings de artistas e músicas.';
 const EXEMPLOS = ['Mari', 'Juca', 'Bel', 'Zé', 'Pri', 'Dani'];
 const cor = (i) => CORES[i % CORES.length];
 const pct = (v) => `${fmtNum(v, 1)}%`;
@@ -60,7 +59,7 @@ function ResultadoMatch({ dados: { r, fontes, fora, exemplo } }) {
       const blob = await desenharPosterMatch(r, ...melhorPar(r), cores);
       const ms = performance.now() - inicio;
       const como = await compartilhar(blob, 'syncup-match.png', 'Match no SyncUp');
-      setAviso(como === 'cancelado' ? '' : `Pôster pronto em ${segundos(ms)} s${como === 'baixado' ? ' (baixado como syncup-match.png)' : ''}.`);
+      setAviso(avisoPoster(como, ms, 'syncup-match.png'));
     } catch (e) { setAviso(`Não deu certo: ${e.message}`); } finally { setOcupado(false); }
   };
   return html`<section class="resultado" aria-labelledby="titulo-match">
@@ -68,7 +67,7 @@ function ResultadoMatch({ dados: { r, fontes, fora, exemplo } }) {
     <${Palco} alvo=${stories} slides=${slides} comSom=${trilha.fila.length > 0} lado=${html`
     <div class="compartilhar"><div class="acoes">
       <button type="button" class="btn btn-verde" onClick=${poster} disabled=${ocupado}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></svg>${ocupado ? 'Gerando…' : 'Baixar pôster'}</button>
-      <button type="button" class="btn btn-borda superficie" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
+      <button type="button" class="btn btn-borda superficie" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>${ICONE.repetir}Ver de novo</button>
     </div>${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
     <${Dock} alvo=${stories} aoPoster=${poster} ocupado=${ocupado} comSom=${!!trilha.fila.length} /></div>
     ${trilha.fila.length > 0 && html`<${SomStories} key=${r} trilha=${trilha} alvo=${stories} nota=${NOTA_SOM} />`}`}>
@@ -166,7 +165,7 @@ export function Match() {
     setNomes(DEMO.map(([, n]) => n)); setArquivos(DEMO.map(() => [])); setConvites('');
     rodar(() => Promise.all(DEMO.map(async ([arquivo]) => {
       const resposta = await fetch(arquivo).catch(() => null);
-      if (!resposta?.ok) throw new Error('Não deu para baixar os históricos fictícios. Confira a internet e tente de novo.');
+      if (!resposta?.ok) throw new Error('Não deu para baixar o exemplo. Confira a internet e tente de novo.');
       return [new File([await resposta.blob()], arquivo)];
     })), DEMO.map(([, n]) => n), '', true);
   };
@@ -191,7 +190,7 @@ export function Match() {
     <div class="barra-acao">
       <button type="button" class="btn btn-verde" onClick=${combinar} disabled=${!pode} aria-describedby="dica-match">
         ${ocupado ? 'Combinando…' : 'Ver quem combina'}<span class="seta" aria-hidden="true">→</span></button>
-      <button type="button" class="btn btn-borda superficie" onClick=${demo} disabled=${ocupado}>Testar com dados fictícios</button>
+      <button type="button" class="btn btn-borda superficie" onClick=${demo} disabled=${ocupado}>Ver um exemplo</button>
       <small id="dica-match">${pode || ocupado || fase.tipo === 'resultado' ? '' : 'Junte pelo menos duas pessoas, com ZIP ou convite. Quem tem nome precisa de arquivo.'}</small>
     </div>
     <div aria-live="polite">

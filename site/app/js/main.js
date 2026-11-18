@@ -48,14 +48,14 @@ function Dupla() {
     destravarSom(); // dentro do clique, antes de qualquer espera: o iPhone só toca som destravado por um toque
     rodar(() => Promise.all(arquivos.map(lerArquivos)), [nomes[0] || 'Pessoa A', nomes[1] || 'Pessoa B']);
   };
-  // Dois históricos fictícios prontos (gerados por tools/empacotar_web.py): nenhum dado real.
+  // Dois históricos de exemplo (gerados por tools/empacotar_web.py): nenhum dado real.
   const demo = () => {
     ultima.current = 'demo';
     destravarSom();
     setNomes(DEMO.map(([, nome]) => nome)); setArquivos([[], []]);
     rodar(() => Promise.all(DEMO.map(async ([arquivo]) => {
       const resposta = await fetch(arquivo).catch(() => null);
-      if (!resposta?.ok) throw new Error('Não deu para baixar os históricos fictícios. Confira a internet e tente de novo.');
+      if (!resposta?.ok) throw new Error('Não deu para baixar o exemplo. Confira a internet e tente de novo.');
       return [{ nome: arquivo, bytes: await resposta.arrayBuffer() }];
     })), DEMO.map(([, nome]) => nome), true);
   };
@@ -71,7 +71,7 @@ function Dupla() {
     <div class="barra-acao">
       <button type="button" class="btn btn-verde" onClick=${comparar} disabled=${!pode} aria-describedby="dica-comparar">
         ${ocupado ? 'Comparando…' : 'Comparar históricos'}<span class="seta" aria-hidden="true">→</span></button>
-      <button type="button" class="btn btn-borda superficie" onClick=${demo} disabled=${ocupado}>Testar com dados fictícios</button>
+      <button type="button" class="btn btn-borda superficie" onClick=${demo} disabled=${ocupado}>Ver um exemplo</button>
       <small id="dica-comparar">${arquivos[0].length && arquivos[1].length ? '' : 'Envie pelo menos um arquivo para cada pessoa.'}</small>
     </div>
     <div aria-live="polite">

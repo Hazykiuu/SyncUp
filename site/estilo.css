@@ -216,7 +216,7 @@ section[id] { scroll-margin-top: 6rem; }
 .duracao { font-size: .9rem; color: var(--sub); text-align: right; white-space: nowrap; }
 @media (max-width: 479px) { .tracklist li { grid-template-columns: 2rem minmax(0, 1fr); } .duracao { grid-column: 2; text-align: left; } }
 
-/* Espectro de escuta: 24 horas de Ana (verde) e Bruno (violeta). Cada hora é um botão: o mouse,
+/* Espectro de escuta: 24 horas de Rafa (verde) e Lu (violeta). Cada hora é um botão: o mouse,
    o toque e as setas mostram os plays daquela hora na dica. Sem Hz: hora de escuta não é frequência. */
 .espectro-cabeca { display: grid; gap: .75rem; }
 .espectro-grafico { position: relative; margin-top: .5rem; }

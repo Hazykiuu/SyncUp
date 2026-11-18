@@ -5,7 +5,7 @@ import { chegarPouco, rolarAte } from './chegada.js';
 import { Pessoa } from './envio.js';
 import { compartilhar, desenharPosterBatalha } from './poster.js';
 import { Opcoes, PADRAO } from './opcoes.js';
-import { destravarSom, SomStories } from './som.js';
+import { destravarSom, SomStories, TRILHA_EXEMPLO } from './som.js';
 import { slidesDaBatalha } from './stories/batalha.js';
 import { fmtNum } from './stories/logica.js';
 import { Player } from './stories/player.js';
@@ -14,11 +14,11 @@ import { Dock } from './stories/dock.js';
 import { Palco } from './stories/palco.js';
 
 const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos pessoas.';
-const DEMO = [['demo-wrapped.zip', 'Ana'], ['demo-bruno.zip', 'Bruno'], ['demo-carla.zip', 'Carla'], ['demo-davi.zip', 'Davi']];
+const DEMO = [['demo-wrapped.zip', 'Rafa'], ['demo-bruno.zip', 'Lu'], ['demo-carla.zip', 'Teo'], ['demo-davi.zip', 'Nina']];
 const NOTA_SOM = 'Para o som, o SyncUp envia à Apple (iTunes) o nome do artista favorito de cada pessoa da batalha, além do seu endereço IP. Os históricos e os nomes de vocês não saem do aparelho. Trechos: iTunes.';
 const AVISO = 'É uma brincadeira com os números do período: não mede gosto nem personalidade.';
 const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
-const EXEMPLOS = ['Ana', 'Bia', 'Caio', 'Duda', 'Edu', 'Fabi'];
+const EXEMPLOS = ['Mari', 'Juca', 'Bel', 'Zé', 'Pri', 'Dani'];
 const inicial = (nome) => [...(nome.trim() || '?')][0].toUpperCase();
 const porMedalhas = (b) => (i, j) => {
   const x = b.lutadores[i].medalhas, y = b.lutadores[j].medalhas;
@@ -157,7 +157,7 @@ export function Batalha() {
     return () => { removeEventListener('hashchange', sair); cancelar(); };
   }, []);
 
-  const rodar = async (ler, nomesUsados) => {
+  const rodar = async (ler, nomesUsados, exemplo = false) => {
     cancelar();
     const minha = rodada.current;
     setFase({ tipo: 'processando', etapa: 'Preparando a batalha…' });
@@ -167,6 +167,7 @@ export function Batalha() {
       const w = (worker.current = abrirWorker('batalha-worker.js', { semResposta: SEM_RESPOSTA, aoProgresso: (etapa) => minha === rodada.current && setFase({ tipo: 'processando', etapa }) }));
       const b = await batalharNoWorker(w, lista, nomesUsados, opcoes);
       if (minha !== rodada.current) return;
+      if (exemplo && b.trilha) b.trilha = TRILHA_EXEMPLO;
       cancelar();
       setFase({ tipo: 'resultado', b, nomes: nomesUsados, comum: opcoes.comum });
       requestAnimationFrame(() => rolarAte(document.getElementById('resultado-batalha')));
@@ -183,7 +184,7 @@ export function Batalha() {
     try { finais = validarNomes(nomes); } catch (e) { setFase({ tipo: 'erro', mensagem: e.message }); return; }
     rodar(async () => arquivos, finais);
   };
-  // Quatro históricos fictícios prontos (gerados por tools/empacotar_web.py): nenhum dado real.
+  // Quatro históricos de exemplo (gerados por tools/empacotar_web.py): nenhum dado real.
   const demo = () => {
     ultima.current = 'demo';
     destravarSom();
@@ -192,7 +193,7 @@ export function Batalha() {
       const resposta = await fetch(arquivo).catch(() => null);
       if (!resposta?.ok) throw new Error('Não deu para baixar os históricos fictícios. Confira a internet e tente de novo.');
       return [new File([await resposta.blob()], arquivo)];
-    })), DEMO.map(([, n]) => n));
+    })), DEMO.map(([, n]) => n), true);
   };
   const mudar = (lista, i, v) => lista.map((x, j) => (j === i ? v : x));
   const adicionar = () => { setNomes((n) => [...n, '']); setArquivos((a) => [...a, []]); };

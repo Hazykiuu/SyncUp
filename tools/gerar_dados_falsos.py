@@ -24,6 +24,9 @@ class Configuracao:
     proporcao_various_artists: float = 0.01
     proporcao_duplicados: float = 0.002
     expoente_cauda: float = 1.1
+    # Só as demos do app web: nomes de artistas e músicas que parecem de verdade (inventados).
+    # Desligado, nada muda (o golden master depende dos nomes numerados).
+    nomes_plausiveis: bool = False
 
     def validar(self) -> None:
         """Verifica limites e espaço para os exemplos obrigatórios."""
@@ -38,6 +41,143 @@ class Configuracao:
         )
         if any(not 0 <= valor <= 1 for valor in proporcoes) or sum(proporcoes) > 1:
             raise ValueError('As proporções devem estar entre zero e um e somar no máximo um.')
+
+
+# Nomes inventados para as demos; combinações conferidas para não repetir artistas conhecidos.
+_NOMES = (
+    'Lia',
+    'Iara',
+    'Caetano',
+    'Bia',
+    'Tomás',
+    'Nara',
+    'Joca',
+    'Elis',
+    'Rui',
+    'Marina',
+    'Clara',
+    'Vitor',
+    'Luana',
+    'Bento',
+    'Alice',
+    'Raul',
+    'Maya',
+    'Flora',
+    'Ícaro',
+    'Cecília',
+    'Murilo',
+    'Jade',
+    'Heitor',
+    'Sofia',
+    'Yara',
+    'Gael',
+    'Irene',
+    'Dora',
+)
+_SOBRENOMES = (
+    'Ventura',
+    'Albuquerque',
+    'Brandão',
+    'Lacerda',
+    'Toledo',
+    'Barreto',
+    'Quintana',
+    'Falcão',
+    'Paiva',
+    'Rangel',
+    'Siqueira',
+    'Aragão',
+    'Campelo',
+    'Dantas',
+    'Bastos',
+    'Leal',
+    'Prado',
+    'Amaral',
+    'Godoy',
+    'Viana',
+    'Frota',
+    'Coutinho',
+    'Lobato',
+    'Nogueira',
+    'Sarmento',
+    'Valença',
+    'Arantes',
+    'Arruda',
+)
+_BANDAS = (
+    'Os Ponteiros',
+    'Quarto Azul',
+    'Sabiá Elétrico',
+    'Trem das Sete',
+    'Vila Sônica',
+    'Os Anfitriões',
+    'Rádio Varanda',
+    'Céu de Agosto',
+    'Os Ventiladores',
+    'Farol Norte',
+    'Banda Quintal',
+    'Cais 22',
+    'Lua de Pano',
+    'Os Inquilinos',
+    'Fita Cassete',
+    'Mar de Dentro',
+    'Varal',
+    'Noite Clara',
+)
+_TITULOS = (
+    'Madrugada',
+    'Céu de Março',
+    'Volta pra Casa',
+    'Sal da Terra',
+    'Primeiro Sol',
+    'Domingo Lento',
+    'Avenida',
+    'Cartas no Varal',
+    'Ventania',
+    'Lá Fora',
+    'Meio-Dia',
+    'Rio Raso',
+    'Fim de Tarde',
+    'Sem Pressa',
+    'Janela Aberta',
+    'Bem Perto',
+    'Cidade Acesa',
+    'Pé na Estrada',
+    'Sereno',
+    'Água Doce',
+    'Outra Vez',
+    'Café Frio',
+    'Ladeira',
+    'Antes do Fim',
+    'Neon',
+    'Ponte Aérea',
+    'Verão Inteiro',
+    'Quintal',
+    'Silêncio Bom',
+    'Linha Reta',
+    'Agosto',
+    'Todo Dia',
+    'Estação',
+    'Lugar Comum',
+    'Vento Sul',
+    'Brisa',
+    'Coração de Vidro',
+    'Último Ônibus',
+    'Dois Lados',
+    'Ressaca',
+)
+
+
+def _artistas_plausiveis(quantidade: int) -> list[str]:
+    """Mesma lista para qualquer seed (as demos precisam de artistas em comum); uma banda a cada 9."""
+    pessoas = [f'{n} {s}' for n in _NOMES for s in _SOBRENOMES]
+    Random(2024).shuffle(pessoas)  # Random próprio: não mexe no sorteio do histórico
+    nomes = []
+    for i in range(quantidade):
+        nomes.append(_BANDAS[i // 9] if i % 9 == 8 and i // 9 < len(_BANDAS) else pessoas[i])
+    if len(set(nomes)) != quantidade:
+        raise ValueError(f'Só há {len(set(nomes))} nomes plausíveis distintos.')
+    return nomes
 
 
 def _gravar_json(pacote: zipfile.ZipFile, nome: str, conteudo: Any) -> None:
@@ -64,7 +204,14 @@ def gerar_zip(destino: str | Path, configuracao: Configuracao | None = None) -> 
     destino = Path(destino)
     destino.parent.mkdir(parents=True, exist_ok=True)
     rng = Random(config.seed)
-    artistas = [f'Artista fictício {n:04d}' for n in range(1, config.artistas + 1)]
+    if config.nomes_plausiveis:
+        artistas = _artistas_plausiveis(config.artistas)
+    else:
+        artistas = [f'Artista fictício {n:04d}' for n in range(1, config.artistas + 1)]
+    codigo = {
+        nome: f'{i + 1:04d}' if config.nomes_plausiveis else nome[-4:]
+        for i, nome in enumerate(artistas)
+    }
     favoritos = artistas.copy()
     rng.shuffle(favoritos)
     acumulados: list[float] = []
@@ -101,6 +248,12 @@ def gerar_zip(destino: str | Path, configuracao: Configuracao | None = None) -> 
                 if various:
                     artista = 'Various Artists'
                 faixa = rng.randint(1, 20)
+                if podcast or artista == 'Various Artists' or not config.nomes_plausiveis:
+                    titulo, album = f'Faixa {faixa:02d} · {artista}', f'Álbum fictício {faixa // 5}'
+                else:
+                    n = int(codigo[artista])
+                    titulo = _TITULOS[(n * 7 + faixa) % len(_TITULOS)]
+                    album = _TITULOS[(n * 3 + faixa // 5) % len(_TITULOS)]
                 pulado = rng.random() < 0.15
                 instante = inicio + timedelta(minutes=indice * 10, seconds=rng.randint(0, 59))
                 evento = {
@@ -110,16 +263,12 @@ def gerar_zip(destino: str | Path, configuracao: Configuracao | None = None) -> 
                     'ms_played': rng.randint(0, 29_999) if pulado else rng.randint(30_000, 360_000),
                     'conn_country': 'BR',
                     'ip_addr': f'192.0.2.{rng.randint(1, 254)}',
-                    'master_metadata_track_name': None
-                    if podcast
-                    else f'Faixa {faixa:02d} · {artista}',
+                    'master_metadata_track_name': None if podcast else titulo,
                     'master_metadata_album_artist_name': None if podcast else artista,
-                    'master_metadata_album_album_name': None
-                    if podcast
-                    else f'Álbum fictício {faixa // 5}',
+                    'master_metadata_album_album_name': None if podcast else album,
                     'spotify_track_uri': None
                     if podcast
-                    else f'spotify:track:ficticio_{artista[-4:]}_{faixa:02d}',
+                    else f'spotify:track:ficticio_{codigo.get(artista, artista[-4:])}_{faixa:02d}',
                     'episode_name': f'Episódio fictício {indice % 40}' if podcast else None,
                     'episode_show_name': 'Podcast fictício SyncUp' if podcast else None,
                     'spotify_episode_uri': f'spotify:episode:ficticio_{indice}'

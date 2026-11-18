@@ -9,8 +9,10 @@ import { normalizar } from './stories/logica.js';
 const VOLUME = 0.2;
 const ENTRA = 1.2; // segundos de fade in
 const SAI = 0.5; // fade out antes de trocar de música (e no fim do trecho)
-// Para históricos fictícios (o iTunes não acha "Artista fictício"): trechos de exemplo.
+// Trechos de músicas conhecidas: para quando o iTunes não acha nada e para o "Ver um exemplo".
 const EXEMPLO = [{ artista: 'Legião Urbana', faixa: 'Tempo Perdido' }, { artista: 'Tim Maia', faixa: 'Azul da Cor do Mar' }, { artista: 'Marisa Monte', faixa: 'Ainda Bem' }];
+// O exemplo usa só estes trechos: os artistas das demos são inventados e uma busca por eles poderia achar outra pessoa.
+export const TRILHA_EXEMPLO = { slides: {}, fila: EXEMPLO };
 const cache = new Map();
 
 const chave = (m) => `${normalizar(m.artista)}|${normalizar(m.faixa)}`;

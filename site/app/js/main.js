@@ -2,7 +2,7 @@
 import { html, render, useEffect, useRef, useState } from 'preact-htm';
 import { chegarPouco, rolarAte } from './chegada.js';
 import { ligarOndas } from './corrida.js';
-import { audioCtx, destravarSom, pausarSom, silenciado } from './som.js';
+import { audioCtx, destravarSom, pausarSom, silenciado, TRILHA_EXEMPLO } from './som.js';
 import { Batalha } from './batalha-tela.js';
 import { Match } from './match-tela.js';
 import { Pessoa } from './envio.js';
@@ -12,9 +12,8 @@ import { TelaAtiva } from './stories/player.js';
 import { Wrapped } from './wrapped.js';
 import { rodarNoWorker } from './worker.js';
 
-// Os mesmos históricos de ponte.arquivos_demo. Nomes curtos, como na demo da Batalha: o botão já diz "dados fictícios"
-// e o nome longo quebrava no primeiro story.
-const DEMO = [['demo-wrapped.zip', 'Ana'], ['demo-bruno.zip', 'Bruno']];
+// Históricos de exemplo gerados por tools/empacotar_web.py. Nomes curtos: o nome longo quebrava no primeiro story.
+const DEMO = [['demo-wrapped.zip', 'Rafa'], ['demo-bruno.zip', 'Lu']];
 
 // A comparação roda em JavaScript num Worker (dupla-worker.js), sem baixar o Python. Um Worker por
 // comparação: ao terminar, o navegador devolve toda a memória (importa no celular).
@@ -34,11 +33,12 @@ function Dupla() {
   const ultima = useRef(null);
 
   // `ler` devolve os dois lados ([{nome, bytes}]); ler os arquivos conta no tempo (é o que a pessoa espera).
-  const rodar = async (ler, nomesUsados) => {
+  const rodar = async (ler, nomesUsados, exemplo = false) => {
     setFase({ tipo: 'processando', etapa: 'Lendo os históricos e calculando a sintonia…' });
     try {
       const [a, b] = await ler();
       const r = await compararNoWorker(a, b, nomesUsados, opcoes);
+      if (exemplo && r.dupla.trilha) r.dupla.trilha = TRILHA_EXEMPLO;
       setFase({ tipo: 'resultado', r });
       requestAnimationFrame(() => rolarAte(document.getElementById('resultado')));
     } catch (e) { if (e.name !== 'AbortError') setFase({ tipo: 'erro', mensagem: e.message }); }
@@ -57,7 +57,7 @@ function Dupla() {
       const resposta = await fetch(arquivo).catch(() => null);
       if (!resposta?.ok) throw new Error('Não deu para baixar os históricos fictícios. Confira a internet e tente de novo.');
       return [{ nome: arquivo, bytes: await resposta.arrayBuffer() }];
-    })), DEMO.map(([, nome]) => nome));
+    })), DEMO.map(([, nome]) => nome), true);
   };
   // Atualização por função: duas mudanças no mesmo instante não apagam uma à outra.
   const mudar = (lista, i, v) => lista.map((x, j) => (j === i ? v : x));

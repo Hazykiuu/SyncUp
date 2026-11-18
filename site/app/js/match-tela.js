@@ -6,7 +6,7 @@ import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { duetos, melhorPar, trilhaMatch } from './match.js';
 import { compartilhar, desenharPosterMatch } from './poster.js';
-import { destravarSom, SomStories } from './som.js';
+import { destravarSom, SomStories, TRILHA_EXEMPLO } from './som.js';
 import { Dock } from './stories/dock.js';
 import { Palco } from './stories/palco.js';
 import { Faixas, Nomes, slidesDoMatch } from './stories/match.js';
@@ -15,11 +15,11 @@ import { fmtNum } from './stories/logica.js';
 import { abrirWorker } from './worker.js';
 
 const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos pessoas.';
-const DEMO = [['demo-wrapped.zip', 'Ana'], ['demo-bruno.zip', 'Bruno'], ['demo-carla.zip', 'Carla'], ['demo-davi.zip', 'Davi']];
+const DEMO = [['demo-wrapped.zip', 'Rafa'], ['demo-bruno.zip', 'Lu'], ['demo-carla.zip', 'Teo'], ['demo-davi.zip', 'Nina']];
 const NOTA_SOM = 'Para o som, o SyncUp envia à Apple (iTunes) os nomes dos artistas em comum de cada par, além do seu endereço IP. Os históricos e os nomes de vocês não saem do aparelho. Trechos: iTunes.';
 const segundos = (ms) => (ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 const AVISO = 'O Match compara só os rankings de artistas e músicas. Não mede afinidade pessoal.';
-const EXEMPLOS = ['Ana', 'Bia', 'Caio', 'Duda', 'Edu', 'Fabi'];
+const EXEMPLOS = ['Mari', 'Juca', 'Bel', 'Zé', 'Pri', 'Dani'];
 const cor = (i) => CORES[i % CORES.length];
 const pct = (v) => `${fmtNum(v, 1)}%`;
 
@@ -46,13 +46,13 @@ function Dueto({ d, cor }) {
   </li>`;
 }
 
-function ResultadoMatch({ dados: { r, fontes, fora } }) {
+function ResultadoMatch({ dados: { r, fontes, fora, exemplo } }) {
   const cores = Object.fromEntries(r.nomes.map((n, i) => [n, cor(i)]));
   const stories = useRef(null);
   const [ocupado, setOcupado] = useState(false);
   const [aviso, setAviso] = useState('');
   const slides = useMemo(() => slidesDoMatch(r), [r]);
-  const trilha = useMemo(() => trilhaMatch(r), [r]);
+  const trilha = useMemo(() => (exemplo ? TRILHA_EXEMPLO : trilhaMatch(r)), [r, exemplo]);
   const poster = async () => {
     setOcupado(true); setAviso('');
     try {
@@ -141,13 +141,13 @@ export function Match() {
     try { return (await w.pedir(mensagem)).dados; } finally { if (worker.current === w) { w.cancelar(); worker.current = null; } }
   };
 
-  const rodar = async (ler, nomesUsados, textoConvites) => {
+  const rodar = async (ler, nomesUsados, textoConvites, exemplo = false) => {
     setFase({ tipo: 'processando', etapa: 'Preparando o Match…' });
     const minha = rodada.current + 1;
     try {
       const lista = await ler();
       const dados = await pedir({ tipo: 'match', arquivos: lista, nomes: nomesUsados, convites: textoConvites, opcoes }, (etapa) => setFase({ tipo: 'processando', etapa }));
-      setFase({ tipo: 'resultado', dados });
+      setFase({ tipo: 'resultado', dados: { ...dados, exemplo } });
       requestAnimationFrame(() => rolarAte(document.getElementById('resultado-match')));
     } catch (e) {
       if (e.name === 'AbortError' || minha !== rodada.current) return;
@@ -168,7 +168,7 @@ export function Match() {
       const resposta = await fetch(arquivo).catch(() => null);
       if (!resposta?.ok) throw new Error('Não deu para baixar os históricos fictícios. Confira a internet e tente de novo.');
       return [new File([await resposta.blob()], arquivo)];
-    })), DEMO.map(([, n]) => n), '');
+    })), DEMO.map(([, n]) => n), '', true);
   };
   const mudar = (lista, i, v) => lista.map((x, j) => (j === i ? v : x));
   const adicionar = () => { setNomes((n) => [...n, '']); setArquivos((a) => [...a, []]); };

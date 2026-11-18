@@ -13,7 +13,9 @@ export const chaveCapa = (item, tipo) => (tipo === 'faixa' ? item?.uri && `t:${i
 // Capas de teste locais (?capas=teste), para treinar o layout sem rede.
 const CAPAS_TESTE = new URLSearchParams(location.search).get('capas') === 'teste';
 
-export const capaTeste = (item) => (CAPAS_TESTE && item?.nome ? `fixtures/capas/capa-${(hashNome(item.nome) % 8) + 1}.jpg` : null);
+// Capa local estável por nome: a de teste e a do "Ver um exemplo" (artistas inventados não vão à rede).
+export const capaLocal = (item) => (item?.nome ? `fixtures/capas/capa-${(hashNome(item.nome) % 8) + 1}.jpg` : null);
+export const capaTeste = (item) => (CAPAS_TESTE ? capaLocal(item) : null);
 
 function useCapa(item, tipo) {
   const capas = useContext(CapasCtx);

@@ -28,7 +28,7 @@ function lerResumo(arquivos) {
 
 const ICONE_ARQUIVO = html`<svg class="deck-icone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5" /><path d="M8.5 15v-2M11 17v-6M13.5 16v-4M16 14.5v-1" /></svg>`;
 
-export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquivos, desabilitado, titulo = `Pessoa ${rotulo}`, exemplo = rotulo === 'A' ? 'Ana' : 'Bia', extra = null, modo = '' }) {
+export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquivos, desabilitado, titulo = `Pessoa ${rotulo}`, exemplo = rotulo === 'A' ? 'Mari' : 'Juca', extra = null, modo = '' }) {
   // `modo`: Batalha e Match ficam montados juntos e numeram as pessoas do mesmo jeito; o prefixo evita IDs repetidos.
   const entrada = useRef(null);
   const [arrastando, setArrastando] = useState(false);

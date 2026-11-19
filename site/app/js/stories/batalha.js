@@ -2,7 +2,7 @@
 // Ordem: abertura, uma rodada por story, dupla mais afinada, quadro de medalhas e o pódio por último (regra do Carlos).
 // Selos e títulos na tipografia do Kicker; pódio sem mola nem quique (trava anti-slop do plano).
 import { html } from 'preact-htm';
-import { fmtNum } from './logica.js';
+import { fmtNum, NOTA_APROX } from './logica.js';
 import { Contador, Entra, Kicker, Slide } from './slides.js';
 
 const rgb = (hex) => [1, 3, 5].map((k) => parseInt(hex.slice(k, k + 2), 16));
@@ -92,7 +92,7 @@ function Rodada({ b, r, i }) {
     <${Entra} i=${1} tag="h3" classe="st-titulo menor sb-vence">${venc.map((k) => pessoa(k).nome).join(' e ')}<//>
     <${Entra} i=${2} tag="p" classe="sb-valor"><b>${fmtNum(r.valores[venc[0]], r.casas)}</b> ${r.unidade}<//>
     ${corpo}
-    <${Entra} i=${6} tag="p" classe="st-nota">${FRASES[r.chave]}<//>
+    <${Entra} i=${6} tag="p" classe="st-nota">${FRASES[r.chave]}${b.aproximado && (r.chave === 'horas' || r.chave === 'dia') ? ` ${NOTA_APROX}` : ''}<//>
     ${r.alerta && html`<${Entra} i=${7} tag="p" classe="sb-rodape"><span class="sb-selo">Dedinho nervoso</span> ${r.alerta.nome} pulou ${fmtNum(r.alerta.valor, 1)}%<//>`}
   <//>`;
 }

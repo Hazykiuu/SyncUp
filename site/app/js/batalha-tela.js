@@ -167,6 +167,7 @@ export function Batalha() {
       const b = await batalharNoWorker(w, lista, nomesUsados, opcoes);
       if (minha !== rodada.current) return;
       if (exemplo && b.trilha) b.trilha = TRILHA_EXEMPLO;
+      b.aproximado = !exemplo && lista.some((a) => a.some((f) => f.lastfm)); // Last.fm: horas pela duração das músicas
       cancelar();
       mostrarResultado(() => setFase({ tipo: 'resultado', b, nomes: nomesUsados, comum: opcoes.comum }), 'resultado-batalha');
     } catch (e) {

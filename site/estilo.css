@@ -425,8 +425,7 @@ section[id] { scroll-margin-top: 6rem; }
 /* Entrada do app vindo de "Abrir o app" (as duas páginas carregam este arquivo). A página inicial não some antes:
    com rede lenta ela ficava vazia na tela. O #app sobe uma vez só: o esqueleto já vem no HTML e o Preact desenha
    dentro do mesmo elemento, sem segundo salto. backwards: ao terminar não fica transform, que prenderia os fixed. */
-@keyframes sobe-app { from { opacity: 0; transform: translateY(32px); } }
-@media (prefers-reduced-motion: no-preference) { body.entrando #app { animation: sobe-app .55s var(--sai) backwards; } }
+/* 1.25: com movimento, quem traz o app é a chegada das ondas (app/app.css, js/sintonia.js); com "menos movimento", o app só aparece. */
 
 /* Cor do modo (--tinta): só na cascata do topo e nas capas de playlist, nunca nas superfícies. */
 :root { --tinta: 30 215 96; }

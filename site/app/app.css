@@ -605,3 +605,28 @@ html[data-luz="b"] body::before { opacity: 0; }
 .lastfm-baixando small { flex: 1; color: var(--sub); font-variant-numeric: tabular-nums; }
 .lastfm-fechar { min-height: 44px; padding-inline: var(--e2); font-size: .9rem; color: var(--sub); }
 .lastfm-fechar:hover { color: var(--texto); }
+
+/* Entrada vindo da página inicial (1.25, entrada.js). A logo do SyncUp aparece grande no centro com as 4 barras
+   fora de sintonia (cada uma no seu ritmo); com o app pronto, elas param juntas no formato da logo e ela voa até a
+   logo de verdade (lateral no computador, topo no celular). O pulso é CSS: segue liso enquanto o JS do app carrega.
+   Só transform e opacity. Com "menos movimento", o app só aparece (sem logo). */
+.pouso { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  /* O app espera a logo (entrada.js põe .chegou). Se o script falhar, os dois se resolvem sozinhos em 3,2 s. */
+  body.entrando:not(.chegou) #app { opacity: 0; animation: entrada-resgate .3s 3.2s forwards; }
+  body.entrando .pouso { display: grid; place-items: center; position: fixed; inset: 0; z-index: 70; pointer-events: none;
+    animation: entrada-resgate .3s 3.2s reverse forwards; }
+  /* A logo de verdade fica escondida até a cópia pousar em cima dela (sem duas logos na tela). */
+  body.entrando .marca:not(.pouso-marca) .logo { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { body.entrando #app { animation: entrada-resgate .2s ease backwards; } } /* só aparece */
+/* Sem fade de entrada: ele só começaria depois que os módulos do app carregassem, e a logo ficaria invisível. */
+.pouso-marca { font-size: clamp(5rem, 18vw, 9rem); }
+/* Fora de sintonia: ritmos diferentes, um por barra (nada de metrônomo). */
+.pouso-marca .logo i { transform-origin: bottom; animation: entrada-pulso var(--ritmo) ease-in-out infinite alternate; }
+.pouso-marca .logo i:nth-child(1) { --ritmo: .42s; } .pouso-marca .logo i:nth-child(2) { --ritmo: .57s; animation-delay: -.2s; }
+.pouso-marca .logo i:nth-child(3) { --ritmo: .36s; animation-delay: -.1s; } .pouso-marca .logo i:nth-child(4) { --ritmo: .64s; animation-delay: -.45s; }
+@keyframes entrada-pulso { from { transform: scaleY(.35); } to { transform: scaleY(1); } }
+@keyframes entrada-resgate { from { opacity: 0; } to { opacity: 1; } }
+/* Depois da entrada, a logo do app pulsa com as barras juntas: o app abre "em sintonia". */
+body.sintonizado .vivo .logo i { animation-delay: -1.4s; }

@@ -59,3 +59,29 @@ def test_app_sem_rolagem_lateral_no_celular(nova_pagina, site_url):
     _abrir_exemplo(pagina, site_url, 'wrapped')
     largura = pagina.evaluate('document.documentElement.scrollWidth - innerWidth')
     assert largura <= 0, f'rola {largura}px para o lado'
+
+
+def _chegar_da_pagina_inicial(pagina, url):
+    pagina.add_init_script("try { sessionStorage.setItem('syncup-entrada', '1') } catch {}")
+    pagina.goto(f'{url}/app/#wrapped')
+
+
+def test_chegada_logo_pousa_e_some(page, site_url):
+    _chegar_da_pagina_inicial(page, site_url)
+    expect(page.locator('.pouso')).to_be_attached()
+    expect(page.locator('.pouso')).to_have_count(0, timeout=5_000)  # entrou em sintonia e pousou
+    expect(page.locator('body')).to_have_class(re.compile('sintonizado'))
+    # a logo de verdade volta quando a cópia pousa em cima dela
+    expect(page.locator('#app .marca .logo:visible').first).to_have_css('opacity', '1')
+
+
+def test_chegada_com_menos_movimento_sem_logo_grande(nova_pagina, site_url):
+    pagina = nova_pagina(reduced_motion='reduce')
+    _chegar_da_pagina_inicial(pagina, site_url)
+    expect(pagina.locator('.pouso')).to_have_count(0)
+    expect(pagina.locator('#principal .app-cabeca:visible')).to_be_visible()
+
+
+def test_abrir_o_app_direto_sem_entrada(page, site_url):
+    page.goto(f'{site_url}/app/#wrapped')
+    expect(page.locator('.pouso')).to_have_count(0)

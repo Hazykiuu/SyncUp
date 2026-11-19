@@ -19,6 +19,8 @@
 <body class="js">
 <!-- Vindo de "Abrir o app": o conteúdo entra subindo (estilo.css, .entrando). -->
 <script>try { if (sessionStorage.getItem('syncup-entrada')) { sessionStorage.removeItem('syncup-entrada'); document.body.classList.add('entrando'); } } catch { /* abre direto */ }</script>
+<!-- Entrada vindo de "Abrir o app" (entrada.js): a logo grande entra em sintonia e pousa no lugar dela. -->
+<div class="pouso" aria-hidden="true"><span class="marca pouso-marca"><span class="logo"><i></i><i></i><i></i><i></i></span></span></div>
 <a class="pular" href="#principal">Pular para o conteúdo</a>
 <!-- Esqueleto da primeira tela (some quando o app desenha, main.js): o logo pulsa como equalizador. -->
 <div id="app"><div class="esqueleto shell" role="status" aria-label="Carregando o SyncUp…">
@@ -27,6 +29,7 @@
   <div class="esq-cartao superficie"></div><div class="esq-cartao superficie"></div>
 </div></div>
 <noscript><p class="shell">O SyncUp precisa de JavaScript para rodar no navegador.</p></noscript>
+<script type="module" src="js/entrada.js"></script>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>

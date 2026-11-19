@@ -1,5 +1,15 @@
 # Changelog — SyncUp
 
+## [1.25.0] — 2026-11-19
+
+A entrada no app ganha uma animação: a logo entra em sintonia.
+
+### Novo
+- **Entrada em sintonia:** vindo de "Abrir o app", a logo do SyncUp aparece grande com as 4 barras fora de sintonia enquanto o app carrega. Quando ele fica pronto, as barras param juntas e a logo voa até o lugar dela (a lateral no computador, o topo no celular), com o app aparecendo em volta. Depois, a logo do app pulsa com as barras juntas. Só `transform` e `opacity`; com "menos movimento", o app só aparece. Se algo falhar, o app aparece sozinho em 3,2 s.
+
+### Mudado
+- A subida antiga do app ao abrir (550 ms) saiu: quem traz o app agora é a entrada.
+
 ## [1.24.0] — 2026-11-19
 
 Página inicial com as cores da logo. O app não muda.

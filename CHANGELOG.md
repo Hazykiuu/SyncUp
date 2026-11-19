@@ -1,5 +1,21 @@
 # Changelog — SyncUp
 
+## [1.24.0] — 2026-11-19
+
+Página inicial com as cores da logo. O app não muda.
+
+### Mudado
+- **As 4 barras da logo dão a cor** (verde → lilás, "você → a outra pessoa"):
+  - cada modo com a sua barra no número, no link e num painel com brilho atrás do mock, agora maior;
+  - "O seu histórico não sai daqui." em degradê verde → lilás;
+  - os três números (0, 2,4 s e 100%) e os passos do "Como usar", ligados por um fio verde → lilás;
+  - ícones da privacidade nas cores da logo e duas auras leves.
+- **"Do ZIP ao story" mostra o app:** o cartão "Seu histórico", a leitura com barra de progresso e o story com a barra de segmentos, sobre um painel com o brilho da logo. Cada passo traz um detalhe: as partes do ZIP, o que o navegador faz com elas e os stories que saem.
+
+### Corrigido
+- No rodapé, as barras da pauta cobriam o texto ao lado do botão "Pedir o histórico ao Spotify".
+- A aura verde dos modos era cortada reta no topo da seção.
+
 ## [1.23.0] — 2026-11-19
 
 Importação do Last.fm no app web e testes que abrem o app num navegador de verdade.

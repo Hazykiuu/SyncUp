@@ -197,11 +197,13 @@
       <div class="jornada-corpo">
         <div class="jornada-tela" aria-hidden="true">
           <div class="mock jornada-mock">
-            <div class="jt jt-1">
+            <div class="jt jt-1 jt-app">
+              <div class="jt-cabeca"><span class="jt-avatar">♪</span><b>Seu histórico</b></div>
               <div class="jt-arquivo">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M8.5 15v-2M11 17v-6M13.5 16v-4M16 14.5v-1"/></svg>
                 <b>my_spotify_data.zip</b><span class="num">38,4 MB · 6 partes</span>
               </div>
+              <span class="jt-botao">Montar meu Wrapped →</span>
             </div>
             <div class="jt jt-2">
               <span class="jt-selo">Lido neste aparelho</span>
@@ -210,11 +212,13 @@
                 <div><dt>Reproduções</dt><dd class="num">300.412</dd></div>
                 <div><dt>Partes</dt><dd class="num">6</dd></div>
               </dl>
-              <span class="jt-nota">Web Worker · 0 bytes enviados</span>
+              <span class="jt-progresso"><i></i></span>
+              <span class="jt-nota">Parte 6 de 6 · Web Worker · 0 bytes enviados</span>
             </div>
             <div class="jt jt-3">
               <section class="su-story ativo st s-artista" style="--capa: 120 96 200">
                 <div class="st-fundo"></div><div class="st-veu"></div>
+                <div class="jt-segs"><i class="feito"></i><i class="feito"></i><i class="agora"></i><i></i><i></i><i></i><i></i></div>
                 <div class="st-conteudo">
                   <span class="st-kicker">O artista da sua vida</span>
                   <div class="st-capa-palco"><img class="st-capa grande" src="app/fixtures/capas/capa-3.jpg" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
@@ -226,9 +230,25 @@
           </div>
         </div>
         <ol class="jornada-passos">
-          <li><span class="modo-n num" aria-hidden="true">01</span><h3>Você solta o ZIP</h3><p>O arquivo que o Spotify manda por e-mail, inteiro. Não precisa extrair nada.</p></li>
-          <li><span class="modo-n num" aria-hidden="true">02</span><h3>O navegador lê, aqui</h3><p>Um Web Worker abre o ZIP no seu aparelho e mostra o período e o total de reproduções antes de qualquer conta. Nada vai para um servidor.</p></li>
-          <li><span class="modo-n num" aria-hidden="true">03</span><h3>Os stories saem prontos</h3><p>Num celular intermediário, 300 mil reproduções viram stories em cerca de 2,4 s.</p></li>
+          <li><span class="modo-n num" aria-hidden="true">01</span><h3>Você solta o ZIP</h3><p>O arquivo que o Spotify manda por e-mail, inteiro. Não precisa extrair nada.</p>
+            <ul class="jornada-arquivos" aria-label="Exemplo de partes dentro do ZIP">
+              <li><span>Streaming_History_Audio_2019-2021_0.json</span><span class="num">12,1 MB</span></li>
+              <li><span>Streaming_History_Audio_2021-2023_1.json</span><span class="num">11,8 MB</span></li>
+              <li><span>Streaming_History_Audio_2023-2025_2.json</span><span class="num">9,6 MB</span></li>
+              <li class="jornada-mais"><span>+ 3 partes e os podcasts, que ficam de fora</span></li>
+            </ul></li>
+          <li><span class="modo-n num" aria-hidden="true">02</span><h3>O navegador lê, aqui</h3><p>Um Web Worker abre o ZIP no seu aparelho e mostra o período e o total de reproduções antes de qualquer conta. Nada vai para um servidor.</p>
+            <ol class="jornada-etapas">
+              <li>Abre o ZIP sem extrair</li>
+              <li>Lê as 6 partes</li>
+              <li>Tira podcasts e plays de menos de 30 s</li>
+              <li><span><b class="num">300.412</b> reproduções prontas</span></li>
+            </ol></li>
+          <li><span class="modo-n num" aria-hidden="true">03</span><h3>Os stories saem prontos</h3><p>Num celular intermediário, 300 mil reproduções viram stories em cerca de 2,4 s.</p>
+            <ul class="jornada-stories" aria-label="Alguns stories do Wrapped">
+              <li>Sua vida em música</li><li>A primeira música</li><li>Artista do coração</li><li>Top artistas</li><li>Top músicas</li>
+              <li>Ano a ano</li><li>O dia recorde</li><li>Seu relógio</li><li>Hábitos</li><li>Seu arquétipo</li><li>Pôster</li>
+            </ul></li>
         </ol>
       </div>
     </div>

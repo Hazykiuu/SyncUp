@@ -13,6 +13,9 @@
   --linha: rgba(255, 255, 255, .1);
   /* Cor com sentido fixo: verde = pessoa A, violeta = pessoa B, rosa = os dois juntos. */
   --verde: #1ed760; --roxo: #c4b7ff; --rosa: #f573a0;
+  /* As 4 barras da logo (1.24): verde → lilás, "você → a outra pessoa". A página inicial tira a cor daqui. */
+  --logo-1: var(--verde); --logo-2: color-mix(in srgb, var(--verde), var(--roxo) 33%);
+  --logo-3: color-mix(in srgb, var(--verde), var(--roxo) 67%); --logo-4: var(--roxo);
   /* Batalha: medalhas e o laranja do fundo (poster.js e batalha.js repetem os valores no Canvas e em JS). */
   --ouro: #f5c542; --prata: #c9d1d9; --bronze: #d08b4f; --laranja: #ffa42b;
   /* Vidro (painéis, stories) e véu sobre o fundo. */
@@ -62,8 +65,8 @@ p { text-wrap: pretty; } /* sem palavra sozinha no fim do parágrafo */
 .marca { display: inline-flex; align-items: center; gap: .6rem; font-weight: 900; letter-spacing: -.02em; }
 .marca .logo { display: inline-flex; align-items: flex-end; gap: .14em; height: 1em; }
 .marca .logo i { width: .16em; border-radius: 1em; background: var(--verde); }
-.marca .logo i:nth-child(1) { height: 55%; } .marca .logo i:nth-child(2) { height: 100%; background: color-mix(in srgb, var(--verde), var(--roxo) 33%); }
-.marca .logo i:nth-child(3) { height: 40%; background: color-mix(in srgb, var(--verde), var(--roxo) 67%); } .marca .logo i:nth-child(4) { height: 75%; background: var(--roxo); }
+.marca .logo i:nth-child(1) { height: 55%; } .marca .logo i:nth-child(2) { height: 100%; background: var(--logo-2); }
+.marca .logo i:nth-child(3) { height: 40%; background: var(--logo-3); } .marca .logo i:nth-child(4) { height: 75%; background: var(--logo-4); }
 /* Logo vivo: as barras pulsam como um equalizador. */
 .vivo .logo i { animation: eq 1.4s ease-in-out infinite alternate; transform-origin: bottom; }
 .vivo .logo i:nth-child(2) { animation-delay: -.5s; } .vivo .logo i:nth-child(3) { animation-delay: -.9s; } .vivo .logo i:nth-child(4) { animation-delay: -.3s; }
@@ -170,22 +173,36 @@ section[id] { scroll-margin-top: 6rem; }
 /* Recursos (1.19): cada modo é uma faixa editorial, separada por fios, sem caixa. Número grande, nome, texto,
    uma linha de fatos em texto corrido, o mock vivo e o link. No PC o mock alterna de lado; no celular a ordem é
    fixa: número e título, texto, fatos, mock e link. */
-.recursos { padding-block: 6rem; }
+.recursos { position: relative; isolation: isolate; overflow-x: clip; padding-block: 6rem; }
+/* Aura verde no começo dos modos (a barra 1 da logo); fica atrás de tudo e não rola para o lado. */
+.recursos::before { content: ''; position: absolute; inset: 0 0 auto; height: 70rem; z-index: -1; pointer-events: none;
+  background: radial-gradient(48rem 32rem at 8% 12rem, color-mix(in srgb, var(--logo-1) 10%, transparent), transparent 70%);
+  mask-image: linear-gradient(transparent, #000 14rem); }
 .recursos .cabeca { display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2rem; }
 .modos { border-top: 1px solid var(--linha); }
-.modo { display: grid; grid-template-areas: "texto" "mock" "link"; gap: 1.25rem; padding-block: clamp(2rem, 5vw, 3.5rem); border-bottom: 1px solid var(--linha); }
+.modo { --cor-modo: var(--logo-1); display: grid; grid-template-areas: "texto" "mock" "link"; gap: 1.25rem; padding-block: clamp(2.5rem, 6vw, 4.5rem); border-bottom: 1px solid var(--linha); }
+/* Cada modo pega uma barra da logo, na ordem (verde → lilás). */
+.modo-wrapped { --cor-modo: var(--logo-2); } .modo-batalha { --cor-modo: var(--logo-3); } .modo-match { --cor-modo: var(--logo-4); }
+/* Painel atrás do mock: a coluna ganha a cor do modo, um brilho no centro e um fio dessa cor. */
+.modo::before { content: ''; grid-area: mock; align-self: stretch; justify-self: stretch; border-radius: var(--r-vidro); pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--cor-modo) 24%, transparent);
+  background: radial-gradient(65% 50% at 50% 50%, color-mix(in srgb, var(--cor-modo) 42%, transparent), transparent 80%),
+    color-mix(in srgb, var(--cor-modo) 11%, var(--sup-1)); }
 .modo-texto { grid-area: texto; display: grid; gap: .6rem; align-content: start; }
-.modo .mock { grid-area: mock; width: 100%; max-width: 13rem; justify-self: start; }
-.modo-abrir { grid-area: link; width: fit-content; min-height: 44px; display: inline-flex; align-items: center; gap: .4em; font-weight: 700; color: var(--verde); }
+.modo .mock { grid-area: mock; position: relative; width: 100%; max-width: 14rem; margin-block: 1.5rem; justify-self: center; box-shadow: 0 24px 48px -16px rgb(0 0 0 / .7); }
+.modo-abrir { grid-area: link; width: fit-content; min-height: 44px; display: inline-flex; align-items: center; gap: .4em; font-weight: 700; color: var(--cor-modo); }
 .modo-abrir:hover { text-decoration: underline; text-underline-offset: .2em; }
-.modo-n { font-size: clamp(3rem, 7vw, 5rem); font-weight: 900; line-height: .9; color: var(--fraco); }
+.modo-n { font-size: clamp(3rem, 7vw, 5rem); font-weight: 900; line-height: .9; color: var(--cor-modo); }
 .modo h3 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -.035em; line-height: 1; }
 .modo p { max-width: 34rem; font-size: 1.05rem; line-height: 1.55; color: var(--sub); }
 .modo .modo-fatos { font-size: .95rem; font-weight: 700; color: var(--sub); }
 @media (min-width: 768px) {
-  .modo { grid-template-columns: minmax(0, 1fr) 13rem; grid-template-areas: "texto mock" "link mock"; column-gap: clamp(2rem, 6vw, 6rem); align-items: center; }
+  /* O painel ocupa a coluna inteira (alinhado à página) e o mock fica no meio dele, com folga dos lados. */
+  .modo { grid-template-columns: minmax(0, 1fr) 20rem; grid-template-areas: "texto mock" "link mock"; column-gap: clamp(3rem, 7vw, 7rem); align-items: center; }
+  .modo::before { margin: -2.25rem 0; }
+  .modo .mock { max-width: 15rem; margin-block: 0; }
   .modo-abrir { align-self: start; }
-  .modo:nth-child(even) { grid-template-columns: 13rem minmax(0, 1fr); grid-template-areas: "mock texto" "mock link"; }
+  .modo:nth-child(even) { grid-template-columns: 20rem minmax(0, 1fr); grid-template-areas: "mock texto" "mock link"; }
 }
 /* Espectro: o gráfico sem caixa, título e legenda em linha. */
 .espectro { display: grid; gap: 1rem; padding-block: clamp(2rem, 5vw, 3.5rem); }
@@ -200,12 +217,17 @@ section[id] { scroll-margin-top: 6rem; }
 
 /* Como usar: uma tracklist. O número da faixa vira ▶ no hover e no foco; a duração fica à direita. */
 .passos { padding-block: 5rem; }
-.tracklist { margin-top: 2.5rem; display: grid; gap: .25rem; border-top: 1px solid var(--linha); padding-top: .75rem; }
+.tracklist { position: relative; margin-top: 2.5rem; display: grid; gap: .25rem; border-top: 1px solid var(--linha); padding-top: .75rem; }
+/* Fio que liga os passos, do verde ao lilás (da primeira à última barra da logo). */
+.tracklist::before { content: ''; position: absolute; left: calc(1rem + 1.5rem - 1px); top: 2.6rem; bottom: 2.6rem; width: 2px; border-radius: 2px;
+  background: linear-gradient(var(--logo-1), var(--logo-4)); }
+.tracklist li:nth-child(1) { --cor-passo: var(--logo-1); } .tracklist li:nth-child(2) { --cor-passo: var(--logo-2); } .tracklist li:nth-child(3) { --cor-passo: var(--logo-4); }
 .tracklist li { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: .9rem 1rem; border-radius: 12px; transition: background .15s; }
 .tracklist li:hover { background: rgba(255, 255, 255, .06); }
-.faixa-n { position: relative; display: grid; place-items: center; height: 1.5rem; font-size: 1.05rem; color: var(--sub); }
-.faixa-n svg { position: absolute; width: 1.1rem; height: 1.1rem; color: var(--verde); opacity: 0; transition: opacity .15s; }
-.faixa-n b { font-weight: 500; transition: opacity .15s; }
+.faixa-n { position: relative; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; justify-self: center; border-radius: 50%; font-size: .95rem;
+  color: var(--cor-passo, var(--sub)); background: var(--bg); border: 2px solid var(--cor-passo, var(--linha)); }
+.faixa-n svg { position: absolute; width: 1rem; height: 1rem; color: var(--cor-passo, var(--verde)); opacity: 0; transition: opacity .15s; }
+.faixa-n b { font-weight: 800; transition: opacity .15s; }
 .tracklist li:hover .faixa-n b, .tracklist li:focus-within .faixa-n b { opacity: 0; }
 .tracklist li:hover .faixa-n svg, .tracklist li:focus-within .faixa-n svg { opacity: 1; }
 .tracklist h3 { font-size: 1.15rem; font-weight: 800; letter-spacing: -.01em; }
@@ -237,7 +259,10 @@ section[id] { scroll-margin-top: 6rem; }
 }
 
 /* Privacidade: três pilares em colunas tipográficas, separados por linhas finas (sem caixas). */
-.privacidade { padding-block: 5rem; }
+.privacidade { position: relative; isolation: isolate; overflow-x: clip; padding-block: 5rem; }
+.privacidade::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(40rem 22rem at 88% 55%, color-mix(in srgb, var(--logo-4) 10%, transparent), transparent 70%); }
+.pilares > div:nth-child(2) svg { color: var(--logo-2); } .pilares > div:nth-child(3) svg { color: var(--logo-4); }
 .colunas { margin-top: 2.5rem; display: grid; }
 .pilares > div, .numeros-lista > div { padding-block: 1.75rem; border-top: 1px solid var(--linha); }
 @media (min-width: 1024px) {
@@ -272,12 +297,46 @@ section[id] { scroll-margin-top: 6rem; }
 .jt-tele .jt-largo + div { border-left: 0; }
 .jt-tele dt { font-size: 4.2cqw; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--fraco); }
 .jt-tele dd { font-size: 7.5cqw; font-weight: 800; font-variant-numeric: tabular-nums; }
-.jornada-passos li { display: grid; gap: .6rem; align-content: center; padding-block: 2rem; border-top: 1px solid var(--linha); }
+.jornada-passos > li { display: grid; gap: .6rem; align-content: center; padding-block: 2rem; border-top: 1px solid var(--linha); }
+/* Cada passo pega uma barra da logo, como no "Como usar". */
+.jornada-passos > li:nth-child(1) { --cor-passo: var(--logo-1); } .jornada-passos > li:nth-child(2) { --cor-passo: var(--logo-2); } .jornada-passos > li:nth-child(3) { --cor-passo: var(--logo-4); }
+.jornada-passos .modo-n { color: var(--cor-passo); }
+/* Detalhes do app embaixo de cada passo: as partes do ZIP, o que o Worker faz e os stories que saem. */
+.jornada-arquivos, .jornada-etapas, .jornada-stories { margin-top: 1rem; max-width: 30rem; }
+.jornada-arquivos { display: grid; gap: .4rem; }
+.jornada-arquivos li { display: flex; justify-content: space-between; gap: 1rem; padding: .55rem .9rem; border-radius: var(--r-campo, 12px); background: rgba(255, 255, 255, .05); font-size: .85rem; }
+.jornada-arquivos li span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jornada-arquivos .num { color: var(--fraco); }
+.jornada-arquivos .jornada-mais { background: none; padding-block: .2rem; color: var(--fraco); }
+.jornada-etapas { display: grid; gap: .55rem; counter-reset: etapa; }
+.jornada-etapas li { display: flex; align-items: center; gap: .7rem; font-size: .95rem; color: var(--sub); }
+.jornada-etapas li::before { content: ''; flex: none; width: .55rem; height: .55rem; border-radius: 50%; background: var(--cor-passo); box-shadow: 0 0 0 4px color-mix(in srgb, var(--cor-passo) 20%, transparent); }
+.jornada-etapas b { color: var(--texto); }
+.jornada-stories { display: flex; flex-wrap: wrap; gap: .45rem; }
+.jornada-stories li { padding: .35rem .8rem; border-radius: var(--pilula); border: 1px solid color-mix(in srgb, var(--cor-passo) 35%, transparent); background: color-mix(in srgb, var(--cor-passo) 10%, transparent); font-size: .82rem; font-weight: 700; color: var(--sub); }
+/* Telas do app no mock: cabeçalho do cartão, botão, progresso da leitura e a barra dos stories. */
+.jt-app { align-content: space-between; justify-items: stretch; padding: 9cqw 8cqw; }
+.jt-cabeca { display: flex; align-items: center; gap: 3cqw; font-size: 6.5cqw; text-align: left; }
+.jt-avatar { display: grid; place-items: center; width: 11cqw; height: 11cqw; border-radius: 50%; background: var(--verde); color: #000; font-size: 6cqw; font-weight: 900; }
+.jt-app .jt-arquivo { padding: 8cqw 4cqw; border-radius: 5cqw; border: 1px solid color-mix(in srgb, var(--verde) 55%, transparent); background: linear-gradient(180deg, rgba(0, 0, 0, .38), rgba(255, 255, 255, .025)); }
+.jt-app .jt-arquivo svg { width: 16cqw; height: 16cqw; }
+.jt-botao { padding: 4cqw; border-radius: var(--pilula); background: var(--verde); color: #000; font-size: 5.5cqw; font-weight: 800; }
+.jt-progresso { width: 100%; height: 2cqw; border-radius: 1cqw; background: rgba(255, 255, 255, .1); overflow: hidden; }
+.jt-progresso i { display: block; height: 100%; background: linear-gradient(90deg, var(--logo-1), var(--logo-4)); }
+.jt-segs { position: absolute; z-index: 2; inset: 5cqw 5cqw auto; display: flex; gap: 1.2cqw; }
+.jt-segs i { flex: 1; height: 1cqw; border-radius: 1cqw; background: rgba(255, 255, 255, .3); }
+.jt-segs i.feito { background: #fff; } .jt-segs i.agora { background: linear-gradient(90deg, #fff 55%, rgba(255, 255, 255, .3) 55%); }
 .jornada-passos h3 { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; letter-spacing: -.03em; line-height: 1.05; }
 .jornada-passos p { max-width: 30rem; font-size: 1.05rem; line-height: 1.55; color: var(--sub); }
 @media (min-width: 900px) {
   .jornada-corpo { grid-template-columns: 5fr 7fr; column-gap: clamp(2rem, 6vw, 6rem); }
   .jornada-mock { width: min(16rem, 100%); }
+  /* No computador, o celular fica sobre um painel com o brilho da logo, como os mocks dos modos. */
+  .jornada-tela { padding: 2.5rem 0; border-radius: var(--r-vidro); border: 1px solid color-mix(in srgb, var(--logo-2) 22%, transparent);
+    background: var(--painel-jornada);
+    --painel-jornada: radial-gradient(60% 45% at 50% 40%, color-mix(in srgb, var(--logo-1) 26%, transparent), transparent 75%),
+      radial-gradient(60% 45% at 50% 75%, color-mix(in srgb, var(--logo-4) 22%, transparent), transparent 75%),
+      color-mix(in srgb, var(--logo-2) 7%, var(--sup-1)); }
 }
 /* Passos de 85vh em toda largura: o quadro seguinte (36–42% do passo dele, com o texto já na tela) só aparece depois
    que o anterior sumiu (78–84% do dele), sem os dois por cima um do outro. */
@@ -290,11 +349,11 @@ section[id] { scroll-margin-top: 6rem; }
     .jornada-corpo { timeline-scope: --j1, --j2, --j3; }
     /* Celular: a tela presa começa no topo e cobre a faixa do cabeçalho, para o texto não aparecer entre os dois. */
     .jornada-tela { position: sticky; top: 0; z-index: 1; margin: 0; padding-block: 5.5rem 1rem; background: var(--canvas); }
-    .jornada-passos li { min-height: 85vh; }
-    @media (min-width: 900px) { .jornada-tela { top: calc(50vh - 15rem); padding: 0; background: none; } }
-    .jornada-passos li:nth-child(1) { view-timeline-name: --j1; }
-    .jornada-passos li:nth-child(2) { view-timeline-name: --j2; }
-    .jornada-passos li:nth-child(3) { view-timeline-name: --j3; }
+    .jornada-passos > li { min-height: 85vh; }
+    @media (min-width: 900px) { .jornada-tela { top: calc(50vh - 17.5rem); padding: 2.5rem 0; background: var(--painel-jornada); } }
+    .jornada-passos > li:nth-child(1) { view-timeline-name: --j1; }
+    .jornada-passos > li:nth-child(2) { view-timeline-name: --j2; }
+    .jornada-passos > li:nth-child(3) { view-timeline-name: --j3; }
     .jt { animation: linear both; animation-range: cover 0% cover 100%; }
     .jt-1 { animation-name: jt-primeiro; animation-timeline: --j1; }
     .jt-2 { animation-name: jt-meio; animation-timeline: --j2; }
@@ -303,16 +362,24 @@ section[id] { scroll-margin-top: 6rem; }
 }
 
 /* Respiro (1.22): uma frase grande e o botão, com espaço em volta. Sem imagem e sem caixa. */
-.respiro { display: grid; align-items: center; min-height: 85vh; padding-block: 4rem; border-block: 1px solid var(--linha); }
+.respiro { display: grid; align-items: center; min-height: 85vh; padding-block: 4rem; border-block: 1px solid var(--linha);
+  background: radial-gradient(36rem 20rem at 6% 70%, color-mix(in srgb, var(--logo-1) 9%, transparent), transparent 70%),
+    radial-gradient(36rem 20rem at 94% 30%, color-mix(in srgb, var(--logo-4) 9%, transparent), transparent 70%); }
 .respiro .shell { display: grid; justify-items: start; gap: 2.5rem; width: 100%; }
 .respiro-titulo { font-size: clamp(2.6rem, 7.5vw, 6.5rem); font-weight: 900; letter-spacing: -.045em; line-height: .98; text-wrap: balance; }
-.respiro-titulo em { font-style: normal; color: var(--sub); }
+.respiro-titulo em { font-style: normal; color: var(--logo-2); }
+@supports (background-clip: text) {
+  .respiro-titulo em { color: transparent; background: linear-gradient(90deg, var(--logo-1), var(--logo-2) 40%, var(--logo-4)); background-clip: text; }
+}
 
 /* Números (1.22): três medidas reais em colunas com fios, como os pilares da privacidade. */
 .numeros { padding-block: 4rem 0; }
 .numeros-lista > div { display: grid; align-content: start; gap: .5rem; }
 .numeros-rotulo { font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--fraco); }
 .numeros-valor { font-size: clamp(3.5rem, 8vw, 6rem); font-weight: 900; line-height: .95; }
+.numeros-lista > div:nth-child(1) .numeros-valor { color: var(--logo-1); }
+.numeros-lista > div:nth-child(2) .numeros-valor { color: var(--logo-2); }
+.numeros-lista > div:nth-child(3) .numeros-valor { color: var(--logo-4); }
 .numeros-lista p { max-width: 24rem; line-height: 1.55; color: var(--sub); }
 
 /* Rodapé */
@@ -325,15 +392,17 @@ section[id] { scroll-margin-top: 6rem; }
   background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, .1) 0 1px, transparent 1px 22px); }
 .pauta i { position: absolute; bottom: -3px; width: 10px; border-radius: 6px; }
 .pauta i:nth-child(1) { right: 96px; height: 48px; background: var(--verde); }
-.pauta i:nth-child(2) { right: 74px; height: 88px; background: color-mix(in srgb, var(--verde), var(--roxo) 33%); }
-.pauta i:nth-child(3) { right: 52px; height: 35px; background: color-mix(in srgb, var(--verde), var(--roxo) 67%); }
+.pauta i:nth-child(2) { right: 74px; height: 88px; background: var(--logo-2); }
+.pauta i:nth-child(3) { right: 52px; height: 35px; background: var(--logo-3); }
 .pauta i:nth-child(4) { right: 30px; height: 66px; background: var(--roxo); }
 @media (max-width: 639px) { .pauta { display: none; } } /* sem as notas, as linhas soltas riscavam o texto */
-/* No computador a chamada e o botão ficam lado a lado: a pauta fica só sob a chamada, sem cruzar o botão. */
-@media (min-width: 1024px) { .pauta { right: 42%; } }
+/* No computador a chamada e o botão ficam lado a lado: a pauta acaba 2rem antes da coluna do botão (largura fixa),
+   então um texto mais longo ao lado nunca cai sobre as notas. */
+@media (min-width: 1024px) { .pauta { right: calc(var(--lado-cta) + 2rem); } }
 @media (min-width: 1024px) { .rodape-cta { flex-direction: row; align-items: flex-end; justify-content: space-between; } }
 .rodape-cta h2 { max-width: 16ch; }
-.rodape-cta .lado { display: flex; flex-direction: column; gap: .9rem; align-items: flex-start; }
+.rodape-cta { --lado-cta: min(24rem, 100%); }
+.rodape-cta .lado { display: flex; flex-direction: column; gap: .9rem; align-items: flex-start; width: var(--lado-cta); }
 .rodape-cta .lado small { font-size: .9rem; color: var(--sub); }
 /* Fundo opaco: a pauta passa por trás do botão sem aparecer através dele. */
 .rodape-cta .lado .btn { background: var(--bg); }

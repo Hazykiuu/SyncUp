@@ -81,9 +81,6 @@ p { text-wrap: pretty; } /* sem palavra sozinha no fim do parágrafo */
 
 /* ---------- Página inicial ---------- */
 section[id] { scroll-margin-top: 6rem; }
-.etiqueta { display: inline-flex; align-items: center; gap: .6rem; width: fit-content; padding: .45rem .9rem; border-radius: var(--pilula); border: 1px solid rgba(255, 255, 255, .14);
-  background: rgba(255, 255, 255, .05); font-size: .875rem; font-weight: 600; color: rgba(255, 255, 255, .85); }
-.etiqueta::before { content: ''; width: .5rem; height: .5rem; border-radius: 50%; background: var(--verde); }
 .titulo-secao { font-size: clamp(2rem, 4.2vw, 3.2rem); font-weight: 900; letter-spacing: -.03em; line-height: 1.04; text-wrap: balance; }
 
 /* Topo fixo em vidro escuro (fundo ≥ 72%: capa que passa por baixo não aparece borrada) */
@@ -115,8 +112,8 @@ section[id] { scroll-margin-top: 6rem; }
 .menu nav a { display: flex; align-items: center; min-height: 3.5rem; font-size: 2.2rem; font-weight: 800; letter-spacing: -.02em; color: rgba(255, 255, 255, .8); }
 .menu nav a:hover { color: #fff; }
 
-/* Topo da página: o texto e o produto (os stories do app, com dados fictícios) */
-.hero { position: relative; padding-top: 7.5rem; padding-bottom: 4rem; }
+/* Topo da página: o texto e o produto (os stories do app, com nomes de exemplo) */
+.hero { position: relative; padding-top: 7.5rem; padding-bottom: 4rem; overflow-x: clip; } /* a luz do palco passa da tela no celular: corta sem criar rolagem */
 .hero .shell { display: grid; gap: 3rem; align-items: center; }
 @media (min-width: 1024px) { .hero { min-height: 100svh; display: grid; align-items: center; padding-top: 6rem; padding-bottom: 2rem; } .hero .shell { grid-template-columns: 7fr 5fr; } }
 .hero-texto { display: flex; flex-direction: column; gap: 1.75rem; }
@@ -158,7 +155,7 @@ section[id] { scroll-margin-top: 6rem; }
 .legal a { text-decoration: underline; text-underline-offset: .2em; }
 .legal a:hover { color: var(--texto); }
 
-/* Entrada do topo (aprovada no Figma): o texto sobe em sequência; o story sobe com mola; o de trás sai de trás dele. */
+/* Entrada do topo (aprovada no Figma): o texto sobe em sequência; o story sobe e para sem passar do ponto (18/11). */
 @keyframes sobe { from { opacity: 0; transform: translateY(var(--dy, 18px)); } }
 @keyframes desce { from { opacity: 0; transform: translateY(-14px); } }
 @keyframes story-sobe { from { opacity: 0; transform: translateY(48px) scale(.95); } }
@@ -166,7 +163,7 @@ section[id] { scroll-margin-top: 6rem; }
 @media (prefers-reduced-motion: no-preference) {
   .topo-barra { animation: desce .5s var(--sai) both; }
   .hero-texto > * { animation: sobe .55s var(--sai) both; animation-delay: var(--d, 0ms); }
-  .palco .frente { animation: story-sobe .8s ease-out both; animation: story-sobe .8s linear(0, .22 8%, .62 20%, .93 32%, 1.07 43%, 1.1 50%, 1.07 58%, 1.01 70%, .99 80%, 1) both; animation-delay: .35s; }
+  .palco .frente { animation: story-sobe .8s var(--sai) both; animation-delay: .35s; }
   .palco-placa { animation: sobe .7s var(--sai) both; animation-delay: .6s; }
 }
 
@@ -266,13 +263,15 @@ section[id] { scroll-margin-top: 6rem; }
 .pauta i:nth-child(2) { right: 74px; height: 88px; background: color-mix(in srgb, var(--verde), var(--roxo) 33%); }
 .pauta i:nth-child(3) { right: 52px; height: 35px; background: color-mix(in srgb, var(--verde), var(--roxo) 67%); }
 .pauta i:nth-child(4) { right: 30px; height: 66px; background: var(--roxo); }
-@media (max-width: 639px) { .pauta i { display: none; } }
+@media (max-width: 639px) { .pauta { display: none; } } /* sem as notas, as linhas soltas riscavam o texto */
 /* No computador a chamada e o botão ficam lado a lado: a pauta fica só sob a chamada, sem cruzar o botão. */
 @media (min-width: 1024px) { .pauta { right: 42%; } }
 @media (min-width: 1024px) { .rodape-cta { flex-direction: row; align-items: flex-end; justify-content: space-between; } }
 .rodape-cta h2 { max-width: 16ch; }
 .rodape-cta .lado { display: flex; flex-direction: column; gap: .9rem; align-items: flex-start; }
 .rodape-cta .lado small { font-size: .9rem; color: var(--sub); }
+/* Fundo opaco: a pauta passa por trás do botão sem aparecer através dele. */
+.rodape-cta .lado .btn { background: var(--bg); }
 .cols { display: grid; gap: 3rem; padding-block: 4rem; }
 @media (min-width: 768px) { .cols { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1024px) { .cols { grid-template-columns: 2fr 1fr 1fr; } }
@@ -287,16 +286,13 @@ section[id] { scroll-margin-top: 6rem; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
-/* "Abrir o app": cortina de 12 barras de equalizador, do verde ao violeta como o logo. Sobem na página inicial
-   e descem no app (os dois HTML animam por JS; as duas páginas carregam este arquivo). */
-.cortina { position: fixed; inset: 0; z-index: 200; display: flex; pointer-events: none; }
-.cortina i { flex: 1; margin-inline: -.5px; transform-origin: bottom; --c: color-mix(in srgb, var(--verde), var(--roxo) calc(var(--k, 0) * 100%));
-  background: linear-gradient(var(--c), color-mix(in srgb, var(--c) 22%, #0a0a0a) 55%, #0a0a0a); }
 /* Alto contraste do Windows: logo, espectro e pauta são feitos só de fundo e sumiriam; mantêm as cores. */
-@media (forced-colors: active) { .marca .logo i, .hora i, .espectro-legenda span::before, .pauta i, .cortina i { forced-color-adjust: none; } }
-/* Transição entre a página inicial e o app (as duas páginas carregam este arquivo). Com a cortina acima cobrindo as duas,
-   o fade entre elas não aparece; quem não suporta navega normalmente. */
-@media (prefers-reduced-motion: no-preference) { @view-transition { navigation: auto; } }
+@media (forced-colors: active) { .marca .logo i, .hora i, .espectro-legenda span::before, .pauta i { forced-color-adjust: none; } }
+/* Entrada do app vindo de "Abrir o app" (as duas páginas carregam este arquivo). A página inicial não some antes:
+   com rede lenta ela ficava vazia na tela. O #app sobe uma vez só: o esqueleto já vem no HTML e o Preact desenha
+   dentro do mesmo elemento, sem segundo salto. backwards: ao terminar não fica transform, que prenderia os fixed. */
+@keyframes sobe-app { from { opacity: 0; transform: translateY(32px); } }
+@media (prefers-reduced-motion: no-preference) { body.entrando #app { animation: sobe-app .55s var(--sai) backwards; } }
 
 /* Cor do modo (--tinta): só na cascata do topo e nas capas de playlist, nunca nas superfícies. */
 :root { --tinta: 30 215 96; }

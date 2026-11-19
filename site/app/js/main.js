@@ -39,6 +39,12 @@ function Dupla() {
       const [a, b] = await ler();
       const r = await compararNoWorker(a, b, nomesUsados, opcoes);
       if (exemplo && r.dupla.trilha) r.dupla.trilha = TRILHA_EXEMPLO;
+      // Last.fm: minutos pela duração das músicas ("≈" nos stories). A sintonia junta os dois lados.
+      if (!exemplo) {
+        r.dupla.a.aproximado = arquivos[0].some((f) => f.lastfm);
+        r.dupla.b.aproximado = arquivos[1].some((f) => f.lastfm);
+        r.dupla.aproximado = r.dupla.a.aproximado || r.dupla.b.aproximado;
+      }
       mostrarResultado(() => setFase({ tipo: 'resultado', r }), 'resultado');
     } catch (e) { if (e.name !== 'AbortError') setFase({ tipo: 'erro', mensagem: e.message }); }
   };

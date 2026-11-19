@@ -6,6 +6,7 @@ import { criarBuscador } from './capas.js';
 import { chegar, chegarPouco, mostrarResultado } from './chegada.js';
 import { avisoPoster, compartilhar, desenharPoster, segundos } from './poster.js';
 import { Pessoa } from './envio.js';
+import { armazemLastfm } from './lastfm.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { ICONE, SomStories, destravarSom, TRILHA_EXEMPLO } from './som.js';
 import { MEDIR_FPS, Player } from './stories/player.js';
@@ -102,6 +103,7 @@ export function Wrapped() {
       rodada.current++;
       setCapas(null);
       if (exemplo) r.trilha = TRILHA_EXEMPLO;
+      else r.dados.aproximado = arquivos.some((f) => f.lastfm); // Last.fm: minutos pela duração das músicas
       mostrarResultado(() => setFase({ tipo: 'resultado', r, ms: performance.now() - inicio, exemplo }), 'resultado-wrapped');
     } catch (e) { if (e.name !== 'AbortError') setFase({ tipo: 'erro', mensagem: e.message }); }
   };
@@ -116,13 +118,13 @@ export function Wrapped() {
       return [{ nome: 'demo-wrapped.zip', bytes: await resposta.arrayBuffer() }];
     }, DEMO, true);
   };
-  // Capas guardadas no navegador (só endereços): apaga tudo na hora.
+  // Guardado no navegador: endereços das capas e as escutas baixadas do Last.fm. Apaga tudo na hora.
   const apagarCapas = async () => {
-    // Ação que não tem volta: confirma antes (a busca refaz as capas, mas leva tempo e usa a rede).
-    if (!confirm('Apagar as capas e fotos guardadas neste navegador? Na próxima vez elas serão buscadas de novo.')) return;
+    // Ação que não tem volta: confirma antes (a busca refaz tudo, mas leva tempo e usa a rede).
+    if (!confirm('Apagar as capas, as fotos e as escutas do Last.fm guardadas neste navegador? Na próxima vez elas serão buscadas de novo.')) return;
     buscador ??= criarBuscador();
-    await buscador.apagarTudo();
-    setAviso('Capas guardadas apagadas deste navegador.');
+    await Promise.all([buscador.apagarTudo(), armazemLastfm().apagarTudo()]);
+    setAviso('Dados guardados apagados deste navegador.');
   };
 
   // Pôster em PNG desenhado no navegador (Canvas): compartilha no celular, baixa no computador.
@@ -160,7 +162,7 @@ export function Wrapped() {
         <div class="compartilhar"><div class="acoes">
           <button type="button" class="btn btn-verde" onClick=${png} disabled=${baixando}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></svg>${baixando ? 'Gerando…' : 'Baixar pôster'}</button>
           <button type="button" class="btn btn-borda superficie" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>${ICONE.repetir}Ver de novo</button>
-          <button type="button" class="btn btn-borda superficie" onClick=${apagarCapas}>Apagar capas guardadas</button>
+          <button type="button" class="btn btn-borda superficie" onClick=${apagarCapas}>Apagar dados guardados</button>
         </div>
         ${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
         ${MEDIR_FPS && html`<p class="nota">Montado em ${segundos(fase.ms)} s.</p>`}

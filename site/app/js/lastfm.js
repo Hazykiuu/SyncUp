@@ -1,0 +1,152 @@
+// Histórico do Last.fm pelo nome de usuário, direto do navegador (sem servidor nosso): só o nome vai ao Last.fm.
+// Os scrobbles viram um JSON no formato do Histórico Estendido do Spotify e seguem o caminho de sempre
+// (historico.js, workers). O Last.fm não diz quanto a música tocou nem se foi pulada: a duração vem do
+// getTopTracks (top 3.000) e, no resto, da mediana; pulos ficam de fora sozinhos (sem skipped/reason_end).
+import { cacheIndexedDB } from './capas.js';
+
+// Chave pública de leitura (não é segredo; o Last.fm a usa para limitar pedidos por app).
+export const CHAVE_API = '';
+const API = 'https://ws.audioscrobbler.com/2.0/';
+export const USUARIO_VALIDO = /^[A-Za-z][A-Za-z0-9_-]{1,14}$/; // regra de cadastro do Last.fm
+const DURACAO_PADRAO = 210000; // 3,5 min, quando o Last.fm não sabe nenhuma duração
+const PAGINAS_TOP = 3;
+const INTERVALO_MS = 250; // até 4 pedidos por segundo (o Last.fm pede no máximo 5)
+const ESPERAS_LIMITE = [1000, 2000, 4000, 8000];
+const ANO_S = 365 * 86400;
+
+const MENSAGENS = {
+  6: 'Não achamos esse usuário no Last.fm. Confira o nome (é o que aparece no endereço do seu perfil).',
+  17: 'Esse perfil esconde as escutas. No Last.fm, desligue "Ocultar escutas recentes" em Configurações → Privacidade e tente de novo.',
+  29: 'O Last.fm pediu uma pausa. Espere um minuto e tente de novo.',
+};
+
+export class ErroLastfm extends Error {
+  constructor(mensagem, codigo) { super(mensagem); this.codigo = codigo; }
+}
+
+const dormir = (ms, sinal) => new Promise((ok, erro) => {
+  const t = setTimeout(ok, ms);
+  sinal?.addEventListener('abort', () => { clearTimeout(t); erro(sinal.reason); }, { once: true });
+});
+
+// O único ponto que fala com a API. O Last.fm responde erros de negócio com HTTP 200 e { error }.
+export async function pedir(metodo, params, { buscar = fetch, esperar = dormir, sinal } = {}) {
+  const url = `${API}?${new URLSearchParams({ ...params, method: metodo, api_key: CHAVE_API, format: 'json' })}`;
+  for (let tentativa = 0; ; tentativa++) {
+    let resp;
+    try { resp = await buscar(url, { signal: sinal }); } catch (e) {
+      if (e?.name === 'AbortError') throw e;
+      throw new ErroLastfm('Sem conexão com o Last.fm. Confira a internet e tente de novo.', 'rede');
+    }
+    let dados = null;
+    try { dados = await resp.json(); } catch { /* corpo que não é JSON: tratado abaixo */ }
+    const codigo = dados?.error ?? (resp.ok && dados && typeof dados === 'object' ? null : resp.status);
+    if (codigo == null) return dados;
+    if ((codigo === 29 || codigo === 429) && tentativa < ESPERAS_LIMITE.length) { await esperar(ESPERAS_LIMITE[tentativa], sinal); continue; }
+    throw new ErroLastfm(MENSAGENS[codigo === 429 ? 29 : codigo] ?? `O Last.fm recusou o pedido (código ${codigo}). Tente de novo daqui a pouco.`, codigo);
+  }
+}
+
+const lista = (x) => (Array.isArray(x) ? x : x ? [x] : []); // uma faixa só vem como objeto
+const texto = (x) => (typeof x === 'string' ? x.trim() : '');
+function validar(usuario) {
+  if (!USUARIO_VALIDO.test(usuario || '')) throw new ErroLastfm('Esse nome de usuário não parece do Last.fm (de 2 a 15 letras, números, - ou _).', 'usuario');
+}
+
+// Todas as escutas (as mais novas primeiro), a partir de `desde` (uts, opcional). Pula a faixa tocando agora.
+export async function baixarScrobbles(usuario, { desde, buscar, esperar = dormir, agora = () => performance.now(), sinal, aoProgresso } = {}) {
+  validar(usuario);
+  const saida = [];
+  const inicio = agora();
+  let ultimoPedido = -Infinity;
+  for (let pagina = 1, paginas = 1; pagina <= paginas; pagina++) {
+    sinal?.throwIfAborted();
+    const falta = ultimoPedido + INTERVALO_MS - agora();
+    if (falta > 0) await esperar(falta, sinal);
+    ultimoPedido = agora();
+    const dados = await pedir('user.getrecenttracks', { user: usuario, limit: '200', page: String(pagina), ...(desde ? { from: String(desde) } : {}) }, { buscar, esperar, sinal });
+    const rt = dados?.recenttracks;
+    paginas = Number(rt?.['@attr']?.totalPages) || 0;
+    for (const t of lista(rt?.track)) {
+      if (t?.['@attr']?.nowplaying === 'true' || !t?.date?.uts) continue;
+      const uts = Number(t.date.uts), musica = texto(t.name), artista = texto(t.artist?.['#text'] ?? t.artist?.name);
+      if (Number.isFinite(uts) && musica && artista) saida.push({ uts, musica, artista });
+    }
+    const ritmo = Math.max((agora() - inicio) / pagina, INTERVALO_MS);
+    aoProgresso?.({ pagina, paginas, scrobbles: saida.length, total: Number(rt?.['@attr']?.total) || 0, restanteMs: Math.round(ritmo * Math.max(0, paginas - pagina)) });
+  }
+  return saida;
+}
+
+export const chave = (artista, musica) => `${String(artista).trim().toLowerCase()}|${String(musica).trim().toLowerCase()}`;
+
+// Duração das músicas mais ouvidas (top 3.000). "0" quer dizer que o Last.fm não sabe: fica de fora.
+export async function baixarDuracoes(usuario, { buscar, esperar = dormir, sinal } = {}) {
+  validar(usuario);
+  const mapa = new Map();
+  for (let pagina = 1, paginas = 1; pagina <= Math.min(paginas, PAGINAS_TOP); pagina++) {
+    const dados = await pedir('user.gettoptracks', { user: usuario, period: 'overall', limit: '1000', page: String(pagina) }, { buscar, esperar, sinal });
+    paginas = Number(dados?.toptracks?.['@attr']?.totalPages) || 0;
+    for (const t of lista(dados?.toptracks?.track)) {
+      const s = Number(t?.duration);
+      if (s > 0 && texto(t.name) && texto(t.artist?.name)) mapa.set(chave(t.artist.name, t.name), s * 1000);
+    }
+  }
+  return mapa;
+}
+
+function mediana(valores) {
+  if (!valores.length) return null;
+  const v = [...valores].sort((a, b) => a - b), m = v.length >> 1;
+  return Math.round((v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2) / 1000) * 1000;
+}
+
+// JSON enxuto (~150 bytes por escuta) com só as 4 chaves que historico.js lê. O scrobble marca o início;
+// o `ts` do Spotify é o fim da música.
+export function paraFormatoSpotify(scrobbles, duracoes) {
+  const reserva = mediana([...duracoes.values()]) ?? DURACAO_PADRAO;
+  let comDuracao = 0;
+  const eventos = scrobbles.map((s) => {
+    const real = duracoes.get(chave(s.artista, s.musica));
+    if (real) comDuracao++;
+    const ms = real ?? reserva;
+    return { ts: `${new Date(s.uts * 1000 + ms).toISOString().slice(0, 19)}Z`, ms_played: ms, master_metadata_track_name: s.musica, master_metadata_album_artist_name: s.artista };
+  });
+  return { json: JSON.stringify(eventos), cobertura: scrobbles.length ? comDuracao / scrobbles.length : 0 };
+}
+
+let armazemPadrao = null;
+export const armazemLastfm = () => (armazemPadrao ??= cacheIndexedDB('syncup-lastfm'));
+
+// Junta escutas sem repetir: a página do Last.fm desliza quando chega escuta nova no meio do download.
+function juntar(a, b) {
+  const vistos = new Set(), saida = [];
+  for (const s of [...b, ...a]) {
+    const k = `${s.uts}|${s.artista}|${s.musica}`;
+    if (!vistos.has(k)) { vistos.add(k); saida.push(s); }
+  }
+  return saida.sort((x, y) => y.uts - x.uts);
+}
+
+// Histórico pronto para o pipeline, com cache por usuário: na volta, só baixa o que é novo.
+// periodo: 'tudo' | 'ano'. Devolve { json, cobertura, reproducoes }.
+export async function historicoDoLastfm(usuario, { periodo = 'tudo', armazem = armazemLastfm(), agora = Date.now, ...rede } = {}) {
+  validar(usuario);
+  const id = usuario.toLowerCase();
+  const anoAtras = Math.floor(agora() / 1000) - ANO_S;
+  let cache = null;
+  try { cache = (await armazem.ler(id)) ?? null; } catch { /* sem cache: baixa tudo */ }
+  // O cache guarda desde quando cobre (null = histórico inteiro). "Todo o histórico" sobre um cache de um ano baixa de novo.
+  const completo = cache && (periodo === 'ano' ? cache.desde == null || cache.desde <= anoAtras : cache.desde == null);
+  const desde = completo ? cache.ultimo + 1 : periodo === 'ano' ? anoAtras : undefined;
+  const novos = await baixarScrobbles(usuario, { ...rede, desde });
+  const escutas = juntar(completo ? cache.escutas : [], novos);
+  const duracoes = cache?.duracoes ? new Map(cache.duracoes) : await baixarDuracoes(usuario, rede);
+  if (escutas.length) {
+    const valor = { escutas, ultimo: escutas[0].uts, desde: completo ? cache.desde : (desde ?? null), duracoes: [...duracoes], quando: Date.now() };
+    try { await armazem.gravar(id, valor); } catch { /* aba anônima: segue sem cache */ }
+  }
+  const usadas = periodo === 'ano' ? escutas.filter((s) => s.uts >= anoAtras) : escutas;
+  if (!usadas.length) throw new ErroLastfm(periodo === 'ano' ? 'Nenhum scrobble no último ano nesse perfil.' : 'Nenhum scrobble nesse perfil do Last.fm.', 'vazio');
+  return { ...paraFormatoSpotify(usadas, duracoes), reproducoes: usadas.length };
+}

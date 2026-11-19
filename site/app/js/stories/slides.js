@@ -4,7 +4,7 @@ import { createContext, html, useContext, useEffect, useLayoutEffect, useRef, us
 import { AVISO_ARQUETIPOS } from '../calculo.js';
 import {
   ajustarCor, CORES_PADRAO, coresVivas, corReserva, dataBr, descobertasCurta, fmtNum, fmtPct, fraseConstancia, fraseRecorde,
-  fraseRepeticao, fraseSequencia, habitoDestaque, hashNome, mesAno,
+  fraseRepeticao, fraseSequencia, habitoDestaque, hashNome, mesAno, NOTA_APROX, aprox,
 } from './logica.js';
 
 // Capas que já chegaram (Map chave → { url, link }), ou null com as capas desligadas.
@@ -108,10 +108,11 @@ export function Intro({ d, ativo, i }) {
     <${Entra} i=${1} tag="h2" classe="st-titulo">${d.nome},<br />sua vida no Spotify<//>
     <${Entra} i=${2} tag="p" classe="st-sub">${mesAno(d.inicio)} → ${mesAno(d.fim)}<//>
     <${Entra} i=${3} classe="st-cartao st-vidro">
-      <div class="st-mega"><${Contador} valor=${d.horas} ativo=${ativo} /></div>
+      <div class="st-mega">${aprox(d.aproximado)}<${Contador} valor=${d.horas} ativo=${ativo} /></div>
       <span class="st-rotulo">horas de música</span>
     <//>
     <${Entra} i=${4} tag="p">Isso dá <strong>${fmtNum(dias, 1)} dias inteiros</strong> sem parar, em ${fmtNum(d.dias_com_musica)} dias com música.<//>
+    ${d.aproximado && html`<${Entra} i=${5} tag="p" classe="st-nota">${NOTA_APROX}<//>`}
   <//>`;
 }
 
@@ -123,7 +124,7 @@ export function Artista({ d, ativo, i }) {
     <${Entra} i=${2} tag="h2" classe="st-nome-xxl">${a.nome}<//>
     <${Entra} i=${3} classe="st-chips">
       <span class="st-vidro"><b><${Contador} valor=${a.plays} ativo=${ativo} /></b> plays</span>
-      <span class="st-vidro"><b><${Contador} valor=${a.horas} ativo=${ativo} /></b> horas</span>
+      <span class="st-vidro"><b>${aprox(d.aproximado)}<${Contador} valor=${a.horas} ativo=${ativo} /></b> horas</span>
       <span class="st-vidro"><b>${fmtPct(d.participacao_artista_vida)}</b> de tudo</span>
     <//>
     <${Entra} i=${4} tag="p">Vocês se conheceram em <strong>${mesAno(d.descoberta_artista_vida)}</strong>.<//>
@@ -164,7 +165,7 @@ export function TopArtistas({ d, i }) {
   return html`<${Slide} tipo="top_artistas" i=${i} capa=${useCapa(d.top_artistas[0], 'artista')?.url}>
     <${Kicker}>Seu top 5 de todos os tempos<//>
     <${Entra} i=${1} tag="h3" classe="st-titulo">Artistas<//>
-    <${Top5} itens=${d.top_artistas} tipo="artista" nome=${(a) => a.nome} sub=${(a) => `${fmtNum(a.plays)} plays`} valor=${(a) => `${fmtNum(a.horas)} h`} />
+    <${Top5} itens=${d.top_artistas} tipo="artista" nome=${(a) => a.nome} sub=${(a) => `${fmtNum(a.plays)} plays`} valor=${(a) => `${aprox(d.aproximado)}${fmtNum(a.horas)} h`} />
   <//>`;
 }
 
@@ -186,7 +187,7 @@ export function Anos({ d, i }) {
       ${d.anos.map((a, k) => html`<li class=${`entra${a.ano === topo.ano ? ' st-ano-topo' : ''}`} style=${{ '--i': k + 2 }}>
         <span class="st-ano">${a.ano}</span>
         <span class="st-ano-barra"><i class="st-barra-valor" style=${{ '--valor': a.horas / maior, '--i': k + 2 }}></i><small>${a.top_artistas[0]?.nome || '—'}</small></span>
-        <em>${fmtNum(a.horas)} h</em></li>`)}
+        <em>${aprox(d.aproximado)}${fmtNum(a.horas)} h</em></li>`)}
     </ol>
     <${Entra} i=${d.anos.length + 2} tag="p" classe="st-nota">Barra: horas no ano · nome: artista nº 1 daquele ano.<//>
   <//>`;
@@ -218,7 +219,7 @@ export function Recorde({ d, ativo, i }) {
     <${Kicker}>O dia mais musical<//>
     <${Entra} i=${1} tag="h3" classe="st-titulo menor">${dataBr(d.dia_recorde)}<//>
     <${Entra} i=${2} classe="st-cartao st-vidro">
-      <div class="st-mega"><${Contador} valor=${d.horas_dia_recorde} casas=${1} ativo=${ativo} /></div>
+      <div class="st-mega">${aprox(d.aproximado)}<${Contador} valor=${d.horas_dia_recorde} casas=${1} ativo=${ativo} /></div>
       <span class="st-rotulo">horas em um único dia</span>
     <//>
     <${Entra} i=${3} tag="p" classe="st-destaque">${fraseRecorde(d.horas_dia_recorde)}<//>
@@ -299,7 +300,7 @@ export function Fiel({ d, ativo, i, controle }) {
     <//>
     <div class="st-painel-ano" aria-live="polite">${ano && html`
       <div class="st-vidro" data-interativo>
-        <b>${ano.ano}</b> · ${fmtNum(ano.horas)} h
+        <b>${ano.ano}</b> · ${aprox(d.aproximado)}${fmtNum(ano.horas)} h
         <ol>${ano.top_artistas.map((a) => html`<li>${a.nome}</li>`)}</ol>
         <button type="button" class="st-continuar" onClick=${fechar}>Continuar ▸</button>
       </div>`}</div>
@@ -375,7 +376,7 @@ export function Resumo({ d, ativo, i }) {
     <${Entra} i=${1} classe="st-poster-nome">
       <p class="st-poster-quem"><span class="st-poster-avatar" aria-hidden="true">${([...d.nome.trim()][0] || '?').toUpperCase()}</span><span>Sua retrospectiva</span></p>
       <h2 class="st-nome-xxl" style=${{ '--tam': tamanho(d.nome, 12.5, 7, 9) }}>${d.nome}</h2>
-      <p class="st-poster-tempo"><b class="st-poster-horas"><${Contador} valor=${d.horas} ativo=${ativo} /> horas</b><span>de música · ${fmtNum(d.horas / 24)} dias sem parar</span></p>
+      <p class="st-poster-tempo"><b class="st-poster-horas">${aprox(d.aproximado)}<${Contador} valor=${d.horas} ativo=${ativo} /> horas</b><span>de música · ${fmtNum(d.horas / 24)} dias sem parar</span></p>
     <//>
     <${Entra} i=${2} classe="st-poster-artista">
       <${Capa} item=${a} tipo="artista" classe="grande" />

@@ -37,6 +37,10 @@ export function player(estado, acao) {
   }
 }
 
+// Histórico do Last.fm: horas e minutos vêm da duração das músicas, não do tempo tocado (lastfm.js).
+export const aprox = (sim) => (sim ? '≈ ' : '');
+export const NOTA_APROX = 'Minutos estimados pelas durações das músicas no Last.fm.';
+
 export const pausado = (estado) => estado.fim || estado.motivos.length > 0;
 
 /* ---------- Luz ambiente: as duas cores vivas de uma capa ---------- */

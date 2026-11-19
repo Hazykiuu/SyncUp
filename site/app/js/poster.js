@@ -3,7 +3,7 @@
 import { linhaDoPar } from './match.js';
 import { larguraComum, LIMITE_STORY } from './stories/match.js';
 import { capaTeste, chaveCapa, corMedia, doSpotify } from './stories/slides.js';
-import { corReserva, cortar, fmtNum, hashNome, mesAno } from './stories/logica.js';
+import { aprox, corReserva, cortar, fmtNum, hashNome, mesAno } from './stories/logica.js';
 import { MEDIR_FPS } from './stories/player.js';
 
 const L = 1080, A = 1920, M = 90, UTIL = L - 2 * M;
@@ -191,7 +191,7 @@ export async function desenharPoster(d, capas) {
   y += 60;
   ctx.fillStyle = '#fff'; ctx.font = FONTE(900, nome.px);
   nome.linhas.forEach((l) => { y += nome.px * 0.95; ctx.fillText(l, M, y); });
-  y += horasPx * 1.08; ctx.fillStyle = '#1db954'; ctx.font = FONTE(800, horasPx); ctx.fillText(`${fmtNum(d.horas)} horas`, M, y);
+  y += horasPx * 1.08; ctx.fillStyle = '#1db954'; ctx.font = FONTE(800, horasPx); ctx.fillText(`${aprox(d.aproximado)}${fmtNum(d.horas)} horas`, M, y);
   y += 52; ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.font = FONTE(500, 38); ctx.fillText(`de música · ${fmtNum(d.horas / 24)} dias sem parar`, M, y);
 
   // Artista da vida: foto à esquerda, texto ao lado (nunca por cima), o nome em quantas linhas precisar.
@@ -275,7 +275,7 @@ export async function desenharPosterDupla(d) {
     const h = s.musica ? 250 : 190;
     vidro(ctx, M, y, UTIL, h, 40, [245, 115, 160]);
     kickerEm(ctx, 'Em sintonia', M + 48, y + 70, ROSA);
-    ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 60); ctx.fillText(cortar(ctx, `${fmtNum(s.minutos)} min ouvindo juntos`, UTIL - 96), M + 48, y + 145);
+    ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 60); ctx.fillText(cortar(ctx, `${aprox(d.aproximado)}${fmtNum(s.minutos)} min ouvindo juntos`, UTIL - 96), M + 48, y + 145);
     if (s.musica) { ctx.font = FONTE(400, 36); ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillText(cortar(ctx, `A música de vocês: ${s.musica.nome}`, UTIL - 96), M + 48, y + 210); }
     y += h + 50;
   }

@@ -176,7 +176,8 @@ section[id] { scroll-margin-top: 6rem; }
 .recursos { position: relative; isolation: isolate; overflow-x: clip; padding-block: 6rem; }
 /* Aura verde no começo dos modos (a barra 1 da logo); fica atrás de tudo e não rola para o lado. */
 .recursos::before { content: ''; position: absolute; inset: 0 0 auto; height: 70rem; z-index: -1; pointer-events: none;
-  background: radial-gradient(48rem 32rem at 8% 0%, color-mix(in srgb, var(--logo-1) 10%, transparent), transparent 70%); }
+  background: radial-gradient(48rem 32rem at 8% 12rem, color-mix(in srgb, var(--logo-1) 10%, transparent), transparent 70%);
+  mask-image: linear-gradient(transparent, #000 14rem); }
 .recursos .cabeca { display: flex; flex-direction: column; gap: 1.25rem; margin-bottom: 2rem; }
 .modos { border-top: 1px solid var(--linha); }
 .modo { --cor-modo: var(--logo-1); display: grid; grid-template-areas: "texto" "mock" "link"; gap: 1.25rem; padding-block: clamp(2.5rem, 6vw, 4.5rem); border-bottom: 1px solid var(--linha); }
@@ -296,12 +297,46 @@ section[id] { scroll-margin-top: 6rem; }
 .jt-tele .jt-largo + div { border-left: 0; }
 .jt-tele dt { font-size: 4.2cqw; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--fraco); }
 .jt-tele dd { font-size: 7.5cqw; font-weight: 800; font-variant-numeric: tabular-nums; }
-.jornada-passos li { display: grid; gap: .6rem; align-content: center; padding-block: 2rem; border-top: 1px solid var(--linha); }
+.jornada-passos > li { display: grid; gap: .6rem; align-content: center; padding-block: 2rem; border-top: 1px solid var(--linha); }
+/* Cada passo pega uma barra da logo, como no "Como usar". */
+.jornada-passos > li:nth-child(1) { --cor-passo: var(--logo-1); } .jornada-passos > li:nth-child(2) { --cor-passo: var(--logo-2); } .jornada-passos > li:nth-child(3) { --cor-passo: var(--logo-4); }
+.jornada-passos .modo-n { color: var(--cor-passo); }
+/* Detalhes do app embaixo de cada passo: as partes do ZIP, o que o Worker faz e os stories que saem. */
+.jornada-arquivos, .jornada-etapas, .jornada-stories { margin-top: 1rem; max-width: 30rem; }
+.jornada-arquivos { display: grid; gap: .4rem; }
+.jornada-arquivos li { display: flex; justify-content: space-between; gap: 1rem; padding: .55rem .9rem; border-radius: var(--r-campo, 12px); background: rgba(255, 255, 255, .05); font-size: .85rem; }
+.jornada-arquivos li span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jornada-arquivos .num { color: var(--fraco); }
+.jornada-arquivos .jornada-mais { background: none; padding-block: .2rem; color: var(--fraco); }
+.jornada-etapas { display: grid; gap: .55rem; counter-reset: etapa; }
+.jornada-etapas li { display: flex; align-items: center; gap: .7rem; font-size: .95rem; color: var(--sub); }
+.jornada-etapas li::before { content: ''; flex: none; width: .55rem; height: .55rem; border-radius: 50%; background: var(--cor-passo); box-shadow: 0 0 0 4px color-mix(in srgb, var(--cor-passo) 20%, transparent); }
+.jornada-etapas b { color: var(--texto); }
+.jornada-stories { display: flex; flex-wrap: wrap; gap: .45rem; }
+.jornada-stories li { padding: .35rem .8rem; border-radius: var(--pilula); border: 1px solid color-mix(in srgb, var(--cor-passo) 35%, transparent); background: color-mix(in srgb, var(--cor-passo) 10%, transparent); font-size: .82rem; font-weight: 700; color: var(--sub); }
+/* Telas do app no mock: cabeçalho do cartão, botão, progresso da leitura e a barra dos stories. */
+.jt-app { align-content: space-between; justify-items: stretch; padding: 9cqw 8cqw; }
+.jt-cabeca { display: flex; align-items: center; gap: 3cqw; font-size: 6.5cqw; text-align: left; }
+.jt-avatar { display: grid; place-items: center; width: 11cqw; height: 11cqw; border-radius: 50%; background: var(--verde); color: #000; font-size: 6cqw; font-weight: 900; }
+.jt-app .jt-arquivo { padding: 8cqw 4cqw; border-radius: 5cqw; border: 1px solid color-mix(in srgb, var(--verde) 55%, transparent); background: linear-gradient(180deg, rgba(0, 0, 0, .38), rgba(255, 255, 255, .025)); }
+.jt-app .jt-arquivo svg { width: 16cqw; height: 16cqw; }
+.jt-botao { padding: 4cqw; border-radius: var(--pilula); background: var(--verde); color: #000; font-size: 5.5cqw; font-weight: 800; }
+.jt-progresso { width: 100%; height: 2cqw; border-radius: 1cqw; background: rgba(255, 255, 255, .1); overflow: hidden; }
+.jt-progresso i { display: block; height: 100%; background: linear-gradient(90deg, var(--logo-1), var(--logo-4)); }
+.jt-segs { position: absolute; z-index: 2; inset: 5cqw 5cqw auto; display: flex; gap: 1.2cqw; }
+.jt-segs i { flex: 1; height: 1cqw; border-radius: 1cqw; background: rgba(255, 255, 255, .3); }
+.jt-segs i.feito { background: #fff; } .jt-segs i.agora { background: linear-gradient(90deg, #fff 55%, rgba(255, 255, 255, .3) 55%); }
 .jornada-passos h3 { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; letter-spacing: -.03em; line-height: 1.05; }
 .jornada-passos p { max-width: 30rem; font-size: 1.05rem; line-height: 1.55; color: var(--sub); }
 @media (min-width: 900px) {
   .jornada-corpo { grid-template-columns: 5fr 7fr; column-gap: clamp(2rem, 6vw, 6rem); }
   .jornada-mock { width: min(16rem, 100%); }
+  /* No computador, o celular fica sobre um painel com o brilho da logo, como os mocks dos modos. */
+  .jornada-tela { padding: 2.5rem 0; border-radius: var(--r-vidro); border: 1px solid color-mix(in srgb, var(--logo-2) 22%, transparent);
+    background: var(--painel-jornada);
+    --painel-jornada: radial-gradient(60% 45% at 50% 40%, color-mix(in srgb, var(--logo-1) 26%, transparent), transparent 75%),
+      radial-gradient(60% 45% at 50% 75%, color-mix(in srgb, var(--logo-4) 22%, transparent), transparent 75%),
+      color-mix(in srgb, var(--logo-2) 7%, var(--sup-1)); }
 }
 /* Passos de 85vh em toda largura: o quadro seguinte (36–42% do passo dele, com o texto já na tela) só aparece depois
    que o anterior sumiu (78–84% do dele), sem os dois por cima um do outro. */
@@ -314,11 +349,11 @@ section[id] { scroll-margin-top: 6rem; }
     .jornada-corpo { timeline-scope: --j1, --j2, --j3; }
     /* Celular: a tela presa começa no topo e cobre a faixa do cabeçalho, para o texto não aparecer entre os dois. */
     .jornada-tela { position: sticky; top: 0; z-index: 1; margin: 0; padding-block: 5.5rem 1rem; background: var(--canvas); }
-    .jornada-passos li { min-height: 85vh; }
-    @media (min-width: 900px) { .jornada-tela { top: calc(50vh - 15rem); padding: 0; background: none; } }
-    .jornada-passos li:nth-child(1) { view-timeline-name: --j1; }
-    .jornada-passos li:nth-child(2) { view-timeline-name: --j2; }
-    .jornada-passos li:nth-child(3) { view-timeline-name: --j3; }
+    .jornada-passos > li { min-height: 85vh; }
+    @media (min-width: 900px) { .jornada-tela { top: calc(50vh - 17.5rem); padding: 2.5rem 0; background: var(--painel-jornada); } }
+    .jornada-passos > li:nth-child(1) { view-timeline-name: --j1; }
+    .jornada-passos > li:nth-child(2) { view-timeline-name: --j2; }
+    .jornada-passos > li:nth-child(3) { view-timeline-name: --j3; }
     .jt { animation: linear both; animation-range: cover 0% cover 100%; }
     .jt-1 { animation-name: jt-primeiro; animation-timeline: --j1; }
     .jt-2 { animation-name: jt-meio; animation-timeline: --j2; }
@@ -328,8 +363,8 @@ section[id] { scroll-margin-top: 6rem; }
 
 /* Respiro (1.22): uma frase grande e o botão, com espaço em volta. Sem imagem e sem caixa. */
 .respiro { display: grid; align-items: center; min-height: 85vh; padding-block: 4rem; border-block: 1px solid var(--linha);
-  background: radial-gradient(40rem 26rem at 0% 100%, color-mix(in srgb, var(--logo-1) 9%, transparent), transparent 70%),
-    radial-gradient(40rem 26rem at 100% 0%, color-mix(in srgb, var(--logo-4) 9%, transparent), transparent 70%); }
+  background: radial-gradient(36rem 20rem at 6% 70%, color-mix(in srgb, var(--logo-1) 9%, transparent), transparent 70%),
+    radial-gradient(36rem 20rem at 94% 30%, color-mix(in srgb, var(--logo-4) 9%, transparent), transparent 70%); }
 .respiro .shell { display: grid; justify-items: start; gap: 2.5rem; width: 100%; }
 .respiro-titulo { font-size: clamp(2.6rem, 7.5vw, 6.5rem); font-weight: 900; letter-spacing: -.045em; line-height: .98; text-wrap: balance; }
 .respiro-titulo em { font-style: normal; color: var(--logo-2); }

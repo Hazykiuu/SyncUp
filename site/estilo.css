@@ -329,11 +329,13 @@ section[id] { scroll-margin-top: 6rem; }
 .pauta i:nth-child(3) { right: 52px; height: 35px; background: color-mix(in srgb, var(--verde), var(--roxo) 67%); }
 .pauta i:nth-child(4) { right: 30px; height: 66px; background: var(--roxo); }
 @media (max-width: 639px) { .pauta { display: none; } } /* sem as notas, as linhas soltas riscavam o texto */
-/* No computador a chamada e o botão ficam lado a lado: a pauta fica só sob a chamada, sem cruzar o botão. */
-@media (min-width: 1024px) { .pauta { right: 42%; } }
+/* No computador a chamada e o botão ficam lado a lado: a pauta acaba 2rem antes da coluna do botão (largura fixa),
+   então um texto mais longo ao lado nunca cai sobre as notas. */
+@media (min-width: 1024px) { .pauta { right: calc(var(--lado-cta) + 2rem); } }
 @media (min-width: 1024px) { .rodape-cta { flex-direction: row; align-items: flex-end; justify-content: space-between; } }
 .rodape-cta h2 { max-width: 16ch; }
-.rodape-cta .lado { display: flex; flex-direction: column; gap: .9rem; align-items: flex-start; }
+.rodape-cta { --lado-cta: min(24rem, 100%); }
+.rodape-cta .lado { display: flex; flex-direction: column; gap: .9rem; align-items: flex-start; width: var(--lado-cta); }
 .rodape-cta .lado small { font-size: .9rem; color: var(--sub); }
 /* Fundo opaco: a pauta passa por trás do botão sem aparecer através dele. */
 .rodape-cta .lado .btn { background: var(--bg); }

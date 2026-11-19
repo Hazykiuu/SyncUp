@@ -20,7 +20,7 @@ Compare o seu histórico do Spotify com o dos amigos e veja com quem você está
 2. Abra <https://hazykiuu.github.io/SyncUp/app/> no computador ou no celular.
 3. Envie o ZIP: na **Dupla**, o de duas pessoas; no **Wrapped**, o seu; na **Batalha**, o de 3 a 6 pessoas. Não precisa extrair.
 
-Sem histórico ainda? Use **"Testar com dados fictícios"**. O Grupo (matriz de compatibilidade), por enquanto, só existe no app para PC.
+Sem histórico ainda? Use **"Ver um exemplo"**. O Grupo (matriz de compatibilidade), por enquanto, só existe no app para PC.
 
 ## Como rodar o SyncUp na sua máquina
 
@@ -58,7 +58,7 @@ Nas próximas vezes, basta o último comando.
 
 No Spotify, entre em **Conta → Privacidade → Baixar seus dados** e marque **Histórico estendido de streaming**. O Spotify manda um ZIP por e-mail, em geral em alguns dias. Esse ZIP é o que você envia no SyncUp. Não precisa extrair.
 
-Enquanto o histórico não chega, use o botão **"Testar com dados fictícios"** da aba Wrapped ou os ZIPs de exemplo da pasta `exemplos_ficticios/`.
+Enquanto o histórico não chega, use o botão **"Ver um exemplo"** do app web ("Testar com dados fictícios" no app para PC) ou os ZIPs de exemplo da pasta `exemplos_ficticios/`.
 
 ### 5. Para fechar
 
@@ -145,7 +145,7 @@ python -m ruff format --check .
 
 O CI roda os mesmos comandos no GitHub, em Python 3.10 e 3.12, mais `node --test tests/js/*.test.mjs` para o app do navegador. O cache Parquet é opcional: `python -m pip install -r requirements-parquet.txt`.
 
-**App do navegador (`site/`) num servidor local:** rode antes `python tools/empacotar_web.py`. Ele gera em `site/app/` as demos `demo-wrapped.zip`, `demo-bruno.zip`, `demo-carla.zip` e `demo-davi.zip`, que não ficam no Git; sem elas o "Testar com dados fictícios" não funciona.
+**App do navegador (`site/`) num servidor local:** rode antes `python tools/empacotar_web.py`. Ele gera em `site/app/` as demos `demo-wrapped.zip`, `demo-bruno.zip`, `demo-carla.zip` e `demo-davi.zip`, que não ficam no Git; sem elas o "Ver um exemplo" não funciona.
 
 | Módulo | Papel |
 |---|---|

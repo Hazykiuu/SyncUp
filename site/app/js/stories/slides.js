@@ -44,14 +44,17 @@ export function corMedia(img) {
   for (let k = 0; k < px.length; k += 4) { soma[0] += px[k]; soma[1] += px[k + 1]; soma[2] += px[k + 2]; }
   return ajustarCor(...soma.map((s) => s / 256));
 }
-// Luz ambiente: as duas cores vivas da capa ativa iluminam o fundo atrás do vidro (--ambient-*, app.css).
-// Sem CORS ou sem cor: as do SyncUp. Só a cor sai da capa; a capa em si continua nítida.
+// Luz ambiente: as duas cores vivas da capa ativa iluminam o fundo atrás do vidro (app.css). A cor vai para a
+// camada escondida e o data-luz troca qual aparece: só a opacidade anima. Sem CORS ou sem cor: as do SyncUp.
+// Só a cor sai da capa; a capa em si continua nítida.
 export function luzAmbiente(img) {
   const px = pixels(img);
   const [a, b] = px ? coresVivas(px) : CORES_PADRAO;
-  const raiz = document.documentElement.style;
-  raiz.setProperty('--ambient-primary', `rgb(${a.join(' ')})`);
-  raiz.setProperty('--ambient-secondary', `rgb(${b.join(' ')})`);
+  const raiz = document.documentElement;
+  const lado = raiz.dataset.luz === 'b' ? 'a' : 'b';
+  raiz.style.setProperty(`--luz-${lado}1`, `rgb(${a.join(' ')})`);
+  raiz.style.setProperty(`--luz-${lado}2`, `rgb(${b.join(' ')})`);
+  raiz.dataset.luz = lado;
 }
 const Marca = ({ link }) => html`<div class="st-marca">
   <img src="marcas/spotify-logo-branco.svg" alt="Spotify" width="80" height="22" />

@@ -20,7 +20,7 @@
   --vidro-borda: rgba(255, 255, 255, .18); --vidro-brilho: rgba(255, 255, 255, .14);
   --veu-a: rgba(0, 0, 0, .55); --veu-b: rgba(0, 0, 0, .78);
   --pilula: 9999px; --cartao: var(--r-vidro);
-  --sai: cubic-bezier(.22, 1, .36, 1);
+  --sai: cubic-bezier(.16, 1, .3, 1);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 /* 100% = 16 px, mas respeita quem aumentou a fonte no sistema. Os títulos grandes usam clamp(). */
@@ -69,10 +69,10 @@ p { text-wrap: pretty; } /* sem palavra sozinha no fim do parágrafo */
 .vivo .logo i:nth-child(2) { animation-delay: -.5s; } .vivo .logo i:nth-child(3) { animation-delay: -.9s; } .vivo .logo i:nth-child(4) { animation-delay: -.3s; }
 @keyframes eq { 0% { transform: scaleY(.45); } 100% { transform: scaleY(1); } }
 
-/* Superfície (1.19): sólida como no Spotify (#181818), fio de 1 px e uma sombra curta. Sem blur, sem aro de luz,
+/* Superfície (1.19): sólida como no Spotify (#181818), fio de 1 px (mais claro só no topo, 1.22) e uma sombra curta. Sem blur, sem aro de luz,
    sem brilho e sem a cor do modo vazando. O blur fica só no que flutua, com regras próprias: .topo-barra, .nav-app,
    .dock, .vidro-ctrl (stories) e .palco-placa. */
-.superficie { position: relative; isolation: isolate; background: var(--sup-2); border: 1px solid var(--linha); box-shadow: 0 1px 3px rgb(0 0 0 / .45); }
+.superficie { position: relative; isolation: isolate; background: var(--sup-2); border: 1px solid var(--linha); box-shadow: inset 0 1px 0 rgb(255 255 255 / .06), 0 1px 3px rgb(0 0 0 / .45); }
 .btn-borda.superficie { background: transparent; border-color: rgb(255 255 255 / .28); box-shadow: none; }
 .btn-borda.superficie:hover:not(:disabled) { background: rgb(255 255 255 / .08); border-color: rgb(255 255 255 / .5); }
 @media (prefers-contrast: more) { .superficie { border-color: #fff; } }
@@ -181,7 +181,7 @@ section[id] { scroll-margin-top: 6rem; }
 .modo-n { font-size: clamp(3rem, 7vw, 5rem); font-weight: 900; line-height: .9; color: var(--fraco); }
 .modo h3 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -.035em; line-height: 1; }
 .modo p { max-width: 34rem; font-size: 1.05rem; line-height: 1.55; color: var(--sub); }
-.modo .modo-fatos { font-size: .95rem; font-weight: 700; color: var(--texto); }
+.modo .modo-fatos { font-size: .95rem; font-weight: 700; color: var(--sub); }
 @media (min-width: 768px) {
   .modo { grid-template-columns: minmax(0, 1fr) 13rem; grid-template-areas: "texto mock" "link mock"; column-gap: clamp(2rem, 6vw, 6rem); align-items: center; }
   .modo-abrir { align-self: start; }
@@ -239,16 +239,81 @@ section[id] { scroll-margin-top: 6rem; }
 /* Privacidade: três pilares em colunas tipográficas, separados por linhas finas (sem caixas). */
 .privacidade { padding-block: 5rem; }
 .colunas { margin-top: 2.5rem; display: grid; }
-.pilares > div { padding-block: 1.75rem; border-top: 1px solid var(--linha); }
+.pilares > div, .numeros-lista > div { padding-block: 1.75rem; border-top: 1px solid var(--linha); }
 @media (min-width: 1024px) {
   .colunas { grid-template-columns: repeat(3, 1fr); }
-  .pilares > div { padding: 0 2rem; border-top: 0; border-left: 1px solid var(--linha); }
-  .pilares > div:first-child { padding-left: 0; border-left: 0; }
+  .pilares > div, .numeros-lista > div { padding: 0 2rem; border-top: 0; border-left: 1px solid var(--linha); }
+  .pilares > div:first-child, .numeros-lista > div:first-child { padding-left: 0; border-left: 0; }
 }
 .colunas svg { font-size: 1.4rem; color: var(--verde); }
 .colunas h3 { margin: .9rem 0 .5rem; font-size: 1.2rem; font-weight: 800; }
 .colunas p { font-size: 1rem; line-height: 1.55; color: var(--sub); }
 .colunas p a { color: var(--texto); font-weight: 700; text-decoration: underline; text-underline-offset: .2em; }
+
+/* Jornada (1.22): demo guiada pela rolagem. A tela fica presa (sticky) e troca de quadro quando cada passo passa
+   pelo meio da tela (uma view-timeline por passo, timeline-scope na seção). Sem suporte ou com "menos movimento",
+   nada fica preso: a tela mostra só o story final e os passos vêm empilhados. Só opacidade e translate. */
+.jornada { padding-block: 5rem 2rem; }
+.jornada-corpo { display: grid; margin-top: 2.5rem; }
+.jornada-tela { align-self: start; margin-bottom: 1.5rem; }
+.jornada-mock { width: min(11rem, 42vw); margin-inline: auto; background: var(--sup-1); border: 1px solid var(--linha); }
+.jt { position: absolute; inset: 0; display: grid; align-content: center; justify-items: center; gap: 5cqw; padding: 8cqw; text-align: center; }
+.jt-1, .jt-2 { opacity: 0; }
+.jt-3 { padding: 0; }
+.jt-arquivo { display: grid; justify-items: center; gap: 3cqw; }
+.jt-arquivo svg { width: 24cqw; height: 24cqw; color: var(--verde); }
+.jt-arquivo b { font-size: 7cqw; overflow-wrap: anywhere; }
+.jt-arquivo span, .jt-nota { font-size: 5.5cqw; color: var(--sub); }
+.jt-selo { padding: 1.5cqw 4cqw; border-radius: var(--pilula); background: rgb(30 215 96 / .16); color: var(--verde); font-size: 5.5cqw; font-weight: 700; }
+.jt-tele { display: grid; grid-template-columns: 1fr 1fr; width: 100%; border-block: 1px solid var(--linha); text-align: left; }
+.jt-tele > div { display: grid; gap: 1cqw; padding: 3cqw; }
+.jt-tele > div + div { border-left: 1px solid var(--linha); }
+.jt-tele .jt-largo { grid-column: 1 / -1; border-bottom: 1px solid var(--linha); }
+.jt-tele .jt-largo + div { border-left: 0; }
+.jt-tele dt { font-size: 4.2cqw; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--fraco); }
+.jt-tele dd { font-size: 7.5cqw; font-weight: 800; font-variant-numeric: tabular-nums; }
+.jornada-passos li { display: grid; gap: .6rem; align-content: center; padding-block: 2rem; border-top: 1px solid var(--linha); }
+.jornada-passos h3 { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; letter-spacing: -.03em; line-height: 1.05; }
+.jornada-passos p { max-width: 30rem; font-size: 1.05rem; line-height: 1.55; color: var(--sub); }
+@media (min-width: 900px) {
+  .jornada-corpo { grid-template-columns: 5fr 7fr; column-gap: clamp(2rem, 6vw, 6rem); }
+  .jornada-mock { width: min(16rem, 100%); }
+}
+/* Passos de 85vh em toda largura: o quadro seguinte (36–42% do passo dele, com o texto já na tela) só aparece depois
+   que o anterior sumiu (78–84% do dele), sem os dois por cima um do outro. */
+@keyframes jt-primeiro { 0%, 78% { opacity: 1; translate: 0 0; } 84%, 100% { opacity: 0; translate: 0 -4%; } }
+@keyframes jt-meio { 0%, 36% { opacity: 0; translate: 0 4%; } 42%, 78% { opacity: 1; translate: 0 0; } 84%, 100% { opacity: 0; translate: 0 -4%; } }
+@keyframes jt-ultimo { 0%, 36% { opacity: 0; translate: 0 4%; } 42%, 100% { opacity: 1; translate: 0 0; } }
+/* animation-range no @supports: deixa de fora os navegadores com suporte parcial. */
+@supports ((animation-timeline: scroll()) and (animation-range: 0% 100%)) {
+  @media (prefers-reduced-motion: no-preference) {
+    .jornada-corpo { timeline-scope: --j1, --j2, --j3; }
+    /* Celular: a tela presa começa no topo e cobre a faixa do cabeçalho, para o texto não aparecer entre os dois. */
+    .jornada-tela { position: sticky; top: 0; z-index: 1; margin: 0; padding-block: 5.5rem 1rem; background: var(--canvas); }
+    .jornada-passos li { min-height: 85vh; }
+    @media (min-width: 900px) { .jornada-tela { top: calc(50vh - 15rem); padding: 0; background: none; } }
+    .jornada-passos li:nth-child(1) { view-timeline-name: --j1; }
+    .jornada-passos li:nth-child(2) { view-timeline-name: --j2; }
+    .jornada-passos li:nth-child(3) { view-timeline-name: --j3; }
+    .jt { animation: linear both; animation-range: cover 0% cover 100%; }
+    .jt-1 { animation-name: jt-primeiro; animation-timeline: --j1; }
+    .jt-2 { animation-name: jt-meio; animation-timeline: --j2; }
+    .jt-3 { animation-name: jt-ultimo; animation-timeline: --j3; }
+  }
+}
+
+/* Respiro (1.22): uma frase grande e o botão, com espaço em volta. Sem imagem e sem caixa. */
+.respiro { display: grid; align-items: center; min-height: 85vh; padding-block: 4rem; border-block: 1px solid var(--linha); }
+.respiro .shell { display: grid; justify-items: start; gap: 2.5rem; width: 100%; }
+.respiro-titulo { font-size: clamp(2.6rem, 7.5vw, 6.5rem); font-weight: 900; letter-spacing: -.045em; line-height: .98; text-wrap: balance; }
+.respiro-titulo em { font-style: normal; color: var(--sub); }
+
+/* Números (1.22): três medidas reais em colunas com fios, como os pilares da privacidade. */
+.numeros { padding-block: 4rem 0; }
+.numeros-lista > div { display: grid; align-content: start; gap: .5rem; }
+.numeros-rotulo { font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--fraco); }
+.numeros-valor { font-size: clamp(3.5rem, 8vw, 6rem); font-weight: 900; line-height: .95; }
+.numeros-lista p { max-width: 24rem; line-height: 1.55; color: var(--sub); }
 
 /* Rodapé */
 .rodape { margin-top: 3rem; border-top: 1px solid var(--linha); background: #0a0a0a; }

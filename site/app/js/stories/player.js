@@ -50,6 +50,25 @@ export function Player({ slides, rotulo, aoMudar }) {
   const ativo = useContext(TelaAtiva);
   const saiu = useRef(false);
 
+  // Paralaxe (1.22): no computador, a capa grande do story ativo segue o ponteiro em até 6 px, solta do texto.
+  // Move a capa inteira, sem cortar nem cobrir (regra do Spotify). Só translate, no máximo um por quadro;
+  // no toque e com "menos movimento" fica parada.
+  useEffect(() => {
+    const el = raiz.current;
+    if (!el || reduzido() || !matchMedia('(hover: hover) and (pointer: fine)').matches) return undefined;
+    let quadro = 0, x = 0, y = 0;
+    const pintar = () => { quadro = 0; for (const c of el.querySelectorAll('.st-slot.ativo .st-capa.grande')) c.style.translate = `${x}px ${y}px`; };
+    const mover = (e) => {
+      const r = el.getBoundingClientRect();
+      x = ((e.clientX - r.left) / r.width - 0.5) * 12; y = ((e.clientY - r.top) / r.height - 0.5) * 12;
+      quadro ||= requestAnimationFrame(pintar);
+    };
+    const sair = () => { x = 0; y = 0; quadro ||= requestAnimationFrame(pintar); };
+    el.addEventListener('pointermove', mover);
+    el.addEventListener('pointerleave', sair);
+    return () => { cancelAnimationFrame(quadro); el.removeEventListener('pointermove', mover); el.removeEventListener('pointerleave', sair); };
+  }, []);
+
   // Modo escondido pausa; ao voltar, o segmento recomeça do zero (como a animação CSS fazia antes).
   useEffect(() => {
     if (!ativo) { saiu.current = true; despachar({ tipo: 'PAUSAR', motivo: 'escondido' }); return; }

@@ -1,7 +1,7 @@
 // Tela do Match: ZIPs e convites colados, o Worker e os pares que mais combinam (com os motivos).
 import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { CORES } from './batalha.js';
-import { chegarPouco, rolarAte } from './chegada.js';
+import { chegarPouco, mostrarResultado } from './chegada.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { duetos, melhorPar, trilhaMatch } from './match.js';
@@ -146,8 +146,7 @@ export function Match() {
     try {
       const lista = await ler();
       const dados = await pedir({ tipo: 'match', arquivos: lista, nomes: nomesUsados, convites: textoConvites, opcoes }, (etapa) => setFase({ tipo: 'processando', etapa }));
-      setFase({ tipo: 'resultado', dados: { ...dados, exemplo } });
-      requestAnimationFrame(() => rolarAte(document.getElementById('resultado-match')));
+      mostrarResultado(() => setFase({ tipo: 'resultado', dados: { ...dados, exemplo } }), 'resultado-match');
     } catch (e) {
       if (e.name === 'AbortError' || minha !== rodada.current) return;
       setFase({ tipo: 'erro', mensagem: e.message });

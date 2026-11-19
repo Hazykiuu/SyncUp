@@ -3,6 +3,7 @@
 import { html, useEffect, useRef, useState } from 'preact-htm';
 import { chegarLista } from './chegada.js';
 import { MESES } from './stories/logica.js';
+import { Contador } from './stories/slides.js';
 import { abrirWorker } from './worker.js';
 
 const ACEITOS = /\.(zip|json)$/i;
@@ -74,10 +75,13 @@ export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquiv
           ${ICONE_ARQUIVO}
           <p><b>Arraste seu my_spotify_data.zip</b> ou escolha o arquivo</p>`
         : html`<div class="deck" aria-live="polite">
-          ${estado === 'lendo' && html`<span class="selo-deck">Lendo o histórico…</span>`}
-          ${estado === 'pronto' && html`<span class="selo-deck ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10" /></svg>Histórico pronto</span>
-            <p class="deck-periodo">${mes(d.inicio)} → ${mes(d.fim)}</p>
-            <p class="deck-plays"><b class="num">${d.plays.toLocaleString('pt-BR')}</b> reproduções · ${arquivos.length} ${arquivos.length === 1 ? 'parte' : 'partes'}</p>`}
+          ${estado === 'lendo' && html`<span class="selo-deck"><span class="giro" aria-hidden="true"></span>Lendo neste aparelho…</span>`}
+          ${estado === 'pronto' && html`<span class="selo-deck ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10" /></svg>Lido neste aparelho</span>
+            <dl class="telemetria">
+              <div class="tl-periodo"><dt>Período</dt><dd>${mes(d.inicio)} → ${mes(d.fim)}</dd></div>
+              <div><dt>Reproduções</dt><dd class="num"><span aria-hidden="true"><${Contador} valor=${d.plays} ativo /></span><span class="sr-only">${d.plays.toLocaleString('pt-BR')}</span></dd></div>
+              <div><dt>${arquivos.length === 1 ? 'Parte' : 'Partes'}</dt><dd class="num">${arquivos.length}</dd></div>
+            </dl>`}
           ${estado === 'erro' && html`<p class="erro" role="alert">${leitura.erro}</p>`}
         </div>`}
         <button type="button" class="btn btn-borda superficie" onClick=${() => entrada.current.click()} disabled=${desabilitado}>

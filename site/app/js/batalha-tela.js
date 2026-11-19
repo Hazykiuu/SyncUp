@@ -1,7 +1,7 @@
 // Tela da Batalha: de 3 a 6 pessoas, o Worker em duas fases e o placar (os stories entram por cima dele).
 import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { CORES, janelaComum, validarNomes } from './batalha.js';
-import { chegarPouco, rolarAte } from './chegada.js';
+import { chegarPouco, mostrarResultado } from './chegada.js';
 import { Pessoa } from './envio.js';
 import { avisoPoster, compartilhar, desenharPosterBatalha } from './poster.js';
 import { Opcoes, PADRAO } from './opcoes.js';
@@ -168,8 +168,7 @@ export function Batalha() {
       if (minha !== rodada.current) return;
       if (exemplo && b.trilha) b.trilha = TRILHA_EXEMPLO;
       cancelar();
-      setFase({ tipo: 'resultado', b, nomes: nomesUsados, comum: opcoes.comum });
-      requestAnimationFrame(() => rolarAte(document.getElementById('resultado-batalha')));
+      mostrarResultado(() => setFase({ tipo: 'resultado', b, nomes: nomesUsados, comum: opcoes.comum }), 'resultado-batalha');
     } catch (e) {
       if (e.name === 'AbortError' || minha !== rodada.current) return; // cancelada: nada a mostrar
       cancelar();

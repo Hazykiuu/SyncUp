@@ -4,7 +4,7 @@
 /* 1. Tokens (cores, vidro e véu ficam no estilo.css) */
 :root {
   --raio-cartao: var(--cartao); --raio-chip: var(--pilula); /* apelidos dos tokens de estilo.css */
-  --dur-story: 10s; --sai-st: cubic-bezier(.2, .8, .2, 1); --passo: 90ms;
+  --dur-story: 10s; --passo: 90ms;
 }
 
 /* 2. Moldura e controles (L3: vidro real só aqui) */
@@ -61,7 +61,7 @@
 .st-capa-tipo { display: grid; place-items: center; font-weight: 900; color: #fff;
   background: linear-gradient(135deg, hsl(var(--hue) 70% 50%), hsl(calc(var(--hue) + 40) 70% 32%)); }
 .st-capa-palco { align-self: center; width: 46cqw; }
-.st-capa.grande { width: 100%; font-size: 22cqw; border-radius: 8px; }
+.st-capa.grande { width: 100%; font-size: 22cqw; border-radius: 8px; transition: translate .3s var(--sai); } /* translate: paralaxe (player.js) */
 .st-lista { list-style: none; margin: 1cqw 0 0; padding: 0; display: grid; gap: 2.8cqw; }
 .st-lista li { display: grid; grid-template-columns: 5cqw 16cqw minmax(0, 1fr) auto; gap: 3cqw; align-items: center; }
 .st-pos { font-size: 4.6cqw; font-weight: 900; color: rgba(255, 255, 255, .7); }
@@ -115,7 +115,7 @@
 .st-anos-chips button.on { color: #000; background: var(--verde); border-color: transparent; }
 /* O ano escolhido é o verde (.on); o contorno branco fica só para o foco do teclado, sem confundir os dois. */
 .st-anos-chips button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
-.st-painel-ano .st-vidro { display: grid; gap: 1.6cqw; padding: 3.6cqw 4cqw; border-radius: 4cqw; font-size: 3.6cqw; animation: st-entra .3s var(--sai-st) both; }
+.st-painel-ano .st-vidro { display: grid; gap: 1.6cqw; padding: 3.6cqw 4cqw; border-radius: 4cqw; font-size: 3.6cqw; animation: st-entra .3s var(--sai) both; }
 .st-painel-ano ol { margin: 0; padding-left: 5cqw; }
 .st-continuar { justify-self: start; min-height: 44px !important; padding: 0 4cqw; border: 0; border-radius: var(--raio-chip); background: #fff; color: #000; font: inherit; font-weight: 800; cursor: pointer; }
 /* Hábitos (12) */
@@ -247,8 +247,8 @@
 /* 5. Movimento: só opacity e transform; só o slide ativo anima */
 @keyframes st-entra { from { opacity: 0; transform: translateY(16px); } }
 @keyframes st-cresce-x { from { transform: scaleX(0); } }
-.st-slot.ativo .entra { animation: st-entra .6s var(--sai-st) both; animation-delay: calc(150ms + var(--i, 0) * var(--passo)); }
-.st-slot.ativo .st-barra-valor { animation: st-cresce-x 1.1s var(--sai-st) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo)); }
+.st-slot.ativo .entra { animation: st-entra .6s var(--sai) both; animation-delay: calc(150ms + var(--i, 0) * var(--passo)); }
+.st-slot.ativo .st-barra-valor { animation: st-cresce-x 1.1s var(--sai) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo)); }
 
 /* Coreografia aprovada no Figma (12/11): a Dupla respira num ritmo mais calmo; os dois círculos vêm de
    lados opostos e se encontram; o cartão do número surge crescendo; a barra de B sai 80 ms depois da de A
@@ -274,11 +274,11 @@
 @keyframes st-encontro-b { from { opacity: 0; transform: translateX(13cqw); } }
 @keyframes st-pop { from { opacity: 0; transform: scale(.92); } }
 .st-slot.ativo .st-avatares span {
-  animation: st-encontro-a .7s var(--sai-st) both;
+  animation: st-encontro-a .7s var(--sai) both;
   animation-delay: calc(150ms + var(--i, 0) * var(--passo)); }
 .st-slot.ativo .st-avatares span + span { animation-name: st-encontro-b; }
 .st-slot.ativo .st-cartao.entra {
-  animation: st-pop .6s var(--sai-st) both;
+  animation: st-pop .6s var(--sai) both;
   animation-delay: calc(150ms + var(--i, 0) * var(--passo)); }
 .st-slot.ativo .st-barra-valor.b { animation-delay: calc(480ms + var(--i, 0) * var(--passo)); }
 
@@ -286,10 +286,10 @@
 @keyframes st-cresce-y { from { transform: scaleY(0); } }
 @keyframes st-raio { from { opacity: 0; transform: scale(.4); } }
 /* O ícone "se desenha": dasharray/dashoffset são herdados pelo conteúdo do <use> (pathLength=1). */
-.st-slot.ativo .desenha { stroke-dasharray: 1; animation: st-desenha 1.2s var(--sai-st) both; animation-delay: .35s; }
-.st-slot.ativo .st-colunas i { animation: st-cresce-y .9s var(--sai-st) both; animation-delay: calc(500ms + var(--i, 0) * 70ms); }
-.st-slot.ativo .st-relogio line { transform-origin: 100px 100px; animation: st-raio .5s var(--sai-st) both; animation-delay: calc(400ms + var(--i) * 25ms); }
-.st-slot.ativo .st-anel .valor { animation: st-desenha-anel 1.1s var(--sai-st) both; animation-delay: .6s; }
+.st-slot.ativo .desenha { stroke-dasharray: 1; animation: st-desenha 1.2s var(--sai) both; animation-delay: .35s; }
+.st-slot.ativo .st-colunas i { animation: st-cresce-y .9s var(--sai) both; animation-delay: calc(500ms + var(--i, 0) * 70ms); }
+.st-slot.ativo .st-relogio line { transform-origin: 100px 100px; animation: st-raio .5s var(--sai) both; animation-delay: calc(400ms + var(--i) * 25ms); }
+.st-slot.ativo .st-anel .valor { animation: st-desenha-anel 1.1s var(--sai) both; animation-delay: .6s; }
 @keyframes st-desenha-anel { from { stroke-dasharray: 0 1; } }
 
 /* 6. Acessibilidade e fallbacks */
@@ -311,7 +311,6 @@
 
 /* 7. Batalha (stories/batalha.js): cada lutador tem a sua cor (--lut); texto sobre a cor é preto.
    Selos na tipografia do Kicker, sem brilho; pódio sobe com desaceleração firme, sem mola nem quique. */
-.sb { --sai-bt: cubic-bezier(.22, 1, .36, 1); }
 .sb-cabeca { display: flex; align-items: center; gap: 2cqw; min-width: 0; }
 .sb-selo { flex: none; padding: .5cqw 2cqw; border: 1px solid rgba(255, 255, 255, .4); border-radius: 99px; font-size: 2.5cqw; font-weight: 800;
   letter-spacing: .14em; text-transform: uppercase; color: #fff; white-space: nowrap; }
@@ -348,8 +347,8 @@
 .sb-empate > span { display: flex; align-items: center; gap: 2.4cqw; min-width: 0; }
 .sb-empate b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 5cqw; font-weight: 900; }
 @keyframes sb-cresce { from { transform: scaleY(.06); opacity: .4; } }
-.st-slot.ativo .sb-podio .sb-bloco { animation: sb-cresce .6s var(--sai-bt) both; animation-delay: calc(250ms + var(--k, 0) * 150ms); }
-.st-slot.ativo .sb-podio li > :not(.sb-bloco) { animation: st-entra .45s var(--sai-bt) both; animation-delay: calc(480ms + var(--k, 0) * 150ms); }
+.st-slot.ativo .sb-podio .sb-bloco { animation: sb-cresce .6s var(--sai) both; animation-delay: calc(250ms + var(--k, 0) * 150ms); }
+.st-slot.ativo .sb-podio li > :not(.sb-bloco) { animation: st-entra .45s var(--sai) both; animation-delay: calc(480ms + var(--k, 0) * 150ms); }
 /* Desenhos das rodadas: um por rodada (stories/batalha.js). */
 .sb-linhas { list-style: none; margin: 2cqw 0; padding: 0; display: grid; gap: 3cqw; }
 .sb-linhas li { display: grid; grid-template-columns: 7cqw 18cqw minmax(0, 1fr) auto; align-items: center; gap: 2cqw; min-height: 10cqw; font-size: 3.8cqw; }
@@ -393,14 +392,14 @@
 @keyframes sb-corre { from { transform: translateX(-100%); } }
 @keyframes sb-acende { from { opacity: .2; } }
 @media (prefers-reduced-motion: no-preference) {
-  .st-slot.ativo .sb-arco { animation: sb-traco .9s var(--sai-bt) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo)); }
+  .st-slot.ativo .sb-arco { animation: sb-traco .9s var(--sai) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo)); }
   .st-slot.ativo .lider .sb-arco { animation-duration: 1.05s; }
-  .st-slot.ativo .sb-corredor { animation: sb-corre .9s var(--sai-bt) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo)); }
+  .st-slot.ativo .sb-corredor { animation: sb-corre .9s var(--sai) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo)); }
   .st-slot.ativo .lider .sb-corredor { animation-duration: 1.05s; }
   .st-slot.ativo .sb-pontos .aceso, .st-slot.ativo .sb-corrente .aceso, .st-slot.ativo .sb-casas .pulou, .st-slot.ativo .sb-tally i {
-    animation: sb-pop .3s var(--sai-bt) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo) + var(--n, 0) * 25ms); }
-  .st-slot.ativo .sb-hora.acesa { animation: sb-acende .3s var(--sai-bt) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo) + var(--n, 0) * 25ms); }
-  .st-slot.ativo .sb-lombada { animation: st-cresce-y .8s var(--sai-bt) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo)); }
+    animation: sb-pop .3s var(--sai) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo) + var(--n, 0) * 25ms); }
+  .st-slot.ativo .sb-hora.acesa { animation: sb-acende .3s var(--sai) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo) + var(--n, 0) * 25ms); }
+  .st-slot.ativo .sb-lombada { animation: st-cresce-y .8s var(--sai) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo)); }
   .st-slot.ativo .lider .sb-lombada { animation-duration: .95s; }
 }
 @media (prefers-reduced-motion: reduce) { .st-slot.ativo .sb-podio .sb-bloco, .st-slot.ativo .sb-podio li > * { animation: none; } }

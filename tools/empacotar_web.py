@@ -2,9 +2,9 @@
 
 Desde a 1.11 a Dupla e o Wrapped rodam em JavaScript, sem Python no navegador, e desde a 1.12 o
 visual e a corrida têm arquivos próprios (``nucleo.css`` e ``js/corrida.js``). Sobram as demos:
-``demo-wrapped.zip`` e ``demo-bruno.zip``, os dois históricos fictícios do "Testar com dados
-fictícios" (Ana e Bruno, os mesmos de ``web.ponte.arquivos_demo``), e ``demo-carla.zip`` e
-``demo-davi.zip``, que completam os quatro lutadores da demo da Batalha.
+``demo-wrapped.zip`` e ``demo-bruno.zip``, os dois históricos do "Ver um exemplo" (Rafa e Lu no
+app web), e ``demo-carla.zip`` e ``demo-davi.zip`` (Teo e Nina), que completam os quatro da Batalha
+e do Match. Os nomes dos arquivos ficam os antigos: ninguém os vê e o CI e os testes dependem deles.
 """
 
 from __future__ import annotations
@@ -14,9 +14,9 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[1]
 APP = RAIZ / 'site' / 'app'
-# Ana também é a demo do Wrapped; Bruno completa a dupla (sementes de ponte.arquivos_demo).
-# Carla e Davi entram na Batalha com gostos diferentes (mais artistas; mais preso aos favoritos),
-# senão as rodadas empatam quase todas.
+# Rafa (demo-wrapped) também é a demo do Wrapped; Lu (demo-bruno) completa a dupla.
+# Teo e Nina entram na Batalha com gostos diferentes (mais artistas; mais preso aos favoritos),
+# senão as rodadas empatam quase todas. Artistas e músicas com nomes inventados que parecem reais.
 DEMOS = {
     'demo-wrapped.zip': {'seed': 41},
     'demo-bruno.zip': {'seed': 97},
@@ -30,7 +30,14 @@ def empacotar(destino: Path = APP) -> Path:
 
     destino.mkdir(parents=True, exist_ok=True)
     for nome, ajustes in DEMOS.items():
-        gerar_zip(destino / nome, Configuracao(**{'linhas': 40_000, 'artistas': 250, **ajustes}))
+        config = {
+            'linhas': 40_000,
+            'artistas': 250,
+            'nomes_plausiveis': True,
+            'proporcao_various_artists': 0,
+            **ajustes,
+        }
+        gerar_zip(destino / nome, Configuracao(**config))
     return destino
 
 

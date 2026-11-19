@@ -4,8 +4,8 @@ import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { chegar, chegarPouco } from './chegada.js';
 import { ligarCorrida } from './corrida.js';
 import { GraficosDupla } from './graficos.js';
-import { compartilhar, desenharPosterDupla } from './poster.js';
-import { SomStories } from './som.js';
+import { avisoPoster, compartilhar, desenharPosterDupla } from './poster.js';
+import { ICONE, SomStories } from './som.js';
 import { SLIDES_DUPLA } from './stories/dupla.js';
 import { tiposDaDupla } from './stories/logica.js';
 import { Player } from './stories/player.js';
@@ -68,7 +68,6 @@ function Medidas({ metricas }) {
 }
 
 // Ações embaixo dos stories: pôster em PNG (Canvas, no aparelho), playlist em CSV e "ver de novo".
-const segundos = (ms) => (ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 function Acoes({ d, csv, aoRepetir, alvo }) {
   const [ocupado, setOcupado] = useState('');
   const [aviso, setAviso] = useState('');
@@ -82,7 +81,7 @@ function Acoes({ d, csv, aoRepetir, alvo }) {
     const blob = await desenharPosterDupla(d);
     const ms = performance.now() - inicio;
     const como = await compartilhar(blob, 'syncup-dupla.png', 'Nossa sintonia no SyncUp');
-    setAviso(como === 'cancelado' ? '' : `Pôster pronto em ${segundos(ms)} s${como === 'baixado' ? ' (baixado como syncup-dupla.png)' : ''}.`);
+    setAviso(avisoPoster(como, ms, 'syncup-dupla.png'));
   });
   // A playlist comum inteira vem pronta do Worker (dupla.csvPlaylist): só vira arquivo para baixar.
   const playlist = () => fazer('playlist', async () => {
@@ -94,7 +93,7 @@ function Acoes({ d, csv, aoRepetir, alvo }) {
     <div class="compartilhar"><div class="acoes">
       <button type="button" class="btn btn-verde" onClick=${poster} disabled=${!!ocupado}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></svg>${ocupado === 'poster' ? 'Gerando…' : 'Baixar pôster'}</button>
       <button type="button" class="btn btn-borda superficie" onClick=${playlist} disabled=${!!ocupado}>${ocupado === 'playlist' ? 'Gerando…' : 'Playlist comum · CSV'}</button>
-      <button type="button" class="btn btn-borda superficie" onClick=${aoRepetir}>↺ Ver de novo</button>
+      <button type="button" class="btn btn-borda superficie" onClick=${aoRepetir}>${ICONE.repetir}Ver de novo</button>
     </div>
     ${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
     ${erro && html`<p ref=${chegarPouco} class="erro superficie" role="alert">Não deu certo: ${erro}</p>`}

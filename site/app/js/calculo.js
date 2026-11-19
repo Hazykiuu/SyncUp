@@ -32,7 +32,7 @@ const DIAS_CHAVE = 100_000; // chave (par, dia) das repetições: dia < 100 mil 
 const SEP = '\u0000'; // separa música e artista nas chaves compostas
 
 /* ---------- Arquétipos (arquetipos.py) ---------- */
-export const AVISO_ARQUETIPOS = 'Arquétipos são regras sobre hábitos de escuta neste histórico. Não medem personalidade nem afinidade entre pessoas.';
+export const AVISO_ARQUETIPOS = 'Arquétipos são regras sobre os hábitos de escuta deste histórico.';
 // [chave, nome, ícone, medida, limiar, frase, formato, teto]
 export const REGRAS = [
   ['devoto', 'Devoto(a)', '💚', 'top1', 0.10, 'Um único artista ocupa {valor} de tudo o que você ouviu.', 'pct', 0.20],

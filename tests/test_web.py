@@ -36,7 +36,7 @@ def test_empacotamento_gera_so_as_demos(tmp_path: Path) -> None:
         'demo-davi.zip',
         'demo-wrapped.zip',
     ]
-    for demo in pasta.iterdir():  # Ana, Bruno, Carla e Davi do "Testar com dados fictícios"
+    for demo in pasta.iterdir():  # Rafa, Lu, Teo e Nina do "Ver um exemplo"
         with zipfile.ZipFile(demo) as pacote:
             assert any(n.endswith('.json') for n in pacote.namelist())
     assert not (pasta / 'syncup-core.zip').exists()  # sem Python no navegador desde a 1.11

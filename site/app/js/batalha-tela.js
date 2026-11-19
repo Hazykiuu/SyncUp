@@ -3,9 +3,9 @@ import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { CORES, janelaComum, validarNomes } from './batalha.js';
 import { chegarPouco, rolarAte } from './chegada.js';
 import { Pessoa } from './envio.js';
-import { compartilhar, desenharPosterBatalha } from './poster.js';
+import { avisoPoster, compartilhar, desenharPosterBatalha } from './poster.js';
 import { Opcoes, PADRAO } from './opcoes.js';
-import { destravarSom, SomStories } from './som.js';
+import { destravarSom, ICONE, SomStories, TRILHA_EXEMPLO } from './som.js';
 import { slidesDaBatalha } from './stories/batalha.js';
 import { fmtNum } from './stories/logica.js';
 import { Player } from './stories/player.js';
@@ -14,11 +14,11 @@ import { Dock } from './stories/dock.js';
 import { Palco } from './stories/palco.js';
 
 const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos pessoas.';
-const DEMO = [['demo-wrapped.zip', 'Ana'], ['demo-bruno.zip', 'Bruno'], ['demo-carla.zip', 'Carla'], ['demo-davi.zip', 'Davi']];
+const DEMO = [['demo-wrapped.zip', 'Rafa'], ['demo-bruno.zip', 'Lu'], ['demo-carla.zip', 'Teo'], ['demo-davi.zip', 'Nina']];
 const NOTA_SOM = 'Para o som, o SyncUp envia à Apple (iTunes) o nome do artista favorito de cada pessoa da batalha, além do seu endereço IP. Os históricos e os nomes de vocês não saem do aparelho. Trechos: iTunes.';
-const AVISO = 'É uma brincadeira com os números do período: não mede gosto nem personalidade.';
+const AVISO = 'Uma brincadeira com os números do período.';
 const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
-const EXEMPLOS = ['Ana', 'Bia', 'Caio', 'Duda', 'Edu', 'Fabi'];
+const EXEMPLOS = ['Mari', 'Juca', 'Bel', 'Zé', 'Pri', 'Dani'];
 const inicial = (nome) => [...(nome.trim() || '?')][0].toUpperCase();
 const porMedalhas = (b) => (i, j) => {
   const x = b.lutadores[i].medalhas, y = b.lutadores[j].medalhas;
@@ -96,7 +96,6 @@ function Placar({ b, nomes }) {
     </div>`;
 }
 
-const segundos = (ms) => (ms / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 function ResultadoBatalha({ b, nomes, comum }) {
   const stories = useRef(null);
   const [ocupado, setOcupado] = useState(false);
@@ -108,7 +107,7 @@ function ResultadoBatalha({ b, nomes, comum }) {
       const blob = await desenharPosterBatalha(b);
       const ms = performance.now() - inicio;
       const como = await compartilhar(blob, 'syncup-batalha.png', 'Batalha no SyncUp');
-      setAviso(como === 'cancelado' ? '' : `Pôster pronto em ${segundos(ms)} s${como === 'baixado' ? ' (baixado como syncup-batalha.png)' : ''}.`);
+      setAviso(avisoPoster(como, ms, 'syncup-batalha.png'));
     } catch (e) { setAviso(`Não deu certo: ${e.message}`); } finally { setOcupado(false); }
   };
   const slides = useMemo(() => slidesDaBatalha(b), [b]);
@@ -118,7 +117,7 @@ function ResultadoBatalha({ b, nomes, comum }) {
       <${Palco} alvo=${stories} slides=${slides} comSom=${!!b.trilha} lado=${html`
       <div class="compartilhar"><div class="acoes">
         <button type="button" class="btn btn-verde" onClick=${poster} disabled=${ocupado}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M5 20h14" /></svg>${ocupado ? 'Gerando…' : 'Baixar pôster'}</button>
-        <button type="button" class="btn btn-borda superficie" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>↺ Ver de novo</button>
+        <button type="button" class="btn btn-borda superficie" onClick=${() => stories.current?.querySelector('.st-player')?.dispatchEvent(new Event('st-replay'))}>${ICONE.repetir}Ver de novo</button>
       </div>${aviso && html`<p ref=${chegarPouco} class="nota" role="status">${aviso}</p>`}
       <${Dock} alvo=${stories} aoPoster=${poster} ocupado=${ocupado} comSom=${!!b.trilha} /></div>
       ${b.trilha && html`<${SomStories} key=${b} trilha=${b.trilha} alvo=${stories} nota=${NOTA_SOM} />`}`}>
@@ -127,7 +126,7 @@ function ResultadoBatalha({ b, nomes, comum }) {
       <p class="batalha-resumo">${b.resenha}</p>
       <${Rodadas} b=${b} nomes=${nomes} />
       <${Podio} b=${b} nomes=${nomes} ordem=${b.lutadores.map((l, i) => i).sort(porMedalhas(b))} />
-      <details class="superficie detalhe"><summary>Ver todos os números</summary><${Placar} b=${b} nomes=${nomes} /></details>
+      <details class="superficie detalhe"><summary>Placar completo</summary><${Placar} b=${b} nomes=${nomes} /></details>
       ${b.fora.length > 0 && html`<p class="nota">Ficaram de fora: ${b.fora.map((f) => `${f.titulo} (${f.motivo})`).join('; ')}.</p>`}
       ${!comum && html`<p class="nota">Históricos inteiros: quem tem mais tempo de histórico leva vantagem.</p>`}
       <p class="nota">${AVISO}</p>
@@ -157,7 +156,7 @@ export function Batalha() {
     return () => { removeEventListener('hashchange', sair); cancelar(); };
   }, []);
 
-  const rodar = async (ler, nomesUsados) => {
+  const rodar = async (ler, nomesUsados, exemplo = false) => {
     cancelar();
     const minha = rodada.current;
     setFase({ tipo: 'processando', etapa: 'Preparando a batalha…' });
@@ -167,6 +166,7 @@ export function Batalha() {
       const w = (worker.current = abrirWorker('batalha-worker.js', { semResposta: SEM_RESPOSTA, aoProgresso: (etapa) => minha === rodada.current && setFase({ tipo: 'processando', etapa }) }));
       const b = await batalharNoWorker(w, lista, nomesUsados, opcoes);
       if (minha !== rodada.current) return;
+      if (exemplo && b.trilha) b.trilha = TRILHA_EXEMPLO;
       cancelar();
       setFase({ tipo: 'resultado', b, nomes: nomesUsados, comum: opcoes.comum });
       requestAnimationFrame(() => rolarAte(document.getElementById('resultado-batalha')));
@@ -183,16 +183,16 @@ export function Batalha() {
     try { finais = validarNomes(nomes); } catch (e) { setFase({ tipo: 'erro', mensagem: e.message }); return; }
     rodar(async () => arquivos, finais);
   };
-  // Quatro históricos fictícios prontos (gerados por tools/empacotar_web.py): nenhum dado real.
+  // Quatro históricos de exemplo (gerados por tools/empacotar_web.py): nenhum dado real.
   const demo = () => {
     ultima.current = 'demo';
     destravarSom();
     setNomes(DEMO.map(([, n]) => n)); setArquivos(DEMO.map(() => []));
     rodar(() => Promise.all(DEMO.map(async ([arquivo]) => {
       const resposta = await fetch(arquivo).catch(() => null);
-      if (!resposta?.ok) throw new Error('Não deu para baixar os históricos fictícios. Confira a internet e tente de novo.');
+      if (!resposta?.ok) throw new Error('Não deu para baixar o exemplo. Confira a internet e tente de novo.');
       return [new File([await resposta.blob()], arquivo)];
-    })), DEMO.map(([, n]) => n));
+    })), DEMO.map(([, n]) => n), true);
   };
   const mudar = (lista, i, v) => lista.map((x, j) => (j === i ? v : x));
   const adicionar = () => { setNomes((n) => [...n, '']); setArquivos((a) => [...a, []]); };
@@ -217,7 +217,7 @@ export function Batalha() {
     <div class="barra-acao">
       <button type="button" class="btn btn-verde" onClick=${batalhar} disabled=${!pode} aria-describedby="dica-batalhar">
         ${ocupado ? 'Batalhando…' : 'Começar a batalha'}<span class="seta" aria-hidden="true">→</span></button>
-      <button type="button" class="btn btn-borda superficie" onClick=${demo} disabled=${ocupado}>Testar com dados fictícios</button>
+      <button type="button" class="btn btn-borda superficie" onClick=${demo} disabled=${ocupado}>Ver um exemplo</button>
       <small id="dica-batalhar">${pode || ocupado || fase.tipo === 'resultado' ? '' : 'Envie pelo menos um arquivo para cada pessoa.'}</small>
     </div>
     <div aria-live="polite">

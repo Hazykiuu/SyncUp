@@ -106,7 +106,7 @@ function Afinada({ b, ativo, i }) {
     <${Entra} i=${3} classe="st-cartao st-vidro"><div class="st-mega"><${Contador} valor=${b.afinada.valor} casas=${1} ativo=${ativo} />%</div>
       <span class="st-rotulo">de escuta em comum</span><//>
     ${b.afinada.artistaComum && html`<${Entra} i=${4} tag="p" classe="sb-unidos">Unidos por <b>${b.afinada.artistaComum}</b><//>`}
-    <${Entra} i=${5} tag="p" classe="st-nota">Mede a escuta neste período, não afinidade entre pessoas.<//>
+    <${Entra} i=${5} tag="p" classe="st-nota">Conta só o que vocês ouviram neste período.<//>
   <//>`;
 }
 

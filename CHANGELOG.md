@@ -1,5 +1,24 @@
 # Changelog — SyncUp
 
+## [1.21.0] — 2026-11-19
+
+Limpeza do que soava a texto e tela feitos por IA, no app web e na página inicial. Cálculos e funções não mudam.
+
+### Mudado
+- **Demos com nomes que parecem de verdade:** Rafa, Lu, Teo e Nina no lugar de Ana, Bruno, Carla e Davi, com artistas e músicas inventados. No modo exemplo, nada vai à rede: as capas e os trechos de som são os locais.
+- **"Ver um exemplo"** nos quatro modos, no lugar de "Testar com dados fictícios". Na página inicial, um selo só avisa que as telas usam nomes e números de exemplo.
+- **Textos reescritos:** as ressalvas dizem o que a conta mede, sem a fórmula "não mede X, mede Y". Os tempos de montagem só aparecem com `?fps=1`.
+- **Ícones em SVG** nos arquétipos do Wrapped e no "Ver de novo", no lugar de emoji e glifos.
+- **Animações sem quique:** o story do topo, o encontro dos avatares, o cartão da Dupla e a troca de modo param sem passar do ponto. Só a agulha do afinador oscila.
+- **Página inicial mais enxuta:**
+  - o topo perdeu a etiqueta e o segundo botão;
+  - o rodapé chama para pedir o histórico ao Spotify, em vez de repetir "Abrir o app";
+  - saiu a contagem de testes.
+- **"Abrir o app" sem cortina nem som:** a página inicial fica na tela até o app abrir, e o app entra subindo.
+
+### Corrigido
+- **Rolagem lateral no celular,** causada pela luz do palco no topo da página inicial.
+
 ## [1.20.0] — 2026-11-17
 
 Duas mudanças de cálculo na Dupla, escolhidas depois de um estudo com 12 históricos reais. Valem no app web e no app de PC, com o mesmo número nos dois.

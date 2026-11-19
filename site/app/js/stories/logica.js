@@ -163,7 +163,7 @@ export function fraseRecorde(horas) {
   return 'Um dia intenso, no seu ritmo.';
 }
 export function fraseRepeticao(plays) {
-  if (plays >= 20) return 'Isso não é ouvir, é estudar.';
+  if (plays >= 20) return 'Ouviu até decorar.';
   if (plays >= 10) return 'Virou a trilha daquele dia.';
   return 'Um dia com trilha sonora definida.';
 }
@@ -194,7 +194,7 @@ export function habitoDestaque(habitos) {
     if (v == null || v < limiar) continue;
     if (!melhor || v / limiar > melhor.razao) melhor = { chave, razao: v / limiar, frase: frase(fmtPct(v)) };
   }
-  return melhor ? { chave: melhor.chave, frase: melhor.frase } : { chave: null, frase: 'Equilíbrio: nem pula demais, nem deixa tudo no aleatório.' };
+  return melhor ? { chave: melhor.chave, frase: melhor.frase } : { chave: null, frase: 'Pula pouco e escolhe o que toca.' };
 }
 
 // Story 7 com 1 ano só: "1 artista novo a cada N plays".

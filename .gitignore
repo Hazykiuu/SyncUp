@@ -17,7 +17,7 @@ graphify-out/
 # Configurações locais do Claude Code (ganchos pessoais, não vão para o repositório)
 .claude/settings.local.json
 
-# Demos do "Testar com dados fictícios" no app no navegador (gerados por tools/empacotar_web.py no CI)
+# Demos do "Ver um exemplo" no app no navegador (gerados por tools/empacotar_web.py no CI)
 site/app/demo-wrapped.zip
 site/app/demo-bruno.zip
 site/app/demo-carla.zip

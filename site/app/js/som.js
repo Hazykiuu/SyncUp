@@ -9,8 +9,10 @@ import { normalizar } from './stories/logica.js';
 const VOLUME = 0.2;
 const ENTRA = 1.2; // segundos de fade in
 const SAI = 0.5; // fade out antes de trocar de música (e no fim do trecho)
-// Para históricos fictícios (o iTunes não acha "Artista fictício"): trechos de exemplo.
+// Trechos de músicas conhecidas: para quando o iTunes não acha nada e para o "Ver um exemplo".
 const EXEMPLO = [{ artista: 'Legião Urbana', faixa: 'Tempo Perdido' }, { artista: 'Tim Maia', faixa: 'Azul da Cor do Mar' }, { artista: 'Marisa Monte', faixa: 'Ainda Bem' }];
+// O exemplo usa só estes trechos: os artistas das demos são inventados e uma busca por eles poderia achar outra pessoa.
+export const TRILHA_EXEMPLO = { slides: {}, fila: EXEMPLO };
 const cache = new Map();
 
 const chave = (m) => `${normalizar(m.artista)}|${normalizar(m.faixa)}`;
@@ -127,6 +129,7 @@ const svg = (corpo) => html`<svg class="ic" viewBox="0 0 24 24" width="20" heigh
 export const ICONE = {
   nota: svg(html`<path d="M9 18V5l11-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="17" cy="16" r="3" />`),
   som: svg(html`<path d="M11 5 6 9H3v6h3l5 4z" /><path d="M15.5 8.5a5 5 0 0 1 0 7" /><path d="M18.5 5.5a9 9 0 0 1 0 13" />`),
+  repetir: svg(html`<path d="M3 12a9 9 0 1 0 2.6-6.4" /><path d="M3 4v5h5" />`),
   mudo: svg(html`<path d="M11 5 6 9H3v6h3l5 4z" /><path d="m22 9-6 6" /><path d="m16 9 6 6" />`),
 };
 
@@ -169,7 +172,7 @@ export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
     let fila = Array.from({ length: Math.max(0, ...listas.map((l) => l.length)) }, (_, i) => listas.map((l) => l[i])).flat().filter(Boolean);
     if (!fila.length && !Object.values(porSlide).some((l) => l.length)) {
       fila = (await Promise.all(EXEMPLO.map(resolver))).flat();
-      if (fila.length) setAviso('Não achamos estas músicas no iTunes (histórico fictício?). Tocando trechos de exemplo.');
+      if (fila.length) setAviso('Não achamos estas músicas no iTunes. Tocando trechos de exemplo.');
     }
     if (!vivo.current) return;
     if (!fila.length && !Object.values(porSlide).some((l) => l.length)) { setEstado('sem'); setAviso('Não deu para buscar os trechos (sem internet?). Os stories seguem sem som.'); return; }

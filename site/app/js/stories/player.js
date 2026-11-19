@@ -14,7 +14,7 @@ const ARRASTO_PX = 40;
 const reduzido = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ?fps=1: quadros por segundo no canto da tela, para medir o player em celulares (só desenvolvimento).
-const MEDIR_FPS = new URLSearchParams(location.search).get('fps') === '1';
+export const MEDIR_FPS = new URLSearchParams(location.search).get('fps') === '1';
 const ESTILO_FPS = { position: 'fixed', left: '8px', bottom: '8px', zIndex: 50, margin: 0, padding: '4px 8px', borderRadius: '6px', background: 'rgba(0,0,0,.8)', color: '#1ed760', font: '700 12px/1 monospace' };
 function Fps() {
   const [fps, setFps] = useState(0);

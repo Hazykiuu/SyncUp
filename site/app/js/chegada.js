@@ -23,7 +23,7 @@ export function mostrarResultado(mudar, id) {
   const focar = () => document.getElementById(id)?.querySelector('.st-player')?.focus({ preventScroll: true });
   if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) {
     mudar();
-    requestAnimationFrame(() => { rolarAte(document.getElementById(id)); focar(); });
+    setTimeout(() => { rolarAte(document.getElementById(id)); focar(); }); // como no update: espera o Preact desenhar
     return;
   }
   const update = async () => { mudar(); await new Promise((r) => setTimeout(r)); rolar('instant'); }; // espera o Preact desenhar

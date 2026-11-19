@@ -205,8 +205,16 @@ textarea.entrada { resize: vertical; }
 .deck { display: flex; flex-direction: column; align-items: center; gap: var(--e2); }
 .selo-deck { display: inline-flex; align-items: center; gap: var(--e2); padding: .3rem .8rem; border-radius: var(--pilula); background: rgba(255, 255, 255, .07); font-size: .85rem; font-weight: 700; color: var(--sub); }
 .selo-deck.ok { background: color-mix(in srgb, var(--cor) 18%, transparent); color: var(--cor); }
-.deck-periodo { font-size: 1.15rem; font-weight: 800; color: var(--texto) !important; }
-.deck-plays b { color: var(--texto); font-size: 1.05rem; }
+/* Telemetria da pré-leitura (1.22): o que o Worker achou, em leitura de instrumento. Fios de 1 px separam as medidas,
+   rótulo pequeno em cinza e só o número em branco; o contador sobe uma vez (Contador, sem animar layout). */
+.telemetria { display: grid; grid-template-columns: 1fr 1fr; width: min(100%, 22rem); border-block: 1px solid var(--linha); text-align: left; }
+.telemetria > div { display: grid; gap: .15rem; padding: var(--e2) var(--e3); }
+.telemetria > div + div { border-left: 1px solid var(--linha); }
+.telemetria .tl-periodo { grid-column: 1 / -1; border-bottom: 1px solid var(--linha); }
+.telemetria .tl-periodo + div { border-left: 0; }
+.telemetria dt { font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--fraco); }
+.telemetria dd { font-size: 1.15rem; font-weight: 800; color: var(--texto); font-variant-numeric: tabular-nums; }
+.selo-deck .giro { width: .85rem; height: .85rem; }
 .soltar p { color: var(--sub); text-wrap: balance; } .soltar small { color: var(--fraco); }
 .lista-arquivos { display: flex; flex-direction: column; gap: var(--e2); }
 .lista-arquivos li { display: flex; align-items: center; gap: var(--e2); padding: var(--e1) var(--e1) var(--e1) var(--e3); border-radius: var(--r-campo); background: rgba(255, 255, 255, .05); font-size: .9rem; }
@@ -372,7 +380,7 @@ textarea.entrada { resize: vertical; }
 @media (max-width: 899px) { .dp-ranks[data-quem="0"] .dp-lado-1, .dp-ranks[data-quem="1"] .dp-lado-0 { display: none; } }
 @media (min-width: 900px) { .dp-alternador { display: none; } }
 .dp-etiquetas { display: flex; flex-wrap: wrap; gap: var(--e2); }
-.dp-etiquetas li { padding: var(--e1) var(--e3); border-radius: var(--pilula); border: 1px solid var(--linha); color: var(--texto); font-size: .9rem; }
+.dp-etiquetas li { padding: var(--e1) var(--e3); border-radius: var(--pilula); border: 1px solid var(--linha); color: var(--sub); font-size: .9rem; }
 /* "Ver mais" abre crescendo (só onde o navegador anima até a altura automática; nos outros, abre seco). */
 @supports (interpolate-size: allow-keywords) {
   .dp-mais { interpolate-size: allow-keywords; }
@@ -423,6 +431,25 @@ html:active-view-transition-type(modo)::view-transition-group(fader) { animation
 /* Barra parada: só o quadro novo, sem fade (os dois quadros somados deixariam a barra mais clara). */
 html:active-view-transition-type(modo)::view-transition-old(barra) { display: none; }
 html:active-view-transition-type(modo)::view-transition-new(barra) { animation: none; }
+/* Processando → resultado (chegada.js, mostrarResultado): o cartão "Lendo…" cresce até o player e os controles de
+   vidro dos stories entram em cascata (barra, depois botões). O resto da página troca seco (já rolado). Só transform e
+   opacidade; o relógio dos stories não depende disso (player.js usa o próprio tempo). */
+html:active-view-transition-type(resultado) .processando, html:active-view-transition-type(resultado) .resultado .st-player { view-transition-name: palco-voo; }
+html:active-view-transition-type(resultado) .resultado .st-barra { view-transition-name: st-barra; }
+html:active-view-transition-type(resultado) .resultado .st-controles { view-transition-name: st-controles; }
+html:active-view-transition-type(resultado)::view-transition-old(root), html:active-view-transition-type(resultado)::view-transition-new(root) { animation: none; }
+html:active-view-transition-type(resultado)::view-transition-group(palco-voo) { animation-duration: .5s; animation-timing-function: var(--sai); overflow: clip; border-radius: var(--r-painel); }
+/* Do cartão largo ao player alto: os dois quadros ocupam o grupo inteiro (sem esticar) enquanto ele cresce. */
+html:active-view-transition-type(resultado)::view-transition-old(palco-voo), html:active-view-transition-type(resultado)::view-transition-new(palco-voo) { height: 100%; object-fit: cover; object-position: top; }
+html:active-view-transition-type(resultado)::view-transition-old(palco-voo) { animation: cf-some .2s ease both; }
+html:active-view-transition-type(resultado)::view-transition-new(palco-voo) { animation: cf-surge .35s ease .1s both; }
+html:active-view-transition-type(resultado)::view-transition-new(st-barra) { animation: vt-desce .35s var(--sai) .3s both; }
+html:active-view-transition-type(resultado)::view-transition-new(st-controles) { animation: vt-desce .35s var(--sai) .38s both; }
+html:active-view-transition-type(resultado)::view-transition-old(st-barra), html:active-view-transition-type(resultado)::view-transition-old(st-controles) { display: none; }
+html:active-view-transition-type(resultado)::view-transition-group(st-barra), html:active-view-transition-type(resultado)::view-transition-group(st-controles) { animation: none; }
+@keyframes cf-some { to { opacity: 0; } }
+@keyframes cf-surge { from { opacity: 0; } }
+@keyframes vt-desce { from { opacity: 0; translate: 0 -8px; } }
 /* O player dos stories segue o raio de painel do app. */
 .st-player.su-stories { border-radius: var(--r-painel); }
 /* Corrida (HTML do núcleo) em tela estreita: a coluna dos nomes cede espaço às barras, e a barra mais longa
@@ -442,14 +469,16 @@ html:active-view-transition-type(modo)::view-transition-new(barra) { animation: 
 @media (min-width: 900px) { .esqueleto { padding-left: calc(var(--e7) + 15rem); } }
 
 /* Luz ambiente: as duas cores vivas da capa ativa (stories/slides.js, luzAmbiente) iluminam o fundo atrás do vidro.
-   @property deixa o navegador fazer a transição da cor; sem suporte, a cor só troca. */
-@property --ambient-primary { syntax: '<color>'; inherits: true; initial-value: rgb(30 215 96); }
-@property --ambient-secondary { syntax: '<color>'; inherits: true; initial-value: rgb(196 183 255); }
-html { transition: --ambient-primary .6s ease, --ambient-secondary .6s ease; }
-body::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-events: none;
-  background: radial-gradient(55% 45% at 12% 8%, color-mix(in srgb, var(--ambient-primary) 22%, transparent), transparent 70%),
-    radial-gradient(50% 50% at 92% 70%, color-mix(in srgb, var(--ambient-secondary) 16%, transparent), transparent 70%); }
-@media (prefers-reduced-transparency: reduce) { body::before { display: none; } }
+   Duas camadas fixas (a = body::before, b = html::before): a cor nova pinta a camada escondida uma vez e a troca é
+   só de opacidade (1.22). Antes a cor herdada mudava a cada quadro no <html> inteiro e repintava a tela toda. */
+body::before, html::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-events: none; transition: opacity .6s ease;
+  background: radial-gradient(55% 45% at 12% 8%, color-mix(in srgb, var(--luz-1) 22%, transparent), transparent 70%),
+    radial-gradient(50% 50% at 92% 70%, color-mix(in srgb, var(--luz-2) 16%, transparent), transparent 70%); }
+body::before { --luz-1: var(--luz-a1, rgb(30 215 96)); --luz-2: var(--luz-a2, rgb(196 183 255)); }
+html::before { --luz-1: var(--luz-b1, rgb(30 215 96)); --luz-2: var(--luz-b2, rgb(196 183 255)); opacity: 0; }
+html[data-luz="b"]::before { opacity: 1; }
+html[data-luz="b"] body::before { opacity: 0; }
+@media (prefers-reduced-transparency: reduce) { body::before, html::before { display: none; } }
 
 /* Dock dos stories (stories/dock.js): cápsula de vidro fixa na base enquanto o player está na tela.
    Fundo escuro ≥ 72%: a capa do story que passa por baixo não aparece borrada (regra do Spotify). */
@@ -513,7 +542,7 @@ body::before { content: ''; position: fixed; inset: 0; z-index: -2; pointer-even
    a "capa" (o ícone do modo num quadrado com degradê), o tipo e o título enorme e apertado. */
 .app-cabeca { position: relative; flex-direction: row; align-items: flex-end; gap: var(--e5); }
 .app-cabeca-texto { display: flex; flex-direction: column; gap: var(--e3); min-width: 0; }
-.app-tipo { font-size: .8rem; font-weight: 700; letter-spacing: .02em; color: var(--texto); }
+.app-tipo { font-size: .8rem; font-weight: 700; letter-spacing: .02em; color: var(--sub); }
 .app-capa { display: none; flex: none; place-items: center; width: clamp(8rem, 14vw, 12rem); aspect-ratio: 1; border-radius: var(--r-campo); color: #000;
   background: linear-gradient(135deg, rgb(var(--tinta)), color-mix(in srgb, rgb(var(--tinta)) 45%, #000)); box-shadow: 0 16px 48px -8px rgb(0 0 0 / .6); }
 .app-capa svg { width: 46%; height: auto; stroke-width: 1.6; }

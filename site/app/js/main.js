@@ -1,6 +1,6 @@
 // App do SyncUp no navegador: casca (topo, modos) e a tela Dupla.
 import { html, render, useEffect, useRef, useState } from 'preact-htm';
-import { chegarPouco, rolarAte } from './chegada.js';
+import { chegarPouco, mostrarResultado } from './chegada.js';
 import { ligarOndas } from './corrida.js';
 import { audioCtx, destravarSom, pausarSom, silenciado, TRILHA_EXEMPLO } from './som.js';
 import { Batalha } from './batalha-tela.js';
@@ -39,8 +39,7 @@ function Dupla() {
       const [a, b] = await ler();
       const r = await compararNoWorker(a, b, nomesUsados, opcoes);
       if (exemplo && r.dupla.trilha) r.dupla.trilha = TRILHA_EXEMPLO;
-      setFase({ tipo: 'resultado', r });
-      requestAnimationFrame(() => rolarAte(document.getElementById('resultado')));
+      mostrarResultado(() => setFase({ tipo: 'resultado', r }), 'resultado');
     } catch (e) { if (e.name !== 'AbortError') setFase({ tipo: 'erro', mensagem: e.message }); }
   };
   const comparar = () => {

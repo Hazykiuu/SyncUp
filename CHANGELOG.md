@@ -1,5 +1,24 @@
 # Changelog — SyncUp
 
+## [1.22.0] — 2026-11-19
+
+Acabamento visual no app web e na página inicial. Cálculos e funções não mudam, e o vidro (blur) continua só no que flutua.
+
+### Novo
+- **Do envio aos stories sem corte:** o cartão "Lendo…" cresce até virar o player, e a barra e os botões dos stories entram um depois do outro. Vale nos quatro modos. Com "menos movimento" ou sem suporte no navegador, a troca é direta. No fim, o foco vai para o player.
+- **Leitura do histórico em painel:** antes de montar, o cartão mostra período, reproduções (o número sobe uma vez) e partes, separados por fios, com o aviso "Lido neste aparelho".
+- **Capa que acompanha o mouse:** no computador, a capa grande dos stories se desloca até 6 px com o ponteiro. A capa inteira se move, sem corte nem texto por cima.
+- **Página inicial:**
+  - "Do ZIP ao story": a tela fica presa enquanto os três passos rolam ao lado e troca do arquivo para a leitura e para o story. Sem suporte ou com "menos movimento", os passos aparecem empilhados.
+  - Uma frase grande sobre o histórico não sair do aparelho, com o botão do app.
+  - Três números: 0 servidores com os seus dados, 2,4 s para montar o Wrapped (Redmi Note 15, 300 mil reproduções) e o histórico estendido inteiro.
+
+### Mudado
+- **Uma curva só para as animações do site**, que responde na hora e para sem arrasto.
+- **Cartões com um fio de luz no topo,** ainda sólidos.
+- **Rótulos em cinza:** o branco fica para o dado principal de cada bloco.
+- **A luz de fundo dos stories troca por opacidade,** sem repintar a tela a cada quadro (mais leve no celular).
+
 ## [1.21.0] — 2026-11-19
 
 Limpeza do que soava a texto e tela feitos por IA, no app web e na página inicial. Cálculos e funções não mudam.

@@ -5,13 +5,18 @@
 import { cacheIndexedDB } from './capas.js';
 
 // Chave pública de leitura (não é segredo; o Last.fm a usa para limitar pedidos por app).
-export const CHAVE_API = '';
+export const CHAVE_API = '487c26d26abbfd02d12fe83ee0cb0fc1';
 const API = 'https://ws.audioscrobbler.com/2.0/';
 export const USUARIO_VALIDO = /^[A-Za-z][A-Za-z0-9_-]{1,14}$/; // regra de cadastro do Last.fm
 const DURACAO_PADRAO = 210000; // 3,5 min, quando o Last.fm não sabe nenhuma duração
 const PAGINAS_TOP = 3;
 const INTERVALO_MS = 250; // até 4 pedidos por segundo (o Last.fm pede no máximo 5)
+const EM_PARALELO = 3; // medido (1.23): 3 em voo, 152 mil escutas em ~5 min; com 6, o Last.fm passou a travar
 const ESPERAS_LIMITE = [1000, 2000, 4000, 8000];
+// Falhas passageiras: 8 (backend), 11 (fora do ar), 16 (indisponível), 29 (limite) e HTTP 429/5xx. Medido em 1.23:
+// o erro 8 com HTTP 500 aparece de vez em quando no meio de históricos grandes.
+const PASSAGEIRO = new Set([8, 11, 16, 29, 429, 500, 502, 503, 504]);
+const TEMPO_LIMITE_MS = 20000; // um pedido pendurado travaria o download inteiro
 const ANO_S = 365 * 86400;
 
 const MENSAGENS = {
@@ -33,16 +38,20 @@ const dormir = (ms, sinal) => new Promise((ok, erro) => {
 export async function pedir(metodo, params, { buscar = fetch, esperar = dormir, sinal } = {}) {
   const url = `${API}?${new URLSearchParams({ ...params, method: metodo, api_key: CHAVE_API, format: 'json' })}`;
   for (let tentativa = 0; ; tentativa++) {
-    let resp;
-    try { resp = await buscar(url, { signal: sinal }); } catch (e) {
-      if (e?.name === 'AbortError') throw e;
-      throw new ErroLastfm('Sem conexão com o Last.fm. Confira a internet e tente de novo.', 'rede');
+    let resp, dados = null;
+    const limite = AbortSignal.timeout(TEMPO_LIMITE_MS);
+    try {
+      resp = await buscar(url, { signal: sinal ? AbortSignal.any([sinal, limite]) : limite });
+      try { dados = await resp.json(); } catch (e) { if (e?.name === 'TimeoutError' || e?.name === 'AbortError') throw e; } // corpo que não é JSON: tratado abaixo
+    } catch (e) {
+      if (sinal?.aborted || e?.name === 'AbortError') throw sinal?.reason ?? e;
+      const demorou = e?.name === 'TimeoutError';
+      if (demorou && tentativa < ESPERAS_LIMITE.length) { await esperar(ESPERAS_LIMITE[tentativa], sinal); continue; }
+      throw new ErroLastfm(demorou ? 'O Last.fm está demorando para responder. Tente de novo daqui a pouco.' : 'Sem conexão com o Last.fm. Confira a internet e tente de novo.', 'rede');
     }
-    let dados = null;
-    try { dados = await resp.json(); } catch { /* corpo que não é JSON: tratado abaixo */ }
     const codigo = dados?.error ?? (resp.ok && dados && typeof dados === 'object' ? null : resp.status);
     if (codigo == null) return dados;
-    if ((codigo === 29 || codigo === 429) && tentativa < ESPERAS_LIMITE.length) { await esperar(ESPERAS_LIMITE[tentativa], sinal); continue; }
+    if (PASSAGEIRO.has(codigo) && tentativa < ESPERAS_LIMITE.length) { await esperar(ESPERAS_LIMITE[tentativa], sinal); continue; }
     throw new ErroLastfm(MENSAGENS[codigo === 429 ? 29 : codigo] ?? `O Last.fm recusou o pedido (código ${codigo}). Tente de novo daqui a pouco.`, codigo);
   }
 }
@@ -53,28 +62,36 @@ function validar(usuario) {
   if (!USUARIO_VALIDO.test(usuario || '')) throw new ErroLastfm('Esse nome de usuário não parece do Last.fm (de 2 a 15 letras, números, - ou _).', 'usuario');
 }
 
-// Todas as escutas (as mais novas primeiro), a partir de `desde` (uts, opcional). Pula a faixa tocando agora.
+// Todas as escutas a partir de `desde` (uts, opcional), sem ordem garantida (historicoDoLastfm ordena).
+// O Last.fm leva ~1,5 s por página: várias páginas ao mesmo tempo, mas cada pedido começa 250 ms depois do
+// anterior (no máximo 4 por segundo). Pula a faixa tocando agora.
 export async function baixarScrobbles(usuario, { desde, buscar, esperar = dormir, agora = () => performance.now(), sinal, aoProgresso } = {}) {
   validar(usuario);
   const saida = [];
   const inicio = agora();
-  let ultimoPedido = -Infinity;
-  for (let pagina = 1, paginas = 1; pagina <= paginas; pagina++) {
+  let proximo = -Infinity, feitas = 0, paginas = 1, total = 0;
+  const baixar = async (pagina) => {
     sinal?.throwIfAborted();
-    const falta = ultimoPedido + INTERVALO_MS - agora();
-    if (falta > 0) await esperar(falta, sinal);
-    ultimoPedido = agora();
+    const espera = proximo - agora();
+    proximo = Math.max(agora(), proximo) + INTERVALO_MS; // reserva o horário antes de esperar
+    if (espera > 0) await esperar(espera, sinal);
     const dados = await pedir('user.getrecenttracks', { user: usuario, limit: '200', page: String(pagina), ...(desde ? { from: String(desde) } : {}) }, { buscar, esperar, sinal });
     const rt = dados?.recenttracks;
     paginas = Number(rt?.['@attr']?.totalPages) || 0;
+    total = Number(rt?.['@attr']?.total) || 0;
     for (const t of lista(rt?.track)) {
       if (t?.['@attr']?.nowplaying === 'true' || !t?.date?.uts) continue;
       const uts = Number(t.date.uts), musica = texto(t.name), artista = texto(t.artist?.['#text'] ?? t.artist?.name);
       if (Number.isFinite(uts) && musica && artista) saida.push({ uts, musica, artista });
     }
-    const ritmo = Math.max((agora() - inicio) / pagina, INTERVALO_MS);
-    aoProgresso?.({ pagina, paginas, scrobbles: saida.length, total: Number(rt?.['@attr']?.total) || 0, restanteMs: Math.round(ritmo * Math.max(0, paginas - pagina)) });
-  }
+    feitas++;
+    const ritmo = Math.max((agora() - inicio) / feitas, INTERVALO_MS);
+    aoProgresso?.({ pagina: feitas, paginas, scrobbles: saida.length, total, restanteMs: Math.round(ritmo * Math.max(0, paginas - feitas)) });
+  };
+  await baixar(1); // a primeira diz quantas páginas há
+  let seguinte = 2;
+  const trabalhar = async () => { while (seguinte <= paginas) await baixar(seguinte++); };
+  await Promise.all(Array.from({ length: EM_PARALELO }, trabalhar));
   return saida;
 }
 

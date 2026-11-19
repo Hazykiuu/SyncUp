@@ -105,7 +105,7 @@ export function Intro({ d, ativo, i }) {
   const dias = d.horas / 24;
   return html`<${Slide} tipo="intro" i=${i} capa=${useCapa(d.top_musicas[0], 'faixa')?.url}>
     <${Entra} i=${0} tag="span" classe="st-kicker">SyncUp Wrapped · vida toda<//>
-    <${Entra} i=${1} tag="h2" classe="st-titulo">${d.nome},<br />sua vida no Spotify<//>
+    <${Entra} i=${1} tag="h2" classe="st-titulo">${d.nome},<br />sua vida no ${d.aproximado ? 'Last.fm' : 'Spotify'}<//>
     <${Entra} i=${2} tag="p" classe="st-sub">${mesAno(d.inicio)} → ${mesAno(d.fim)}<//>
     <${Entra} i=${3} classe="st-cartao st-vidro">
       <div class="st-mega">${aprox(d.aproximado)}<${Contador} valor=${d.horas} ativo=${ativo} /></div>

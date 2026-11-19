@@ -49,8 +49,16 @@ test('erro 17 (perfil privado) explica como liberar as escutas', async () => {
 });
 
 test('código desconhecido vira mensagem genérica com o número', async () => {
-  const buscar = async () => resposta({ error: 8, message: 'Operation failed' });
-  await assert.rejects(pedir('user.getrecenttracks', { user: 'alguem' }, { buscar, ...semEspera }), (e) => e.codigo === 8 && /código 8/.test(e.message));
+  const buscar = async () => resposta({ error: 26, message: 'Suspended API key' });
+  await assert.rejects(pedir('user.getrecenttracks', { user: 'alguem' }, { buscar, ...semEspera }), (e) => e.codigo === 26 && /código 26/.test(e.message));
+});
+
+test('erro 8 com HTTP 500 (falha passageira do Last.fm) tenta de novo', async () => {
+  let chamadas = 0;
+  const buscar = async () => (++chamadas < 3 ? resposta({ error: 8, message: 'Operation failed' }, 500) : resposta({ ok: 1 }));
+  assert.deepEqual(await pedir('user.getrecenttracks', { user: 'alguem' }, { buscar, ...semEspera }), { ok: 1 });
+  const sempre500 = async () => resposta('<html>', 503);
+  await assert.rejects(pedir('m', {}, { buscar: sempre500, ...semEspera }), (e) => e.codigo === 503);
 });
 
 test('erro 29 (limite) tenta de novo com espera crescente e desiste depois de 4 vezes', async () => {
@@ -73,6 +81,23 @@ test('sem rede: mensagem de conexão; cancelado: AbortError passa direto', async
   await assert.rejects(pedir('m', {}, { buscar: semRede, ...semEspera }), /conexão/i);
   const cancelado = async () => { throw new DOMException('parou', 'AbortError'); };
   await assert.rejects(pedir('m', {}, { buscar: cancelado, ...semEspera }), (e) => e.name === 'AbortError');
+});
+
+test('pedido que passa do tempo limite tenta de novo; sempre pendurado vira mensagem de demora', async () => {
+  const demora = () => { throw new DOMException('timeout', 'TimeoutError'); };
+  let chamadas = 0;
+  const umaVez = async () => (++chamadas === 1 ? demora() : resposta({ ok: 1 }));
+  assert.deepEqual(await pedir('m', {}, { buscar: umaVez, ...semEspera }), { ok: 1 });
+  await assert.rejects(pedir('m', {}, { buscar: async () => demora(), ...semEspera }), /demorando/);
+});
+
+test('cada pedido leva um sinal com tempo limite, além do cancelamento', async () => {
+  let recebido;
+  const ctl = new AbortController();
+  await pedir('m', {}, { buscar: async (_, op) => { recebido = op.signal; return resposta({}); }, sinal: ctl.signal, ...semEspera });
+  assert.ok(recebido instanceof AbortSignal && recebido !== ctl.signal);
+  ctl.abort();
+  assert.ok(recebido.aborted);
 });
 
 test('só vai para ws.audioscrobbler.com em https, com format=json', async () => {
@@ -107,20 +132,25 @@ test('pula a faixa "tocando agora" e qualquer faixa sem date.uts', async () => {
   assert.deepEqual(lista, [{ uts: 1700000000, musica: 'Valeu', artista: 'Y' }]);
 });
 
-test('respeita totalPages, a no máximo 4 pedidos por segundo, e o tempo restante diminui', async () => {
+test('respeita totalPages, baixa em paralelo a no máximo 4 pedidos por segundo, e o tempo restante diminui', async () => {
   const recentes = Array.from({ length: 450 }, (_, i) => scrobble(1700000000 - i));
   const { buscar, pedidos } = lastfm({ recentes });
   let t = 0;
   const esperas = [];
   const progresso = [];
+  const inicios = [];
   const lista = await baixarScrobbles('carlos', {
-    buscar, agora: () => t, esperar: async (ms) => { esperas.push(ms); t += ms; },
+    buscar: (u) => { inicios.push(t); return buscar(u); }, agora: () => t, esperar: async (ms) => { esperas.push(ms); t += ms; },
     aoProgresso: (p) => { progresso.push(p); t += 50; },
   });
   assert.equal(lista.length, 450);
   assert.equal(pedidos.length, 3);
   assert.ok(pedidos.every((p) => p.limit === '200'));
-  assert.ok(esperas.every((ms) => ms > 0 && ms <= 250) && esperas.length >= 2);
+  assert.equal(new Set(pedidos.map((p) => p.page)).size, 3); // cada página uma vez, mesmo em paralelo
+  assert.ok(esperas.length >= 2);
+  // Cada pedido começa pelo menos 250 ms depois do anterior (relógio falso que só anda nas esperas).
+  const reservas = inicios.slice(1).map((_, k) => esperas.slice(0, k + 1).reduce((a, b) => a + b, 0));
+  assert.ok(reservas.every((r, k) => k === 0 || r - reservas[k - 1] >= 250), JSON.stringify({ inicios, esperas }));
   assert.deepEqual(progresso.map((p) => [p.pagina, p.paginas, p.total]), [[1, 3, 450], [2, 3, 450], [3, 3, 450]]);
   assert.ok(progresso[0].restanteMs > progresso[1].restanteMs && progresso[2].restanteMs === 0);
 });

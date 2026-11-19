@@ -10,7 +10,7 @@ import { TelaAtiva } from './player.js';
 const TITULOS = {
   abertura: 'Abertura', em_comum: 'O que une vocês', frente: 'Frente a frente', apresentar: 'Quem apresentou o quê',
   relogios: 'Quando cada um ouve', sintonia: 'Em sintonia', sintonia_musica: 'A música em sintonia', poster: 'Pôster',
-  intro: 'Sua vida no Spotify', primeira: 'A primeira música', artista: 'Artista do coração', top_artistas: 'Top artistas',
+  intro: 'Sua vida em música', primeira: 'A primeira música', artista: 'Artista do coração', top_artistas: 'Top artistas',
   top_musicas: 'Top músicas', trilha: 'Sua trilha', anos: 'Ano a ano', descobertas: 'Descobertas', recorde: 'O dia recorde',
   relogio: 'Seu relógio', maratona: 'Maratona', fiel: 'Fiel', habitos: 'Hábitos', arquetipo: 'Seu arquétipo', resumo: 'Resumo',
   afinada: 'A dupla mais afinada', medalhas: 'Quadro de medalhas', podio: 'Pódio',

@@ -590,3 +590,18 @@ html[data-luz="b"] body::before { opacity: 0; }
 .palco-faixa small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--sub); }
 .palco-progresso { position: static; display: block; }
 .palco-mudo { justify-content: center; gap: var(--e2); }
+
+/* Last.fm (1.23): segunda forma de enviar, discreta abaixo do deck. Aberta, é um formulário curto com fio no topo. */
+.lastfm-abrir { align-self: center; min-height: 44px; padding-inline: var(--e2); font-size: .9rem; color: var(--sub); }
+.lastfm-abrir b { color: var(--texto); text-decoration: underline; text-underline-offset: .2em; text-decoration-color: var(--linha); }
+.lastfm-abrir:hover b { text-decoration-color: currentColor; }
+.lastfm { display: grid; gap: var(--e3); padding-top: var(--e4); border-top: 1px solid var(--linha); accent-color: var(--cor); }
+.lastfm-titulo { font-size: 1rem; font-weight: 800; letter-spacing: -.01em; }
+.lastfm-periodo { display: flex; flex-wrap: wrap; gap: var(--e1) var(--e4); border: 0; padding: 0; margin: 0; }
+.lastfm-periodo legend { margin-bottom: var(--e1); }
+.lastfm-periodo label { display: inline-flex; align-items: center; gap: var(--e2); min-height: 44px; color: var(--texto); }
+.lastfm-acoes, .lastfm-baixando { display: flex; flex-wrap: wrap; align-items: center; gap: var(--e2) var(--e3); }
+.lastfm-baixando progress { flex: 1 1 100%; inline-size: 100%; }
+.lastfm-baixando small { flex: 1; color: var(--sub); font-variant-numeric: tabular-nums; }
+.lastfm-fechar { min-height: 44px; padding-inline: var(--e2); font-size: .9rem; color: var(--sub); }
+.lastfm-fechar:hover { color: var(--texto); }

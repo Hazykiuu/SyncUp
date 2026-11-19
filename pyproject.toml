@@ -1,6 +1,6 @@
 [project]
 name = "syncup"
-version = "1.22.0"
+version = "1.23.0"
 description = "Comparador local de históricos do Spotify: Dupla, Match, Wrapped e Grupo."
 readme = "README.md"
 license = { text = "MIT" }
@@ -14,11 +14,12 @@ Repository = "https://github.com/Hazykiuu/SyncUp"
 minversion = "8.3"
 testpaths = ["tests"]
 pythonpath = ["."]
-addopts = "-ra --strict-config --strict-markers"
+addopts = "-ra --strict-config --strict-markers -m 'not navegador'"
 norecursedirs = ["tests/fixtures", "exemplos_ficticios"]
 markers = [
     "golden: regressão contra referências numéricas previamente salvas",
     "ui: criação de componentes ou fluxo HTTP local do Gradio",
+    "navegador: app web aberto num navegador de verdade (Playwright; requirements-e2e.txt)",
 ]
 
 [tool.ruff]

@@ -1,7 +1,7 @@
 // Stories da Dupla, desenhados a partir de `dupla` (JSON da ponte), na moldura do Wrapped.
 // Cor com significado fixo: verde = pessoa A, violeta = pessoa B, rosa = os dois juntos (sintonia).
 import { html } from 'preact-htm';
-import { dataBr, fmtNum, fraseEmComum, frasePosicao, fraseRelogios, mesAno, textoCents } from './logica.js';
+import { aprox, dataBr, fmtNum, fraseEmComum, frasePosicao, fraseRelogios, mesAno, NOTA_APROX, textoCents } from './logica.js';
 import { Contador, Entra, Kicker, Slide } from './slides.js';
 
 const ROSA = [245, 115, 160];
@@ -64,8 +64,8 @@ function Frente({ d, i }) {
     <${Entra} i=${1} tag="h3" classe="st-titulo menor">O favorito de cada um<//>
     <div class="st-frente">${cartao(d.a, d.b, d.favoritos[0], 'a', 2)}${cartao(d.b, d.a, d.favoritos[1], 'b', 3)}</div>
     <${Entra} i=${4} classe="st-chips">
-      <span class="st-vidro"><span class="st-a">${d.a.nome}</span> · <b>${fmtNum(d.a.horas)}</b> h de música</span>
-      <span class="st-vidro"><span class="st-b">${d.b.nome}</span> · <b>${fmtNum(d.b.horas)}</b> h de música</span>
+      <span class="st-vidro"><span class="st-a">${d.a.nome}</span> · <b>${aprox(d.a.aproximado)}${fmtNum(d.a.horas)}</b> h de música</span>
+      <span class="st-vidro"><span class="st-b">${d.b.nome}</span> · <b>${aprox(d.b.aproximado)}${fmtNum(d.b.horas)}</b> h de música</span>
     <//>
   <//>`;
 }
@@ -130,7 +130,7 @@ function Sintonia({ d, ativo, i }) {
     <${Kicker}>Em sintonia<//>
     <${Entra} i=${1} tag="h3" classe="st-titulo menor">Vocês ouviram juntos<//>
     <${Entra} i=${2} classe="st-cartao st-vidro">
-      <div class="st-mega"><${Contador} valor=${s.minutos} ativo=${ativo} /></div>
+      <div class="st-mega">${aprox(d.aproximado)}<${Contador} valor=${s.minutos} ativo=${ativo} /></div>
       <span class="st-rotulo">minutos ao mesmo tempo</span>
     <//>
     <${Entra} i=${3} tag="p">Foram <strong>${plural(s.momentos, 'momento', 'momentos')}</strong> com a mesma música tocando para os dois, no mesmo instante.<//>
@@ -152,14 +152,14 @@ function SintoniaMusica({ d, i }) {
     <${Entra} i=${2} tag="p" classe="st-sub">${m.artista}<//>
     <${Entra} i=${3} classe="st-chips">
       <span class="st-vidro"><b>${fmtNum(m.vezes)}</b> ${m.vezes === 1 ? 'vez juntos' : 'vezes juntos'}</span>
-      <span class="st-vidro"><b>${fmtNum(m.minutos)}</b> min</span>
+      <span class="st-vidro"><b>${aprox(d.aproximado)}${fmtNum(m.minutos)}</b> min</span>
     <//>
     ${p && html`<${Entra} i=${4} tag="p">A primeira vez foi com <strong>${p.musica}</strong>, em ${dataBr(p.data)}, às ${p.data.slice(11, 16)}.<//>`}
     ${s.por_mes.length > 1 && html`<${Entra} i=${5} classe="st-meses">
       <small>Quando a sintonia aconteceu</small>
       <div class="st-colunas">${s.por_mes.map(([mes, v], k) => html`<div><span></span><i style=${{ '--valor': v / maior, '--i': k }}></i><em>${rotulo(mes, k)}</em></div>`)}</div>
     <//>`}
-    <${Entra} i=${6} tag="p" classe="st-nota">Ao mesmo tempo = a mesma faixa tocando para os dois, com pelo menos 30 s em comum.<//>
+    <${Entra} i=${6} tag="p" classe="st-nota">Ao mesmo tempo = a mesma faixa tocando para os dois, com pelo menos 30 s em comum.${d.aproximado ? ` ${NOTA_APROX}` : ''}<//>
   <//>`;
 }
 
@@ -176,7 +176,7 @@ function Poster({ d, ativo, i }) {
     <${Entra} i=${3} tag="p"><b class="st-poster-horas"><${Contador} valor=${d.match * 100} ativo=${ativo} />%</b> de escuta em comum · ${plural(d.total_comuns, 'artista', 'artistas')} em comum<//>
     ${s?.momentos > 0 && html`<${Entra} i=${4} classe="st-cartao st-vidro st-poster-sintonia">
       <span class="st-kicker">Em sintonia</span>
-      <b>${fmtNum(s.minutos)} min ouvindo juntos</b>
+      <b>${aprox(d.aproximado)}${fmtNum(s.minutos)} min ouvindo juntos</b>
       ${s.musica && html`<small>A música de vocês: ${s.musica.nome}</small>`}
     <//>`}
     ${d.em_comum.length > 0 && html`<${Entra} i=${5} classe="st-poster-fatos">${d.em_comum.map((c) => html`<span class="st-vidro">${c.nome}</span>`)}<//>`}

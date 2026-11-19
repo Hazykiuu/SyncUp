@@ -2,7 +2,7 @@
 // logica.js (testados); aqui entram os gestos: toque (esquerda volta, direita avança), segurar pausa,
 // arrastar troca, teclado (← → Home End espaço), aba oculta e modo escondido. O tempo é do relógio em JS:
 // a barra só o mostra, então "menos movimento" (sem animação) não trava o avanço.
-import { createContext, html, useContext, useEffect, useReducer, useRef, useState } from 'preact-htm';
+import { createContext, html, useContext, useEffect, useLayoutEffect, useReducer, useRef, useState } from 'preact-htm';
 import { correr, duracaoMs, inicial, parar, pausado, player, relogio, restanteEm } from './logica.js';
 import { luzAmbiente } from './slides.js';
 
@@ -11,6 +11,7 @@ export const TelaAtiva = createContext(true);
 
 const SEGURAR_MS = 250;
 const ARRASTO_PX = 40;
+let focoHerdado = false; // ver o useLayoutEffect do foco no Player
 const reduzido = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ?fps=1: quadros por segundo no canto da tela, para medir o player em celulares (só desenvolvimento).
@@ -49,6 +50,14 @@ export function Player({ slides, rotulo, aoMudar }) {
   const tempo = useRef(null); // { chave, r }: o relógio do segmento atual
   const ativo = useContext(TelaAtiva);
   const saiu = useRef(false);
+
+  // O Wrapped remonta o player quando as capas chegam (key em wrapped.js). Se o foco estava nele, o novo
+  // player herda o foco; sem isso, o teclado e o leitor de tela voltam para o topo da página.
+  useLayoutEffect(() => {
+    if (focoHerdado && (!document.activeElement || document.activeElement === document.body)) raiz.current?.focus({ preventScroll: true });
+    focoHerdado = false;
+    return () => { focoHerdado = !!raiz.current?.contains(document.activeElement); };
+  }, []);
 
   // Paralaxe (1.22): no computador, a capa grande do story ativo segue o ponteiro em até 6 px, solta do texto.
   // Move a capa inteira, sem cortar nem cobrir (regra do Spotify). Só translate, no máximo um por quadro;

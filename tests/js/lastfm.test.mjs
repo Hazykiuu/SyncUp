@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import {
-  baixarDuracoes, baixarScrobbles, chave, historicoDoLastfm, paraFormatoSpotify, pedir, USUARIO_VALIDO,
+  baixarDuracoes, baixarScrobbles, capaDoScrobble, chave, historicoDoLastfm, paraFormatoSpotify, pedir, USUARIO_VALIDO,
 } from '../../site/app/js/lastfm.js';
 
 const resposta = (corpo, status = 200) => ({ ok: status === 200, status, json: async () => corpo });
@@ -161,6 +161,27 @@ test('para quando o sinal cancela', async () => {
   const ctl = new AbortController();
   await assert.rejects(baixarScrobbles('carlos', { buscar, ...semEspera, sinal: ctl.signal, aoProgresso: () => ctl.abort() }), (e) => e.name === 'AbortError');
   assert.equal(pedidos.length, 1);
+});
+
+test('capa do álbum: só a do CDN do Last.fm, sem a estrela de "sem capa"', () => {
+  const img = (url) => ({ image: [{ size: 'small', '#text': 'https://lastfm.freetls.fastly.net/i/u/34s/x.jpg' }, { size: 'extralarge', '#text': url }] });
+  assert.equal(capaDoScrobble(img('https://lastfm.freetls.fastly.net/i/u/300x300/abc.jpg')), 'https://lastfm.freetls.fastly.net/i/u/300x300/abc.jpg');
+  assert.equal(capaDoScrobble(img('https://lastfm-img.freetls.fastly.net/i/u/300x300/abc.png')), 'https://lastfm-img.freetls.fastly.net/i/u/300x300/abc.png');
+  assert.equal(capaDoScrobble(img('https://lastfm.freetls.fastly.net/i/u/300x300/2a96cbd8b46e442fc41c2b86b821562f.png')), null);
+  assert.equal(capaDoScrobble(img('http://lastfm.freetls.fastly.net/i/u/300x300/abc.jpg')), null);
+  assert.equal(capaDoScrobble(img('https://outro.site/abc.jpg')), null);
+  assert.equal(capaDoScrobble(img('')), null);
+  assert.equal(capaDoScrobble({}), null);
+});
+
+test('as capas vêm no resultado e ficam no cache (a escuta mais nova manda)', async () => {
+  const armazem = memoria();
+  const comCapa = (uts, musica, id) => ({ ...scrobble(uts, musica), image: [{ size: 'extralarge', '#text': `https://lastfm.freetls.fastly.net/i/u/300x300/${id}.jpg` }] });
+  const lf = lastfm({ recentes: [comCapa(1000, 'a', 'nova'), comCapa(900, 'a', 'velha'), scrobble(800, 'b')] });
+  const r = await historicoDoLastfm('carlos', { buscar: lf.buscar, armazem, ...semEspera });
+  assert.deepEqual([...r.capas], [[chave('Banda', 'a'), 'https://lastfm.freetls.fastly.net/i/u/300x300/nova.jpg']]);
+  const de_novo = await historicoDoLastfm('carlos', { buscar: lf.buscar, armazem, ...semEspera });
+  assert.equal(de_novo.capas.get(chave('Banda', 'a')), 'https://lastfm.freetls.fastly.net/i/u/300x300/nova.jpg');
 });
 
 // --- Durações --------------------------------------------------------------------------------------

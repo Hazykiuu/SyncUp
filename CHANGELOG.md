@@ -9,6 +9,7 @@ Importação do Last.fm no app web e testes que abrem o app num navegador de ver
   - Escolha entre "Todo o histórico" e "Último ano"; o download mostra o progresso e o tempo restante, e pode ser cancelado.
   - O cartão mostra "Do Last.fm", o período, as reproduções e a fatia com duração real.
   - O Last.fm não diz quanto cada música tocou: horas e minutos vêm da duração das músicas (a das 3.000 mais ouvidas, e a mediana no resto) e aparecem com "≈" e uma nota. Pulos não aparecem.
+  - Capas: as músicas usam a capa do álbum que o Last.fm manda com cada escuta (os scrobbles não têm o código do Spotify); as fotos de artista continuam vindo do Spotify.
   - As escutas ficam guardadas no navegador: na próxima vez, só as novas são baixadas. "Apagar dados guardados" (antes "Apagar capas guardadas") limpa também isso.
   - Erros explicados: usuário que não existe, perfil com "Ocultar escutas recentes" e pausa pedida pelo Last.fm (o SyncUp tenta de novo sozinho).
 - **Testes de navegador:** 11 testes com Playwright abrem o app no Chromium (exemplo dos quatro modos até os stories, pré-leitura, "menos movimento", celular de 375 px, página inicial e Last.fm com a API simulada). Rodam no CI no job "Navegador".

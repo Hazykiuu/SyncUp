@@ -6,7 +6,7 @@ import { criarBuscador } from './capas.js';
 import { chegar, chegarPouco, mostrarResultado } from './chegada.js';
 import { avisoPoster, compartilhar, desenharPoster, segundos } from './poster.js';
 import { Pessoa } from './envio.js';
-import { armazemLastfm } from './lastfm.js';
+import { armazemLastfm, chave as chaveLastfm } from './lastfm.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { ICONE, SomStories, destravarSom, TRILHA_EXEMPLO } from './som.js';
 import { MEDIR_FPS, Player } from './stories/player.js';
@@ -57,6 +57,14 @@ function pedidos(d) {
   return [...new Map(lista.map((p) => [chaveCapa(p.item, p.tipo), p])).values()];
 }
 
+// Last.fm: as músicas não têm o código do Spotify (o oEmbed precisa dele). As que têm capa do álbum no Last.fm
+// ganham um código próprio "lastfm:artista|música", e a capa vem do mapa que o download montou.
+const LASTFM = 'lastfm:';
+function marcarCapasLastfm(d, capas) {
+  const marcar = (m) => { const k = m && !m.uri && chaveLastfm(m.artista, m.nome); if (k && capas.has(k)) m.uri = LASTFM + k; };
+  [d.primeira_musica, d.repeticao_dia, ...d.top_musicas, ...d.anos.map((a) => a.top_musica)].forEach(marcar);
+}
+
 // Criado quando os stories ligam capas e som: antes disso nem o IndexedDB é aberto.
 let buscador = null;
 
@@ -83,9 +91,10 @@ export function Wrapped() {
     setCapas(new Map());
     for (const { item, tipo } of pedidos(d)) {
       (async () => {
-        let capa = await (tipo === 'faixa' ? buscador.faixa(item.uri) : buscador.artista(item.nome));
+        const daFaixa = (uri) => (uri.startsWith(LASTFM) ? { url: d.capasLastfm?.get(uri.slice(LASTFM.length)) } : buscador.faixa(uri));
+        let capa = await (tipo === 'faixa' ? daFaixa(item.uri) : buscador.artista(item.nome));
         const dele = tipo === 'artista' && !capa && d.top_musicas.find((m) => m.artista === item.nome && m.uri);
-        if (dele) capa = await buscador.faixa(dele.uri);
+        if (dele) capa = await daFaixa(dele.uri);
         if (capa && minha === rodada.current) setCapas((m) => new Map(m).set(chaveCapa(item, tipo), capa));
       })();
     }
@@ -103,7 +112,11 @@ export function Wrapped() {
       rodada.current++;
       setCapas(null);
       if (exemplo) r.trilha = TRILHA_EXEMPLO;
-      else r.dados.aproximado = arquivos.some((f) => f.lastfm); // Last.fm: minutos pela duração das músicas
+      else {
+        const lastfm = arquivos.find((f) => f.lastfm)?.lastfm;
+        r.dados.aproximado = !!lastfm; // Last.fm: minutos pela duração das músicas
+        if (lastfm?.capas) { r.dados.capasLastfm = lastfm.capas; marcarCapasLastfm(r.dados, lastfm.capas); }
+      }
       mostrarResultado(() => setFase({ tipo: 'resultado', r, ms: performance.now() - inicio, exemplo }), 'resultado-wrapped');
     } catch (e) { if (e.name !== 'AbortError') setFase({ tipo: 'erro', mensagem: e.message }); }
   };

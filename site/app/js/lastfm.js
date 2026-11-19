@@ -56,6 +56,19 @@ export async function pedir(metodo, params, { buscar = fetch, esperar = dormir, 
   }
 }
 
+// Capa do álbum que o Last.fm manda junto com cada escuta (os scrobbles não têm o código do Spotify para o oEmbed).
+// Só https do CDN do Last.fm; a estrela cinza é a imagem de "sem capa".
+const HOST_CAPA = /^lastfm(-img)?\.freetls\.fastly\.net$/;
+const SEM_CAPA = '2a96cbd8b46e442fc41c2b86b821562f';
+export function capaDoScrobble(t) {
+  const imagens = Array.isArray(t?.image) ? t.image : [];
+  const url = (imagens.find((i) => i?.size === 'extralarge') ?? imagens.at(-1))?.['#text'];
+  try {
+    const u = new URL(url);
+    return u.protocol === 'https:' && HOST_CAPA.test(u.hostname) && !u.pathname.includes(SEM_CAPA) ? u.href : null;
+  } catch { return null; }
+}
+
 const lista = (x) => (Array.isArray(x) ? x : x ? [x] : []); // uma faixa só vem como objeto
 const texto = (x) => (typeof x === 'string' ? x.trim() : '');
 function validar(usuario) {
@@ -65,7 +78,8 @@ function validar(usuario) {
 // Todas as escutas a partir de `desde` (uts, opcional), sem ordem garantida (historicoDoLastfm ordena).
 // O Last.fm leva ~1,5 s por página: várias páginas ao mesmo tempo, mas cada pedido começa 250 ms depois do
 // anterior (no máximo 4 por segundo). Pula a faixa tocando agora.
-export async function baixarScrobbles(usuario, { desde, buscar, esperar = dormir, agora = () => performance.now(), sinal, aoProgresso } = {}) {
+// `capas` (Map opcional): recebe a capa de cada música (chave artista|música), a primeira que aparecer.
+export async function baixarScrobbles(usuario, { desde, buscar, esperar = dormir, agora = () => performance.now(), sinal, aoProgresso, capas } = {}) {
   validar(usuario);
   const saida = [];
   const inicio = agora();
@@ -82,7 +96,10 @@ export async function baixarScrobbles(usuario, { desde, buscar, esperar = dormir
     for (const t of lista(rt?.track)) {
       if (t?.['@attr']?.nowplaying === 'true' || !t?.date?.uts) continue;
       const uts = Number(t.date.uts), musica = texto(t.name), artista = texto(t.artist?.['#text'] ?? t.artist?.name);
-      if (Number.isFinite(uts) && musica && artista) saida.push({ uts, musica, artista });
+      if (!(Number.isFinite(uts) && musica && artista)) continue;
+      saida.push({ uts, musica, artista });
+      const k = capas && chave(artista, musica);
+      if (k && !capas.has(k)) { const url = capaDoScrobble(t); if (url) capas.set(k, url); }
     }
     feitas++;
     const ritmo = Math.max((agora() - inicio) / feitas, INTERVALO_MS);
@@ -146,7 +163,7 @@ function juntar(a, b) {
 }
 
 // Histórico pronto para o pipeline, com cache por usuário: na volta, só baixa o que é novo.
-// periodo: 'tudo' | 'ano'. Devolve { json, cobertura, reproducoes }.
+// periodo: 'tudo' | 'ano'. Devolve { json, cobertura, reproducoes, capas }.
 export async function historicoDoLastfm(usuario, { periodo = 'tudo', armazem = armazemLastfm(), agora = Date.now, ...rede } = {}) {
   validar(usuario);
   const id = usuario.toLowerCase();
@@ -156,14 +173,15 @@ export async function historicoDoLastfm(usuario, { periodo = 'tudo', armazem = a
   // O cache guarda desde quando cobre (null = histórico inteiro). "Todo o histórico" sobre um cache de um ano baixa de novo.
   const completo = cache && (periodo === 'ano' ? cache.desde == null || cache.desde <= anoAtras : cache.desde == null);
   const desde = completo ? cache.ultimo + 1 : periodo === 'ano' ? anoAtras : undefined;
-  const novos = await baixarScrobbles(usuario, { ...rede, desde });
+  const capas = new Map(completo ? cache.capas ?? [] : []);
+  const novos = await baixarScrobbles(usuario, { ...rede, desde, capas });
   const escutas = juntar(completo ? cache.escutas : [], novos);
   const duracoes = cache?.duracoes ? new Map(cache.duracoes) : await baixarDuracoes(usuario, rede);
   if (escutas.length) {
-    const valor = { escutas, ultimo: escutas[0].uts, desde: completo ? cache.desde : (desde ?? null), duracoes: [...duracoes], quando: Date.now() };
+    const valor = { escutas, ultimo: escutas[0].uts, desde: completo ? cache.desde : (desde ?? null), duracoes: [...duracoes], capas: [...capas], quando: Date.now() };
     try { await armazem.gravar(id, valor); } catch { /* aba anônima: segue sem cache */ }
   }
   const usadas = periodo === 'ano' ? escutas.filter((s) => s.uts >= anoAtras) : escutas;
   if (!usadas.length) throw new ErroLastfm(periodo === 'ano' ? 'Nenhum scrobble no último ano nesse perfil.' : 'Nenhum scrobble nesse perfil do Last.fm.', 'vazio');
-  return { ...paraFormatoSpotify(usadas, duracoes), reproducoes: usadas.length };
+  return { ...paraFormatoSpotify(usadas, duracoes), reproducoes: usadas.length, capas };
 }

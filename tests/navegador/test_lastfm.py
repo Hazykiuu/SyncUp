@@ -11,6 +11,7 @@ from playwright.sync_api import expect
 pytestmark = pytest.mark.navegador
 
 AGORA = 1_763_500_000  # nov/2025
+CDN = 'https://lastfm.freetls.fastly.net/i/u/300x300'  # capas do álbum que vêm com cada escuta
 
 
 def _escutas(n=900, seed=7):
@@ -24,6 +25,7 @@ def _escutas(n=900, seed=7):
                 'name': f'Faixa {aleatorio.randrange(6)} de {artista}',
                 'artist': {'#text': artista},
                 'date': {'uts': str(AGORA - i * 3 * 3600)},
+                'image': [{'size': 'extralarge', '#text': f'{CDN}/{artista[-1]}.jpg'}],
             }
         )
     escutas.insert(
@@ -92,6 +94,9 @@ def test_lastfm_vira_wrapped_com_minutos_aproximados(page, site_url):
     intro = player.locator('.st-slot.ativo')
     expect(intro.locator('.st-mega')).to_contain_text('≈')
     expect(intro).to_contain_text('Minutos estimados pelas durações das músicas no Last.fm')
+    # Sem código do Spotify, a capa da música vem do Last.fm (a rede externa é cortada; basta o endereço).
+    capa = page.locator(f'.resultado img[src^="{CDN}/"]').first
+    expect(capa).to_be_attached(timeout=15_000)
 
 
 def test_lastfm_perfil_privado_explica_o_que_fazer(page, site_url):

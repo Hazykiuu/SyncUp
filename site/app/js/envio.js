@@ -52,7 +52,7 @@ function BuscaLastfm({ id, desabilitado, aoPronto }) {
       const r = await historicoDoLastfm(nome, { periodo, sinal: controle.current.signal, aoProgresso: setBaixando });
       const arquivo = new File([r.json], `lastfm-${nome}.json`, { type: 'application/json' });
       if (arquivo.size > TETO) { setErro('Passou de 50 MB para esta pessoa. Escolha "Último ano" e busque de novo.'); return; }
-      arquivo.lastfm = { usuario: nome, cobertura: r.cobertura };
+      arquivo.lastfm = { usuario: nome, cobertura: r.cobertura, capas: r.capas };
       aoPronto(arquivo);
     } catch (falha) { if (falha.name !== 'AbortError') setErro(falha.message); } finally { setBaixando(null); controle.current = null; }
   };

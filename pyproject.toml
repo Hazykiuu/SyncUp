@@ -1,6 +1,6 @@
 [project]
 name = "syncup"
-version = "1.25.0"
+version = "1.26.0"
 description = "Comparador local de históricos do Spotify: Dupla, Match, Wrapped e Grupo."
 readme = "README.md"
 license = { text = "MIT" }
@@ -29,6 +29,7 @@ extend-exclude = [
     "tests/fixtures", # Fontes congeladas: hashes do golden master não podem mudar.
     "exemplos_ficticios",
     ".syncup_cache",
+    "notebook", # Notebook didático gerado por tools/gerar_notebook.py (estilo compacto p/ Colab).
 ]
 
 [tool.ruff.lint]

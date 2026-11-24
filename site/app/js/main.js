@@ -155,6 +155,7 @@ function App() {
             <span class="app-tipo">Modo · ${MODOS.find(([id]) => id === modo)[1]}</span>
             <h1>${CABECA[modo][0]}</h1>
             <p class="sub">${CABECA[modo][1]}</p>
+            <a class="app-como-pedir" href="../#como-pedir">Ainda não tem o ZIP? Veja como pedir</a>
           </div>
         </div>
         ${[['dupla', Dupla], ['wrapped', Wrapped], ['batalha', Batalha], ['match', Match]].map(([id, Tela]) => html`

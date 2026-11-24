@@ -221,19 +221,23 @@ section[id] { scroll-margin-top: 6rem; }
 /* Fio que liga os passos, do verde ao lilás (da primeira à última barra da logo). */
 .tracklist::before { content: ''; position: absolute; left: calc(1rem + 1.5rem - 1px); top: 2.6rem; bottom: 2.6rem; width: 2px; border-radius: 2px;
   background: linear-gradient(var(--logo-1), var(--logo-4)); }
-.tracklist li:nth-child(1) { --cor-passo: var(--logo-1); } .tracklist li:nth-child(2) { --cor-passo: var(--logo-2); } .tracklist li:nth-child(3) { --cor-passo: var(--logo-4); }
-.tracklist li { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: .9rem 1rem; border-radius: 12px; transition: background .15s; }
-.tracklist li:hover { background: rgba(255, 255, 255, .06); }
+.tracklist > li:nth-child(1) { --cor-passo: var(--logo-1); } .tracklist > li:nth-child(2) { --cor-passo: var(--logo-2); } .tracklist > li:nth-child(3) { --cor-passo: var(--logo-4); }
+.tracklist > li { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: .9rem 1rem; border-radius: 12px; transition: background .15s; }
+.tracklist > li:hover { background: rgba(255, 255, 255, .06); }
 .faixa-n { position: relative; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; justify-self: center; border-radius: 50%; font-size: .95rem;
   color: var(--cor-passo, var(--sub)); background: var(--bg); border: 2px solid var(--cor-passo, var(--linha)); }
 .faixa-n svg { position: absolute; width: 1rem; height: 1rem; color: var(--cor-passo, var(--verde)); opacity: 0; transition: opacity .15s; }
 .faixa-n b { font-weight: 800; transition: opacity .15s; }
-.tracklist li:hover .faixa-n b, .tracklist li:focus-within .faixa-n b { opacity: 0; }
-.tracklist li:hover .faixa-n svg, .tracklist li:focus-within .faixa-n svg { opacity: 1; }
+.tracklist > li:hover .faixa-n b, .tracklist > li:focus-within .faixa-n b { opacity: 0; }
+.tracklist > li:hover .faixa-n svg, .tracklist > li:focus-within .faixa-n svg { opacity: 1; }
 .tracklist h3 { font-size: 1.15rem; font-weight: 800; letter-spacing: -.01em; }
 .tracklist p { margin-top: .25rem; font-size: .95rem; line-height: 1.5; color: var(--sub); }
+.como-pedir { margin-top: .5rem; padding-left: 1.2rem; list-style: decimal; display: grid; gap: .35rem; font-size: .95rem; line-height: 1.5; color: var(--sub); }
+.como-pedir a { color: var(--texto); text-decoration: underline; text-underline-offset: 2px; }
+#como-pedir { scroll-margin-top: 6rem; }
+#como-pedir .faixa-n { align-self: start; } /* passo alto: o círculo fica no topo, onde o fio começa */
 .duracao { font-size: .9rem; color: var(--sub); text-align: right; white-space: nowrap; }
-@media (max-width: 479px) { .tracklist li { grid-template-columns: 2rem minmax(0, 1fr); } .duracao { grid-column: 2; text-align: left; } }
+@media (max-width: 479px) { .tracklist > li { grid-template-columns: 2rem minmax(0, 1fr); } .duracao { grid-column: 2; text-align: left; } }
 
 /* Espectro de escuta: 24 horas de Rafa (verde) e Lu (violeta). Cada hora é um botão: o mouse,
    o toque e as setas mostram os plays daquela hora na dica. Sem Hz: hora de escuta não é frequência. */

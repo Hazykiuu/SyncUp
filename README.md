@@ -1,4 +1,4 @@
-# SyncUp v1.26
+# SyncUp v1.27
 
 Compare o seu histórico do Spotify com o dos amigos e veja com quem você está em sintonia, em stories. **Use direto no navegador**, no computador ou no celular: sem instalar, sem conta, sem anúncios, e o histórico não sai do seu aparelho. Há também um app para PC com o Grupo e as fontes extras do Match (ListenBrainz e gêneros). Projeto de ciência de dados, **código aberto** ([licença MIT](LICENSE)).
 
@@ -56,7 +56,7 @@ Nas próximas vezes, basta o último comando.
 
 ### 4. Peça o seu histórico ao Spotify
 
-No Spotify, entre em **Conta → Privacidade → Baixar seus dados** e marque **Histórico estendido de streaming**. O Spotify manda um ZIP por e-mail, em geral em alguns dias. Esse ZIP é o que você envia no SyncUp. Não precisa extrair.
+No Spotify, abra [spotify.com/account/privacy](https://www.spotify.com/account/privacy/) no navegador (no celular também, mas não pelo app do Spotify), vá em **Baixe seus dados** e marque só o **Histórico ampliado de streams**. O Spotify manda um ZIP por e-mail, em geral em menos de 1 dia. Esse ZIP é o que você envia no SyncUp. Não precisa extrair.
 
 Enquanto o histórico não chega, use o botão **"Ver um exemplo"** do app web ("Testar com dados fictícios" no app para PC) ou os ZIPs de exemplo da pasta `exemplos_ficticios/`.
 

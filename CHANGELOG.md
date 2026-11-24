@@ -1,5 +1,20 @@
 # Changelog — SyncUp
 
+## [1.27.0] — 2026-11-24
+
+Pedir o histórico ao Spotify ficou mais fácil de entender. O resto do app não muda.
+
+### Novo
+- **Guia "Como pedir o histórico"** no primeiro passo do "Como usar": o link da página de privacidade do Spotify, a opção "Histórico ampliado de streams", o e-mail de confirmação e o ZIP, que não precisa ser extraído. O topo da página ganha o botão "Como pedir o histórico".
+- **No app**, abaixo do texto de cada modo: "Ainda não tem o ZIP? Veja como pedir", que leva ao guia.
+
+### Mudado
+- **Prazo real:** "até 30 dias" virou "menos de 1 dia" no passo 01, e o rodapé agora diz "Peça hoje, compare amanhã". Os 34 históricos estendidos pedidos para testar o SyncUp chegaram todos em menos de 24 h.
+
+### Corrigido
+- O README traz o mesmo caminho, o nome da opção e o prazo do guia.
+- As regras dos passos do "Como usar" valiam para qualquer item de lista dentro deles; agora só valem para os passos.
+
 ## [1.26.0] — 2026-11-24
 
 O projeto volta a ter a análise acadêmica, nas 6 fases do CRISP-DM.

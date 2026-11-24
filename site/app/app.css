@@ -86,6 +86,7 @@ a.nav-item:hover { color: var(--texto); }
 @media (min-width: 900px) { .app-cabeca { padding-block: 4rem 3rem; } }
 .app-cabeca h1 { text-wrap: balance; font-size: clamp(2.2rem, 6vw, 3.6rem); font-weight: 900; letter-spacing: -.03em; line-height: 1; }
 .app-cabeca .sub { max-width: 46ch; color: var(--sub); font-size: 1.05rem; line-height: 1.5; }
+.app-como-pedir { align-self: flex-start; margin-top: var(--e2); color: var(--texto); font-size: .95rem; text-decoration: underline; text-underline-offset: 3px; }
 
 .pessoas { display: grid; gap: var(--vao); }
 @media (min-width: 900px) { .pessoas { grid-template-columns: 1fr 1fr; } }

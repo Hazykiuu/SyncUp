@@ -1,0 +1,8 @@
+# Opcional: só para o notebook acadêmico (notebook/SyncUp_CRISP-DM.ipynb).
+# O app não depende destes pacotes. No Google Colab eles já vêm instalados.
+pandas==2.2.3; python_version < "3.13"
+pandas==2.3.3; python_version >= "3.13"
+numpy>=1.26,<3
+seaborn==0.13.2
+matplotlib==3.10.8
+nbformat==5.10.4

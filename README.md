@@ -1,4 +1,4 @@
-# SyncUp v1.25
+# SyncUp v1.26
 
 Compare o seu histórico do Spotify com o dos amigos e veja com quem você está em sintonia, em stories. **Use direto no navegador**, no computador ou no celular: sem instalar, sem conta, sem anúncios, e o histórico não sai do seu aparelho. Há também um app para PC com o Grupo e as fontes extras do Match (ListenBrainz e gêneros). Projeto de ciência de dados, **código aberto** ([licença MIT](LICENSE)).
 
@@ -106,6 +106,21 @@ Um histórico por pessoa, no mesmo período. Cada número vira uma rodada (mais 
 ### Grupo: de 3 a 6 pessoas (app para PC)
 
 Um arquivo por pessoa. Mostra uma matriz de compatibilidade de todos com todos, os perfis e os arquétipos. As regras técnicas ficam em "Detalhes técnicos".
+
+## Projeto acadêmico (CRISP-DM)
+
+O SyncUp nasceu como projeto de **Ciência de Dados I (UCL)**. A análise completa, nas 6 fases do CRISP-DM, está em [`notebook/SyncUp_CRISP-DM.ipynb`](notebook/SyncUp_CRISP-DM.ipynb), com **Pandas** e **Seaborn**:
+
+| Fase | Notebook | Código do app |
+|---|---|---|
+| 1. Entendimento do Negócio | pergunta, critérios de sucesso, hipótese | — |
+| 2. Entendimento dos Dados | leitura dos ZIPs, qualidade, `describe()` interpretado, histograma e boxplot | `dados.py` |
+| 3. Preparação dos Dados | podcasts fora, fuso, plays ≥ 30 s, período comum, `describe()` por dia e por artista | `dados.py`, `configuracao.py` |
+| 4. Modelagem | Jaccard, cosseno (bruto e log), matriz de todos com todos, duplas ótimas | `metricas.py`, `conciliacao.py` |
+| 5. Avaliação | conclusões, hipótese, limitações | `VALIDACAO.md`, `tests/` |
+| 6. Implantação | recomendações por dupla + app e site | `app.py`, `ui/`, `site/` |
+
+**Rodar no Google Colab:** abra o notebook pelo GitHub (*File → Open notebook → GitHub*, cole a URL do repositório) e use **Executar tudo**; ele pede um ZIP por pessoa (2 a 8). Os pacotes já vêm no Colab. Na sua máquina: `pip install -r requirements-notebook.txt`. O notebook fica no repositório **sem saídas**, para não publicar dados de ninguém; para regenerá-lo, `python tools/gerar_notebook.py`.
 
 ## Privacidade
 

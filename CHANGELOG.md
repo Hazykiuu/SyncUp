@@ -1,5 +1,16 @@
 # Changelog — SyncUp
 
+## [1.26.0] — 2026-11-24
+
+O projeto volta a ter a análise acadêmica, nas 6 fases do CRISP-DM.
+
+### Novo
+- **Notebook acadêmico** (`notebook/SyncUp_CRISP-DM.ipynb`): Entendimento do Negócio e dos Dados, Preparação, Modelagem, Avaliação e Implantação, com Pandas e Seaborn. `describe()` interpretado (tempo por reprodução, plays por dia e por artista), Jaccard e cosseno (bruto e log) para todas as duplas, matriz de todos com todos, duplas ótimas (como o Match) e recomendações. Aceita de 2 a 8 pessoas; no Colab pede os ZIPs.
+- **`requirements-notebook.txt`**: Seaborn e Matplotlib só para o notebook; o app continua sem eles.
+- **`tools/gerar_notebook.py`**: gera o notebook sem saídas (nenhum dado real no repositório).
+- README: seção "Projeto acadêmico (CRISP-DM)", ligando cada fase ao código.
+- Teste `tests/test_notebook_academico.py`: 6 fases, `describe()`, Seaborn, sem saídas e igual ao gerador.
+
 ## [1.25.0] — 2026-11-19
 
 A entrada no app ganha uma animação: a logo entra em sintonia.

@@ -25,7 +25,7 @@ Igual às rodadas 1 e 2. Nenhuma falha. Esta linha de base **é** a medição "n
 | Item | O que foi verificado | Como | Resultado | Achados |
 |---|---|---|---|---|
 | **1. Windows** — CI | os 3 workflows, os passos com sintaxe de bash e um `testes.yml` completo com `windows-latest` | leitura + script que compara a proposta com o arquivo atual | Só `ubuntu-latest`; 2 passos usam bash (`testes.yml:js`, `lint.yml`). Proposta pronta, com os mesmos passos e os mesmos nomes de check no Linux; **não rodada no GitHub** | R3-03 |
-| 1 — Python que o usuário recebe | `py -0p`; resolução das dependências no 3.14 | `py -3.14 -m pip install --dry-run --only-binary=:all: --target <temp>` com `requirements.txt` e com `requirements-dev.txt` | O `py -3` (1ª escolha do `iniciar.bat:7`, só usada quando o `.venv` ainda não existe, `:15-18`) pega o **3.14** aqui. As dependências resolvem com binário no 3.14 (código 0 nos dois arquivos). **A suíte nunca rodou no 3.14** | R3-03 |
+| 1 — Python que o usuário recebe | `py -0p`; resolução das dependências no 3.14 | `py -3.14 -m pip install --dry-run --only-binary=:all: --target <temp>` com `requirements.txt` e com `requirements-dev.txt` | O `py -3` (1ª escolha do `iniciar.bat:7`, só usada quando o `.venv` ainda não existe, `:15-18`) pega o **3.14** aqui. As dependências resolvem com binário no 3.14 (código 0 nos dois arquivos; bloco do R3-03). A suíte não roda no 3.14 no CI e não foi rodada nesta rodada; o último registro de execução no 3.14 é da v0.7 (`VALIDACAO.md:53,63`, `CHANGELOG.md:699`) | R3-03 |
 | 1 — caminhos, encoding e ZIP | pasta com espaço, acento e emoji; ZIP com nome UTF-8 e cp437; JSON com BOM; nas duas linguagens | Python + Node (bloco em §4) | **Ok** nos dois motores | — |
 | 1 — `iniciar.bat` | cópia do repositório numa pasta `Sync Up Ção`, com o `.venv` por junção; caminho feliz e sem Python no PATH | `cmd /c` com o caminho completo, como o duplo clique (bloco em §4) | **Ok com o ambiente já criado**: o app respondeu; sem Python, a mensagem certa e o `goto erro`, mesmo em LF. A primeira execução (criar o venv e instalar) não foi testada (§5) | — |
 | 1 — encerrar o app | pool de leitura (`dados.py:660-702`) quando o processo do app morre | Python (bloco do R3-08) | **Falha** no encerramento à força: 4 processos órfãos, 249 MB. Reproduzido no Windows | R3-08 |
@@ -33,27 +33,27 @@ Igual às rodadas 1 e 2. Nenhuma falha. Esta linha de base **é** a medição "n
 | 2 — constantes duplicadas | 16 pares Python × JS | script que lê o valor no JS e compara (§2.1) | Os 16 são **iguais hoje** | — |
 | 2 — o que os testes pegam | 8 mutações (uma constante mudada só no Python) e 2 controles | pytest com plugin de mutação (bloco do R3-04) + suíte inteira com as 6 que passaram, juntas | **6 de 8 mutações passam sem nenhum teste falhar** | R3-04 |
 | 2 — invariantes | simetria, identidade, [0,1], determinismo e Python × JS em 500 pares aleatórios | Python + Node (bloco em §4) | **Ok** nas 4 métricas (diferença máxima Python × JS: 1,7e-16). No Python, `tests/test_metricas.py` já confere simetria (`:29`, `:45`, `:62`, `:107`) e identidade (`:143-144`, `:154`) com casos fixos. Faltam: limites [0,1] e determinismo, casos aleatórios e todo o lado JS (só o RBO tem teste JS, `tests/js/rbo.test.mjs`) | proposta no R3-04 |
-| **3. Versionamento** | convite atual, futuro (`SYNCUP2.`), com campo novo e sem campo; perfil com `versao` 99, ausente e `'x'` | Python + Node (bloco do R3-11) | Atual e campo novo: ok. Futuro: mensagem enganosa. Sem campo: recusado com mensagem clara. Perfil: qualquer `versao` aceita, mas o perfil não é mais salvo nem lido por ninguém | R3-11, R3-13 |
-| 3 — correção de escopo | `perfis.py` | leitura | `perfis.py` são as regras de arquétipo, sem formato persistido. O formato com versão é o `PerfilGosto` (`perfil_gosto.py:36,51,62-75`) | R3-13 |
+| **3. Versionamento** | convite atual, futuro (`SYNCUP2.`), com campo novo e sem campo; perfil com `versao` 99, ausente e `'x'` | Python + Node (bloco do R3-13) | Atual e campo novo: ok. Futuro: mensagem enganosa. Sem campo: recusado com mensagem clara. Perfil: qualquer `versao` aceita, mas o perfil não é mais salvo nem lido por ninguém | R3-13, R3-14 |
+| 3 — correção de escopo | `perfis.py` | leitura | `perfis.py` são as regras de arquétipo, sem formato persistido. O formato com versão é o `PerfilGosto` (`perfil_gosto.py:36,51,62-75`) | R3-14 |
 | 3 — formatos que existem de verdade | convite `SYNCUP1.` (um formato só desde `6887e7b`, conferido com `git log -S"SYNCUP" -- convite.py`), cache do histórico (`dados.py:487-552`), cache de gêneros (sem versão: R1-03), IndexedDB `syncup-capas` v1 e `syncup-lastfm` | leitura | Não há formato antigo para migrar. O cache do histórico (versão + identidade + hash) é o modelo a seguir | — |
 | **4. Privacidade** — o que sai do PC | ListenBrainz e MusicBrainz: URL, parâmetros, cabeçalhos e tempo-limite do cliente do próprio app | `httpx.MockTransport` (bloco em §2.2) | Só nome de usuário e nomes de artistas; User-Agent sem e-mail; os dois opcionais | — |
 | 4 — o que sai do navegador | pedidos para fora depois de "Montar meu Wrapped", sem outro clique | Chromium com mocks (bloco do R3-05) | **34 a 35 pedidos em 15 s** para iTunes, Spotify, MusicBrainz e CDN de imagem. O mesmo componente roda nos 4 modos, e 3 telas dizem que nada sai | R3-05 |
-| 4 — textos de privacidade × comportamento | PC ("apagados em até 1 hora"), landing ("Fechou a página, sumiu"), subtítulos do app | script (bloco do R3-14) | **3 promessas maiores que o comportamento** | R3-05, R3-14 |
+| 4 — textos de privacidade × comportamento | PC ("apagados em até 1 hora"), landing ("Fechou a página, sumiu"), subtítulos do app | script (bloco do R3-11) | **3 promessas maiores que o comportamento** | R3-05, R3-11 |
 | 4 — app sem a rede | app web com `unpkg.com` fora | Chromium | **Falha**: fica no esqueleto, sem o botão "Montar" | R3-02 |
-| 4 — APIs fora, lentas ou com limite | ListenBrainz, MusicBrainz (Python); Last.fm, capas (Node); iTunes (leitura) | mocks (blocos do R3-06, R3-07 e §2.2) | Nenhuma falha de API de dados derruba o resultado. Falhas: capa "sumida" por 30 dias depois de um 500; texto técnico em inglês no ListenBrainz; `Retry-After` ignorado (ou cortado em 10 s, no ListenBrainz); o download do Last.fm faz 16 pedidos num 429; o iTunes não tem limitador | R3-06, R3-07, R3-12 |
-| **5. Métricas** — texto × código | Cosseno, Jaccard, RBO e Ruzicka em `metricas.py`, `dupla.js`, `resultado.js`, `componentes.py`, `cartao.py`, `ui/layout.py` | leitura + script | As fórmulas fazem o que os nomes dizem. Mas a **ponderação padrão** muda entre PC e navegador e só o PC a mostra; os textos de Jaccard e Ruzicka não dizem que o cálculo usa só plays ≥ 30 s, o período comum e a ponderação | R3-01, R3-10 |
+| 4 — APIs fora, lentas ou com limite | ListenBrainz, MusicBrainz (Python); Last.fm, capas (Node); iTunes (leitura) | mocks (blocos do R3-06, R3-07 e §2.2) | Nenhuma falha de API de dados derruba o resultado. Falhas: capa "sumida" por 30 dias depois de um 500; texto técnico em inglês no ListenBrainz; `Retry-After` ignorado (ou cortado em 10 s, no ListenBrainz); o download do Last.fm faz 16 pedidos num 429; o iTunes não tem limitador | R3-06, R3-07, R3-10 |
+| **5. Métricas** — texto × código | Cosseno, Jaccard, RBO e Ruzicka em `metricas.py`, `dupla.js`, `resultado.js`, `componentes.py`, `cartao.py`, `ui/layout.py` | leitura + script | As fórmulas fazem o que os nomes dizem. Mas a **ponderação padrão** muda entre PC e navegador e só o PC a mostra; os textos de Jaccard e Ruzicka não dizem que o cálculo usa só plays ≥ 30 s, o período comum e a ponderação | R3-01, R3-12 |
 | 5 — calibração × validação | `VALIDACAO.md`, `conciliacao.py:29-30`, `analise.py:43`, `CHANGELOG.md:112` | script (bloco do R3-01) | Não há registro de validação das faixas do Match nem de dados separados (a R1 já deixou isso em aberto) | R3-09 |
 
 ### Pendências das rodadas anteriores
 
 | Pendência | Onde ficou | Veredito desta rodada |
 |---|---|---|
-| Last.fm fora do ar, lento ou com limite | R1 §6. A R2 conferiu as mensagens (fora do ar, limite e perfil vazio) com rota falsa no Chromium | **Fechada na camada de rede**, com o `pedir()` e o download paralelo simulados no Node (bloco do R3-06). Sem rede: 1 pedido e "Sem conexão com o Last.fm…" na hora. Lento (tempo-limite estourado): 5 tentativas e depois "O Last.fm está demorando…"; pela conta (5 × 20 s de `lastfm.js:19` + 15 s de esperas), até ~115 s por pedido, **calculado, não observado**. Limite (HTTP 429 ou `{error: 29}` com HTTP 200): 5 pedidos e depois "O Last.fm pediu uma pausa…"; no download real são 16 pedidos (R3-12). A tela com 429 e lentidão de verdade não foi vista (§5). |
+| Last.fm fora do ar, lento ou com limite | R1 §6. A R2 conferiu as mensagens (fora do ar, limite e perfil vazio) com rota falsa no Chromium | **Fechada na camada de rede**, com o `pedir()` e o download paralelo simulados no Node (bloco do R3-06). Sem rede: 1 pedido e "Sem conexão com o Last.fm…" na hora. Lento (tempo-limite estourado): 5 tentativas e depois "O Last.fm está demorando…"; pela conta (5 × 20 s de `lastfm.js:19` + 15 s de esperas), até ~115 s por pedido, **calculado, não observado**. Limite (HTTP 429 ou `{error: 29}` com HTTP 200): 5 pedidos e depois "O Last.fm pediu uma pausa…"; no download real são 16 pedidos (R3-10). A tela com 429 e lentidão de verdade não foi vista (§5). |
 | Calibração × validação do Match | R1 §6 e R1-02 | **Fechada como risco de registro** (R3-09). |
 | O que a tela do PC mostra quando o `TypeError` do R1-03 escapa | R1 §6 | Não fechada (não reproduzida nesta rodada); segue em §5. |
 | Selo "Lendo neste aparelho…" | R1 §6 | Já fechada pela R2 (§4 da R2: aparece com a CPU 20× mais lenta). |
 | Erros de entrada do ZIP no Gradio | R1 §6 | Já fechada pela R2 (§5 da R2: mensagem em português, com o título "Error"). |
-| "Não auditados": `opcoes.js`, `ui/meus_dados.py`, `ui/match.py` | R2 §5 | **Parcialmente coberta:** o padrão de `opcoes.js` (R3-01), o texto de `ui/meus_dados.py` (R3-14) e os avisos de `ui/match.py` (R3-07). A tela em si continua sem auditoria de UI. |
+| "Não auditados": `opcoes.js`, `ui/meus_dados.py`, `ui/match.py` | R2 §5 | **Parcialmente coberta:** o padrão de `opcoes.js` (R3-01), o texto de `ui/meus_dados.py` (R3-11) e os avisos de `ui/match.py` (R3-07). A tela em si continua sem auditoria de UI. |
 | `[data-testid="file"]`, título "Error", app para PC no celular, custo do vidro no celular, `aria-live` dos stories, movimento por `requestAnimationFrame`, rolagem lateral no PC, os 124 seletores nunca casados, alvo de toque de "Ainda não tem o ZIP?" | R1 §6, R2 §5 | Fora do escopo desta rodada (UI); seguem em aberto. |
 
 ### 2.1 Constantes copiadas à mão entre Python e JS
@@ -68,7 +68,7 @@ Todas iguais hoje (bloco abaixo). A última coluna diz se algum teste falha quan
 | Tamanho do ranking 50 | `perfil_gosto.py:34` | `match.js:11` | não testada (`test_match.py:61` e `match.test.mjs:20` fixam cada lado) |
 | Faixas do Match 25/10/5/1 | `conciliacao.py:31-37` | `match.js:15-21` | **não** (25→20 passa) |
 | Máximo de pessoas 16 | `conciliacao.py:28` | `match.js:128`, mais os literais `match-tela.js:184` e `main.js:109` | **não** (16→12 passa) |
-| Convite: código 20.000, JSON 100.000, nome 60, texto 200 | `convite.py:25-28` (o 200 também é valor padrão de `_texto`, `:47`) | `convite.js:6-9` | texto 200→150: **não**. O JS fixa o código (`convite.test.mjs:37`) e o texto (`:34`) só do lado dele |
+| Convite: código 20.000, JSON 100.000, nome 60, texto 200 | `convite.py:25-28` (o 200 também é valor padrão de `_texto`, `:47`) | `convite.js:6-9` | texto 200→150: **não**. O JS fixa o código (`convite.test.mjs:37`), o texto (`:34`), o nome (`:19-20`) e um caso de JSON grande (`:33`) só do lado dele |
 | Teto do ZIP 1 GB | `dados.py:40` | `historico.js:4` | não testada |
 | Play mais longo aceito 24 h | `dados.py:76` | `historico.js:122` | **não** (24 h→3 h passa) |
 | Play mínimo 30 s | `analise.py:40` (cópias em `perfil_gosto.py:35` e `wrapped.py:18`) | `calculo.js:7` | **sim** (27 falhas) |
@@ -76,6 +76,7 @@ Todas iguais hoje (bloco abaixo). A última coluna diz se algum teste falha quan
 | Meia-vida 365 dias | `analise.py:46` | `dupla.js:77` | **sim** (controle: 3 falhas) |
 | Profundidade do RBO 50 | `analise.py:44` | `dupla.js:75` | não testada |
 | Entrada máxima por JSON no ZIP 64 MB | — | `historico.js:7` | Diferença **intencional** (protege o iOS; R1-07). Um teste de contrato precisa registrá-la como exceção |
+| **Fora deste bloco** (também copiados à mão, não comparados aqui): as 12 regras e limiares dos arquétipos; top 20; 8 artistas da corrida; Batalha de 3 a 6 pessoas; janela, mínimo e exemplos da sintonia; ponte; prefixo do convite; RBO p = 0,9; famílias de plataforma | `arquetipos.py:58-168`, `analise.py:41-42,425-426`, `componentes.py:30`, `recursos.py:13-15,183`, `convite.py:24`, `metricas.py:61`, `dados.py:187-199` | `calculo.js:37-50`, `dupla.js:7,61,139-140,180,277,484`, `batalha.js:28`, `convite.js:5`, `historico.js:110-114` | Em boa parte cobertos pela paridade (§4 e o inventário de constantes); o teste de contrato deve incluí-los |
 
 ```powershell
 @'
@@ -129,7 +130,7 @@ Saída: 16 linhas `igual  …` (de `perfil_gosto.JANELAS_DIAS = match.js:JANELAS
 | Landing | `unpkg.com` | pedido do Lenis (IP do visitante) | ao abrir a página, salvo com "menos movimento" | `site/index.html:354-370` |
 | Web | `unpkg.com` | pedido do Preact/htm (IP do visitante) | toda vez que o app abre | `site/app/index.html:17` (R3-02) |
 | Web | `ws.audioscrobbler.com` | nome de usuário e a chave pública de leitura | só se a pessoa usa o Last.fm | `lastfm.js:8-9,38-40` |
-| Web | `itunes.apple.com` | Wrapped: `artista + música` e `artista` do top. Dupla: músicas e artistas em comum. Match: artistas em comum de cada par. Batalha: o favorito de cada pessoa. Sempre `country=BR` | **sozinho**, quando o resultado aparece | `som.js:21,40-47,162-163`; `ponte.py:221-261` e `dupla.js` (Dupla), `match.js:236-245`, `batalha.js:189-204`; bloco do R3-05 |
+| Web | `itunes.apple.com` | Wrapped: `artista + música` e `artista` do top. Dupla: músicas e artistas em comum. Match: artistas em comum de cada par. Batalha: o favorito de cada pessoa. Sempre `country=BR` | **sozinho**, quando o resultado aparece | `som.js:21,40-47,162-163`; `dupla.js:553-573`, `match.js:236-245`, `batalha.js:189-202`; bloco do R3-05 |
 | Web | `open.spotify.com/oembed` | IDs das faixas mais ouvidas (só IDs com o formato real de 22 caracteres) e, pelo código, o ID Spotify do artista achado no MusicBrainz | **sozinho**, no Wrapped | `capas.js:7,14-16,106,159` |
 | Web | `musicbrainz.org` | nomes dos artistas do top e, pelo código, a página do artista achado (`/artist/<mbid>?inc=url-rels`) | **sozinho**, no Wrapped | `capas.js:8,153-157` |
 | Web | `i.scdn.co`, `*.spotifycdn.com`, `audio-ssl.itunes.apple.com`, `*.mzstatic.com`, CDN do Last.fm | pedido da imagem ou do trecho (IP) | sozinho, depois das buscas; o pôster recarrega as imagens ao clicar | `capas.js:21-22`, `lastfm.js:61`, `som.js:27-28`, `poster.js:16-21` |
@@ -176,10 +177,11 @@ for nome, resposta in casos.items():
     pedidos.clear(); dormidas = []; resposta_atual['r'] = resposta
     c = ConsultaMusicBrainz(cache=cache, relogio=lambda: 0.0, dormir=dormidas.append)
     r = [c.generos(f'Banda {i}') for i in range(5)]
-    print('MusicBrainz', nome, '| pedidos', len(pedidos), 'para 5 artistas | falhas', c.falhas, '| generos', r, '| esperas', dormidas[:3])
+    c.salvar()  # grava o que estiver no cache em memoria, como o app faz ao terminar o Match
+    print('MusicBrainz', nome, '| pedidos', len(pedidos), 'para 5 artistas | falhas', c.falhas, '| generos', r, '| esperas', dormidas[:3],
+          '| cache em memoria', c._cache, '| no disco', open(cache, encoding='utf-8').read() if os.path.exists(cache) else None)
 p = pedidos[0]
-print('o que sai:', p.url.host, dict(p.url.params), '| User-Agent:', p.headers['user-agent'], '| timeout:', p.extensions['timeout']['read'],
-      '| arquivo de cache gravado?', os.path.exists(cache))
+print('o que sai:', p.url.host, dict(p.url.params), '| User-Agent:', p.headers['user-agent'], '| timeout:', p.extensions['timeout']['read'])
 '@ | .venv\Scripts\python.exe -
 ```
 
@@ -190,10 +192,10 @@ Saída:
 - `ListenBrainz 429 com Retry-After: 30 | pedidos 3 | esperas [10, 10] | ValueError -> a tela mostra o texto: 'O ListenBrainz est\xe1 ocupado agora. Tente de novo em instantes.'`
 - `ListenBrainz corpo que nao e JSON | pedidos 1 | esperas [] | ValueError -> a tela mostra o texto: 'Expecting value: line 1 column 1 (char 0)'`
 - `o que sai: GET api.listenbrainz.org /1/stats/user/ana_ficticia/artists {'range': 'month', 'count': '50'} | User-Agent: SyncUp/1.27 ( https://github.com/Hazykiuu/SyncUp ) | cabecalhos: ['accept', 'accept-encoding', 'connection', 'host', 'user-agent'] | timeout: {'connect': 10, 'read': 10, 'write': 10, 'pool': 10}`
-- `MusicBrainz <cada um dos 5 casos> | pedidos 3 para 5 artistas | falhas 3 | generos [[], [], [], [], []] | esperas [1.0, 1.0]` (5 linhas iguais)
-- `o que sai: musicbrainz.org {'query': 'artist:"Banda 0"', 'fmt': 'json', 'limit': '1'} | User-Agent: SyncUp/1.27 ( https://github.com/Hazykiuu/SyncUp ) | timeout: 15 | arquivo de cache gravado? False`
+- `MusicBrainz <cada um dos 5 casos> | pedidos 3 para 5 artistas | falhas 3 | generos [[], [], [], [], []] | esperas [1.0, 1.0] | cache em memoria {} | no disco {}` (5 linhas iguais)
+- `o que sai: musicbrainz.org {'query': 'artist:"Banda 0"', 'fmt': 'json', 'limit': '1'} | User-Agent: SyncUp/1.27 ( https://github.com/Hazykiuu/SyncUp ) | timeout: 15`
 
-O MusicBrainz para depois de 3 falhas (`generos.py:38,84-85`) e não grava falha no cache: os 5 artistas custam 3 pedidos, não 10. O ListenBrainz corta o `Retry-After` em 10 s e tenta de novo (R3-12). O tempo-limite do httpx vale por fase (conexão, leitura…), não para o pedido inteiro.
+O MusicBrainz para depois de 3 falhas (`generos.py:38,84-85`) e não grava falha no cache: o bloco chama `salvar()`, como o app faz ao fim do Match, e o cache sai vazio na memória e no disco. Os 5 artistas custam 3 pedidos, não 10. O ListenBrainz corta o `Retry-After` em 10 s e tenta de novo (R3-10). O tempo-limite do httpx vale por fase (conexão, leitura…), não para o pedido inteiro.
 
 ## 3. Achados (ordem de impacto)
 
@@ -202,7 +204,7 @@ O MusicBrainz para depois de 3 falhas (`generos.py:38,84-85`) e não grava falha
 - **Classificação:** Problema comprovado (as duas superfícies mostram números diferentes para os mesmos arquivos e só uma diz por quê)
 - **Prioridade:** P2
 - **Localização:**
-  - padrão do PC: `ui/layout.py:361-365` (`value='bruta'`); padrão do navegador: `site/app/js/opcoes.js:4` (`ponderacao: 'log1p'`), mudado na `CHANGELOG.md:349` sem dizer por quê;
+  - padrão do PC: `ui/layout.py:361-365` (`value='bruta'`); padrão do navegador: `site/app/js/opcoes.js:4` (`ponderacao: 'log1p'`), mudado na `CHANGELOG.md:349`. O motivo aparece num comentário da Batalha, "o mais estável no estudo com históricos reais" (`batalha.js:92`), mas não no `VALIDACAO.md` nem na tela. A API Python (`analise.py:128,259,453`) e o motor JS (`dupla.js:378`) continuam com `bruta` como padrão: só a tela web troca;
   - o PC mostra a ponderação ao lado do número (`componentes.py:70`, "Cosseno · ponderação …"); o navegador não (`site/app/js/resultado.js:59`), e é esse número que abre os stories;
   - a ponderação muda o cosseno e o Ruzicka, não o Jaccard nem o RBO (`analise.py:320-330`, `metricas.py:114-129`). Na 1.20 o projeto destacou que os cálculos dão "o mesmo número nos dois" (`CHANGELOG.md:112`); com os padrões atuais, isso só vale se a pessoa mudar a opção.
 - **Evidência:**
@@ -220,6 +222,14 @@ print('padrao no PC (ui/layout.py):', pc, '| padrao no navegador (opcoes.js):', 
 for modo in dict.fromkeys([pc, web]):
     m = comparar_dupla(['site/app/demo-wrapped.zip'], ['site/app/demo-bruno.zip'], 'Rafa', 'Lu', {'ponderacao': modo})['metricas']
     print(f'{modo:5} -> cosseno {m["cosseno"] * 100:.1f}% | ruzicka {m["ruzicka"] * 100:.1f}% | jaccard {m["jaccard"] * 100:.1f}% | rbo {m["rbo_top50"] * 100:.1f}%')
+print('padrao da API Python (analise.comparar) e do motor JS (dupla.js):',
+      re.findall(r"ponderacao: str = '(\w+)'", Path('analise.py').read_text(encoding='utf-8')),
+      re.findall(r"opcoes\.ponderacao \|\| '(\w+)'", Path('site/app/js/dupla.js').read_text(encoding='utf-8')))
+linha = next(l for l in Path('site/app/js/resultado.js').read_text(encoding='utf-8').splitlines() if "['cosseno'" in l)
+print('resultado.js mostra a ponderacao junto do cosseno?', 'ponder' in linha.casefold())
+modulos = {p.stem for p in Path('.').glob('*.py')}
+nb = Path('notebook/SyncUp_CRISP-DM.ipynb').read_text(encoding='utf-8')
+print('o notebook importa algum modulo do app?', sorted(m for m in modulos if re.search(r'(from|import) ' + m + r'\b', nb)))
 texto = Path('VALIDACAO.md').read_text(encoding='utf-8')
 print('VALIDACAO.md cita as faixas do Match (25/10/5/1)?', bool(re.search(r'Sintonia rara|25 pontos|faixas do Match', texto)),
       '| fala em "12 hist"?', '12 hist' in texto, '| linhas com "4 hist":', [i for i, l in enumerate(texto.splitlines(), 1) if '4 hist' in l])
@@ -232,6 +242,9 @@ for arq in ['conciliacao.py', 'analise.py', 'CHANGELOG.md']:
   - `padrao no PC (ui/layout.py): bruta | padrao no navegador (opcoes.js): log1p | iguais? False`
   - `bruta -> cosseno 5.1% | ruzicka 14.8% | jaccard 100.0% | rbo 2.5%`
   - `log1p -> cosseno 93.0% | ruzicka 75.9% | jaccard 100.0% | rbo 2.5%`
+  - `padrao da API Python (analise.comparar) e do motor JS (dupla.js): ['bruta', 'bruta', 'bruta'] ['bruta']`
+  - `resultado.js mostra a ponderacao junto do cosseno? False`
+  - `o notebook importa algum modulo do app? []`
   - `VALIDACAO.md cita as faixas do Match (25/10/5/1)? False | fala em "12 hist"? False | linhas com "4 hist": [73]`
   - `conciliacao.py [(29, "'# Faixas calibradas com 4 hist\\xf3ricos reais (2017\\u20132026). Rankings de top 50 se'")]`
   - `analise.py [(43, '\'# "Favoritos em comum": RBO nos 50 artistas mais ouvidos (estudo com 12 hist\\xf3ricos).\'')]`
@@ -239,9 +252,9 @@ for arq in ['conciliacao.py', 'analise.py', 'CHANGELOG.md']:
 
   Os números saem da referência Python dos testes de paridade (`web/ponte.py:comparar_dupla`, só com a ponderação trocada e as outras opções no padrão do PC); o navegador dá o mesmo número para as mesmas opções (paridade). Não foram lidos na tela. As 4 últimas linhas são a evidência do R3-09. **O tamanho da diferença vale só para as demos:** elas têm os mesmos 250 artistas (Jaccard 100%) com favoritos diferentes, o que exagera o efeito; com históricos reais a diferença não foi medida. O cálculo é o mesmo nos dois motores (paridade em `test_paridade_dupla.py`, casos `padrao`, `raiz` e `log`); o que difere é só o padrão.
 - **Impacto:** quem compara no PC e manda o app web para um amigo vê dois números de "sintonia" diferentes para os mesmos arquivos, sem texto que explique. No navegador nem há como saber qual ponderação valeu sem abrir "Opções de dados".
-- **Solução proposta:** decidir com dados (como no estudo dos 12 históricos) um padrão único para as duas superfícies e registrar o porquê no `VALIDACAO.md`. Enquanto isso, mostrar a ponderação ao lado do número também no navegador (`resultado.js:59` e o story de abertura), como o PC já faz.
+- **Solução proposta:** decidir com dados (como no estudo dos 12 históricos) um padrão único **nas telas** (`ui/layout.py` e `opcoes.js`) e registrar o porquê no `VALIDACAO.md`. Não mudar o padrão de `analise.py`/`dupla.js`: os testes, o golden master e quem chama `comparar()` sem `ponderacao=` dependem dele (o notebook não: ele não importa o app, ver o bloco). Enquanto isso, mostrar a ponderação ao lado do número também no navegador (`resultado.js:59` e o story de abertura), como o PC já faz.
 - **Testes necessários:** Python (novo `tests/test_contratos.py`): se o padrão for unificado, o de `ui/layout.py` e o `PADRAO` de `opcoes.js` são iguais (lidos como na 1ª linha do bloco); se continuarem diferentes, o rótulo do cosseno em `resultado.js` mostra a ponderação. Paridade: nenhuma mudança.
-- **Critério de aceitação:** a 1ª linha do bloco dá `iguais? True` (padrão unificado) ou, se a escolha for manter padrões diferentes, o resultado do navegador mostra a ponderação; nos dois casos, o teste de contrato correspondente passa.
+- **Critério de aceitação:** a 1ª linha do bloco dá `iguais? True` (padrão unificado) ou a linha `resultado.js mostra a ponderacao junto do cosseno?` dá `True`; a linha do padrão da API continua `['bruta', 'bruta', 'bruta'] ['bruta']`; e o teste de contrato correspondente passa.
 
 ### R3-02 — O app no navegador não abre sem o `unpkg.com`
 
@@ -260,8 +273,20 @@ for arq in ['conciliacao.py', 'analise.py', 'CHANGELOG.md']:
 - **Prioridade:** P2
 - **Localização:** `.github/workflows/testes.yml:15`, `:38`, `:51` (`runs-on: ubuntu-latest` nos 3 jobs) e a matriz `python: ['3.10', '3.12']` (`:19`). `iniciar.bat:7` tenta `py -3` primeiro, que pega o Python mais novo instalado. `requirements.txt:1,6-8` promete "Python 3.10–3.14" e troca o pandas no 3.13+ (`:8`), caminho que nenhum CI testa.
 - **Evidência:**
-  - **Observado nesta máquina (Windows):** as 3 suítes passam com Python 3.12 (§1); ZIP, encoding e `iniciar.bat` ok (§4); o pool órfão do R3-08 foi reproduzido aqui; `py -0p` mostra o 3.14 como padrão; `py -3.14 -m pip install --dry-run --only-binary=:all: --target <temp> -r requirements.txt` e o mesmo com `-r requirements-dev.txt` terminam com código 0. **A suíte nunca rodou no 3.14.**
-  - **Rodaria no CI (não executado):** o `testes.yml` completo abaixo. Ele só muda os cabeçalhos dos jobs `testes` e `js`: os passos ficam iguais, e no Linux os nomes dos checks continuam os de hoje ("Python 3.10", "Python 3.12", "JavaScript (node --test)"), então a proteção da `main` não precisa mudar. Os checks novos ganham " (Windows)" no nome.
+  - **Observado nesta máquina (Windows):** as 3 suítes passam com Python 3.12 (§1); ZIP, encoding e `iniciar.bat` ok (§4); o pool órfão do R3-08 foi reproduzido aqui; `py -0p` mostra o 3.14 como padrão; a resolução das dependências no 3.14 termina com código 0 (bloco abaixo). A suíte não foi rodada no 3.14 nesta rodada; o último registro é da v0.7 (`VALIDACAO.md:53,63`).
+
+```powershell
+py -0p
+$t = Join-Path $env:TEMP 'syncup-dry'
+foreach ($r in 'requirements.txt', 'requirements-dev.txt') {
+    py -3.14 -m pip install --dry-run --quiet --disable-pip-version-check --only-binary=:all: --target $t -r $r
+    "$r no Python 3.14, so binarios: codigo $LASTEXITCODE (0 = todas as dependencias resolvem; nada e instalado)"
+}
+```
+
+  Saída: as 2 linhas do `py -0p` (`-V:3.14[-64] *` e `-V:3.12[-64]`), `requirements.txt no Python 3.14, so binarios: codigo 0 (…)` e `requirements-dev.txt no Python 3.14, so binarios: codigo 0 (…)`. O bloco consulta o PyPI (só metadados).
+
+  - **Rodaria no CI (não executado):** o `testes.yml` completo abaixo. Ele só muda os cabeçalhos dos jobs `testes` e `js`: os passos ficam iguais, e no Linux os nomes dos checks continuam os de hoje ("Python 3.10", "Python 3.12", "JavaScript (node --test)", "Navegador (Playwright)"), então a proteção da `main` não quebra no merge. Os checks novos ganham " (Windows)" no nome; incluí-los na proteção é um passo seguinte, recomendado.
 
 ```yaml
 # Testes a cada push e PR: a main só recebe o que passou aqui (badge "Testes" no README).
@@ -391,7 +416,7 @@ for j, job in proposta['jobs'].items():
 
   O script imita as regras do GitHub só para este caso (cada `include` traz um `os` novo, e o nome é trocado por texto, não avaliado); o `actionlint` não foi rodado. O job `testes` não tem passo com bash (`pip install` e `pytest` rodam igual no `pwsh`); o job `js` precisa do `shell: bash` (que no Linux passa a rodar com `-o pipefail`, sem efeito nesses passos) por causa do laço `for f in …; do node --check` (`testes.yml:45`). O `node --test tests/js/*.test.mjs` foi visto passando só no Node 26 local; no Node 22 do runner Windows é "rodaria". `lint.yml` e `site.yml` ficam no Linux (o Ruff e o empacotamento não dependem do sistema). O job `navegador` fica fora: o `playwright install --with-deps` é para Linux e o custo no Windows é alto.
 - **Impacto:** quem mais usa o app (o Carlos, no Windows) é o único ambiente que o CI não vê. Regressões só do Windows (encerramento de processos, caminhos, `tzdata`) e o caminho Python 3.13+/pandas 2.3.3 chegam à `main` sem nenhum check.
-- **Solução proposta:** trocar o `testes.yml` pelo bloco acima e incluir os 3 checks novos na proteção da `main`. Nada no código muda.
+- **Solução proposta:** trocar o `testes.yml` pelo bloco acima. Depois que os checks novos passarem uma vez, incluí-los na proteção da `main`. Nada no código muda.
 - **Testes necessários:** nenhum teste novo; o critério é o CI.
 - **Critério de aceitação:** os checks `Python 3.12 (Windows)`, `Python 3.14 (Windows)` e `JavaScript (node --test) (Windows)` aparecem verdes num PR, e os checks de hoje continuam com o mesmo nome.
 
@@ -477,7 +502,7 @@ print('suite inteira com as 6 mutacoes:', r.stdout.strip().splitlines()[-1].spli
   - Invariantes nos dois motores (o bloco de §4 serve de molde): simetria, identidade = 1, resultado em [0, 1], determinismo e diferença Python × JS ≤ 1e-12, com tolerância (a simetria do JS varia no último bit).
   - Paridade: uma fixture com plays a ~200 e ~400 dias do fim e um par com nota entre 20 e 25.
   - As tabelas de casos extremos já achados (RBO inválido do R1-04, Unicode do R1-08, datas do R1-09) entram cada uma no PR que corrige a divergência, não neste: aqui elas falhariam.
-- **Critério de aceitação:** com `tests/test_contratos.py` acrescentado às três listas `TESTES` do bloco, as 8 linhas de mutação dão `PEGOU`; e o teste cobre também os 6 pares marcados "não testada" na §2.1, as 3 cópias Python do play mínimo e o literal `16` (conferir lendo o teste: o bloco só exercita as 8 mutações).
+- **Critério de aceitação:** com `tests/test_contratos.py` acrescentado às três listas `TESTES` do bloco, as 8 linhas de mutação dão `PEGOU`; e o teste cobre também os 5 pares marcados "não testada" e os 3 limites do convite que não foram mutados na §2.1, os pares "fora deste bloco", as 3 cópias Python do play mínimo e o literal `16`. Como o bloco só muda o Python, conferir também com uma mutação **no JS** (numa cópia de `site/app/js/`) que o teste lê o arquivo JS de verdade, e que os testes de invariantes e as fixtures novas de paridade rodam.
 
 ### R3-05 — O navegador manda nomes de artistas e músicas a terceiros assim que um resultado aparece, sem escolha antes, e 3 subtítulos dizem que nada sai
 
@@ -485,9 +510,9 @@ print('suite inteira com as 6 mutacoes:', r.stdout.strip().splitlines()[-1].spli
 - **Prioridade:** P3
 - **Localização:**
   - `site/app/js/som.js:162-163` (`useEffect(() => { comecar(); … }, [])`): o `SomStories` busca no iTunes ao aparecer, e ele é montado nos 4 modos (`wrapped.js:174`, `resultado.js:158`, `match-tela.js:73`, `batalha-tela.js:123`); capas e fotos no Wrapped (`wrapped.js:85`, `capas.js:96-160`).
-  - No Match e na Batalha os nomes vêm dos históricos e convites **de outras pessoas**: artistas em comum de cada par (`match.js:236-245`) e o favorito de cada pessoa (`batalha.js:189-204`).
+  - No Match e na Batalha os nomes vêm dos históricos e convites **de outras pessoas**: artistas em comum de cada par (`match.js:236-245`) e o favorito de cada pessoa (`batalha.js:189-202`).
   - As notas existem: `NOTA_WRAPPED` (`som.js:109`), `NOTA_DUPLA` (`resultado.js:16`) e `NOTA_SOM` (`match-tela.js:19`, `batalha-tela.js:18`), mostradas em `som.js:260`; e a landing explica antes do app (`site/index.html:297`). Mas os subtítulos de cada modo dizem o contrário: Dupla "Nada é enviado para nenhum servidor" (`main.js:107`), Match e Batalha "Nada sai do seu aparelho" (`main.js:109-110`).
-- **Evidência:** o bloco serve `site/`, corta o `unpkg.com` na 1ª parte (R3-02) e, na 2ª, responde todo pedido externo com dados falsos, registrando host, caminho e parâmetros. Só há dois cliques: escolher o arquivo e "Montar meu Wrapped". **Só o Wrapped foi observado**; nos outros 3 modos o envio vem do código (o mesmo `SomStories`, com a trilha de cada modo). Os subtítulos estão no bloco do R3-14.
+- **Evidência:** o bloco serve `site/`, corta o `unpkg.com` na 1ª parte (R3-02) e, na 2ª, responde todo pedido externo com dados falsos, registrando host, caminho e parâmetros. Só há dois cliques: escolher o arquivo e "Montar meu Wrapped". **Só o Wrapped foi observado**; nos outros 3 modos o envio vem do código (o mesmo `SomStories`, com a trilha de cada modo). Os subtítulos estão no bloco do R3-11.
 
 ```powershell
 @'
@@ -547,16 +572,16 @@ with sync_playwright() as p:
   - `musicbrainz.org /ws/2/artist/ [('query', 'artist:"Banda Ficticia 0"'), ('fmt', 'json'), ('limit', '3')] | Referer: <origem do app>/`
   - `i.scdn.co /image/ficticia [] | Referer: <origem do app>/`
 - **Impacto:** o que sai é pouco (nomes de artistas e músicas, IDs do Spotify e o IP, nunca o histórico) e está escrito na landing e na nota de cada modo. O problema é a ordem e a contradição: a nota aparece junto com o resultado, quando os pedidos já saíram, e o subtítulo da mesma tela diz "Nada sai do seu aparelho" enquanto nomes do histórico dela e dos amigos vão para a Apple. Quem não quer isso não tem como impedir antes.
-- **Solução proposta:** trocar os 3 subtítulos por um texto verdadeiro ("O histórico não sai do seu aparelho; para o som, só nomes de artistas vão para o iTunes"). E, respeitando a decisão de começar com som, dar a escolha **antes**: uma preferência global "Capas e som" (marcada por padrão, lembrada no `localStorage` como o mudo, `som.js:74,89`) que o `SomStories` consulta antes de `comecar()`, valendo nos 4 modos. Mudar o padrão fica com o Carlos.
+- **Solução proposta:** trocar os 3 subtítulos por um texto verdadeiro para cada modo: na Dupla, "para o som, nomes de artistas e músicas em comum vão para o iTunes" (`dupla.js:553-573` manda faixa e artista); no Match e na Batalha, "nomes de artistas". O histórico em si nunca sai. E, respeitando a decisão de começar com som, dar a escolha **antes**: uma preferência global "Capas e som" (marcada por padrão, lembrada no `localStorage` como o mudo, `som.js:74,89`) que o `SomStories` consulta antes de `comecar()`, valendo nos 4 modos. Como `comecar()` é quem chama `aoLigar` (`som.js:159`), isso também segura as capas e fotos do Wrapped (`wrapped.js:85`). Mudar o padrão fica com o Carlos.
 - **Testes necessários:** Playwright: com a preferência desligada, nenhum pedido para fora depois de mostrar o resultado nos 4 modos (o registro do bloco vira a asserção). Python (`tests/test_site.py`): nenhum subtítulo diz que nada sai.
-- **Critério de aceitação:** o bloco, estendido para desligar a preferência e repetir nos 4 endereços (`#wrapped`, `#dupla`, `#match`, `#batalha`) com os exemplos de cada modo, dá `{}` na contagem de pedidos para fora; ligada, continua como hoje; e as 3 linhas de `main.js` do bloco do R3-14 mudam.
+- **Critério de aceitação:** o bloco, estendido para os 4 endereços (`#wrapped`, `#dupla`, `#match`, `#batalha`) **enviando arquivos fictícios pelo `input[type=file]`** com IDs de 22 caracteres (como já faz no Wrapped; o "Ver um exemplo" não serve, porque usa só trechos locais, `CHANGELOG.md:96`, `batalha-tela.js:169`), dá pedidos para fora com a preferência ligada e `{}` com ela desligada; e as 3 linhas de `main.js` do bloco do R3-11 mudam.
 
 ### R3-06 — Capas: um erro 500 do Spotify ou do MusicBrainz vira "sem capa" por 30 dias
 
 - **Classificação:** Problema comprovado
 - **Prioridade:** P3
 - **Localização:** `site/app/js/capas.js:108` (`if (r.status !== 429 && r.status !== 503) return null;`) e `:127-128` (o `null` é gravado no cache com validade de 30 dias, `:10`). Só 429/503 e erro de rede escapam do cache. `tests/js/capas.test.mjs` cobre 429, 503 e sem rede, não 500/404.
-- **Evidência:** o mesmo bloco fecha a pendência do Last.fm na camada de rede e mostra o download paralelo do R3-12.
+- **Evidência:** o mesmo bloco fecha a pendência do Last.fm na camada de rede e mostra o download paralelo do R3-10.
 
 ```powershell
 @'
@@ -689,16 +714,17 @@ for como in ['terminate() (TerminateProcess) no processo do app', 'Ctrl+Break no
     p.wait(); time.sleep(5)
     sobram = [x for x in antes if vivo(x)]
     mb = sum(ps('ConvertTo-Json -Compress @(' + ','.join(map(str, sobram)) + ' | ForEach-Object { (Get-Process -Id $_).WorkingSet64 })')) / 2**20 if sobram else 0
-    print(f'{como}: processos abaixo do app = {len(antes)}; vivos 5 s depois = {len(sobram)} (memoria somada: {mb:.0f} MB)')
+    tipos = ps('ConvertTo-Json -Compress @(' + ','.join(map(str, sobram)) + " | ForEach-Object { if ((Get-CimInstance Win32_Process -Filter \"ProcessId=$_\").CommandLine -match 'spawn_main') { 'pool' } else { 'app' } })") if sobram else []
+    print(f'{como}: processos abaixo do app = {len(antes)}; vivos 5 s depois = {len(sobram)} {sorted(tipos)} (memoria somada: {mb:.0f} MB)')
     for x in sobram: subprocess.run(['taskkill', '/PID', str(x), '/F'], capture_output=True)  # limpeza
 '@ | .venv\Scripts\python.exe -
 ```
 
   Saída:
-  - `terminate() (TerminateProcess) no processo do app: processos abaixo do app = 5; vivos 5 s depois = 4 (memoria somada: 249 MB)`
-  - `Ctrl+Break no grupo do console: processos abaixo do app = 5; vivos 5 s depois = 0 (memoria somada: 0 MB)`
+  - `terminate() (TerminateProcess) no processo do app: processos abaixo do app = 5; vivos 5 s depois = 4 ['pool', 'pool', 'pool', 'pool'] (memoria somada: 249 MB)`
+  - `Ctrl+Break no grupo do console: processos abaixo do app = 5; vivos 5 s depois = 0 [] (memoria somada: 0 MB)`
 
-  "5" é o processo Python real (o `.venv\Scripts\python.exe` é um lançador, e é ele que leva o `terminate()`) mais os 4 do pool. O bloco mata os órfãos no fim. Antes desta rodada, nesta máquina, `Get-CimInstance Win32_Process -Filter "Name='python.exe'" | Where-Object CommandLine -match 'spawn_main'` listava **24** processos assim (6 grupos de 4, das 09h42 às 10h22 de hoje), todos com o processo pai já morto. A origem provável são as rodadas anteriores, que abriram o app num subprocesso e o encerraram com `terminate()`; isso não é reproduzível agora.
+  "5" é o processo Python real (o `.venv\Scripts\python.exe` é um lançador, e é ele que leva o `terminate()`) mais os 4 do pool. Os 4 que sobram são todos do pool (`spawn_main` na linha de comando): o Python real morre junto com o lançador. Então o pai dos workers some, e a solução abaixo (esperar o sinal do pai) se aplica. O bloco mata os órfãos no fim. Antes desta rodada, nesta máquina, `Get-CimInstance Win32_Process -Filter "Name='python.exe'" | Where-Object CommandLine -match 'spawn_main'` listava **24** processos assim (6 grupos de 4, das 09h42 às 10h22 de hoje), todos com o processo pai já morto. A origem provável são as rodadas anteriores, que abriram o app num subprocesso e o encerraram com `terminate()`; isso não é reproduzível agora.
 - **Impacto:** testado: o encerramento à força (`TerminateProcess`, a mesma chamada do "Finalizar tarefa" do Gerenciador de Tarefas, aqui feita no lançador) deixa ~250 MB parados até reiniciar o PC, mais 4 processos a cada vez; e o Ctrl+Break mandado ao grupo do console não deixa órfãos. Não testados: Ctrl+C, fechar a janela do console e o "Finalizar tarefa" no Python real (§5).
 - **Solução proposta:** passar um `initializer` ao `ProcessPoolExecutor` com uma thread que espera `multiprocessing.parent_process().sentinel` e chama `os._exit(0)` quando o pai some (biblioteca padrão, ~6 linhas). Só "criar o pool na primeira leitura grande" não resolve: o pool continua órfão depois da primeira leitura.
 - **Testes necessários:** Python (Windows, depois do R3-03): o bloco acima como teste, com `terminate()` e 0 vivos.
@@ -709,111 +735,13 @@ for como in ['terminate() (TerminateProcess) no processo do app', 'Ctrl+Break no
 - **Classificação:** Risco potencial (registro ausente; se houve problema de método não dá para saber)
 - **Prioridade:** P3 (vai no mesmo PR do R1-02, que já pede o mínimo de amostra documentado no `VALIDACAO.md`)
 - **Localização:** `conciliacao.py:29-30` ("Faixas calibradas com 4 históricos reais"; o R1 citou `:28`), `match.js:14` (repete), `VALIDACAO.md:73` ("Match com 4 históricos reais conferido no Chromium…", uma checagem de interface). O estudo com 12 históricos que escolheu o RBO e o "peso pelo tempo" aparece em `analise.py:43` e `CHANGELOG.md:112-123`, mas não no `VALIDACAO.md`.
-- **Evidência:** as 4 últimas linhas do bloco do R3-01. O ponto "não está documentado se houve dados separados" já estava na R1 (§6 da R1); o que esta rodada acrescenta é a ausência do estudo de 12 históricos no `VALIDACAO.md`.
+- **Evidência:** as 4 últimas linhas do bloco do R3-01. O ponto "não está documentado se houve dados separados" já estava na R1 (§6 da R1); o que esta rodada acrescenta é a ausência do estudo de 12 históricos no `VALIDACAO.md` e que os limiares dos 12 arquétipos do Wrapped também foram calibrados com 4 históricos reais sem validação separada registrada (`VALIDACAO.md:65`).
 - **Impacto:** as faixas ("Sintonia rara" a partir de 25) não têm validação registrada; se os mesmos 4 históricos serviram para escolher e para conferir, as faixas podem só descrever esses 4. Junto do R1-02 (1 artista em comum dá "Sintonia rara"), a nota do Match é a parte com menos base registrada.
 - **Solução proposta:** uma seção "Match" no `VALIDACAO.md` com: quais dados escolheram as faixas, quais as conferiram (outros históricos, ou validação deixando um de fora), a distribuição das notas e o resultado; e uma seção com o estudo dos 12 históricos (números agregados e método, sem nomes). Se não houver dados separados, dizer isso e marcar as faixas como provisórias na tela (o R2-07 já pede a escala da nota).
 - **Testes necessários:** nenhum de código.
 - **Critério de aceitação:** o `VALIDACAO.md` tem as duas seções, cada uma dizendo quais dados calibraram, quais validaram (ou que não houve validação separada) e os números obtidos. O bloco do R3-01 só confere que as palavras aparecem; o conteúdo é revisão humana.
 
-### R3-10 — Nomes e descrições das métricas divergem entre superfícies e não dizem tudo o que o cálculo faz
-
-- **Classificação:** Oportunidade de melhoria
-- **Prioridade:** P4
-- **Localização:**
-  - cosseno: "Escuta em comum" (`resultado.js:59`), "Similaridade musical" (`componentes.py:70`, `apresentacao.py:115`), "SIMILARIDADE DE ESCUTA · COSSENO" (`cartao.py:152`);
-  - Ruzicka: "Plays em comum" (`resultado.js:62`, parecido demais com "Escuta em comum") e "Contagens compartilhadas" (`componentes.py:73`); o aviso "sensível ao volume de escuta" só existe no rodapé do PC (`ui/layout.py:871`);
-  - Jaccard: "De todos os artistas que aparecem nos dois históricos" (`resultado.js:60`) e "todos os artistas" (`componentes.py:71`), mas o cálculo usa só plays ≥ 30 s e, por padrão, só o período em comum (`analise.py:307-330`); o Ruzicka "pesando pela quantidade de plays", mas no navegador o padrão pesa ln(1 + plays) (R3-01).
-- **Evidência:**
-
-```powershell
-@'
-import re
-from pathlib import Path
-# Ancorado no dado (chave ou campo da metrica), nao no rotulo: o bloco continua valendo depois de trocar os nomes.
-ALVOS = {'site/app/js/resultado.js': r"\['(cosseno|jaccard|ruzicka)'", 'componentes.py': r"\(\s*'[^']+', m\.(cosseno|jaccard|jaccard_ponderado)\b",
-         'ui/layout.py': r'volume de escuta'}
-for arq, padrao in ALVOS.items():
-    for i, linha in enumerate(Path(arq).read_text(encoding='utf-8').splitlines(), 1):
-        if re.search(padrao, linha):
-            print(f'{arq}:{i}', ascii(linha.strip())[:150])
-cartao = Path('cartao.py').read_text(encoding='utf-8').splitlines()
-i = next(n for n, l in enumerate(cartao) if 'resultado.metricas.cosseno' in l)  # o rotulo e a linha antes do numero
-print(f'cartao.py:{i}', ascii(cartao[i - 1].strip())[:150])
-print('"volume" em algum texto do app web:', [str(p) for p in Path('site').rglob('*.js') if 'volume de escuta' in p.read_text(encoding='utf-8')])
-'@ | .venv\Scripts\python.exe -
-```
-
-  Saída:
-  - `site/app/js/resultado.js:59 "['cosseno', 'Escuta em comum', 'Cosseno', 'Compara quanto cada um ouviu de cada artista. \xc9 o n\xfamero da abertura dos stories.'],"`
-  - `site/app/js/resultado.js:60 "['jaccard', 'Artistas em comum', 'Jaccard', 'De todos os artistas que aparecem nos dois hist\xf3ricos, quantos os dois ouviram.'],"`
-  - `site/app/js/resultado.js:62 "['ruzicka', 'Plays em comum', 'Ruzicka', 'Como o de artistas em comum, mas pesando pela quantidade de plays.'],"`
-  - `componentes.py:70 "('Similaridade musical', m.cosseno, f'Cosseno \xb7 pondera\xe7\xe3o {resultado.ponderacao}'),"`
-  - `componentes.py:71 "('Artistas em comum', m.jaccard, 'Jaccard \xb7 todos os artistas'),"`
-  - `componentes.py:73 "('Contagens compartilhadas', m.jaccard_ponderado, 'Ruzicka \xb7 pondera\xe7\xe3o selecionada'),"`
-  - `ui/layout.py:871 "'O Ruzicka usa pesos absolutos e \xe9 sens\xedvel ao volume de escuta. ' + AVISO_TRACOS,"`
-  - `cartao.py:152 "texto(100, 415, 'SIMILARIDADE DE ESCUTA \xb7 COSSENO', 26, SECUNDARIO)"`
-  - `"volume" em algum texto do app web: []`
-
-  As fórmulas fazem o que os nomes prometem: cosseno sobre contagens de plays (`metricas.py:49-51`), Jaccard sobre conjuntos de artistas (`metricas.py:54-58`), RBO extrapolado do top 50 com p = 0,9 (`metricas.py:61-82`, "pesa mais o topo"), Ruzicka com o mesmo divisor nos dois perfis, sem normalizar volume (`metricas.py:85-97`). No Match, o cosseno é sobre rankings ponderados por posição (`perfil_gosto.py:206-226`), e a tela diz "compara só os rankings" (`match-tela.js:20`): bate.
-- **Impacto:** quem usa as duas superfícies não sabe que "Escuta em comum" e "Similaridade musical" são o mesmo número; no navegador ninguém avisa que o Ruzicka favorece quem ouve mais; e "todos os artistas" sugere mais do que o cálculo usa.
-- **Solução proposta:** um nome por métrica nas três superfícies e descrições que digam o recorte ("artistas com plays de 30 s ou mais, no período em comum") e a ponderação; a frase do volume também em `resultado.js:62`.
-- **Testes necessários:** Python (`tests/test_contratos.py`): os rótulos das 4 métricas iguais em `resultado.js` e `componentes.py`.
-- **Critério de aceitação:** no bloco, o rótulo do cosseno é o mesmo nas linhas de `resultado.js`, `componentes.py` e `cartao.py`, o do Ruzicka é o mesmo nas duas primeiras, e a última linha deixa de ser `[]`.
-
-### R3-11 — Convite: um `SYNCUP2.` futuro diz "Isso não parece um convite do SyncUp", e uma mudança de sentido sob `SYNCUP1.` passaria sem aviso
-
-- **Classificação:** Oportunidade de melhoria (versionamento)
-- **Prioridade:** P4 (só importa no dia em que o formato mudar)
-- **Localização:** `convite.py:62-63`, `site/app/js/convite.js:55`. O prefixo é o único versionamento; não há campo de versão no JSON, e campos desconhecidos são ignorados (`convite.py:76-88`).
-- **Evidência:**
-
-```powershell
-@'
-import base64, json, subprocess, zlib
-from convite import PREFIXO, gerar_convite, ler_convite
-from perfil_gosto import PerfilGosto
-def codigo(d, prefixo=PREFIXO):
-    return prefixo + base64.urlsafe_b64encode(zlib.compress(json.dumps(d).encode())).decode().rstrip('=')
-base = {'n': 'Ana', 'a': {'short_term': ['Banda A']}, 'm': {'short_term': [['Faixa 1', 'Banda A']]}}
-casos = {
-    'atual': codigo(base),
-    'futuro SYNCUP2.': codigo(base, 'SYNCUP2.'),
-    'campo novo (v)': codigo({**base, 'v': 2, 'g': ['rock']}),
-    'sem m': codigo({k: v for k, v in base.items() if k != 'm'}),
-    'sem n': codigo({k: v for k, v in base.items() if k != 'n'}),
-}
-NODE = ("import {lerConvite} from './site/app/js/convite.js'; let s=''; process.stdin.on('data', d => s += d).on('end', async () => {"
-        " const r = []; for (const c of JSON.parse(s)) { try { const p = await lerConvite(c); r.push('ok ' + p.nome); } catch (e) { r.push('erro: ' + e.message); } }"
-        " console.log(JSON.stringify(r)); });")
-js = json.loads(subprocess.run(['node', '--input-type=module', '-e', NODE], input=json.dumps(list(casos.values())).encode(),
-                               capture_output=True, check=True).stdout.decode('utf-8'))
-for (nome, c), j in zip(casos.items(), js):
-    try: py = 'ok ' + ler_convite(c).nome
-    except ValueError as e: py = 'erro: ' + str(e)
-    print(nome, '| py:', ascii(py), '| js:', ascii(j))
-for extra in ({'versao': 99}, {}, {'versao': 'x'}):
-    p = PerfilGosto.de_dict({'nome': 'Ana', 'top_artistas': {'short_term': ['Banda A']}, **extra})
-    print('de_dict', extra, '-> aceito, versao =', repr(p.versao))
-'@ | .venv\Scripts\python.exe -
-```
-
-  Saída:
-  - `atual | py: 'ok Ana' | js: 'ok Ana'`
-  - `futuro SYNCUP2. | py: 'erro: Isso n\xe3o parece um convite do SyncUp (ele come\xe7a com "SYNCUP1.").' | js: 'erro: Isso n\xe3o parece um convite do SyncUp (ele come\xe7a com "SYNCUP1.").'`
-  - `campo novo (v) | py: 'ok Ana' | js: 'ok Ana'`
-  - `sem m | py: 'erro: O convite est\xe1 incompleto ou foi alterado. Copie o c\xf3digo inteiro de novo.' | js: (igual)`
-  - `sem n | py: 'erro: O convite est\xe1 incompleto ou foi alterado. Copie o c\xf3digo inteiro de novo.' | js: (igual)`
-  - `de_dict {'versao': 99} -> aceito, versao = 99`
-  - `de_dict {} -> aceito, versao = 1`
-  - `de_dict {'versao': 'x'} -> aceito, versao = 'x'`
-
-  As 3 últimas linhas são do R3-13.
-- **Impacto:** se o formato mudar de prefixo, quem tem a versão antiga lê "não parece um convite do SyncUp" e acha que o amigo mandou algo errado, quando o certo é atualizar. Se mudar sem trocar o prefixo (por exemplo, um campo `v: 2` que muda o sentido de `a`), a versão antiga aceita em silêncio. Acrescentar um campo opcional sem mudar o sentido funciona hoje, e campo obrigatório ausente é recusado com mensagem clara.
-- **Solução proposta:** reconhecer `SYNCUP<n>.` com `n > 1` e reservar o campo `v` (recusar se `v > 1`), respondendo nos dois casos "Este convite foi feito numa versão mais nova do SyncUp. Atualize o app para ler." Nos dois motores, com o mesmo texto. Não há migração a fazer: `SYNCUP1.` é o único formato desde que o convite existe.
-- **Testes necessários:** `tests/test_convite.py` e `tests/js/convite.test.mjs` com `SYNCUP2.` e com `v: 2`; paridade da mensagem (o round trip de `test_paridade_match.py:141-152` já existe).
-- **Critério de aceitação:** as linhas `futuro SYNCUP2.` e `campo novo (v)` do bloco mostram a mensagem de atualização nos dois lados.
-
-### R3-12 — Limite de taxa: nenhum cliente respeita um `Retry-After` longo, o iTunes não tem limitador e o download do Last.fm multiplica as tentativas
+### R3-10 — Limite de taxa: nenhum cliente respeita um `Retry-After` longo, o iTunes não tem limitador e o download do Last.fm multiplica as tentativas
 
 - **Classificação:** Risco potencial
 - **Prioridade:** P3
@@ -825,20 +753,9 @@ for extra in ({'versao': 99}, {}, {'versao': 'x'}):
 - **Impacto:** depois das tentativas o app desiste com a mensagem certa. Mas, quando o Last.fm pede pausa, saem 16 pedidos com a chave pública compartilhada por todos os visitantes, 2 deles depois que a pessoa já leu "pediu uma pausa"; isso pode prolongar o bloqueio. Uma falha no meio de um download longo joga fora todas as páginas já baixadas. O iTunes recebeu 19 buscas de uma vez no Wrapped observado (3 delas as de exemplo); nos outros modos, pelo código, a rajada tem o tamanho da trilha de cada um.
 - **Solução proposta:** nos clientes com tentativas (Last.fm, capas, MusicBrainz, ListenBrainz), ler `Retry-After` (segundos) e, se for maior que um teto de 10 s (o do ListenBrainz hoje), desistir logo com a mensagem de pausa; abaixo do teto, esperar o maior entre ele e a espera atual. No Last.fm, um 429 ou erro 29 numa página pausa as outras (um `AbortController` interno), e as páginas já baixadas vão para o cache. No iTunes, o mesmo limitador de `capas.js:80-94`. Os testes devem usar o status que cada serviço documenta (o MusicBrainz, pela documentação pública, responde 503 ao limite; isso não foi verificado aqui).
 - **Testes necessários:** JS (`tests/js/lastfm.test.mjs`): `pedir` com 429 e `Retry-After: 60` desiste em 1 pedido; `baixarScrobbles` com 429 a partir da página 2 faz no máximo 1 rodada de tentativas no total e 0 pedidos depois da rejeição. JS (novo `tests/js/som.test.mjs`): N candidatas dão no máximo K pedidos em voo. Python (`tests/test_listenbrainz.py`): 429 com `Retry-After: 30` dá 1 pedido.
-- **Critério de aceitação:** no bloco do R3-06, a linha do 429 dá `1 pedidos` e a do download dá `pedidos depois da mensagem 0`; no bloco da §2.2, o ListenBrainz com `Retry-After: 30` dá `pedidos 1`.
+- **Critério de aceitação:** no bloco do R3-06, a linha do 429 dá `1 pedidos` e a do download dá `pedidos no total` ≤ 6 e `pedidos depois da mensagem 0`; no bloco da §2.2, o ListenBrainz e o MusicBrainz com `Retry-After: 30` dão `pedidos 1`. As outras partes (capas com `Retry-After`, cache parcial do Last.fm e no máximo K buscas do iTunes em voo) ficam nos testes listados acima, que precisam ser acrescentados a esses blocos ou à suíte. Nas capas e no MusicBrainz, "desistir" é parar de tentar **sem** gravar a falha no cache (hoje os dois engolem o erro e devolvem vazio, `capas.js:127`, `generos.py:100-103`).
 
-### R3-13 — `PerfilGosto.de_dict` aceita qualquer versão, e o perfil salvo que ele lia não existe mais
-
-- **Classificação:** Oportunidade de melhoria (código morto)
-- **Prioridade:** P4
-- **Localização:** `perfil_gosto.py:51` (campo `versao`), `:62-75` (`para_json`, `de_dict`). Os perfis salvos saíram com o login do Spotify (`CHANGELOG.md:358`); `git grep -n -w -e de_dict -e para_json` acha só a definição (`perfil_gosto.py:62,66`) e os blocos de evidência da Rodada 1 (`docs/auditoria/rodada-1.md:106` e `:175`, nos R1-01 e R1-03); o bloco do R3-11 também usa `de_dict`. Nenhum código do app, de `tools/`, do `notebook/` ou de `tests/` usa. `VERSAO_PERFIL` continua útil: entra na chave do cache em memória (`perfil_gosto.py:142`). O comentário de `rotulo_fonte` sobre "convites antigos" (`:56`) também não vale mais: `ler_convite` sempre grava `fonte='convite'` (`convite.py:95`).
-- **Evidência:** as 3 últimas linhas do bloco do R3-11 (`versao` 99 e `'x'` aceitos sem aviso).
-- **Impacto:** nenhum para o usuário hoje. Quem lê o código acha que existe um formato de perfil salvo com versão, e `de_dict` aceita perfis de versões futuras sem aviso. É usado só pelos blocos de evidência das auditorias.
-- **Solução proposta:** o mais barato é manter `de_dict` (os blocos de evidência das R1-01, R1-03 e R3-11 dependem dele) e recusar `versao > VERSAO_PERFIL` com "Perfil de uma versão mais nova do SyncUp"; `para_json` pode sair. Remover `de_dict` também só se os três blocos forem reescritos para montar `PerfilGosto(...)` direto, porque os critérios de aceitação do R1-01 e do R1-03 apontam para eles. `VERSAO_PERFIL` fica (chave do cache).
-- **Testes necessários:** Python (`tests/test_match.py` ou novo): `de_dict` com `versao` 99 recusa e sem `versao` aceita.
-- **Critério de aceitação:** no bloco do R3-11, a linha `de_dict {'versao': 99}` passa a mostrar a recusa (e `{'versao': 'x'}` também); a linha sem `versao` continua aceita. Se a escolha for remover, `git grep -n -w -e de_dict -e para_json -- "*.py"` não acha nada e os blocos das R1-01, R1-03 e R3-11 rodam sem `de_dict`.
-
-### R3-14 — Textos de privacidade prometem mais do que o app faz: "apagados em até 1 hora" e "Fechou a página, sumiu"
+### R3-11 — Textos de privacidade prometem mais do que o app faz: "apagados em até 1 hora" e "Fechou a página, sumiu"
 
 - **Classificação:** Problema comprovado pela configuração e pela documentação do Gradio (a limpeza em si não foi cronometrada)
 - **Prioridade:** P3
@@ -881,9 +798,139 @@ print('SomStories montado em:', [f'{a}:{i}' for a in ('resultado.js', 'match-tel
 
   A janela de ~2 h é a regra documentada do Gradio aplicada aos números configurados; a limpeza em si não foi cronometrada.
 - **Impacto:** as promessas de privacidade são a principal razão de usar o SyncUp. Quem usou o Last.fm e fechou a página acredita que nada ficou, mas o histórico inteiro continua no navegador até alguém clicar em "Apagar dados guardados".
-- **Solução proposta:** PC: `delete_cache=(600, 3000)` (limpa a cada 10 min o que tem mais de 50 min: no pior caso, 1 hora) ou o texto "em até 2 horas, ou ao fechar o app". Landing e app: dizer que o Last.fm fica guardado neste navegador até apagar (e onde apagar), ou dar uma validade ao cache (`quando` já existe). Os subtítulos, como no R3-05.
+- **Solução proposta:** PC: `delete_cache=(600, 3000)` (com o app aberto, limpa a cada 10 min o que tem mais de 50 min: no pior caso, 1 hora) ou o texto "apagados em até 2 horas com o app aberto; se você fechar antes, na próxima vez que abrir". Nos dois casos o texto precisa dizer o que acontece ao fechar: a limpeza total é ao **reiniciar** o servidor, não ao fechar. Uma limpeza explícita ao encerrar ajuda no fechamento normal, mas não no encerramento à força (R3-08). Landing e app: dizer que o Last.fm fica guardado neste navegador até apagar (e onde apagar), ou dar uma validade ao cache (`quando` já existe). Os subtítulos, como no R3-05.
 - **Testes necessários:** Python (`tests/test_smoke_ui.py`): a soma de `delete_cache` ≤ o prazo do texto. Python (`tests/test_site.py`): se o cache do Last.fm não tem validade, a landing não diz "sumiu".
-- **Critério de aceitação:** no bloco, as duas primeiras linhas ficam coerentes (ou o texto muda), a linha do `index.html` deixa de prometer que tudo some (ou `quando` passa a ser lido), e as linhas de `main.js` mudam.
+- **Critério de aceitação:** no bloco, as duas primeiras linhas ficam coerentes com a regra do Gradio da 3ª (ou o texto muda e passa a falar do fechamento), e a linha do `index.html` deixa de prometer que tudo some (ou `quando` passa a ser lido). As linhas de `main.js` são do R3-05.
+
+### R3-12 — Nomes e descrições das métricas divergem entre superfícies e não dizem tudo o que o cálculo faz
+
+- **Classificação:** Oportunidade de melhoria
+- **Prioridade:** P4
+- **Localização:**
+  - cosseno: "Escuta em comum" (`resultado.js:59`), "Similaridade musical" (`componentes.py:70`, `apresentacao.py:115`), "SIMILARIDADE DE ESCUTA · COSSENO" (`cartao.py:152`);
+  - Ruzicka: "Plays em comum" (`resultado.js:62`, parecido demais com "Escuta em comum"), "Contagens compartilhadas" (`componentes.py:73`) e "Contagens em comum" (`cartao.py:160`); o aviso "sensível ao volume de escuta" só existe no rodapé do PC (`ui/layout.py:871`);
+  - RBO: "Favoritos em comum" (`resultado.js:61`, `apresentacao.py:116`) e "Favoritos compartilhados" (`componentes.py:72`);
+  - Batalha: "% de sintonia" (`batalha.js:176`) é o cosseno com `log1p` fixo (`batalha.js:99`), sem dizer a fórmula nem a ponderação;
+  - Jaccard: "De todos os artistas que aparecem nos dois históricos" (`resultado.js:60`) e "todos os artistas" (`componentes.py:71`), mas o cálculo usa só plays ≥ 30 s e, por padrão, só o período em comum (`analise.py:307-330`); o Ruzicka "pesando pela quantidade de plays", mas no navegador o padrão pesa ln(1 + plays) (R3-01).
+- **Evidência:**
+
+```powershell
+@'
+import re
+from pathlib import Path
+# Ancorado no dado (chave ou campo da metrica), nao no rotulo: o bloco continua valendo depois de trocar os nomes.
+ler = lambda arq: Path(arq).read_text(encoding='utf-8').splitlines()
+for i, l in enumerate(ler('site/app/js/resultado.js'), 1):
+    if re.search(r"\['(cosseno|jaccard|rbo\w*|ruzicka)'", l):
+        print(f'resultado.js:{i}', ascii(l.strip())[:150])
+for i, l in enumerate(ler('componentes.py'), 1):
+    if re.search(r"\(\s*'[^']+', m\.(cosseno|jaccard|rbo_top50|jaccard_ponderado)\b", l):
+        print(f'componentes.py:{i}', ascii(l.strip())[:150])
+cartao = ler('cartao.py')
+n = next(n for n, l in enumerate(cartao) if 'fmt_pct(resultado.metricas.cosseno)' in l)  # o rotulo e a linha antes do numero
+print(f'cartao.py:{n}', ascii(cartao[n - 1].strip())[:150])
+for n, l in enumerate(cartao):
+    if 'metricas.jaccard_ponderado' in l:
+        print(f'cartao.py:{n + 1}', ascii(l.strip())[:150])
+for i, l in enumerate(ler('apresentacao.py'), 1):
+    if re.search(r'm\.(cosseno|rbo_top50)', l):
+        print(f'apresentacao.py:{i}', ascii(l.strip())[:150])
+print('landing, "escuta em comum":', [i for i, l in enumerate(ler('site/index.html'), 1) if 'escuta em comum' in l])
+print('ui/layout.py, aviso do volume:', [i for i, l in enumerate(ler('ui/layout.py'), 1) if 'volume de escuta' in l])
+print('resultado.js, aviso do volume na linha do Ruzicka:', [i for i, l in enumerate(ler('site/app/js/resultado.js'), 1) if "['ruzicka'" in l and 'volume' in l])
+'@ | .venv\Scripts\python.exe -
+```
+
+  Saída:
+  - `resultado.js:59 "['cosseno', 'Escuta em comum', 'Cosseno', 'Compara quanto cada um ouviu de cada artista. \xc9 o n\xfamero da abertura dos stories.'],"`
+  - `resultado.js:60 "['jaccard', 'Artistas em comum', 'Jaccard', 'De todos os artistas que aparecem nos dois hist\xf3ricos, quantos os dois ouviram.'],"`
+  - `resultado.js:61 "['rbo_top50', 'Favoritos em comum', 'RBO do top 50', 'Compara os rankings dos 50 artistas mais ouvidos de cada um: pesa mais o topo do ranking.'],"`
+  - `resultado.js:62 "['ruzicka', 'Plays em comum', 'Ruzicka', 'Como o de artistas em comum, mas pesando pela quantidade de plays.'],"`
+  - `componentes.py:70 "('Similaridade musical', m.cosseno, f'Cosseno \xb7 pondera\xe7\xe3o {resultado.ponderacao}'),"`
+  - `componentes.py:71 "('Artistas em comum', m.jaccard, 'Jaccard \xb7 todos os artistas'),"`
+  - `componentes.py:72 "('Favoritos compartilhados', m.rbo_top50, 'RBO \xb7 Top 50'),"`
+  - `componentes.py:73 "('Contagens compartilhadas', m.jaccard_ponderado, 'Ruzicka \xb7 pondera\xe7\xe3o selecionada'),"`
+  - `cartao.py:152 "texto(100, 415, 'SIMILARIDADE DE ESCUTA \xb7 COSSENO', 26, SECUNDARIO)"`
+  - `cartao.py:160 "f'Contagens em comum \xb7 Ruzicka: {fmt_pct(resultado.metricas.jaccard_ponderado)}',"`
+  - `apresentacao.py:115 'texto = f"""## Similaridade musical: {fmt_pct(m.cosseno)}'`
+  - `apresentacao.py:116 '**Cosseno:** compara o padr\xe3o de frequ\xeancia por artista. **Jaccard geral:** {fmt_pct(m.jaccard)}. **Favoritos em comum (RBO do top 50, pesa mai`
+  - `landing, "escuta em comum": [60, 74]`
+  - `ui/layout.py, aviso do volume: [871]`
+  - `resultado.js, aviso do volume na linha do Ruzicka: []`
+
+  As fórmulas fazem o que os nomes prometem: cosseno sobre contagens de plays (`metricas.py:49-51`), Jaccard sobre conjuntos de artistas (`metricas.py:54-58`), RBO extrapolado do top 50 com p = 0,9 (`metricas.py:61-82`, "pesa mais o topo"), Ruzicka com o mesmo divisor nos dois perfis, sem normalizar volume (`metricas.py:85-97`). No Match, o cosseno é sobre rankings ponderados por posição (`perfil_gosto.py:206-226`), e a tela diz "compara só os rankings" (`match-tela.js:20`): bate.
+- **Impacto:** quem usa as duas superfícies não sabe que "Escuta em comum" e "Similaridade musical" são o mesmo número; no navegador ninguém avisa que o Ruzicka favorece quem ouve mais; e "todos os artistas" sugere mais do que o cálculo usa.
+- **Solução proposta:** um nome por métrica nas três superfícies (incluindo a landing, `site/index.html:60,74`) e descrições que digam o recorte ("artistas com plays de 30 s ou mais, no período em comum") e a ponderação; a frase do volume também em `resultado.js:62`. `apresentacao.py:resumo_markdown` diz manter o texto da v0.4 "para o benchmark e a regressão" (`:112-113`): o único teste que o usa olha só a tabela (`tests/test_passo2.py:221`), mas conferir o `benchmark/` antes de mudar o título.
+- **Testes necessários:** Python (`tests/test_contratos.py`): os rótulos das 4 métricas iguais em `resultado.js` e `componentes.py`.
+- **Critério de aceitação:** no bloco, cada métrica tem o mesmo rótulo em `resultado.js`, `componentes.py`, `cartao.py` e `apresentacao.py`, e a linha `aviso do volume na linha do Ruzicka` deixa de ser `[]`.
+
+### R3-13 — Convite: um `SYNCUP2.` futuro diz "Isso não parece um convite do SyncUp", e uma mudança de sentido sob `SYNCUP1.` passaria sem aviso
+
+- **Classificação:** Oportunidade de melhoria (versionamento)
+- **Prioridade:** P4 (só importa no dia em que o formato mudar)
+- **Localização:** `convite.py:62-63`, `site/app/js/convite.js:55`. O prefixo é o único versionamento; não há campo de versão no JSON, e campos desconhecidos são ignorados (`convite.py:76-88`).
+- **Evidência:**
+
+```powershell
+@'
+import base64, json, subprocess, zlib
+from convite import PREFIXO, gerar_convite, ler_convite
+from perfil_gosto import PerfilGosto
+def codigo(d, prefixo=PREFIXO):
+    return prefixo + base64.urlsafe_b64encode(zlib.compress(json.dumps(d).encode())).decode().rstrip('=')
+base = {'n': 'Ana', 'a': {'short_term': ['Banda A']}, 'm': {'short_term': [['Faixa 1', 'Banda A']]}}
+casos = {
+    'atual': codigo(base),
+    'futuro SYNCUP2.': codigo(base, 'SYNCUP2.'),
+    'campo novo (v)': codigo({**base, 'v': 2, 'g': ['rock']}),
+    'sem m': codigo({k: v for k, v in base.items() if k != 'm'}),
+    'sem n': codigo({k: v for k, v in base.items() if k != 'n'}),
+}
+NODE = ("import {lerConvite} from './site/app/js/convite.js'; let s=''; process.stdin.on('data', d => s += d).on('end', async () => {"
+        " const r = []; for (const c of JSON.parse(s)) { try { const p = await lerConvite(c); r.push('ok ' + p.nome); } catch (e) { r.push('erro: ' + e.message); } }"
+        " console.log(JSON.stringify(r)); });")
+js = json.loads(subprocess.run(['node', '--input-type=module', '-e', NODE], input=json.dumps(list(casos.values())).encode(),
+                               capture_output=True, check=True).stdout.decode('utf-8'))
+for (nome, c), j in zip(casos.items(), js):
+    try: py = 'ok ' + ler_convite(c).nome
+    except ValueError as e: py = 'erro: ' + str(e)
+    print(nome, '| py:', ascii(py), '| js:', ascii(j))
+for extra in ({'versao': 99}, {}, {'versao': 'x'}, {'versao': True}):
+    try:
+        p = PerfilGosto.de_dict({'nome': 'Ana', 'top_artistas': {'short_term': ['Banda A']}, **extra})
+        print('de_dict', extra, '-> aceito, versao =', repr(p.versao))
+    except (ValueError, TypeError) as e:
+        print('de_dict', extra, '-> recusado:', type(e).__name__, ascii(str(e)))
+'@ | .venv\Scripts\python.exe -
+```
+
+  Saída:
+  - `atual | py: 'ok Ana' | js: 'ok Ana'`
+  - `futuro SYNCUP2. | py: 'erro: Isso n\xe3o parece um convite do SyncUp (ele come\xe7a com "SYNCUP1.").' | js: 'erro: Isso n\xe3o parece um convite do SyncUp (ele come\xe7a com "SYNCUP1.").'`
+  - `campo novo (v) | py: 'ok Ana' | js: 'ok Ana'`
+  - `sem m | py: 'erro: O convite est\xe1 incompleto ou foi alterado. Copie o c\xf3digo inteiro de novo.' | js: (igual)`
+  - `sem n | py: 'erro: O convite est\xe1 incompleto ou foi alterado. Copie o c\xf3digo inteiro de novo.' | js: (igual)`
+  - `de_dict {'versao': 99} -> aceito, versao = 99`
+  - `de_dict {} -> aceito, versao = 1`
+  - `de_dict {'versao': 'x'} -> aceito, versao = 'x'`
+  - `de_dict {'versao': True} -> aceito, versao = True`
+
+  As 4 últimas linhas são do R3-14.
+- **Impacto:** se o formato mudar de prefixo, quem tem a versão antiga lê "não parece um convite do SyncUp" e acha que o amigo mandou algo errado, quando o certo é atualizar. Se mudar sem trocar o prefixo (por exemplo, um campo `v: 2` que muda o sentido de `a`), a versão antiga aceita em silêncio. Acrescentar um campo opcional sem mudar o sentido funciona hoje, e campo obrigatório ausente é recusado com mensagem clara.
+- **Solução proposta:** reconhecer `^SYNCUP\d+\.` também em `separar_convites`/`separarConvites` (`convite.py:98-109`, `convite.js:76-83`; hoje um `SYNCUP2.` colado depois de um `SYNCUP1.` vira continuação dele e estraga os dois), e reservar o campo `v` (inteiro, recusando `bool` e texto, comparado **fora** do `try` que transforma qualquer erro em "incompleto ou foi alterado", `convite.py:89-92`, `convite.js:68-70`). Para `n > 1` ou `v > 1`: "Este convite foi feito numa versão mais nova do SyncUp. Atualize o app para ler.", igual nos dois motores. Não há migração a fazer: `SYNCUP1.` é o único formato desde que o convite existe.
+- **Testes necessários:** `tests/test_convite.py` e `tests/js/convite.test.mjs` com `SYNCUP2.`, `v: 2`, `v: '2'` e `v: true`, e com `SYNCUP1.…` e `SYNCUP2.…` colados juntos (o 1º lido, o 2º com a mensagem de atualização); paridade da mensagem (o round trip de `test_paridade_match.py:141-152` já existe).
+- **Critério de aceitação:** as linhas `futuro SYNCUP2.` e `campo novo (v)` do bloco mostram a mensagem de atualização nos dois lados.
+
+### R3-14 — `PerfilGosto.de_dict` aceita qualquer versão, e o perfil salvo que ele lia não existe mais
+
+- **Classificação:** Oportunidade de melhoria (código morto)
+- **Prioridade:** P4
+- **Localização:** `perfil_gosto.py:51` (campo `versao`), `:62-75` (`para_json`, `de_dict`). Os perfis salvos saíram com o login do Spotify (`CHANGELOG.md:358`); `git grep -n -w -e de_dict -e para_json` acha só a definição (`perfil_gosto.py:62,66`) e os blocos de evidência da Rodada 1 (`docs/auditoria/rodada-1.md:106` e `:175`, nos R1-01 e R1-03); o bloco do R3-13 também usa `de_dict`. Nenhum código do app, de `tools/`, do `notebook/` ou de `tests/` usa. `VERSAO_PERFIL` continua útil: entra na chave do cache em memória (`perfil_gosto.py:142`). O comentário de `rotulo_fonte` sobre "convites antigos" (`:56`) também não vale mais: `ler_convite` sempre grava `fonte='convite'` (`convite.py:95`).
+- **Evidência:** as 4 últimas linhas do bloco do R3-13 (`versao` 99, `'x'` e `True` aceitos sem aviso).
+- **Impacto:** nenhum para o usuário hoje. Quem lê o código acha que existe um formato de perfil salvo com versão, e `de_dict` aceita perfis de versões futuras sem aviso. É usado só pelos blocos de evidência das auditorias.
+- **Solução proposta:** o mais barato é manter `de_dict` (os blocos de evidência das R1-01, R1-03 e R3-13 dependem dele) e aceitar só `versao` inteira (recusando `bool` e texto) com `1 <= versao <= VERSAO_PERFIL`, com "Perfil de uma versão mais nova do SyncUp" para as futuras e `ValueError` para o resto; `para_json` pode sair. Remover `de_dict` também só se os três blocos forem reescritos para montar `PerfilGosto(...)` direto, porque os critérios de aceitação do R1-01 e do R1-03 apontam para eles. `VERSAO_PERFIL` fica (chave do cache).
+- **Testes necessários:** Python (`tests/test_match.py` ou novo): `de_dict` com `versao` 99, `'x'` e `True` recusa com `ValueError`; sem `versao` aceita.
+- **Critério de aceitação:** no bloco do R3-13 (que captura a exceção), as linhas `versao` 99, `'x'` e `True` passam a dar `recusado: ValueError`; a linha sem `versao` continua aceita. Se a escolha for remover, `git grep -n -w -e de_dict -e para_json -- "*.py"` não acha nada e os blocos das R1-01, R1-03 e R3-13 rodam sem `de_dict`.
 
 ## 4. O que já funciona bem
 
@@ -968,19 +1015,23 @@ print('js stderr', ascii(r.stderr.decode('utf-8')[-300:]))
 '@ | .venv\Scripts\python.exe -
 ```
 
-  Saída: 3 linhas `py '<arquivo>' linhas 1 'Can\xe7\xe3o \u3042' 'Banda \xc9'` (para `'Hist\xf3rico utf8.zip'`, `'Historico cp437.zip'` e `'com BOM \xe9.json'`), 3 linhas `js ['<arquivo>', 1, 'Can\xe7\xe3o \u3042', 'Banda \xc9']` e `js stderr ''`. Pela leitura, os `open()` do código do app têm `encoding=` explícito ou são binários, e os testes que chamam o Node decodificam bytes como UTF-8 (`dados.py`, `generos.py`, `exportacoes.py`, `tests/test_paridade_*.py`).
-- **Invariantes das métricas:** em 500 pares aleatórios (pesos de 0,01 a 1 milhão, nomes Unicode), as 4 métricas são simétricas, dão 1 para o mesmo perfil, ficam em [0, 1], são determinísticas, e Python × JS diferem no máximo 1,7e-16:
+  Saída: 3 linhas `py '<arquivo>' linhas 1 'Can\xe7\xe3o \u3042' 'Banda \xc9'` (para `'Hist\xf3rico utf8.zip'`, `'Historico cp437.zip'` e `'com BOM \xe9.json'`), 3 linhas `js ['<arquivo>', 1, 'Can\xe7\xe3o \u3042', 'Banda \xc9']` e `js stderr ''`. Ressalva: o JS decodifica o **nome** de cada arquivo dentro do ZIP como UTF-8 (`historico.js:36,45`), então um nome em cp437 com acento vira `\ufffd`; o JSON é lido mesmo assim porque só a extensão `.json` importa. Pela leitura, os `open()` do código do app têm `encoding=` explícito ou são binários, e os testes que chamam o Node decodificam bytes como UTF-8 (`dados.py`, `generos.py`, `exportacoes.py`, `tests/test_paridade_*.py`).
+- **Invariantes das métricas:** em 500 pares aleatórios (pesos de 0,01 a 1 milhão, nomes Unicode, perfis de até 70 artistas para passar do corte k = 50 do RBO, e 1 em cada 10 sem nada em comum), as 4 métricas são simétricas, dão 1 para o mesmo perfil, ficam em [0, 1], dão 0 sem nada em comum, são determinísticas, e Python × JS diferem no máximo 2,2e-16:
 
 ```powershell
 @'
 import json, random, subprocess
 from metricas import cosseno, jaccard, jaccard_ponderado, rbo
 rnd = random.Random(7)
-nomes = [f'Banda {i}' for i in range(40)] + ['Banda ' + chr(0x3042), 'Banda ' + chr(0x1F3B5)]
+nomes = [f'Banda {i}' for i in range(100)] + ['Banda ' + chr(0x3042), 'Banda ' + chr(0x1F3B5)]
+def perfil(pool):
+    return {n: rnd.choice([1, 2, 3, 10, 250, 1e6]) * rnd.random() + 0.01 for n in rnd.sample(pool, rnd.randint(1, min(70, len(pool))))}
 casos = []
-for _ in range(500):
-    a = {n: rnd.choice([1, 2, 3, 10, 250, 1e6]) * rnd.random() + 0.01 for n in rnd.sample(nomes, rnd.randint(1, 30))}
-    b = {n: rnd.choice([1, 2, 3, 10, 250, 1e6]) * rnd.random() + 0.01 for n in rnd.sample(nomes, rnd.randint(1, 30))}
+for i in range(500):
+    if i % 10 == 0:  # 1 em cada 10: perfis sem nenhum artista em comum
+        a, b = perfil(nomes[:51]), perfil(nomes[51:])
+    else:
+        a, b = perfil(nomes), perfil(nomes)
     casos.append((a, b, sorted(a, key=a.get, reverse=True), sorted(b, key=b.get, reverse=True)))
 def metricas_py(a, b, ra, rb):
     return [cosseno(a, b), jaccard(a, b), jaccard_ponderado(a, b), rbo(ra, rb, 0.9, 50)]
@@ -988,30 +1039,30 @@ NODE = ("import {cosseno, jaccard, ruzicka, rbo} from './site/app/js/dupla.js'; 
         " const M = (o) => new Map(Object.entries(o)); const f = ([a, b, ra, rb]) => [cosseno(M(a), M(b)), jaccard(Object.keys(a), Object.keys(b)), ruzicka(M(a), M(b)), rbo(ra, rb, 0.9, 50)];"
         " console.log(JSON.stringify(JSON.parse(s).map((c) => [f(c), f([c[1], c[0], c[3], c[2]]), f([c[0], c[0], c[2], c[2]]), f(c)]))); });")
 js = json.loads(subprocess.run(['node', '--input-type=module', '-e', NODE], input=json.dumps(casos).encode(), capture_output=True, check=True).stdout)
-rotulos = ['cosseno', 'jaccard', 'ruzicka', 'rbo']
-for i, rot in enumerate(rotulos):
+print('casos:', len(casos), '| perfis com 50+ artistas (corte k=50 do RBO):', sum(len(c[2]) >= 50 for c in casos), '| pares disjuntos:', sum(not set(c[0]) & set(c[1]) for c in casos))
+for i, rot in enumerate(['cosseno', 'jaccard', 'ruzicka', 'rbo']):
     py_ab = [metricas_py(*c)[i] for c in casos]
     py_ba = [metricas_py(c[1], c[0], c[3], c[2])[i] for c in casos]
     py_aa = [metricas_py(c[0], c[0], c[2], c[2])[i] for c in casos]
     js_ab, js_ba, js_aa, js_ab2 = ([r[k][i] for r in js] for k in range(4))
-    print(f'{rot:8} simetria py max|ab-ba| = {max(abs(x - y) for x, y in zip(py_ab, py_ba)):.1e}, js = {max(abs(x - y) for x, y in zip(js_ab, js_ba)):.1e}'
-          f' | identidade py min = {min(py_aa):.15f}, js min = {min(js_aa):.15f}'
-          f' | limites [0,1] py {all(0 <= x <= 1 for x in py_ab)}, js {all(0 <= x <= 1 for x in js_ab)}'
-          f' | determinismo js {js_ab == js_ab2}, py {py_ab == [metricas_py(*c)[i] for c in casos]}'
-          f' | max|py-js| = {max(abs(x - y) for x, y in zip(py_ab, js_ab)):.1e}')
+    disj = [x for x, c in zip(py_ab, casos) if not set(c[0]) & set(c[1])]
+    print(f'{rot:8} simetria py {max(abs(x - y) for x, y in zip(py_ab, py_ba)):.1e} js {max(abs(x - y) for x, y in zip(js_ab, js_ba)):.1e}'
+          f' | identidade max|x-1| py {max(abs(x - 1) for x in py_aa):.1e} js {max(abs(x - 1) for x in js_aa):.1e}'
+          f' | [0,1] {all(0 <= x <= 1 for x in py_ab + py_aa + js_ab + js_aa)} | disjuntos = 0 {all(x == 0 for x in disj)}'
+          f' | determinismo {js_ab == js_ab2 and py_ab == [metricas_py(*c)[i] for c in casos]} | max|py-js| {max(abs(x - y) for x, y in zip(py_ab, js_ab)):.1e}')
 '@ | .venv\Scripts\python.exe -
 ```
 
-  Saída (4 linhas, uma por métrica):
-  - `cosseno  simetria py max|ab-ba| = 0.0e+00, js = 1.1e-16 | identidade py min = 1.000000000000000, js min = 1.000000000000000 | limites [0,1] py True, js True | determinismo js True, py True | max|py-js| = 1.7e-16`
-  - `jaccard  simetria py max|ab-ba| = 0.0e+00, js = 0.0e+00 | identidade … 1.000000000000000 … | limites [0,1] py True, js True | determinismo js True, py True | max|py-js| = 0.0e+00`
-  - `ruzicka  simetria py max|ab-ba| = 0.0e+00, js = 1.2e-16 | identidade … | limites … True | determinismo … True | max|py-js| = 1.1e-16`
-  - `rbo      simetria py max|ab-ba| = 0.0e+00, js = 0.0e+00 | identidade … | limites … True | determinismo … True | max|py-js| = 0.0e+00`
+  - `casos: 500 | perfis com 50+ artistas (corte k=50 do RBO): 136 | pares disjuntos: 78`
+  - `cosseno  simetria py 0.0e+00 js 1.1e-16 | identidade max|x-1| py 2.2e-16 js 2.2e-16 | [0,1] True | disjuntos = 0 True | determinismo True | max|py-js| 2.2e-16`
+  - `jaccard  simetria py 0.0e+00 js 0.0e+00 | identidade max|x-1| py 0.0e+00 js 0.0e+00 | [0,1] True | disjuntos = 0 True | determinismo True | max|py-js| 0.0e+00`
+  - `ruzicka  simetria py 0.0e+00 js 1.4e-16 | identidade max|x-1| py 0.0e+00 js 0.0e+00 | [0,1] True | disjuntos = 0 True | determinismo True | max|py-js| 1.1e-16`
+  - `rbo      simetria py 0.0e+00 js 0.0e+00 | identidade max|x-1| py 6.7e-16 js 6.7e-16 | [0,1] True | disjuntos = 0 True | determinismo True | max|py-js| 0.0e+00`
 
-  A simetria do JS difere no último bit (1e-16) porque a ordem da soma muda; os testes propostos no R3-04 devem usar tolerância. "Identidade min = 1.000000000000000" está arredondado a 15 casas.
+  A simetria do JS difere no último bit (1e-16) porque a ordem da soma muda; os testes propostos no R3-04 devem usar tolerância.
 - **A paridade pega o que mais importa:** mudar o play mínimo de 30 s quebra 27 testes; a janela de 28 dias, o peso das músicas e a meia-vida também são pegos (R3-04).
 - **Cache do histórico bem versionado** (`dados.py:487-580`): versão do esquema, identidade das opções, hash do Parquet, contadores conferidos e gravação atômica. É o modelo para o cache de gêneros (R1-03).
-- **Convite:** acrescentar um campo opcional não quebra a versão de hoje, e campo obrigatório ausente é recusado com a mesma mensagem nos dois motores (R3-11).
+- **Convite:** acrescentar um campo opcional não quebra a versão de hoje, e campo obrigatório ausente é recusado com a mesma mensagem nos dois motores (R3-13).
 - **Rede no PC:** servidor só em `127.0.0.1`, telemetria do Gradio desligada, ListenBrainz e MusicBrainz opcionais, User-Agent sem e-mail (visto no cliente do próprio app). O MusicBrainz espaça 1 s, para depois de 3 falhas e não guarda falha no cache (§2.2).
 - **Rede no navegador:** URLs de imagem e áudio só de hosts esperados e https (`capas.js:21-25`, `lastfm.js:61`); IDs fictícios nunca saem (`capas.js:14-16`; o pedido do bloco do R3-05 só saiu porque o ID tinha o formato real); o Last.fm tem tempo-limite por pedido, tentativas com espera, "Cancelar" e mensagens em português para sem rede, lento e limite.
 - **Quando uma API de dados falha** (ListenBrainz, MusicBrainz, Last.fm, capas, nos casos simulados), o resultado continua aparecendo; só some a capa, o som ou a pessoa que dependia dela. O CDN do Preact é a exceção (R3-02).
@@ -1020,7 +1071,7 @@ Também valem os pontos fortes das rodadas 1 e 2 (paridade, golden master, ZIP e
 
 ## 5. Necessita investigação
 
-- **CI no Windows:** a proposta do R3-03 não foi rodada no GitHub. A suíte no Python 3.14 e o Node 22 no Windows não foram executados nesta máquina (o 3.14 só resolveu dependências).
+- **CI no Windows:** a proposta do R3-03 não foi rodada no GitHub. A suíte no Python 3.14 e o Node 22 no Windows não foram executados nesta rodada (o 3.14 só resolveu dependências).
 - **Primeira execução do `iniciar.bat`:** criar o venv com o `py -3` (3.14 aqui) numa pasta com acento e instalar tudo. Testado só com o ambiente já criado.
 - **Encerrar o app de outros jeitos:** Ctrl+C, fechar a janela do console (`CTRL_CLOSE`) e o "Finalizar tarefa" no Python real (não no lançador). O pool órfão também não foi testado no Linux (R3-08).
 - **Rede da página do Gradio:** ninguém capturou os pedidos que o frontend do Gradio faz no navegador; "nada mais sai do PC" (§2.2) vem da leitura. Um teste Playwright com toda a rede externa abortada fecharia isso.
@@ -1029,6 +1080,10 @@ Também valem os pontos fortes das rodadas 1 e 2 (paridade, golden master, ZIP e
 - **Arquivo `.bat` em LF:** funcionou aqui nos dois caminhos. O `cmd` tem um problema conhecido com rótulos em arquivos LF quando o rótulo cai numa fronteira de bloco de leitura; não foi reproduzido.
 - **Comportamento real das APIs:** limites do iTunes por IP, frequência real de 500 no oEmbed, status de limite do MusicBrainz (503 pela documentação) e o `Referer` no GitHub Pages não foram medidos, por regra.
 - **Tamanho real da diferença do R3-01** com históricos reais.
+- **iTunes com erro, lentidão ou limite:** só lido (R3-10), não simulado.
+- **Envio de dados nos modos Dupla, Match e Batalha:** inferido do código (R3-05), não capturado no Chromium.
+- **`iniciar.bat` sem internet:** o `pip install` de cada abertura não foi testado offline.
+- **`encoding=` em todos os `open()`:** afirmado pela leitura (§4), sem script que confira.
 - **"Downloads … apagados ao fim da sessão"** (`ui/meus_dados.py:20`): pode ser uma 4ª promessa governada pelo mesmo `delete_cache` ou pelo `rmtree` de `ui/comum.py:69-76`; não conferido.
 
 ## 6. Lista curta (fora dos 14 achados)
@@ -1041,6 +1096,7 @@ Também valem os pontos fortes das rodadas 1 e 2 (paridade, golden master, ZIP e
 - `web/ponte.py` ainda se descreve como ponte do Pyodide (`:1`), mas hoje só serve aos testes de paridade; e `site.yml:8` republica o site quando `web/**` muda.
 - `VALIDACAO.md` ainda se chama "v0.5 final" no título (`:1`) e para na v1.3.1.
 - Correções de linha da Rodada 1: o comentário das faixas do Match está em `conciliacao.py:29` (não `:28`).
+- `capas.js:32-33` cria o object store em `onupgradeneeded` sem conferir se ele já existe: uma futura versão 2 do banco levantaria `ConstraintError` no upgrade.
 
 ## 7. Plano de PRs desta rodada (um item por PR, nesta ordem)
 
@@ -1051,24 +1107,24 @@ Também valem os pontos fortes das rodadas 1 e 2 (paridade, golden master, ZIP e
 | 3 | Mesma ponderação padrão (ou ponderação visível no navegador) | R3-01 | `opcoes.js` ou `ui/layout.py`, `resultado.js`, `VALIDACAO.md`, `tests/test_contratos.py` |
 | 4 | Preact/htm servido pelo próprio site | R3-02 | `site/app/index.html`, `site/app/vendor/`, `tests/test_site.py`, `tests/navegador/conftest.py` |
 | 5 | Subtítulos verdadeiros e preferência "Capas e som" | R3-05 | `main.js`, `som.js`, `wrapped.js`, teste de navegador, `tests/test_site.py` |
-| 6 | Textos de privacidade coerentes (PC e landing) | R3-14 | `ui/layout.py` ou `ui/meus_dados.py`, `site/index.html`, `lastfm.js`, testes |
+| 6 | Textos de privacidade coerentes (PC e landing) | R3-11 | `ui/layout.py` ou `ui/meus_dados.py`, `site/index.html`, `lastfm.js`, testes |
 | 7 | Capas: 5xx não vira "sem capa" por 30 dias | R3-06 | `capas.js`, `tests/js/capas.test.mjs` |
 | 8 | Mensagens do ListenBrainz | R3-07 | `listenbrainz.py`, `ui/match.py`, `tests/test_listenbrainz.py` |
 | 9 | Pool de leitura encerra junto com o app | R3-08 | `dados.py`, teste (Windows, depende do PR 1) |
-| 10 | Limite de taxa nos 5 clientes | R3-12 | `lastfm.js`, `capas.js`, `som.js`, `generos.py`, `listenbrainz.py`, testes |
+| 10 | Limite de taxa nos 5 clientes | R3-10 | `lastfm.js`, `capas.js`, `som.js`, `generos.py`, `listenbrainz.py`, testes |
 | 11 | Seções de validação do Match e do estudo de 12 históricos | R3-09 | `VALIDACAO.md` (junto do PR do R1-02) |
-| 12 | Nomes e descrições das métricas | R3-10 | `resultado.js`, `componentes.py`, `cartao.py`, `apresentacao.py` |
-| 13 | Convite de versão futura | R3-11 | `convite.py`, `convite.js`, testes |
-| 14 | `de_dict` recusa versão futura | R3-13 | `perfil_gosto.py`, teste |
+| 12 | Nomes e descrições das métricas | R3-12 | `resultado.js`, `componentes.py`, `cartao.py`, `apresentacao.py` |
+| 13 | Convite de versão futura | R3-13 | `convite.py`, `convite.js`, testes |
+| 14 | `de_dict` recusa versão futura | R3-14 | `perfil_gosto.py`, teste |
 
-Conflitos: 2 e 3 mexem em `tests/test_contratos.py` (o 2 cria, o 3 acrescenta); 3 e 12 em `resultado.js`; 5 e 10 em `som.js`; 6 e 10 em `lastfm.js`; 7 e 10 em `capas.js`; 8 e 10 em `listenbrainz.py`. O 1 sai primeiro, porque o teste do 9 precisa do runner Windows; o 10 vai depois de 5 a 8.
+Conflitos: 2, 3 e 12 mexem em `tests/test_contratos.py` (o 2 cria, os outros acrescentam); 4, 5 e 6 em `tests/test_site.py`; 3 e 12 em `resultado.js`; 5 e 10 em `som.js`; 6 e 10 em `lastfm.js`; 7 e 10 em `capas.js`; 8 e 10 em `listenbrainz.py`. O 1 sai primeiro, porque o teste do 9 precisa do runner Windows; o 10 vai depois de 5 a 8.
 
 ## 8. Skills aplicadas
 
 - `agent-skills:ci-cd-and-automation` — a matriz do R3-03 (sem pular nenhum gate, `fail-fast: false`, Windows só onde o sistema importa, `shell: bash` onde o passo é bash, nomes de check preservados para a proteção da `main`) e o "deslocar para a esquerda": o teste de contrato do R3-04 pega no CI o que hoje só apareceria no uso.
-- `agent-skills:api-and-interface-design` — contratos Python/JS como interface (R3-04); "preferir adição" e seus limites no convite (R3-11); resposta de terceiros como dado não confiável (R3-07); a Lei de Hyrum para manter o texto das mensagens igual nos dois motores.
-- `agent-skills:deprecation-and-migration` — antes de propor remover, contar os consumidores: o `git grep` achou os blocos de evidência das auditorias usando `de_dict`, e por isso o R3-13 prefere recusar versões futuras a remover ("remover só com uso zero comprovado"); não há migração a desenhar para o convite (um formato só).
-- `agent-skills:security-and-hardening` (e o revisor `agent-skills:security-auditor`, em contexto limpo) — fronteiras de confiança e "enviar o mínimo": a tabela do que sai (§2.2), o envio antes da escolha (R3-05), prazo de retenção e textos de privacidade (R3-14), CSP (lista curta).
+- `agent-skills:api-and-interface-design` — contratos Python/JS como interface (R3-04); "preferir adição" e seus limites no convite (R3-13); resposta de terceiros como dado não confiável (R3-07); a Lei de Hyrum para manter o texto das mensagens igual nos dois motores.
+- `agent-skills:deprecation-and-migration` — antes de propor remover, contar os consumidores: o `git grep` achou os blocos de evidência das auditorias usando `de_dict`, e por isso o R3-14 prefere recusar versões futuras a remover ("remover só com uso zero comprovado"); não há migração a desenhar para o convite (um formato só).
+- `agent-skills:security-and-hardening` (e o revisor `agent-skills:security-auditor`, em contexto limpo) — fronteiras de confiança e "enviar o mínimo": a tabela do que sai (§2.2), o envio antes da escolha (R3-05), prazo de retenção e textos de privacidade (R3-11), CSP (lista curta).
 - `agent-skills:test-driven-development` — cada achado traz o teste que falha hoje; as mutações do R3-04 são o "vermelho" do teste de contrato proposto.
 - `engineering:testing-strategy` — pirâmide para os testes propostos: contrato estático e invariantes (pequenos), paridade (médios), Playwright só para o que é tela (R3-02, R3-05).
 - `agent-skills:doubt-driven-development` — revisão adversarial do relatório antes da entrega (§9).
@@ -1080,24 +1136,26 @@ Três revisores em contexto limpo, cada um com uma lente (evidência e correçã
 - **Uma mutação não fazia nada:** `MAXIMO_TEXTO` é valor padrão de argumento em `convite._texto`, e trocar o atributo do módulo não o alcança. O bloco passou a trocar `_texto.__defaults__`, ganhou a mutação da janela de 28 dias, e o placar virou "6 de 8 mutações, mais 2 controles".
 - **O YAML não estava pronto para colar** (só cabeçalhos, e mudava os nomes dos checks da proteção da `main`). Virou o `testes.yml` completo, com os nomes de hoje no Linux, e o bloco compara os passos com o arquivo atual.
 - **Contradições e exageros corrigidos:** o ListenBrainz não "respeita" o `Retry-After` (corta em 10 s e tenta de novo); "nenhum teste fixa simetria" era falso (`tests/test_metricas.py` confere simetria e identidade por métrica no Python; a 1ª correção ainda dizia o contrário e foi refeita no 2º ciclo); "~80 MB" não tinha medida (medido: 249 MB); o `iniciar.bat` só foi testado com o ambiente pronto; o 3.14 só resolveu dependências; o cabeçalho escondia as idas ao `unpkg.com`; "nada derruba o app" contradizia o R3-02.
-- **Evidência mais fiel:** o User-Agent do ListenBrainz agora vem do cliente do próprio app (antes, do teste); o bloco do R3-01 lê os padrões dos arquivos; o do R3-10 se ancora na chave da métrica; o do R3-08 força a criação do pool.
-- **O que faltava:** o download paralelo do Last.fm (16 pedidos num 429, 2 depois da mensagem) e o iTunes sem limitador entraram no R3-12; os modos Dupla, Match e Batalha e os subtítulos "Nada sai do seu aparelho" entraram no R3-05; os textos de privacidade viraram o R3-14; a §2.2 ganhou a landing, o PyPI e a 2ª etapa das capas.
-- **Planos:** R1-10 e R3-11 voltaram a PRs separados; as promoções de prioridade estão marcadas; o PR do teste de contrato não leva as tabelas de casos extremos (elas falhariam antes das correções); a nota sobre o R1-07 foi corrigida (ele não iguala limites); o plano consolidado foi para o fim.
+- **Evidência mais fiel:** o User-Agent do ListenBrainz agora vem do cliente do próprio app (antes, do teste); o bloco do R3-01 lê os padrões dos arquivos; o do R3-12 se ancora na chave da métrica; o do R3-08 força a criação do pool.
+- **O que faltava:** o download paralelo do Last.fm (16 pedidos num 429, 2 depois da mensagem) e o iTunes sem limitador entraram no R3-10; os modos Dupla, Match e Batalha e os subtítulos "Nada sai do seu aparelho" entraram no R3-05; os textos de privacidade viraram o R3-11; a §2.2 ganhou a landing, o PyPI e a 2ª etapa das capas.
+- **Planos:** R1-10 e R3-13 voltaram a PRs separados; as promoções de prioridade estão marcadas; o PR do teste de contrato não leva as tabelas de casos extremos (elas falhariam antes das correções); a nota sobre o R1-07 foi corrigida (ele não iguala limites); o plano consolidado foi para o fim.
 - **Linhas corrigidas:** `testes.yml:51`, `listenbrainz.py:65-66`, `dados.py:660-676`, `match.js:14`, `requirements.txt:8`, e as fontes da linha de imagens da §2.2.
 
-Um 2º ciclo, em contexto limpo, revisou só as partes reescritas e achou mais 14 pontos, corrigidos: a frase sobre testes de simetria ainda errada; `delete_cache=(600, 3600)` contradizia o teste proposto no próprio R3-14; as notas de cada modo sobre o iTunes (R3-05 exagerava); critérios que o bloco não verificava (R3-01, R3-05, R3-12); o teto do `Retry-After` sem número; pendências da R2 §5 que faltavam; conflitos de arquivo entre rodadas no plano consolidado; o bloco da suíte com as 6 mutações, que só existia em prosa; e mais linhas.
+Um 2º ciclo, em contexto limpo, revisou só as partes reescritas e achou mais 14 pontos, corrigidos: a frase sobre testes de simetria ainda errada; `delete_cache=(600, 3600)` contradizia o teste proposto no próprio R3-11; as notas de cada modo sobre o iTunes (R3-05 exagerava); critérios que o bloco não verificava (R3-01, R3-05, R3-10); o teto do `Retry-After` sem número; pendências da R2 §5 que faltavam; conflitos de arquivo entre rodadas no plano consolidado; o bloco da suíte com as 6 mutações, que só existia em prosa; e mais linhas.
 
-Ficaram de fora, como ruído ou trade-off: rodar a primeira instalação do `iniciar.bat` e o app do PC com a rede capturada (foram para §5). Não houve segunda opinião de outro modelo nesta rodada.
+Depois do merge, uma revisão de **outro modelo** (Gemini, em contexto próprio, a partir dos arquivos do repositório) trouxe mais 17 pontos. Conferidos no código, 16 procediam, total ou parcialmente, e entraram nesta versão: critérios que passariam com uma correção vazia (Dupla/Match/Batalha só com o "Ver um exemplo") ou que o bloco não verificava (perfil com exceção abortando o laço; MusicBrainz sem `salvar()`); a quebra de `separar_convites` com um `SYNCUP2.` colado; texto de subtítulo proposto que seria falso na Dupla; "ao fechar o app" trocado por outra promessa falsa; a ordem dos achados por impacto (renumerados: o limite de taxa e os textos de privacidade, que eram R3-12 e R3-14, viraram R3-10 e R3-11; os nomes das métricas, o convite e o `de_dict`, que eram R3-10, R3-11 e R3-13, viraram R3-12, R3-13 e R3-14. As outras seções já usam a numeração nova); "a suíte nunca rodou no 3.14" era falso (`VALIDACAO.md:53,63`); constantes e nomes que faltavam; conflitos e contagem de PRs no plano. Um ponto foi descartado: as capas do Wrapped não escapam da preferência proposta, porque `comecar()` chama `aoLigar` (`som.js:159`). No R3-08, a dúvida sobre quem sobrevive foi resolvida com evidência: são os 4 do pool.
+
+Ficaram de fora, como ruído ou trade-off: rodar a primeira instalação do `iniciar.bat` e o app do PC com a rede capturada (foram para §5). 
 
 ## 10. Plano consolidado das 3 rodadas (P1 → P4)
 
-Uma ordem só, para os 38 achados (R1-01 a R1-10, R2-01 a R2-14, R3-01 a R3-14), em 36 PRs. Dentro de cada prioridade, primeiro o que protege os PRs seguintes (CI e teste de contrato), depois o que o usuário sente. Quando um achado sobe de prioridade para ir junto de outro, a linha diz.
+Uma ordem só, para os 38 achados (R1-01 a R1-10, R2-01 a R2-14, R3-01 a R3-14), em 36 linhas; como o R2-11 sai em um PR por arquivo (3 CSS), são 38 PRs. Dentro de cada prioridade, primeiro o que protege os PRs seguintes (CI e teste de contrato), depois o que o usuário sente. Quando um achado sobe de prioridade para ir junto de outro, a linha diz.
 
 | Ordem | Prioridade | PR | IDs | Observação |
 |---|---|---|---|---|
 | 1 | P1 | Match: pessoa sem dados comparáveis sai com aviso | R1-01 | Único P1 das 3 rodadas |
 | 2 | P2 | CI no Windows | R3-03 | Protege todos os seguintes no ambiente do Carlos |
-| 3 | P2 | Teste de contrato e invariantes | R3-04 (P3, adiantado) | Adiantado para nascer antes dos PRs que mexem em regras copiadas entre os motores (4, 11, 23, 27 a 29). O 1 vem antes por ser o único P1. Sem as tabelas de casos extremos (vão nos PRs 11, 27 e 28) |
+| 3 | P2 | Teste de contrato e invariantes | R3-04 (P3, adiantado) | Adiantado para nascer antes dos PRs que mexem em regras copiadas entre os motores ou acrescentam ao teste de contrato (4, 5, 6, 11, 27 a 32). O 1 vem antes por ser o único P1. Sem as tabelas de casos extremos (vão nos PRs 11, 27 e 28) |
 | 4 | P2 | Match: amostra pequena + validação documentada | R1-02 + R3-09 (P3, promovido para ir junto) | Mesmo `VALIDACAO.md`; depois do 1 (mesmos arquivos) |
 | 5 | P2 | Wrapped: "histórico curto demais" | R2-01 | Precisa de paridade e de piso decidido com dados |
 | 6 | P2 | Ponderação padrão igual (ou visível) | R3-01 | |
@@ -1109,11 +1167,11 @@ Uma ordem só, para os 38 achados (R1-01 a R1-10, R2-01 a R2-14, R3-01 a R3-14),
 | 12 | P3 | Gradio: regra morta + teste de seletores | R1-05 + R2-12 (P4, promovido para ir junto) | R2 §7 já sugere juntar |
 | 13 | P3 | Testes de navegador dos erros de entrada | R1-06 | |
 | 14 | P3 | Subtítulos verdadeiros e preferência "Capas e som" | R3-05 | A preferência é decisão de produto do Carlos |
-| 15 | P3 | Textos de privacidade coerentes | R3-14 | |
+| 15 | P3 | Textos de privacidade coerentes | R3-11 | |
 | 16 | P3 | Capas: 5xx sem cache de 30 dias | R3-06 | |
 | 17 | P3 | Mensagens do ListenBrainz | R3-07 | |
 | 18 | P3 | Pool encerra com o app | R3-08 | Depois do 2 |
-| 19 | P3 | Limite de taxa nos 5 clientes (Last.fm, capas, MusicBrainz, ListenBrainz e iTunes) | R3-12 | Depois de 14 a 17 (mesmos arquivos) |
+| 19 | P3 | Limite de taxa nos 5 clientes (Last.fm, capas, MusicBrainz, ListenBrainz e iTunes) | R3-10 | Depois de 14 a 17 (mesmos arquivos) |
 | 20 | P3 | Stories da Dupla com nomes longos | R2-04 | |
 | 21 | P3 | Painel do som lê o motivo | R2-05 | |
 | 22 | P3 | Cancelar o cálculo | R2-06 | |
@@ -1125,11 +1183,11 @@ Uma ordem só, para os 38 achados (R1-01 a R1-10, R2-01 a R2-14, R3-01 a R3-14),
 | 28 | P4 | Datas: mesmo subconjunto ISO | R1-09 | Com a tabela de datas nos dois lados |
 | 29 | P4 | Mensagem dos 64 MB e tabela de limites | R1-07 | Não iguala limites; a tabela documenta as diferenças esperadas, que o teste de contrato registra como exceção |
 | 30 | P4 | Convite: música malformada recusa | R1-10 | |
-| 31 | P4 | Convite de versão futura | R3-11 | Depois do 30 (mesmos arquivos) |
-| 32 | P4 | Nomes e descrições das métricas | R3-10 | |
-| 33 | P4 | `de_dict` recusa versão futura | R3-13 | |
+| 31 | P4 | Convite de versão futura | R3-13 | Depois do 30 (mesmos arquivos) |
+| 32 | P4 | Nomes e descrições das métricas | R3-12 | |
+| 33 | P4 | `de_dict` recusa versão futura | R3-14 | |
 | 34 | P4 | Hover protegido e flash do toque | R2-13 | |
 | 35 | P4 | Textos do PC sem "describe()" | R2-14 | |
 | 36 | P4 | Sobrescritas no fim dos CSS (um arquivo por PR) | R2-11 | Por último entre os de CSS (R2 §7) |
 
-As dependências de arquivo dentro de cada rodada estão nos planos de cada uma (R1 §8, R2 §7 e §7 acima). Entre rodadas, os arquivos em comum são: `som.js` (14, 19, 21); `main.js` (3, 14, 22); `match-tela.js` (1, 3, 22, 23); `resultado.js` (6, 32); `VALIDACAO.md` (4, 5, 6); `generos.py` (10, 19); `convite.py`/`convite.js` (30, 31). Sair na ordem da tabela, rebaseando cada PR sobre o anterior. Os dois "+" juntam achados que mexem nos mesmos arquivos e no mesmo assunto; continuam sendo um assunto por PR.
+As dependências de arquivo dentro de cada rodada estão nos planos de cada uma (R1 §8, R2 §7 e §7 acima). Entre rodadas, os arquivos em comum são: `som.js` (14, 19, 21); `main.js` (3, 14, 22); `match-tela.js` (1, 3, 22, 23); `wrapped.js` (5, 14, 22); `resultado.js` (6, 32); `VALIDACAO.md` (4, 5, 6, 29); `generos.py` (10, 19); `convite.py`/`convite.js` (30, 31); `ui/layout.py` (6, 15, 35); `ui/match.py` (1, 4, 17); `tests/test_smoke_ui.py` (12, 15, 35); `tests/test_match.py` (1, 33); `tests/navegador/test_app.py` (8, 13); `tests/test_contratos.py` (3, 6, 32); `styles.css` (9, 12, 24, 26). Sair na ordem da tabela, rebaseando cada PR sobre o anterior. Os dois "+" juntam achados que mexem nos mesmos arquivos e no mesmo assunto; continuam sendo um assunto por PR.

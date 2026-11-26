@@ -59,6 +59,9 @@ export function jaccard(a, b) {
 // Rank-biased overlap extrapolado (Webber et al., 2010) nos tops de k, como metricas.rbo: o topo pesa mais.
 // As duas listas são cortadas na mesma profundidade (a menor, até k); lista vazia devolve null.
 export function rbo(a, b, p = 0.9, k = 50) {
+  if (!(p > 0 && p < 1)) throw new RangeError('RBO: p precisa estar entre 0 e 1.'); // NaN também cai aqui
+  if (!Number.isInteger(k) || k < 1) throw new RangeError('RBO: k precisa ser um inteiro a partir de 1.');
+  if (new Set(a).size < a.length || new Set(b).size < b.length) throw new RangeError('RBO: as listas não podem repetir itens.');
   k = Math.min(k, a.length, b.length);
   if (!k) return null;
   const va = new Set(), vb = new Set();

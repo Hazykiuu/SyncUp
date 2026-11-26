@@ -390,8 +390,8 @@
 .sb-lua { fill: rgba(255, 255, 255, .1); } .sb-lua.acesa { fill: var(--lut); }
 /* Relógio novo: as horas do tema em branco no mostrador; a fatia de cada um no anel de dentro. */
 .sb-hora.na-janela { stroke: rgba(255, 255, 255, .62); }
-/* Calendário: folha com cabeçalho e 35 dias; os acesos na cor do lutador. */
-.sb-folha { fill: rgba(255, 255, 255, .04); stroke: rgba(255, 255, 255, .16); stroke-width: .6; } .sb-folha-topo { fill: rgba(255, 255, 255, .14); }
+/* Calendário: fio de cabeçalho e 35 dias, sem caixa; os acesos na cor do lutador. */
+.sb-folha-topo { fill: rgba(255, 255, 255, .3); }
 .sb-dia { fill: rgba(255, 255, 255, .12); } .sb-dia.acesa { fill: var(--lut); }
 .sb-estante { list-style: none; margin: 1cqw 0 0; padding: 0; display: flex; align-items: flex-end; gap: 2.4cqw; height: 62cqw; margin-block: 2cqw; }
 .sb-estante li { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 1cqw; min-width: 0; height: 100%; font-size: 3cqw; }

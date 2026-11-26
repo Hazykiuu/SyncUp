@@ -51,10 +51,10 @@ const GLIFOS = {
   // Relógio: as horas do tema marcadas no mostrador e, dentro, o anel da fatia de cada um.
   janela: (f, v, k, t) => html`<svg viewBox="0 0 40 40" class="sb-glifo">${HORAS.map((h) => traco(h, h >= t.janela[0] && h < t.janela[1] ? 'sb-hora na-janela' : 'sb-hora'))}
     ${arco(piso(v, f, 0.04), 'grosso', 9)}</svg>`,
-  // Calendário: uma folha de 35 dias; acende, linha a linha, a fração de cada um.
+  // Calendário: 35 dias sob um fio de cabeçalho, sem caixa (nada de cartão); acende, linha a linha, a fração de cada um.
   folha: (f, v) => {
     const n = acesas(v, f, 35);
-    return html`<svg viewBox="0 0 40 40" class="sb-glifo"><rect x="3" y="4" width="34" height="33" rx="3" class="sb-folha" /><rect x="3" y="4" width="34" height="6" rx="3" class="sb-folha-topo" />
+    return html`<svg viewBox="0 0 40 40" class="sb-glifo"><rect x="4.9" y="7" width="30.2" height="2.4" rx="1.2" class="sb-folha-topo" />
       ${Array.from({ length: 35 }, (_, d) => html`<rect x=${(4.9 + (d % 7) * 4.5).toFixed(1)} y=${(12.6 + Math.floor(d / 7) * 4.5).toFixed(1)} width="3.2" height="3.2" rx=".6"
         class=${d < n ? 'sb-dia acesa' : 'sb-dia'} style=${{ '--n': d }} />`)}</svg>`;
   },

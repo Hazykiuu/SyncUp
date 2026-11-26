@@ -40,6 +40,8 @@ def _batalha_forcada(pagina, url):
         '**/batalha-worker.js',
         lambda rota: rota.fulfill(body=corpo, content_type='text/javascript; charset=utf-8'),
     )
+    # a 1ª carga do app pode passar de 5 s com a máquina ocupada
+    expect(pagina.locator('button.mais-lutador:visible')).to_be_visible(timeout=TEMPO)
     for _ in range(3):
         pagina.locator('button.mais-lutador:visible').click()
     lutadores = pagina.locator('.lutador:visible')

@@ -4,7 +4,7 @@ import { CORES } from './batalha.js';
 import { chegarPouco, mostrarResultado } from './chegada.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
-import { duetos, melhorPar, trilhaMatch } from './match.js';
+import { duetos, MAXIMO_PESSOAS, melhorPar, trilhaMatch } from './match.js';
 import { avisoPoster, compartilhar, desenharPosterMatch } from './poster.js';
 import { destravarSom, ICONE, SomStories, TRILHA_EXEMPLO } from './som.js';
 import { Dock } from './stories/dock.js';
@@ -181,7 +181,7 @@ export function Match() {
             extra=${i >= 1 && html`<button type="button" class="tirar tirar-lutador" aria-label=${`Tirar a pessoa ${i + 1}`} onClick=${() => tirar(i)} disabled=${ocupado}>×</button>`} />
         </div>`)}
     </div>
-    ${nomes.length < 16 && html`<button type="button" class="btn btn-borda superficie mais-lutador" onClick=${adicionar} disabled=${ocupado}>+ Adicionar pessoa</button>`}
+    ${nomes.length < MAXIMO_PESSOAS && html`<button type="button" class="btn btn-borda superficie mais-lutador" onClick=${adicionar} disabled=${ocupado}>+ Adicionar pessoa</button>`}
     <label class="superficie match-colar"><span><b>Convites recebidos</b> <small>(opcional) Cole os códigos que começam com SYNCUP1., um por linha.</small></span>
       <textarea rows="3" value=${convites} onInput=${(e) => setConvites(e.target.value)} disabled=${ocupado} spellcheck="false" autocomplete="off"></textarea></label>
     <${MeuConvite} opcoes=${opcoes} rodar=${(m) => pedir(m)} ocupado=${ocupado} />

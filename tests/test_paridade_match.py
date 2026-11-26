@@ -174,3 +174,25 @@ def test_arredondamento_igual_ao_round_do_python():
 let s = ''; for await (const c of process.stdin) s += c;
 process.stdout.write(JSON.stringify(JSON.parse(s).map(arredondar1)));"""
     assert json.loads(_node(script, json.dumps(valores))) == [round(v, 1) for v in valores]
+
+
+def test_janelas_longas_e_nota_entre_20_e_25_iguais(tmp_path):
+    """Dados que cruzam os valores (R3-04): plays a ~200 e ~400 dias do fim e uma nota na faixa de 25."""
+
+    def historico(nome: str, dias_artistas: list[tuple[str, str]]) -> Path:
+        caminho = tmp_path / f'{nome}.json'
+        eventos = [
+            {'ts': f'{dia}T10:00:00Z', 'ms_played': 60_000, 'master_metadata_track_name': 'F',
+             'master_metadata_album_artist_name': artista}
+            for dia, artista in dias_artistas
+        ]  # fmt: skip
+        caminho.write_text(json.dumps(eventos), encoding='utf-8')
+        return caminho
+
+    hoje, d200, d400 = '2026-12-31', '2026-06-14', '2025-11-26'
+    ana = [(hoje, x) for x in ('Comum', 'A1', 'A2', 'A3')] + [(d200, 'Meio'), (d400, 'Velho')]
+    bia = [(hoje, x) for x in ('Comum', 'B1', 'B2', 'B3', 'B4')]
+    pessoas = [('Ana', historico('ana', ana)), ('Bia', historico('bia', bia))]
+    js = _js(pessoas, {})
+    assert 20 < js['pares'][0]['pontuacao'] < 25, js['pares'][0]['pontuacao']
+    _igual(_py(pessoas, {}), js, 'match')

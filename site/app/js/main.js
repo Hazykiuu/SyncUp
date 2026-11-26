@@ -4,6 +4,7 @@ import { chegarPouco, mostrarResultado } from './chegada.js';
 import { ligarOndas } from './corrida.js';
 import { audioCtx, destravarSom, pausarSom, silenciado, TRILHA_EXEMPLO } from './som.js';
 import { Batalha } from './batalha-tela.js';
+import { MAXIMO_PESSOAS } from './match.js';
 import { Match } from './match-tela.js';
 import { Pessoa } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
@@ -106,7 +107,7 @@ function cliqueFader(paraDireita) {
 const CABECA = {
   dupla: ['Compare dois históricos', 'Envie o Histórico Estendido do Spotify de duas pessoas. Nada é enviado para nenhum servidor.'],
   wrapped: ['Seu Wrapped da vida toda', 'Envie o seu Histórico Estendido do Spotify e veja a sua vida musical em stories. O histórico não sai do seu aparelho.'],
-  match: ['Match do grupo', 'Junte históricos e convites de 2 a 16 pessoas e veja quem combina com quem. Nada sai do seu aparelho.'],
+  match: ['Match do grupo', `Junte históricos e convites de 2 a ${MAXIMO_PESSOAS} pessoas e veja quem combina com quem. Nada sai do seu aparelho.`],
   batalha: ['Batalha de históricos', 'Junte de 3 a 6 históricos do Spotify e veja quem leva cada rodada. Nada sai do seu aparelho.'],
 };
 

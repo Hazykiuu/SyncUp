@@ -378,6 +378,18 @@ test('volume, variedade e repetição', () => {
   assert.equal(n.obra, 1);
 });
 
+test('top 10 corta no 10º, obra conta músicas de um artista e presença conta dias do período', () => {
+  // a1: 3 músicas no dia 1; a2 a a11: uma música cada no dia 4. 13 plays, 11 artistas, 13 músicas.
+  const n = num([
+    ...[1, 2, 3].map((k) => [`2024-03-01 10:0${k}`, MIN, `m${k}`, 'a1']),
+    ...Array.from({ length: 10 }, (_, k) => [`2024-03-04 10:${String(k + 10)}`, MIN, `s${k}`, `a${k + 2}`]),
+  ]);
+  perto(n.panelinha, 1200 / 13); // a1 (3) + 9 artistas com 1
+  perto(n.playlist, 1000 / 13); // 10 músicas de 1 play
+  assert.equal(n.obra, 3);
+  assert.equal(n.presenca, 50); // dias 1 e 4 de 1 a 4
+});
+
 test('em sequência: a ordem é a do início (fim − duração), não a do fim gravado', () => {
   // m1 termina 10:10 depois de 9 min (começou 10:01); m2 termina 10:05 e começou 10:04; m1 de novo às 10:19.
   const n = num([['2024-03-04 10:05', MIN, 'm2', 'a'], ['2024-03-04 10:10', 9 * MIN, 'm1', 'a'], ['2024-03-04 10:20', MIN, 'm1', 'a']]);

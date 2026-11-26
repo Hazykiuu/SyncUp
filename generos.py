@@ -38,6 +38,8 @@ PESO_PALAVRA = 0.5
 MAXIMO_FALHAS = 3
 TENTATIVAS = 2
 ARQUIVO_CACHE = 'generos_musicbrainz.json'
+VERSAO_CACHE = 1
+MAXIMO_ENTRADAS_CACHE = 20_000  # artistas; acima disso saem os gravados há mais tempo
 # Mesma pasta do cache Parquet (ConfiguracaoCarga.diretorio_cache); a UI passa a configurada.
 CACHE_PADRAO = Path(ConfiguracaoCarga().diretorio_cache) / ARQUIVO_CACHE
 
@@ -69,7 +71,17 @@ class ConsultaMusicBrainz:
             dados = json.loads(self.caminho.read_text('utf-8'))
         except (OSError, ValueError):
             return {}
-        return dados if isinstance(dados, dict) else {}
+        # Formato ou versão desconhecidos valem como cache vazio: o MusicBrainz é consultado de novo.
+        if not isinstance(dados, dict) or dados.get('versao') != VERSAO_CACHE:
+            return {}
+        artistas = dados.get('artistas')
+        if not isinstance(artistas, dict):
+            return {}
+        return {
+            chave: tags
+            for chave, tags in artistas.items()
+            if isinstance(tags, list) and all(isinstance(t, str) for t in tags)
+        }
 
     def generos(self, artista: str) -> list[str]:
         """Tags do artista; lista vazia se não houver correspondência confiável."""
@@ -125,7 +137,10 @@ class ConsultaMusicBrainz:
                 'w', dir=self.caminho.parent, suffix='.tmp', encoding='utf-8', delete=False
             ) as arquivo:
                 temporario = Path(arquivo.name)
-                json.dump(mesclado, arquivo, ensure_ascii=False)
+                recentes = dict(list(mesclado.items())[-MAXIMO_ENTRADAS_CACHE:])
+                json.dump(
+                    {'versao': VERSAO_CACHE, 'artistas': recentes}, arquivo, ensure_ascii=False
+                )
             temporario.replace(self.caminho)
         except OSError:
             if temporario is not None:

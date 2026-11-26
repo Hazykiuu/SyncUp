@@ -1,7 +1,7 @@
 // Batalha (no app web, no lugar do Grupo do app para PC): de 3 a 6 históricos disputam rodadas de números do período.
 // Funções puras: o Worker (batalha-worker.js) lê os arquivos e chama numerosDoLutador e montarBatalha.
 import { medidasNovas, numerosDoGrupo } from './batalha-medidas.js';
-import { ausente, OPOSTOS, TEMA, TEMAS } from './batalha-temas.js';
+import { ausente, FAMILIAS, OPOSTOS, TEMA, TEMAS, TITULOS } from './batalha-temas.js';
 import { calcularWrapped, compararTexto, MINIMO_PLAYS_WRAPPED, TEMPO_MINIMO_PLAY_MS } from './calculo.js';
 import { cosseno, ponderar } from './dupla.js';
 
@@ -178,18 +178,19 @@ export function alertaPaciencia(r, nomes) {
   return quem.length === 1 && pior > 60 ? { nome: nomes[quem[0]], valor: pior } : null;
 }
 
-// Título de classe do campeão único, pela primeira combinação de ouros que bater.
-const TITULOS = [
-  [['coruja', 'dia'], 'Insone Oficial'],
-  [['repeteco', 'fa'], 'Modo Obsessão'],
-  [['artistas', 'musicas'], 'Enciclopédia Musical'],
-  [['horas', 'plays'], 'Trator de Plays'],
-];
+// Título de classe do campeão único: a família em que fez mais ouros, com pelo menos 2 (empate: a primeira do
+// registro). Sem isso, "Dono(a) do Aux". `familiaDoTitulo` devolve a família, para a resenha citar as rodadas.
+function familiaDoTitulo(b) {
+  if (b.campeoes.length !== 1) return null;
+  const c = b.campeoes[0], ouros = new Map();
+  for (const r of b.rodadas) if (r.posicoes[c] === 1) ouros.set(TEMA[r.chave].familia, (ouros.get(TEMA[r.chave].familia) || 0) + 1);
+  let melhor = null;
+  for (const f of FAMILIAS) if ((ouros.get(f) || 0) >= 2 && (ouros.get(f) || 0) > (ouros.get(melhor) || 0)) melhor = f;
+  return melhor;
+}
 export function tituloCampeao(b) {
   if (b.campeoes.length !== 1) return null;
-  const c = b.campeoes[0];
-  const ouros = new Set(b.rodadas.filter((r) => r.posicoes[c] === 1).map((r) => r.chave));
-  return TITULOS.find(([chaves]) => chaves.every((k) => ouros.has(k)))?.[1] ?? 'Dono(a) do Aux';
+  return TITULOS[familiaDoTitulo(b)] ?? 'Dono(a) do Aux';
 }
 
 // Campeão único que venceu por 1 ouro, ou empatado em ouros e decidido na prata.
@@ -205,8 +206,10 @@ const NOME_SELO = { 'por-um-triz': 'Por um triz', massacre: 'Massacre' };
 // Até 3 fatos da partida: o campeão, um selo (massacre antes de por um triz) e a dupla menos afinada.
 export function resenha(b, nomes) {
   const e = (lista) => lista.join(lista.length > 2 ? ', ' : ' e ').replace(/, ([^,]*)$/, ' e $1');
+  const familia = familiaDoTitulo(b);
+  const deram = familia && b.rodadas.filter((r) => r.posicoes[b.campeoes[0]] === 1 && TEMA[r.chave].familia === familia).map((r) => r.titulo);
   const fatos = [b.campeoes.length === 1
-    ? `${nomes[b.campeoes[0]]} levou a batalha como ${b.titulo}.`
+    ? `${nomes[b.campeoes[0]]} levou a batalha como ${b.titulo}${deram ? `, com ouro em ${e(deram)}` : ''}.`
     : `Empate no topo entre ${e(b.campeoes.map((i) => nomes[i]))}.`];
   const selo = b.rodadas.find((r) => r.destaque === 'massacre') || b.rodadas.find((r) => r.destaque === 'por-um-triz');
   if (selo) fatos.push(`${NOME_SELO[selo.destaque]} em ${selo.titulo}: ${nomes[selo.posicoes.indexOf(1)]} venceu ${selo.destaque === 'massacre' ? 'com folga' : 'por pouco'}.`);

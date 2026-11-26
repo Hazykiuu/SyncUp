@@ -4,9 +4,10 @@ import { test } from 'node:test';
 
 import {
   alertaPaciencia, arredondar, campeoes, CORES, decididoNoDetalhe, destaqueRodada, janelaComum, maisAfinada, medalhas, montarBatalha,
-  numerosDoLutador, posicoes, tituloCampeao,
+  numerosDoLutador, posicoes, resenha, tituloCampeao,
   recortar, rodadas, validarNomes,
 } from '../../site/app/js/batalha.js';
+import { FAMILIAS, TEMA, TITULOS } from '../../site/app/js/batalha-temas.js';
 
 // Números de um lutador como o Worker extrai do calcularWrapped (unidades de tela: horas e %).
 const lutador = (nome, numeros = {}) => ({
@@ -198,14 +199,58 @@ function batalhaCom(ganhas, extra = {}) {
   return { rodadas: rodadasB, campeoes: [0], ...extra };
 }
 
-test('tituloCampeao: as combinações, a ordem e o Dono(a) do Aux', () => {
-  assert.equal(tituloCampeao(batalhaCom(['coruja', 'dia'])), 'Insone Oficial');
+// Ruling (passo 5): o título vem da família em que o campeão fez 2 ouros ou mais (antes, de pares fixos de rodadas).
+// Muda: coruja + dia (famílias relógio e volume) não dá mais "Insone Oficial", e com 8 ouros vale a primeira família
+// do registro (volume), não mais a primeira combinação da lista antiga.
+test('tituloCampeao: as famílias de antes, a ordem e o Dono(a) do Aux', () => {
+  assert.equal(tituloCampeao(batalhaCom(['coruja', 'dia'])), 'Dono(a) do Aux');
   assert.equal(tituloCampeao(batalhaCom(['repeteco', 'fa'])), 'Modo Obsessão');
   assert.equal(tituloCampeao(batalhaCom(['artistas', 'musicas'])), 'Enciclopédia Musical');
   assert.equal(tituloCampeao(batalhaCom(['horas', 'plays'])), 'Trator de Plays');
-  assert.equal(tituloCampeao(batalhaCom(['coruja', 'dia', 'repeteco', 'fa', 'artistas', 'musicas', 'horas', 'plays'])), 'Insone Oficial');
+  assert.equal(tituloCampeao(batalhaCom(['coruja', 'dia', 'repeteco', 'fa', 'artistas', 'musicas', 'horas', 'plays'])), 'Trator de Plays');
   assert.equal(tituloCampeao(batalhaCom(['horas', 'coruja'])), 'Dono(a) do Aux');
   assert.equal(tituloCampeao(batalhaCom(['horas'], { campeoes: [0, 1] })), null);
+});
+
+// Rodadas quaisquer: o campeão (índice 0) vence as de `ganhas` e fica em 3º nas outras.
+const comOuros = (ganhas, perdidas = []) => ({
+  campeoes: [0],
+  rodadas: [...ganhas.map((chave) => ({ chave, posicoes: [1, 2, 3] })), ...perdidas.map((chave) => ({ chave, posicoes: [3, 2, 1] }))],
+});
+
+test('tituloCampeao: um título por família, verdadeiro para qualquer tema dela', () => {
+  const dois = {
+    volume: ['metralhadora', 'cruzeiro'], variedade: ['buffet', 'elenco'], repeticao: ['disco', 'obra'], relogio: ['coruja', 'madrugador'],
+    calendario: ['sextou', 'virada'], constancia: ['sumico', 'sessao'], pulos: ['paciencia', 'destino'], aparelhos: ['bolso', 'aparelhos'],
+    descoberta: ['faro', 'raizes'], grupo: ['soeu', 'turma'],
+  };
+  for (const f of FAMILIAS) {
+    assert.equal(tituloCampeao(comOuros(dois[f])), TITULOS[f], f);
+    assert.equal(tituloCampeao(comOuros(dois[f].slice(0, 1), dois[f].slice(1))), 'Dono(a) do Aux', `${f} com 1 ouro`);
+  }
+  const nomes = Object.values(TITULOS);
+  assert.equal(new Set(nomes).size, FAMILIAS.length);
+  for (const t of [...nomes, 'Dono(a) do Aux']) {
+    assert.ok([...t].length <= 20, t); // cabe no pódio do story (1/3 da largura) e no pôster, como o mais longo de antes
+    assert.doesNotMatch(t, /\p{Extended_Pictographic}/u, t);
+  }
+});
+
+test('tituloCampeao: mais ouros na família vencem a ordem; empate fica com a primeira família do registro', () => {
+  assert.equal(tituloCampeao(comOuros(['horas', 'plays', 'artistas', 'musicas', 'buffet'])), 'Enciclopédia Musical');
+  assert.equal(tituloCampeao(comOuros(['soeu', 'dj', 'coruja', 'noite'])), TITULOS.relogio);
+  assert.equal(tituloCampeao(comOuros(['coruja', 'virada', 'soeu', 'bolso'])), 'Dono(a) do Aux'); // 4 ouros, 1 por família
+});
+
+test('resenha: o título vem com as rodadas que o deram', () => {
+  const b = {
+    ...comOuros(['sextou', 'virada'], ['horas']), menosAfinada: { par: [1, 2], valor: 12.5 },
+  };
+  b.rodadas = b.rodadas.map((r) => ({ ...r, titulo: TEMA[r.chave].titulo, destaque: null }));
+  b.titulo = tituloCampeao(b);
+  assert.match(resenha(b, ['Ana', 'Bia', 'Caio']), /^Ana levou a batalha como Agenda Cheia, com ouro em Sextou e Virada\. /);
+  const aux = { ...b, rodadas: b.rodadas.slice(1), titulo: 'Dono(a) do Aux' };
+  assert.match(resenha(aux, ['Ana', 'Bia', 'Caio']), /^Ana levou a batalha como Dono\(a\) do Aux\. /);
 });
 
 test('maisAfinada: artista-cola pelo menor dos dois e a dupla menos afinada', () => {

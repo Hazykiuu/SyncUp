@@ -6,6 +6,13 @@
 export const FAMILIAS = ['volume', 'variedade', 'repeticao', 'relogio', 'calendario', 'constancia', 'pulos', 'aparelhos', 'descoberta', 'grupo'];
 export const MODELOS = ['corrida', 'porcentagem', 'relogio', 'calendario', 'sequencia', 'contagem'];
 export const OPOSTOS = [['nuncasome', 'sumico'], ['paciencia', 'dedo'], ['destino', 'adedo']];
+// Título do campeão que fez 2 ouros numa família (batalha.js). Cada um vale para qualquer tema da família,
+// inclusive os opostos (Grande sumiço e Sem parar; Paciência e Dedo nervoso; Só eu conheço e Gosto de turma).
+export const TITULOS = {
+  volume: 'Trator de Plays', variedade: 'Enciclopédia Musical', repeticao: 'Modo Obsessão', relogio: 'Fuso Próprio',
+  calendario: 'Agenda Cheia', constancia: 'Ritmo Próprio', pulos: 'Comandante do Play', aparelhos: 'Sempre Plugado(a)',
+  descoberta: 'Curador(a) Oficial', grupo: 'Peça-chave',
+};
 
 const P = { pct: true, escala: 100 };
 const A = { aprox: true };

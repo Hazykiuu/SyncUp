@@ -78,7 +78,7 @@ export let silenciado = lerMudo();
 
 // Estado do som que o dock dos stories mostra (stories/dock.js): o trecho atual, se toca e o mudo.
 // Um só para a página: só o modo na tela toca (a troca de modo pausa o <audio>).
-const estadoSom = { trecho: null, tocando: false, mudo: silenciado };
+const estadoSom = { trecho: null, tocando: false, mudo: silenciado, semSom: null }; // semSom: o que o painel diz quando não há som
 const ouvintes = new Set();
 const avisar = (mudanca) => { Object.assign(estadoSom, mudanca); ouvintes.forEach((f) => f({ ...estadoSom })); };
 export function useSom() {
@@ -152,6 +152,8 @@ export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
   mudoAgora.current = mudo;
   const raiz = () => alvo.current?.querySelector('.st-player');
   const [aviso, setAviso] = useState('');
+  // "Sem som" muda o aviso (aqui) e o painel do palco juntos: um não pode dizer "Preparando" e o outro "sem som".
+  const ficarSem = (texto, painel = 'Stories sem som') => { setEstado('sem'); setAviso(texto); avisar({ semSom: painel }); };
 
   const rampa = (valor, segundos = ENTRA) => {
     const m = som; if (!m) return;
@@ -161,20 +163,20 @@ export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
   };
   // play() rejeita com AbortError quando o slide troca rápido: não é falha de som.
   // Bloqueado: volta para "sem", cujo botão "Ligar capas e som" destrava de novo dentro de um toque.
-  const tocar = (el) => el.play().catch((e) => { if (e.name !== 'AbortError') { setEstado('sem'); setAviso('O navegador bloqueou o som. Toque em “Ligar capas e som” para tentar de novo.'); } });
+  const tocar = (el) => el.play().catch((e) => { if (e.name !== 'AbortError') { ficarSem('O navegador bloqueou o som. Toque em “Ligar capas e som” para tentar de novo.', 'Som bloqueado: toque em “Ligar capas e som”'); } });
 
   // Qualquer erro na busca vira "sem som", nunca um "Buscando…" eterno.
   // Começa sozinho (o áudio foi destravado no toque em "Montar"); o botão "Ligar" repete isto num toque.
-  const comecar = () => { aoLigar?.(); return iniciarSom().catch(() => { setEstado('sem'); setAviso('Não deu para preparar o som. Os stories seguem sem som.'); }); };
+  const comecar = () => { aoLigar?.(); return iniciarSom().catch(() => { ficarSem('Não deu para preparar o som. Os stories seguem sem som.'); }); };
   // Começa sozinho: o áudio já foi destravado no toque em "Montar". `vivo`: um resultado novo desmonta este;
   // a busca antiga, se terminar depois, não pode reiniciar nem rolar até o player do resultado novo.
   const vivo = useRef(true);
   // Com "Capas e som" desligado nada é pedido para fora; o botão "Ligar capas e som" continua valendo neste resultado.
-  useEffect(() => { if (capasESom()) comecar(); else setEstado('sem'); return () => { vivo.current = false; }; }, []);
+  useEffect(() => { if (capasESom()) comecar(); else ficarSem(''); return () => { vivo.current = false; }; }, []);
   const iniciarSom = async () => {
     destravarSom(); // no botão "Ligar", dentro do toque e antes de qualquer await
     if (!som) throw new Error('sem Web Audio'); // vira "sem som" no catch de comecar
-    setEstado('carregando'); setAviso('');
+    setEstado('carregando'); setAviso(''); avisar({ semSom: null });
     const porSlide = Object.fromEntries(await Promise.all(Object.entries(trilha.slides).map(
       async ([tipo, candidatas]) => [tipo, (await Promise.all(candidatas.map(resolver))).flat()])));
     // Intercala: a 1ª de cada candidata, depois a 2ª… (não esgota um artista antes do próximo).
@@ -185,7 +187,7 @@ export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
       if (fila.length) setAviso('Não achamos estas músicas no iTunes. Tocando trechos de exemplo.');
     }
     if (!vivo.current) return;
-    if (!fila.length && !Object.values(porSlide).some((l) => l.length)) { setEstado('sem'); setAviso('Não deu para buscar os trechos (sem internet?). Os stories seguem sem som.'); return; }
+    if (!fila.length && !Object.values(porSlide).some((l) => l.length)) { ficarSem('Não deu para buscar os trechos (sem internet?). Os stories seguem sem som.'); return; }
     trilhaPronta.current = { fila, porSlide };
     setEstado('tocando');
     raiz()?.dispatchEvent(new Event('st-replay')); // recomeça do primeiro slide, já com som

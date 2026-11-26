@@ -36,7 +36,7 @@ function useAtual(alvo) {
 const capaGrande = (url) => url?.replace(/\/\d+x\d+bb\./, '/600x600bb.');
 
 function Agora({ titulo, comSom }) {
-  const { trecho, tocando, mudo } = useSom();
+  const { trecho, tocando, mudo, semSom } = useSom();
   const t = comSom ? trecho : null;
   return html`<div class="palco-agora superficie">
     <p class="palco-rotulo">Tocando agora</p>
@@ -44,7 +44,7 @@ function Agora({ titulo, comSom }) {
       : html`<div class="palco-capa vazia" aria-hidden="true">${ICONE.nota}</div>`}
     <div class="palco-faixa">
       <b>${t ? t.faixa : titulo}</b>
-      <small>${t ? `${t.artista} · trecho de 30 s` : comSom ? 'Preparando o som…' : 'Stories sem som'}</small>
+      <small>${t ? `${t.artista} · trecho de 30 s` : comSom ? semSom ?? 'Preparando o som…' : 'Stories sem som'}</small>
     </div>
     ${t && html`<span key=${t.url} class=${`dock-progresso palco-progresso${tocando ? '' : ' parado'}`} aria-hidden="true"><i></i></span>`}
     ${comSom && html`<button type="button" class="palco-mudo btn btn-borda superficie" aria-pressed=${mudo} onClick=${() => definirMudo(!mudo)}>

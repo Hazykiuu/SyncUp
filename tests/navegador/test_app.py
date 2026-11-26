@@ -245,3 +245,12 @@ def test_stories_da_dupla_cabem_com_nomes_longos(
         ruins += pagina.evaluate(fora)
         player.press('ArrowRight')
     assert ruins == []
+
+
+def test_sem_rede_o_painel_do_som_nao_fica_preparando(nova_pagina, site_url):
+    """R2-05: quando os trechos não vêm, o painel e o aviso dizem a mesma coisa."""
+    pagina = nova_pagina(viewport={'width': 1280, 'height': 900})
+    _abrir_exemplo(pagina, site_url, 'wrapped')
+    expect(pagina.get_by_text(re.compile('buscar os trechos')).first).to_be_visible(timeout=TEMPO)
+    painel = pagina.locator('.palco-agora:visible .palco-faixa small').first
+    expect(painel).to_have_text('Stories sem som')

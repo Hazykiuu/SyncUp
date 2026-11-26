@@ -38,6 +38,22 @@ def test_exemplo_chega_aos_stories_e_avanca(page, site_url, modo):
     expect(contador).to_have_text(f'{min(atual + 1, total)}/{total}')
 
 
+def test_batalha_com_semente_repete_o_sorteio(nova_pagina, site_url):
+    """Batalha v2: ?semente=N fixa os 10 temas sorteados; "Ficaram fora" só diz o que faltou, agrupado."""
+    sorteios = []
+    for _ in range(2):
+        pagina = nova_pagina()
+        pagina.goto(f'{site_url}/app/?semente=7#batalha')
+        pagina.get_by_role('button', name='Ver um exemplo').click()
+        rodadas = pagina.locator('#resultado-batalha .rodadas > li h3')
+        expect(rodadas).to_have_count(10, timeout=TEMPO)
+        sorteios.append(rodadas.all_inner_texts())
+        nota = pagina.locator('#resultado-batalha .nota', has_text='Ficaram fora do sorteio')
+        expect(nota).to_contain_text('porque')
+        expect(nota).not_to_contain_text('empataram')
+    assert sorteios[0] == sorteios[1]
+
+
 def test_pre_leitura_mostra_periodo_e_reproducoes(page, site_url):
     page.goto(f'{site_url}/app/#wrapped')
     # Os quatro modos ficam montados: o cartão certo é o da tela visível.

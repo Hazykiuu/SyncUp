@@ -503,6 +503,66 @@ test('numerosDoLutador traz todos os temas que não dependem do grupo, e o prime
   assert.deepEqual([...primeiros.keys()].sort(), ['a0', 'a1', 'a2', 'a3', 'a4']);
 });
 
+/* ---------- Batalha v2: sorteio com semente ---------- */
+// Três pessoas com 300, 200 e 100 em cada tema pedido (os outros não existem para elas): todos elegíveis,
+// porcentagens inclusive. Cada uma tem um artista só dela, então os temas do grupo empatam ou zeram e ficam fora.
+const elenco = (chaves) => ['Ana', 'Bia', 'Caio'].map((nome, k) => ({ nome, numeros: Object.fromEntries(chaves.map((c) => [c, 300 - 100 * k])), contagens: new Map([[`x${k}`, 1]]) }));
+const temas = async () => (await import('../../site/app/js/batalha-temas.js'));
+
+test('sorteio: 10 temas, no máximo 2 por família, nunca um par oposto, na ordem do registro', async () => {
+  const { TEMAS, TEMA, OPOSTOS } = await temas();
+  const todos = elenco(TEMAS.filter((t) => t.familia !== 'grupo').map((t) => t.chave));
+  const vistos = new Set();
+  for (let semente = 1; semente <= 50; semente++) {
+    const b = montarBatalha(todos, { semente });
+    assert.equal(b.semente, semente);
+    assert.equal(b.rodadas.length, 10);
+    assert.deepEqual(b.temas, b.rodadas.map((r) => r.chave));
+    const ordem = b.temas.map((k) => TEMAS.indexOf(TEMA[k]));
+    assert.deepEqual(ordem, [...ordem].sort((x, y) => x - y));
+    const porFamilia = Map.groupBy(b.temas, (k) => TEMA[k].familia);
+    assert.ok([...porFamilia.values()].every((l) => l.length <= 2), b.temas.join());
+    for (const [x, y] of OPOSTOS) assert.ok(!(b.temas.includes(x) && b.temas.includes(y)), `${x} e ${y}`);
+    vistos.add(b.temas.join());
+  }
+  assert.ok(vistos.size > 40, `só ${vistos.size} sorteios diferentes em 50`);
+});
+
+test('sorteio: mesma entrada e semente dão o mesmo resultado; batalha anterior não se repete', async () => {
+  const { TEMAS } = await temas();
+  const todos = elenco(TEMAS.filter((t) => t.familia !== 'grupo').map((t) => t.chave));
+  const a = montarBatalha(todos, { semente: 7 });
+  assert.deepEqual(montarBatalha(todos, { semente: 7 }), a);
+  assert.deepEqual(montarBatalha(todos), montarBatalha(todos)); // sem semente: a padrão, fixa
+  const b = montarBatalha(todos, { semente: 7, evitar: a.temas });
+  assert.equal(b.rodadas.length, 10);
+  assert.deepEqual(b.temas.filter((k) => a.temas.includes(k)), []);
+});
+
+test('sorteio: quando as regras não cabem, volta a batalha anterior antes de passar do teto por família', async () => {
+  // 4 famílias com 2 temas cada e 4 temas de variedade: 12 elegíveis. Sem os 2 de volume (batalha anterior), sobram 8 no teto.
+  const chaves = ['horas', 'plays', 'repeteco', 'fa', 'coruja', 'madrugador', 'natal', 'virada', 'artistas', 'musicas', 'buffet', 'umavez'];
+  const b = montarBatalha(elenco(chaves), { semente: 3, evitar: ['horas', 'plays'] });
+  assert.equal(b.rodadas.length, 10);
+  assert.ok(b.temas.includes('horas') && b.temas.includes('plays'));
+  assert.equal(b.temas.filter((k) => ['artistas', 'musicas', 'buffet', 'umavez'].includes(k)).length, 2);
+  // Só 3 famílias: o teto cai e as 10 rodadas saem assim mesmo.
+  const tres = montarBatalha(elenco(['horas', 'plays', 'dia', 'metralhadora', 'artistas', 'musicas', 'buffet', 'umavez', 'repeteco', 'fa', 'disco', 'hino']), { semente: 3 });
+  assert.equal(tres.rodadas.length, 10);
+});
+
+test('sorteio: com menos de 10 elegíveis usa todos, menos um de cada par oposto', () => {
+  const b = montarBatalha(elenco(['horas', 'plays', 'artistas', 'paciencia', 'dedo', 'destino', 'adedo']), { semente: 5 });
+  assert.equal(b.rodadas.length, 5);
+  assert.equal(b.temas.filter((k) => k === 'paciencia' || k === 'dedo').length, 1);
+  assert.equal(b.temas.filter((k) => k === 'destino' || k === 'adedo').length, 1);
+  assert.ok(['horas', 'plays', 'artistas'].every((k) => b.temas.includes(k)));
+});
+
+test('Dedinho nervoso vale também no Dedo nervoso, onde quem pula mais vence', () => {
+  assert.deepEqual(alertaPaciencia(r([10, 20, 70], false, 'dedo'), ['Ana', 'Bia', 'Caio']), { nome: 'Caio', valor: 70 });
+});
+
 test('textos legíveis sobre a superfície sólida da 1.19 (#181818)', () => {
   assert.ok(contraste('#e6e6e6', '#181818') >= 4.5, contraste('#e6e6e6', '#181818').toFixed(2));
   assert.ok(contraste('#b3b3b3', '#181818') >= 4.5, contraste('#b3b3b3', '#181818').toFixed(2)); // --sub

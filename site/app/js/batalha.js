@@ -1,7 +1,7 @@
 // Batalha (no app web, no lugar do Grupo do app para PC): de 3 a 6 históricos disputam rodadas de números do período.
 // Funções puras: o Worker (batalha-worker.js) lê os arquivos e chama numerosDoLutador e montarBatalha.
 import { medidasNovas, numerosDoGrupo } from './batalha-medidas.js';
-import { ausente, TEMAS } from './batalha-temas.js';
+import { ausente, OPOSTOS, TEMA, TEMAS } from './batalha-temas.js';
 import { calcularWrapped, compararTexto, MINIMO_PLAYS_WRAPPED, TEMPO_MINIMO_PLAY_MS } from './calculo.js';
 import { cosseno, ponderar } from './dupla.js';
 
@@ -77,6 +77,44 @@ export function rodadas(lutadores) {
   return { dentro, fora };
 }
 
+// mulberry32: o mesmo sorteio para a mesma semente, sem Math.random.
+function gerador(semente) {
+  let a = semente >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), a | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export const RODADAS_POR_BATALHA = 10;
+const POR_FAMILIA = 2;
+const OPOSTO = new Map(OPOSTOS.flatMap(([a, b]) => [[a, b], [b, a]]));
+// Embaralha os elegíveis e escolhe em três passadas, cada uma relaxando uma regra: 1) sem os temas de `evitar`
+// (a batalha anterior) e no máximo 2 por família; 2) volta a batalha anterior; 3) passa do teto por família.
+// Par oposto nunca. Devolve as rodadas na ordem do registro.
+export function sortear(dentro, { semente, evitar = [] }) {
+  const sorte = gerador(semente), lista = [...dentro];
+  for (let i = lista.length - 1; i > 0; i--) {
+    const j = Math.floor(sorte() * (i + 1));
+    [lista[i], lista[j]] = [lista[j], lista[i]];
+  }
+  const anterior = new Set(evitar), escolhidos = new Set(), familias = new Map();
+  for (const passada of [1, 2, 3]) {
+    for (const { chave } of lista) {
+      if (escolhidos.size === RODADAS_POR_BATALHA) break;
+      const { familia } = TEMA[chave];
+      if (escolhidos.has(chave) || escolhidos.has(OPOSTO.get(chave))) continue;
+      if (passada === 1 && anterior.has(chave)) continue;
+      if (passada < 3 && (familias.get(familia) || 0) >= POR_FAMILIA) continue;
+      escolhidos.add(chave);
+      familias.set(familia, (familias.get(familia) || 0) + 1);
+    }
+  }
+  return dentro.filter((r) => escolhidos.has(r.chave));
+}
+
 export function medalhas(lista) {
   const m = lista[0].posicoes.map(() => ({ ouro: 0, prata: 0, bronze: 0 }));
   for (const { posicoes: p } of lista) p.forEach((pos, i) => { const tipo = ['ouro', 'prata', 'bronze'][pos - 1]; if (tipo) m[i][tipo]++; });
@@ -132,9 +170,9 @@ export function destaqueRodada(r) {
   return primeiro >= segundo * 2 - FOLGA ? 'massacre' : null;
 }
 
-// Paciência: o último colocado, se for um só e pular mais de 60% das músicas ("Dedinho nervoso").
+// Paciência ou Dedo nervoso: quem mais pula, se for um só e pular mais de 60% das músicas ("Dedinho nervoso").
 export function alertaPaciencia(r, nomes) {
-  if (r.chave !== 'paciencia') return null;
+  if (r.chave !== 'paciencia' && r.chave !== 'dedo') return null;
   const pior = Math.max(...r.valores);
   const quem = r.valores.map((v, i) => (v === pior ? i : -1)).filter((i) => i >= 0);
   return quem.length === 1 && pior > 60 ? { nome: nomes[quem[0]], valor: pior } : null;
@@ -201,16 +239,20 @@ export function trilhaBatalha(b, favoritos) {
   };
 }
 
-// `lutadores`: [{ nome, numeros, contagens, primeiros? }] na ordem do formulário. Devolve o JSON da tela.
-export function montarBatalha(lutadores) {
+// `lutadores`: [{ nome, numeros, contagens, primeiros? }] na ordem do formulário. `semente` e `evitar` (os temas da
+// batalha anterior) vêm da tela. Devolve o JSON da tela, com a semente e os temas sorteados.
+export function montarBatalha(lutadores, { semente = 1, evitar = [] } = {}) {
   const grupo = numerosDoGrupo(lutadores);
   lutadores = lutadores.map((l, i) => ({ ...l, numeros: { ...l.numeros, ...grupo[i] } }));
-  const { dentro, fora } = rodadas(lutadores);
-  if (!dentro.length) throw new Error('Não há números suficientes para uma batalha neste período.');
+  const { dentro: elegiveis, fora } = rodadas(lutadores);
+  if (!elegiveis.length) throw new Error('Não há números suficientes para uma batalha neste período.');
+  const dentro = sortear(elegiveis, { semente, evitar });
   const nomes = lutadores.map((l) => l.nome);
   const m = medalhas(dentro);
   const { menosAfinada, ...afinada } = maisAfinada(lutadores.map((l) => l.contagens), nomes);
   const b = {
+    semente,
+    temas: dentro.map((r) => r.chave),
     lutadores: lutadores.map((l, i) => ({ nome: l.nome, cor: CORES[i], medalhas: m[i] })),
     rodadas: dentro.map((r) => ({ ...r, destaque: destaqueRodada(r), alerta: alertaPaciencia(r, nomes) })),
     fora,

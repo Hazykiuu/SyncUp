@@ -1,7 +1,8 @@
 // Motor da Batalha no navegador: lê de 3 a 6 históricos, uma pessoa por vez, e devolve só os números.
 // Uma mensagem por fase, sempre com os File de novo (nunca relê uma referência guardada da fase anterior):
 //   {fase: 1, arquivos: [[File, ...], ...], opcoes} → {ok: true, faixas: [[minUtc, maxUtc], ...]}
-//   {fase: 2, arquivos, nomes, opcoes, janela: [inicio, fim] | null} → {ok: true, dados} (montarBatalha)
+//   {fase: 2, arquivos, nomes, opcoes, janela: [inicio, fim] | null, semente, evitar} → {ok: true, dados} (montarBatalha)
+// `semente` e `evitar` (temas da batalha anterior) ficam na tela: este Worker é recriado a cada batalha.
 // Durante a leitura: {etapa: 'Lendo Ana (2 de 4)…'}. Erro: {ok: false, erro}.
 // Memória: só os bytes e as colunas de uma pessoa por vez, mais os números já guardados.
 import { montarBatalha, numerosDoLutador, recortar } from './js/batalha.js';
@@ -13,7 +14,7 @@ async function ler(lista, opcoes) {
   return lerHistorico(partes, opcoes);
 }
 
-self.onmessage = async ({ data: { fase, arquivos, nomes, opcoes, janela } }) => {
+self.onmessage = async ({ data: { fase, arquivos, nomes, opcoes, janela, semente, evitar } }) => {
   try {
     const rotulo = (i) => (nomes?.[i] ? `${nomes[i]} (${i + 1} de ${arquivos.length})` : `${i + 1} de ${arquivos.length}`);
     if (fase === 1) {
@@ -36,7 +37,7 @@ self.onmessage = async ({ data: { fase, arquivos, nomes, opcoes, janela } }) => 
       if (janela) c = recortar(c, janela[0], janela[1]);
       lutadores.push({ nome: nomes[i], ...numerosDoLutador(c, nomes[i], opcoes.fuso || 'America/Sao_Paulo') });
     }
-    self.postMessage({ ok: true, dados: montarBatalha(lutadores) });
+    self.postMessage({ ok: true, dados: montarBatalha(lutadores, { semente, evitar }) });
   } catch (e) {
     // Nossas mensagens são Error em português; TypeError, RangeError (memória) e afins viram texto genérico.
     const nosso = e?.constructor === Error && e.message;

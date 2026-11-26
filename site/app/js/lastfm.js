@@ -152,6 +152,10 @@ export function paraFormatoSpotify(scrobbles, duracoes) {
 let armazemPadrao = null;
 export const armazemLastfm = () => (armazemPadrao ??= cacheIndexedDB('syncup-lastfm'));
 
+// O histórico guardado vence 7 dias depois do último uso (a landing e o README prometem isso).
+export const VALIDADE_LASTFM = 7 * 86_400_000;
+export const limparLastfmVencido = () => armazemLastfm().limpar(Date.now() - VALIDADE_LASTFM);
+
 // Junta escutas sem repetir: a página do Last.fm desliza quando chega escuta nova no meio do download.
 function juntar(a, b) {
   const vistos = new Set(), saida = [];
@@ -170,6 +174,7 @@ export async function historicoDoLastfm(usuario, { periodo = 'tudo', armazem = a
   const anoAtras = Math.floor(agora() / 1000) - ANO_S;
   let cache = null;
   try { cache = (await armazem.ler(id)) ?? null; } catch { /* sem cache: baixa tudo */ }
+  if (cache && agora() - cache.quando > VALIDADE_LASTFM) cache = null;
   // O cache guarda desde quando cobre (null = histórico inteiro). "Todo o histórico" sobre um cache de um ano baixa de novo.
   const completo = cache && (periodo === 'ano' ? cache.desde == null || cache.desde <= anoAtras : cache.desde == null);
   const desde = completo ? cache.ultimo + 1 : periodo === 'ano' ? anoAtras : undefined;
@@ -178,7 +183,7 @@ export async function historicoDoLastfm(usuario, { periodo = 'tudo', armazem = a
   const escutas = juntar(completo ? cache.escutas : [], novos);
   const duracoes = cache?.duracoes ? new Map(cache.duracoes) : await baixarDuracoes(usuario, rede);
   if (escutas.length) {
-    const valor = { escutas, ultimo: escutas[0].uts, desde: completo ? cache.desde : (desde ?? null), duracoes: [...duracoes], capas: [...capas], quando: Date.now() };
+    const valor = { escutas, ultimo: escutas[0].uts, desde: completo ? cache.desde : (desde ?? null), duracoes: [...duracoes], capas: [...capas], quando: agora() };
     try { await armazem.gravar(id, valor); } catch { /* aba anônima: segue sem cache */ }
   }
   const usadas = periodo === 'ano' ? escutas.filter((s) => s.uts >= anoAtras) : escutas;

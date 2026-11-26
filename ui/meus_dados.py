@@ -16,7 +16,7 @@ PRIVACIDADE = """<section class="su-privacy" aria-labelledby="su-privacy-title">
   <p class="su-note">O SyncUp roda no seu computador. Não há conta, servidor nem anúncios.</p>
   <div class="su-privacy-grid">
     <div><h3>Fica no seu computador</h3><ul>
-      <li>Os históricos que você envia: lidos nesta sessão e apagados em até 1 hora.</li>
+      <li>Os históricos que você envia: lidos nesta sessão e apagados em até 1 hora com o app aberto; se você fechar antes, são apagados na próxima vez que ele abrir.</li>
       <li>O cache, até você apagar em <b>Opções de dados → Meus dados</b>.</li>
       <li>Os downloads (CSV, PNG, XSPF), em pastas temporárias apagadas ao fim da sessão.</li>
     </ul></div>

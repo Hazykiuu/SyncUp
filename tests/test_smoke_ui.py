@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import gradio as gr
@@ -44,3 +45,15 @@ def test_criar_interface_monta_arvore_sem_erros() -> None:
         assert 'prefers-reduced-motion' in css.read_text(encoding='utf-8')
     finally:
         demo.close()
+
+
+def test_prazo_de_apagar_cumpre_o_que_o_texto_promete() -> None:
+    """R3-11: no pior caso o arquivo dura frequência + idade; o texto promete 1 hora."""
+    from pathlib import Path
+
+    from ui.meus_dados import PRIVACIDADE
+
+    layout = (Path(__file__).resolve().parents[1] / 'ui/layout.py').read_text(encoding='utf-8')
+    frequencia, idade = map(int, re.search(r'delete_cache=\((\d+), (\d+)\)', layout).groups())
+    assert frequencia + idade <= 3600
+    assert 'em até 1 hora com o app aberto' in PRIVACIDADE and 'próxima vez' in PRIVACIDADE

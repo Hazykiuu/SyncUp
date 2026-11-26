@@ -264,7 +264,7 @@ def criar_interface() -> gr.Blocks:
     with gr.Blocks(
         title='SyncUp',
         analytics_enabled=False,
-        delete_cache=(3600, 3600),
+        delete_cache=(600, 3000),  # no pior caso, 1 hora (o texto de Meus dados)
     ) as demo:
         gr.HTML(TOPO)
         # Opções avançadas numa gaveta lateral fechada: a página mostra só o que encanta.

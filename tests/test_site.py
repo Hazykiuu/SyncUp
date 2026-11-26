@@ -65,3 +65,8 @@ def test_nenhum_subtitulo_do_app_diz_que_nada_sai() -> None:
     """R3-05: com "Capas e som" ligado, nomes de artistas e músicas vão para terceiros."""
     fonte = (SITE / 'app/js/main.js').read_text(encoding='utf-8')
     assert not re.search(r'Nada (sai|é enviado)', fonte)
+
+
+def test_privacidade_nao_promete_que_o_lastfm_some_ao_fechar() -> None:
+    """R3-11: o que vem do Last.fm fica no navegador até vencer ou ser apagado."""
+    assert 'sumiu' not in HTML and '7 dias' in HTML and 'Apagar dados guardados' in HTML

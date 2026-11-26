@@ -281,3 +281,19 @@ test('sem nenhum scrobble: erro claro', async () => {
   const lf = lastfm({ recentes: [] });
   await assert.rejects(historicoDoLastfm('carlos', { buscar: lf.buscar, armazem: memoria(), ...semEspera }), /nenhum scrobble/i);
 });
+
+// R3-11: o histórico guardado vence 7 dias depois do último uso.
+test('cache vencido há mais de 7 dias é ignorado e o histórico é baixado de novo', async () => {
+  const armazem = memoria();
+  const recentes = [scrobble(1000, 'a')];
+  const lf = lastfm({ recentes });
+  const dia = 86_400_000;
+  await historicoDoLastfm('carlos', { buscar: lf.buscar, armazem, agora: () => 100 * dia, ...semEspera });
+  assert.equal(armazem.m.get('carlos').quando, 100 * dia);
+  for (const [quando, doCache] of [[107 * dia, true], [115 * dia, false]]) {
+    lf.pedidos.length = 0;
+    await historicoDoLastfm('carlos', { buscar: lf.buscar, armazem, agora: () => quando, ...semEspera });
+    const pedidos = lf.pedidos.filter((p) => p.method === 'user.getrecenttracks');
+    assert.equal(pedidos.every((p) => p.from === '1001'), doCache, `${quando / dia}`);
+  }
+});

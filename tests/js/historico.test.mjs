@@ -98,7 +98,7 @@ test('erros com as mensagens do Python', async () => {
   await assert.rejects(ler({ 'a.zip': bom.subarray(0, bom.length - 30) }), /ZIP está inválido/);
   await assert.rejects(ler({ 'a.zip': zip({ 'a.json': json([ev('2024-01-01T12:00:00Z', 'Ana', 'Uma música com nome comprido')]) }, { mentir: true }) }), /ZIP está inválido/);
   // Entrada declarada acima do teto: recusada antes de alocar (sem precisar de 65 MB de verdade).
-  await assert.rejects(ler({ 'a.zip': zip({ 'a.json': '[]' }, { declarar: LIMITE_ENTRADA + 1 }) }), /grande demais para o navegador/);
+  await assert.rejects(ler({ 'a.zip': zip({ 'a.json': '[]' }, { declarar: LIMITE_ENTRADA + 1 }) }), /grande demais para abrir no navegador.*Use o app para PC/);
   // Zip bomb: cada entrada abaixo do teto, mas a soma declarada passa de 1 GiB (recusa antes de descompactar).
   const muitas = Object.fromEntries(Array.from({ length: Math.ceil(LIMITE_BYTES / LIMITE_ENTRADA) + 1 }, (_, k) => [`p${k}.json`, '[]']));
   await assert.rejects(ler({ 'a.zip': zip(muitas, { declarar: LIMITE_ENTRADA }) }), /passa de 1 GB descompactado/);

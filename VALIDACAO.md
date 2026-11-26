@@ -199,3 +199,13 @@ Históricos reais, usados com autorização e guardados fora do repositório. M�
 - Na 1ª metade × 2ª metade no tempo, o cosseno bruto acertou 83% e o Jaccard 96%; o cosseno com raiz ou `log1p`, o TF-IDF, o Jensen-Shannon e o Ruzicka acertaram 100%.
 - Nos 66 pares entre pessoas diferentes, o cosseno bruto concordou menos com o `log1p` (Spearman 0,65).
 
+
+## Limites de tamanho: PC e navegador (2026-11-26)
+
+| Limite | App para PC | Navegador |
+|---|---|---|
+| Total descompactado | 1 GB | 1 GB |
+| Cada JSON dentro do ZIP | sem limite | 64 MB (protege o iOS, que fecha a aba) |
+| Arquivos enviados por pessoa (compactados) | limite de envio do app | 50 MB |
+
+A diferença é de propósito. O maior JSON real do Spotify visto tinha cerca de 15 MB.

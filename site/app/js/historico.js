@@ -14,7 +14,7 @@ const MSG = {
   tipo: 'Selecione um arquivo ZIP ou JSON do histórico estendido.',
   estendido: 'Use o histórico estendido de áudio do Spotify (ZIP ou JSON).',
   tamanho: 'O histórico passa de 1 GB descompactado. Use o histórico estendido de áudio do Spotify (ZIP ou JSON).',
-  entrada: 'Um arquivo dentro do ZIP passa de 64 MB descompactado, grande demais para o navegador. Use o histórico estendido de áudio do Spotify.',
+  entrada: 'Um arquivo dentro do ZIP é grande demais para abrir no navegador (passa de 64 MB descompactado). Use o app para PC.',
   nenhum: 'Selecione pelo menos um ZIP ou JSON por perfil.',
   repetido: 'O mesmo conteúdo foi selecionado mais de uma vez neste perfil. Remova o arquivo duplicado.',
   fuso: 'Fuso inválido. Use um nome IANA, como America/Sao_Paulo ou Europe/Lisbon.',

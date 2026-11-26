@@ -132,7 +132,7 @@ def test_foco_do_teclado_nao_fica_sob_a_barra_no_celular(nova_pagina, site_url):
 
 @pytest.mark.parametrize('nome, mensagem', [
     ('quebrado.zip', 'inválido ou incompleto'),
-    ('grande.zip', 'passa de 64 MB'),
+    ('grande.zip', 'Use o app para PC'),
     ('outro.json', 'Use o histórico estendido de áudio do Spotify'),
 ])  # fmt: skip
 def test_erro_de_entrada_aparece_na_tela(page, site_url, tmp_path, nome, mensagem):

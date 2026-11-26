@@ -59,3 +59,9 @@ def test_app_serve_o_preact_do_proprio_site() -> None:
         'StNNHifqKmppGEDNqrv+YtX8PD3mhAhLtNbioQ4QxbPNqaTnktcDjsIPGjcDoiKa'
     )
     assert {'LICENSE-htm', 'LICENSE-preact'} <= {p.name for p in (app / 'vendor').iterdir()}
+
+
+def test_nenhum_subtitulo_do_app_diz_que_nada_sai() -> None:
+    """R3-05: com "Capas e som" ligado, nomes de artistas e músicas vão para terceiros."""
+    fonte = (SITE / 'app/js/main.js').read_text(encoding='utf-8')
+    assert not re.search(r'Nada (sai|é enviado)', fonte)

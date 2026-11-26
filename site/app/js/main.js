@@ -2,7 +2,7 @@
 import { html, render, useEffect, useRef, useState } from 'preact-htm';
 import { chegarPouco, mostrarResultado } from './chegada.js';
 import { ligarOndas } from './corrida.js';
-import { audioCtx, destravarSom, pausarSom, silenciado, TRILHA_EXEMPLO } from './som.js';
+import { audioCtx, capasESom, definirCapasESom, destravarSom, pausarSom, silenciado, TRILHA_EXEMPLO } from './som.js';
 import { Batalha } from './batalha-tela.js';
 import { MAXIMO_PESSOAS } from './match.js';
 import { Match } from './match-tela.js';
@@ -105,13 +105,14 @@ function cliqueFader(paraDireita) {
 }
 
 const CABECA = {
-  dupla: ['Compare dois históricos', 'Envie o Histórico Estendido do Spotify de duas pessoas. Nada é enviado para nenhum servidor.'],
+  dupla: ['Compare dois históricos', 'Envie o Histórico Estendido do Spotify de duas pessoas. O histórico não sai do seu aparelho; com “Capas e som” ligado, nomes de artistas e músicas em comum vão para o iTunes.'],
   wrapped: ['Seu Wrapped da vida toda', 'Envie o seu Histórico Estendido do Spotify e veja a sua vida musical em stories. O histórico não sai do seu aparelho.'],
-  match: ['Match do grupo', `Junte históricos e convites de 2 a ${MAXIMO_PESSOAS} pessoas e veja quem combina com quem. Nada sai do seu aparelho.`],
-  batalha: ['Batalha de históricos', 'Junte de 3 a 6 históricos do Spotify e veja quem leva cada rodada. Nada sai do seu aparelho.'],
+  match: ['Match do grupo', `Junte históricos e convites de 2 a ${MAXIMO_PESSOAS} pessoas e veja quem combina com quem. O histórico não sai do seu aparelho; com “Capas e som” ligado, nomes de artistas vão para o iTunes.`],
+  batalha: ['Batalha de históricos', 'Junte de 3 a 6 históricos do Spotify e veja quem leva cada rodada. O histórico não sai do seu aparelho; com “Capas e som” ligado, nomes de artistas vão para o iTunes.'],
 };
 
 function App() {
+  const [comCapas, setComCapas] = useState(capasESom);
   // As telas ficam montadas (hidden): trocar de aba não perde o resultado.
   // Só hash conhecido troca de modo: "Pular para o conteúdo" (#principal) fica onde a pessoa está.
   const lerModo = (atual = 'dupla') => ({ '#wrapped': 'wrapped', '#batalha': 'batalha', '#match': 'match', '#dupla': 'dupla', '': 'dupla' })[location.hash] ?? atual;
@@ -156,6 +157,8 @@ function App() {
             <span class="app-tipo">Modo · ${MODOS.find(([id]) => id === modo)[1]}</span>
             <h1>${CABECA[modo][0]}</h1>
             <p class="sub">${CABECA[modo][1]}</p>
+            <label class="marcar app-capas-som"><input type="checkbox" checked=${comCapas} onChange=${(e) => { definirCapasESom(e.target.checked); setComCapas(e.target.checked); }} />
+              Capas e som <small>(busca capas e trechos no Spotify, no MusicBrainz e na Apple)</small></label>
             <a class="app-como-pedir" href="../#como-pedir">Ainda não tem o ZIP? Veja como pedir</a>
           </div>
         </div>

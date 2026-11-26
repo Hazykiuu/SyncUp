@@ -90,6 +90,13 @@ export function definirMudo(mudo) {
   avisar({ mudo });
 }
 
+// "Capas e som": escolhida antes de calcular, vale nos 4 modos e fica neste aparelho. Ligada por padrão.
+const CHAVE_CAPAS = 'syncup-capas-e-som';
+export const capasESom = () => { try { return localStorage.getItem(CHAVE_CAPAS) !== '0'; } catch { return true; } };
+export function definirCapasESom(ligado) {
+  try { localStorage.setItem(CHAVE_CAPAS, ligado ? '1' : '0'); } catch { /* sem armazenamento: vale a opção padrão */ }
+}
+
 // Um só <audio>: um elemento novo precisaria de outro toque no iPhone. Criado no primeiro toque em
 // "Montar", "Comparar" ou "Batalhar" (destravarSom).
 let som = null;
@@ -137,7 +144,7 @@ export const ICONE = {
 export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
   const trilhaPronta = useRef(null);
   const [status, setStatus] = useState('');
-  const [estado, setEstado] = useState('carregando'); // carregando | tocando | sem (o Wrapped começa sempre com capas e som)
+  const [estado, setEstado] = useState('carregando'); // carregando | tocando | sem (começa sozinho com "Capas e som" ligado)
   const { mudo } = useSom(); // o botão de mudo fica no dock (stories/dock.js)
   const mudoAgora = useRef(false); // lido pelos ouvintes do player, que não re-renderizam
   mudoAgora.current = mudo;
@@ -160,7 +167,8 @@ export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
   // Começa sozinho: o áudio já foi destravado no toque em "Montar". `vivo`: um resultado novo desmonta este;
   // a busca antiga, se terminar depois, não pode reiniciar nem rolar até o player do resultado novo.
   const vivo = useRef(true);
-  useEffect(() => { comecar(); return () => { vivo.current = false; }; }, []);
+  // Com "Capas e som" desligado nada é pedido para fora; o botão "Ligar capas e som" continua valendo neste resultado.
+  useEffect(() => { if (capasESom()) comecar(); else setEstado('sem'); return () => { vivo.current = false; }; }, []);
   const iniciarSom = async () => {
     destravarSom(); // no botão "Ligar", dentro do toque e antes de qualquer await
     if (!som) throw new Error('sem Web Audio'); // vira "sem som" no catch de comecar

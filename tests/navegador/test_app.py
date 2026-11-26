@@ -1,5 +1,6 @@
 """App web de ponta a ponta: exemplo dos quatro modos, pré-leitura e "menos movimento"."""
 
+import json
 import re
 import zipfile
 from pathlib import Path
@@ -148,3 +149,57 @@ def test_erro_de_entrada_aparece_na_tela(page, site_url, tmp_path, nome, mensage
     tela = page.get_by_role('region', name='Seu histórico')
     tela.locator('input[type=file]').first.set_input_files(arquivo)
     expect(tela.get_by_role('alert').first).to_contain_text(mensagem, timeout=TEMPO)
+
+
+def _historico(pasta, nome, semente):
+    """Plays fictícios (cada pessoa com um total diferente, para a Batalha não empatar em tudo), com IDs de 22 caracteres como os do Spotify."""
+    eventos = [
+        {'ts': f'2023-12-{1 + i % 28:02d}T{i % 24:02d}:{i % 60:02d}:00Z', 'ms_played': 200_000,
+         'master_metadata_track_name': f'Faixa {(i + semente) % 7}',
+         'master_metadata_album_artist_name': f'Banda {(i + semente) % 5}',
+         'spotify_track_uri': 'spotify:track:' + chr(65 + i % 7) * 22}
+        for i in range(300 + 60 * semente)
+    ]  # fmt: skip
+    caminho = pasta / f'{nome}.json'
+    caminho.write_text(json.dumps(eventos), encoding='utf-8')
+    return caminho
+
+
+@pytest.mark.parametrize('ligado', [True, False])
+@pytest.mark.parametrize('modo, pessoas, botao', [
+    ('wrapped', 1, 'Montar meu Wrapped'),
+    ('dupla', 2, 'Comparar históricos'),
+    ('match', 2, 'Ver quem combina'),
+    ('batalha', 3, 'Começar a batalha'),
+])  # fmt: skip
+def test_capas_e_som_decide_o_que_sai_do_aparelho(
+    page, site_url, tmp_path, modo, pessoas, botao, ligado
+):
+    """R3-05: com a opção desligada, mostrar um resultado não pede nada para fora."""
+    pedidos = []
+    page.on(
+        'request',
+        lambda r: r.url.startswith((site_url, 'blob:', 'data:', 'https://unpkg.com'))
+        or pedidos.append(r.url),
+    )
+    page.goto(f'{site_url}/app/#{modo}')
+    opcao = page.get_by_role('checkbox', name=re.compile('^Capas e som'))
+    expect(opcao).to_be_checked()
+    if not ligado:
+        opcao.uncheck()
+        page.reload()  # a escolha fica guardada neste navegador
+        expect(opcao).not_to_be_checked()
+    if modo == 'wrapped':
+        cartoes = page.get_by_role('region', name='Seu histórico')
+    else:
+        cartoes = page.locator('#principal section.pessoa:visible')
+    for i in range(pessoas):
+        cartao = cartoes if modo == 'wrapped' else cartoes.nth(i)
+        if modo != 'wrapped':
+            cartao.locator('input.entrada').first.fill(f'Pessoa {i}')
+        cartao.locator('input[type=file]').first.set_input_files(_historico(tmp_path, f'p{i}', i))
+    page.wait_for_timeout(1_500)  # a pré-leitura libera o botão
+    page.get_by_role('button', name=re.compile(botao)).locator('visible=true').last.click()
+    expect(page.locator('.resultado .st-player:visible').first).to_be_visible(timeout=TEMPO)
+    page.wait_for_timeout(2_000)
+    assert bool(pedidos) is ligado, pedidos[:3]

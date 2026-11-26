@@ -200,11 +200,11 @@ def test_capas_e_som_decide_o_que_sai_do_aparelho(
     )
     page.goto(f'{site_url}/app/#{modo}')
     opcao = page.get_by_role('checkbox', name=re.compile('^Capas e som'))
-    expect(opcao).to_be_checked()
+    expect(opcao).to_be_checked(timeout=TEMPO)  # a 1ª carga do app passa de 5 s com a máquina ocupada
     if not ligado:
         opcao.uncheck()
         page.reload()  # a escolha fica guardada neste navegador
-        expect(opcao).not_to_be_checked()
+        expect(opcao).not_to_be_checked(timeout=TEMPO)
     if modo == 'wrapped':
         cartoes = page.get_by_role('region', name='Seu histórico')
     else:

@@ -32,21 +32,23 @@
 .st-player .st.su-story { background: rgb(var(--capa) / 1); animation: none; transition: background-color .6s ease; }
 .st-player .st.su-story::before { display: none; }
 .st-fundo { position: absolute; inset: 0; overflow: hidden;
-  background: radial-gradient(120% 80% at 15% 0%, rgb(var(--capa) / .95), transparent 60%),
-              radial-gradient(120% 90% at 100% 100%, rgb(var(--capa) / .55), transparent 55%), #0b0b0c; }
+  background:
+  radial-gradient(140% 70% at 22% -8%, rgb(var(--capa) / .95), rgb(var(--capa) / .45) 42%, rgb(var(--capa) / .08) 70%, transparent 88%),
+  radial-gradient(90% 50% at 100% 105%, rgb(var(--capa) / .22), transparent 70%), var(--sup-1); }
 /* Capa de 32 px de detalhe, ampliada e borrada: barato e sem serrilhado. */
 /* Regras do Spotify: capa sem blur nem texto por cima. A cópia no fundo só serve para ler a cor (--capa). */
 .st-fundo img { display: none; }
-.st-veu { position: absolute; inset: 0; background: linear-gradient(180deg, var(--veu-a) 0%, var(--veu-b) 70%); }
+.st-veu { position: absolute; inset: 0; background: linear-gradient(180deg, rgb(0 0 0 / .42) 0%, rgb(18 18 18 / .5) 45%, rgb(18 18 18 / .82) 100%); }
 .st-conteudo { position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: center; gap: 3.4cqw;
   width: 100%; padding: 22cqw 7cqw 9cqw; font-size: 4.1cqw; line-height: 1.35; color: #fff; }
 .st-conteudo p { margin: 0; color: rgba(255, 255, 255, .88); }
 .st-conteudo strong { color: #fff; font-weight: 800; }
 
 /* 4. Peças */
-.st-vidro { background: linear-gradient(180deg, var(--vidro-brilho), transparent 40%), var(--vidro-1);
-  border: 1px solid rgb(var(--capa) / .35); box-shadow: inset 0 1px 0 var(--vidro-borda); }
-.st-kicker { font-size: 2.9cqw; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: rgba(255, 255, 255, .8); }
+/* Superfície escura translúcida com fio claro de 1 px, sem blur nem aro: o degradê da capa é o único efeito. */
+.st-vidro { border: 1px solid rgb(255 255 255 / .16); background: rgb(0 0 0 / .28); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* Kicker do Spotify: peso 700, tracking curto, sempre branco cheio (o rosa-claro do Match é a exceção, conferida). */
+.st-kicker { font-size: 2.9cqw; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #fff; }
 .st-titulo { margin: 0; font-size: 10cqw; line-height: 1; font-weight: 900; letter-spacing: -.035em; }
 .st-sub { font-weight: 600; }
 .st-cartao { padding: 5cqw; border-radius: var(--raio-cartao); }
@@ -132,7 +134,7 @@
 .st-player .st-barra, .st-player .st-controles { transition: opacity .4s ease; }
 .st-player.limpo .st-barra, .st-player.limpo .st-controles { opacity: 0; }
 /* Pôster (último story): é o print que vai para o Instagram. Fotos e capas nítidas, texto só ao lado. */
-.s-resumo .st-conteudo, .s-poster .st-conteudo { gap: 2.6cqw; padding-top: 15cqw; padding-bottom: 6cqw; }
+.s-poster .st-conteudo { gap: 2.6cqw; padding-top: 15cqw; padding-bottom: 6cqw; }
 .st-poster-topo { display: flex; align-items: center; justify-content: space-between; }
 .st-poster-topo .marca { font-size: 4.6cqw; }
 .st-poster-topo small { font-size: 3cqw; color: rgba(255, 255, 255, .7); }
@@ -160,12 +162,12 @@
 .s-resumo .st-conteudo { justify-content: space-between; gap: 3cqw; padding-top: 14cqw; padding-bottom: 7cqw; }
 .s-resumo .st-conteudo > * { margin-top: 0 !important; }
 .s-resumo .st-poster-topo { flex-direction: column; align-items: flex-start; gap: 1cqw; }
-.s-resumo .st-poster-topo small { opacity: .7; color: #fff; }
+.s-resumo .st-poster-topo small { opacity: .7; color: #fff; font-size: calc(3cqw * var(--e, 1)); }
 .st-poster-quem { display: flex; align-items: center; gap: 2.4cqw; font-size: 2.9cqw; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .st-poster-quem > span:last-child { opacity: .65; }
 .st-poster-avatar { display: grid; place-items: center; flex: none; width: 9cqw; aspect-ratio: 1; border-radius: 50%; background: var(--verde); color: #0b0b0e; font-size: 4.4cqw; font-weight: 900; letter-spacing: 0; }
 .st-poster-tempo { display: grid; gap: .6cqw; }
-.s-resumo .st-poster-horas { color: #1db954; font-weight: 800; }
+.s-resumo .st-poster-horas { color: #1db954; font-weight: 800; font-size: calc(8cqw * var(--e, 1)); }
 .st-poster-tempo span { font-size: 3.4cqw; font-weight: 500; opacity: .75; }
 .s-resumo .st-fundo { background: radial-gradient(70% 38% at 22% 52%, rgb(var(--capa) / .42), rgb(var(--capa) / .12) 55%, transparent 80%), #0b0b0e; }
 .s-resumo .st-fundo img, .s-resumo .st-fundo::before, .s-resumo .st-fundo::after { display: none; }
@@ -192,10 +194,12 @@
 .st-replay { justify-self: start; min-height: 44px !important; padding: 0 5cqw; border-radius: var(--raio-chip); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
 
 /* Dupla: verde = pessoa A, violeta = pessoa B, rosa = os dois juntos (a cor vem do slide). */
-.st-duo .st-fundo { background: radial-gradient(120% 80% at 8% 0%, rgb(30 215 96 / .9), transparent 58%),
-  radial-gradient(120% 90% at 100% 100%, rgb(196 183 255 / .78), transparent 55%), #0b0b0c; }
+/* Verde de A no alto; o violeta de B fica só no canto de baixo (e nas cores das pessoas), sem o fundo dividido. */
+.st-duo .st-fundo { background:
+  radial-gradient(140% 70% at 22% -8%, rgb(var(--capa) / .95), rgb(var(--capa) / .45) 42%, rgb(var(--capa) / .08) 70%, transparent 88%),
+  radial-gradient(80% 45% at 100% 105%, rgb(196 183 255 / .3), transparent 70%), var(--sup-1); }
 /* Véu mais leve que o do Wrapped: o violeta de B, embaixo, precisa aparecer (o texto segue acima de 9:1). */
-.st-duo .st-veu { background: linear-gradient(180deg, rgba(0, 0, 0, .5) 0%, rgba(0, 0, 0, .64) 70%); }
+.st-duo .st-veu { background: linear-gradient(180deg, rgb(0 0 0 / .42) 0%, rgb(18 18 18 / .5) 45%, rgb(18 18 18 / .8) 100%); }
 .st-duo .st-vidro { border-color: rgba(255, 255, 255, .28); }
 .st-a { color: var(--verde); } .st-b { color: var(--roxo); }
 .st-quebra { overflow-wrap: anywhere; }
@@ -307,10 +311,9 @@
 @keyframes st-aparece { from { opacity: 0; } }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .vidro-ctrl { background: rgba(20, 20, 20, .72); } }
 @media (prefers-reduced-transparency: reduce) {
-  .st-vidro { background: #1a1a1a; } .vidro-ctrl { background: #242424; -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .st-veu { background: rgba(0, 0, 0, .85); }
+  .vidro-ctrl { background: #242424; -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
-@media (prefers-contrast: more) { .st-vidro, .vidro-ctrl { border: 2px solid #fff; } .st-veu { background: rgba(0, 0, 0, .85); } }
+@media (prefers-contrast: more) { .vidro-ctrl { border: 2px solid #fff; } }
 
 /* 7. Batalha (stories/batalha.js): cada lutador tem a sua cor (--lut); texto sobre a cor é preto.
    Selos na tipografia do Kicker, sem brilho; pódio sobe com desaceleração firme, sem mola nem quique. */
@@ -456,49 +459,30 @@
   --rosa-claro: color-mix(in srgb, var(--rosa) 45%, #fff); --rosa-papel: color-mix(in srgb, var(--rosa) 30%, #fff);
   --rosa-noite: color-mix(in srgb, var(--rosa) 12%, #000);
 }
-.st-fundo { background:
-  radial-gradient(140% 70% at 22% -8%, rgb(var(--capa) / .95), rgb(var(--capa) / .45) 42%, rgb(var(--capa) / .08) 70%, transparent 88%),
-  radial-gradient(90% 50% at 100% 105%, rgb(var(--capa) / .22), transparent 70%), var(--sup-1); }
-.st-veu { background: linear-gradient(180deg, rgb(0 0 0 / .42) 0%, rgb(18 18 18 / .5) 45%, rgb(18 18 18 / .82) 100%); }
-/* Dupla: verde de A no alto; o violeta de B fica só no canto de baixo (e nas cores das pessoas), sem o fundo dividido. */
-.st-duo .st-fundo { background:
-  radial-gradient(140% 70% at 22% -8%, rgb(var(--capa) / .95), rgb(var(--capa) / .45) 42%, rgb(var(--capa) / .08) 70%, transparent 88%),
-  radial-gradient(80% 45% at 100% 105%, rgb(196 183 255 / .3), transparent 70%), var(--sup-1); }
-.st-duo .st-veu { background: linear-gradient(180deg, rgb(0 0 0 / .42) 0%, rgb(18 18 18 / .5) 45%, rgb(18 18 18 / .8) 100%); }
-/* Kicker do Spotify: peso 700, tracking curto, sempre branco cheio (o rosa-claro do Match é a exceção, conferida). */
-.st-kicker { font-weight: 700; letter-spacing: .06em; color: #fff; }
 .sb-selo, .sb-titulo { letter-spacing: .06em; }
-/* Peças dos stories (1.19): superfície escura translúcida, fio claro de 1 px, sem blur nem aro. O degradê da capa
-   é o único efeito. Os controles (.vidro-ctrl) flutuam sobre o story e ficam com o blur da linha 16. */
-.st-vidro, .sb-bloco { border: 1px solid rgb(255 255 255 / .16); background: rgb(0 0 0 / .28); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* Os controles (.vidro-ctrl) flutuam sobre o story e ficam com o blur do começo do arquivo. */
 .vidro-ctrl { border: 1px solid rgb(255 255 255 / .16); }
 /* Bloco do pódio: a cor do lutador, chapada. */
-.sb-bloco { background: color-mix(in srgb, var(--lut) 34%, rgb(0 0 0 / .3)); }
+.sb-bloco { border: 1px solid rgb(255 255 255 / .16); background: color-mix(in srgb, var(--lut) 34%, rgb(0 0 0 / .3)); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
 /* Listas no jeito do Spotify: linhas com superfície própria e número à esquerda. */
 .st-lista > li, .sb-quadro > li { padding: 1.6cqw 2.4cqw; border-radius: 2cqw; background: rgb(255 255 255 / .06); }
 @media (prefers-reduced-transparency: reduce) { .st-vidro, .vidro-ctrl { background: var(--sup-2); } }
 @media (prefers-contrast: more) { .st-vidro, .vidro-ctrl, .sb-bloco { background: var(--sup-2); border-color: #fff; } }
 /* Resumo sem cortes (1.19.1): o nome e o artista encolhem pelo comprimento (--tam) e quebram a linha; as cinco
-   músicas viram uma lista, uma por linha, que também quebra. Nada de reticências. */
-.s-resumo .st-poster-nome .st-nome-xxl { font-size: var(--tam, 12.5cqw); white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; line-height: .95; }
-.s-resumo .st-poster-artista b { font-size: var(--tam, 7cqw); overflow-wrap: anywhere; }
-.s-resumo .st-poster-musicas ol { display: grid; gap: .8cqw; margin-top: 2cqw; font-size: 3cqw; line-height: 1.25; }
+   músicas viram uma lista, uma por linha, que também quebra. Nada de reticências. Os tamanhos são multiplicados
+   por --e (1 normalmente; menor quando os nomes não cabem, ver useCaber). */
+.s-resumo .st-poster-nome .st-nome-xxl { font-size: calc(var(--tam, 12.5cqw) * var(--e, 1)); white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; line-height: .95; }
+.s-resumo .st-poster-artista b { font-size: calc(var(--tam, 7cqw) * var(--e, 1)); overflow-wrap: anywhere; }
+.s-resumo .st-poster-musicas ol { display: grid; gap: .8cqw; margin-top: 2cqw; font-size: calc(3cqw * var(--e, 1)); line-height: 1.25; }
 .s-resumo .st-poster-musicas li { display: grid; grid-template-columns: 4cqw minmax(0, 1fr); overflow-wrap: anywhere; }
 .s-resumo .st-poster-musicas li b { color: var(--verde); }
-.s-resumo .st-poster-fatos span { white-space: normal; overflow-wrap: anywhere; }
-/* Tamanhos do resumo multiplicados por --e (1 normalmente; menor quando os nomes não cabem, ver useCaber). */
+.s-resumo .st-poster-fatos span { font-size: calc(3.4cqw * var(--e, 1)); white-space: normal; overflow-wrap: anywhere; }
 .s-resumo .st-poster-topo .marca { font-size: calc(4.6cqw * var(--e, 1)); }
-.s-resumo .st-poster-topo small { font-size: calc(3cqw * var(--e, 1)); }
 .s-resumo .st-poster-quem { font-size: calc(2.9cqw * var(--e, 1)); }
 .s-resumo .st-poster-avatar { width: calc(9cqw * var(--e, 1)); font-size: calc(4.4cqw * var(--e, 1)); }
-.s-resumo .st-poster-nome .st-nome-xxl { font-size: calc(var(--tam, 12.5cqw) * var(--e, 1)); }
-.s-resumo .st-poster-horas { font-size: calc(8cqw * var(--e, 1)); }
 .s-resumo .st-poster-tempo span { font-size: calc(3.4cqw * var(--e, 1)); }
 .s-resumo .st-poster-artista { grid-template-columns: calc(30cqw * var(--e, 1)) minmax(0, 1fr); }
 .s-resumo .st-poster-artista .st-capa { font-size: calc(14cqw * var(--e, 1)); }
-.s-resumo .st-poster-artista b { font-size: calc(var(--tam, 7cqw) * var(--e, 1)); }
 .s-resumo .st-poster-artista small { font-size: calc(3.2cqw * var(--e, 1)); }
 .s-resumo .st-poster-capas { width: calc(100% * var(--e, 1)); }
-.s-resumo .st-poster-musicas ol { font-size: calc(3cqw * var(--e, 1)); }
-.s-resumo .st-poster-fatos span { font-size: calc(3.4cqw * var(--e, 1)); }
 .s-resumo .st-poster-pe { font-size: calc(3.2cqw * var(--e, 1)); }

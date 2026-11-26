@@ -262,6 +262,87 @@ test('trilha da Batalha: favorito de quem venceu cada rodada, artista que une a 
   assert.deepEqual(semComum.slides.abertura, [{ artista: 'B' }]);
 });
 
+/* ---------- Batalha v2: registro dos 56 temas ---------- */
+// Entrada fixa: 240 eventos de 20/12/2023 em diante, com pulos, aleatório, offline e aparelho preenchidos.
+function historicoFixo() {
+  const c = { utc: [], local: [], ms: [], musica: [], artista: [], uri: [], pulada: [], aleatorio: [], offline: [], plataforma: [], motivo: [] };
+  for (let i = 0; i < 240; i++) {
+    const utc = Date.UTC(2023, 11, 20) + Math.round(i * 4.7 * HORA) + (i % 4) * 600_000;
+    c.utc.push(utc); c.local.push(utc - 3 * HORA); c.ms.push(20_000 + ((i * 7919) % 240_000));
+    c.musica.push(`m${(i * i) % 17}`); c.artista.push(`a${i % 7 === 0 ? 0 : i % 5}`); c.uri.push(null);
+    c.pulada.push(i % 5 === 0); c.aleatorio.push(i % 3 === 0); c.offline.push(i % 11 === 0);
+    c.plataforma.push(['Android', 'Windows', 'iOS'][i % 3]); c.motivo.push(i % 5 === 0 ? 'fwdbtn' : 'trackdone');
+  }
+  return c;
+}
+
+test('regressão: os 10 temas de antes dão exatamente os mesmos números', () => {
+  const { numeros } = numerosDoLutador(historicoFixo(), 'Ana', 'America/Sao_Paulo');
+  const dez = ['horas', 'plays', 'artistas', 'musicas', 'sequencia', 'dia', 'coruja', 'repeteco', 'fa', 'paciencia'];
+  assert.deepEqual(Object.fromEntries(dez.map((k) => [k, numeros[k]])), {
+    horas: 9.221366666666665, plays: 229, artistas: 5, musicas: 45, sequencia: 48, dia: 0.3577408333333334,
+    coruja: 25.76419213973799, repeteco: 2, fa: 31.877729257641924, paciencia: 20,
+  });
+});
+
+test('registro: 56 temas em 10 famílias, 6 modelos de desenho e pares opostos', async () => {
+  const { TEMAS, TEMA, FAMILIAS, MODELOS, OPOSTOS } = await import('../../site/app/js/batalha-temas.js');
+  assert.equal(TEMAS.length, 56);
+  assert.equal(new Set(TEMAS.map((t) => t.chave)).size, 56);
+  assert.deepEqual(FAMILIAS.map((f) => TEMAS.filter((t) => t.familia === f).length), [5, 6, 7, 6, 6, 7, 6, 3, 6, 4]);
+  assert.deepEqual(MODELOS, ['corrida', 'porcentagem', 'relogio', 'calendario', 'sequencia', 'contagem']);
+  for (const t of TEMAS) {
+    assert.ok(MODELOS.includes(t.modelo), t.chave);
+    assert.match(t.frase, /^[A-ZÁÉÍÓÚ].*\.$/u, t.chave);
+    assert.ok(t.titulo && t.unidade && Number.isInteger(t.casas), t.chave);
+    assert.ok(t.menor || t.vazio, `${t.chave}: sem motivo para quando ninguém pontua`);
+    assert.ok(Array.isArray(t.campos) && typeof t.aprox === 'boolean' && typeof t.pct === 'boolean', t.chave);
+    if (t.pct) assert.equal(t.escala, 100, t.chave);
+    assert.doesNotMatch(`${t.titulo}${t.unidade}${t.frase}`, /\p{Extended_Pictographic}/u, t.chave);
+  }
+  for (const [a, b] of OPOSTOS) {
+    assert.equal(TEMA[a].familia, TEMA[b].familia);
+    assert.notEqual(!!TEMA[a].menor, !!TEMA[b].menor, `${a} x ${b}`);
+  }
+  assert.deepEqual(OPOSTOS, [['nuncasome', 'sumico'], ['paciencia', 'dedo'], ['destino', 'adedo']]);
+});
+
+test('registro: os 10 de antes mantêm chave, título, unidade, frase e escala', async () => {
+  const { TEMA } = await import('../../site/app/js/batalha-temas.js');
+  const antes = [
+    ['horas', 'Maratonista', 'h', 0, 'Horas de música no período.'],
+    ['plays', 'Play infinito', 'plays', 0, 'Plays de pelo menos 30 segundos.'],
+    ['artistas', 'Explorador(a)', 'artistas', 0, 'Artistas diferentes que cada um ouviu.'],
+    ['musicas', 'Colecionador(a)', 'músicas', 0, 'Músicas diferentes na estante de cada um.'],
+    ['sequencia', 'Sem parar', 'dias seguidos', 0, 'Dias seguidos ouvindo, sem falhar um.'],
+    ['dia', 'Dia mais insano', 'h num dia', 1, 'O dia em que mais ouviu, nas 24 horas.'],
+    ['coruja', 'Coruja', '% na madrugada', 1, 'Fatia dos plays entre meia-noite e 6 h.'],
+    ['repeteco', 'Repeteco', 'vezes a mesma música num dia', 0, 'A mesma música, repetida num dia só.'],
+    ['fa', 'Fã nº 1', '% no artista favorito', 1, 'Fatia dos plays no artista favorito.'],
+    ['paciencia', 'Paciência', '% de músicas puladas', 1, 'Fatia de músicas puladas. Aqui, menos é melhor.'],
+  ];
+  for (const [chave, titulo, unidade, casas, frase] of antes) assert.deepEqual([TEMA[chave].titulo, TEMA[chave].unidade, TEMA[chave].casas, TEMA[chave].frase], [titulo, unidade, casas, frase]);
+  assert.equal(TEMA.paciencia.menor, true);
+  assert.equal(TEMA.repeteco.minimo, 1);
+  assert.deepEqual(['coruja', 'fa', 'paciencia', 'dia', 'horas'].map((k) => TEMA[k].escala), [100, 100, 100, 24, null]);
+  assert.deepEqual(['horas', 'dia', 'plays', 'coruja'].map((k) => TEMA[k].aprox), [true, true, false, false]); // nota "≈" do Last.fm
+});
+
+test('rodadas: tema sem cálculo não aparece; dado ausente sai com o motivo do campo', () => {
+  const lista = [lutador('Ana'), lutador('Bia', { paciencia: null, horas: 12 }), lutador('Caio', { horas: 30 })];
+  const { dentro, fora: f } = rodadas(lista);
+  assert.ok(dentro.every((r) => r.chave in lista[0].numeros));
+  assert.ok(f.every((r) => r.chave in lista[0].numeros));
+  assert.deepEqual(f.find((r) => r.chave === 'paciencia'), { chave: 'paciencia', titulo: 'Paciência', tipo: 'dado', motivo: 'nem todo histórico informa as músicas puladas' });
+});
+
+test('porcentagens pedem 100 plays de 30 s de cada pessoa', () => {
+  const f = fora([lutador('Ana', { coruja: 9 }), lutador('Bia', { coruja: 4, plays: 99 }), lutador('Caio')], 'coruja');
+  assert.equal(f.tipo, 'dado');
+  assert.match(f.motivo, /100 plays/);
+  assert.ok(rodada([lutador('Ana', { horas: 9 }), lutador('Bia', { plays: 99 }), lutador('Caio')], 'horas')); // horas não é porcentagem
+});
+
 test('textos legíveis sobre a superfície sólida da 1.19 (#181818)', () => {
   assert.ok(contraste('#e6e6e6', '#181818') >= 4.5, contraste('#e6e6e6', '#181818').toFixed(2));
   assert.ok(contraste('#b3b3b3', '#181818') >= 4.5, contraste('#b3b3b3', '#181818').toFixed(2)); // --sub

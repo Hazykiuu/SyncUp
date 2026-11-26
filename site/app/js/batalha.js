@@ -1,25 +1,11 @@
 // Batalha (no app web, no lugar do Grupo do app para PC): de 3 a 6 históricos disputam rodadas de números do período.
 // Funções puras: o Worker (batalha-worker.js) lê os arquivos e chama numerosDoLutador e montarBatalha.
-import { calcularWrapped, compararTexto, TEMPO_MINIMO_PLAY_MS } from './calculo.js';
+import { ausente, TEMAS } from './batalha-temas.js';
+import { calcularWrapped, compararTexto, MINIMO_PLAYS_WRAPPED, TEMPO_MINIMO_PLAY_MS } from './calculo.js';
 import { cosseno, ponderar } from './dupla.js';
 
 // Verde e violeta são os da Dupla; texto sobre elas é sempre preto (teste de contraste em batalha.test.mjs).
 export const CORES = ['#1ed760', '#c4b7ff', '#f573a0', '#ffa42b', '#5cb8ff', '#f5d547'];
-
-// Valor de tela de cada rodada a partir do Wrapped do recorte. `menor`: menor vence.
-// `vazio`: por que a rodada sai quando ninguém pontua (`minimo`: valor que não conta como ponto).
-const RODADAS = [
-  { chave: 'horas', titulo: 'Maratonista', unidade: 'h', casas: 0, vazio: 'ninguém ouviu' },
-  { chave: 'plays', titulo: 'Play infinito', unidade: 'plays', casas: 0, vazio: 'ninguém deu play' },
-  { chave: 'artistas', titulo: 'Explorador(a)', unidade: 'artistas', casas: 0, vazio: 'ninguém ouviu' },
-  { chave: 'musicas', titulo: 'Colecionador(a)', unidade: 'músicas', casas: 0, vazio: 'ninguém ouviu' },
-  { chave: 'sequencia', titulo: 'Sem parar', unidade: 'dias seguidos', casas: 0, vazio: 'ninguém ouviu' },
-  { chave: 'dia', titulo: 'Dia mais insano', unidade: 'h num dia', casas: 1, vazio: 'ninguém ouviu' },
-  { chave: 'coruja', titulo: 'Coruja', unidade: '% na madrugada', casas: 1, vazio: 'ninguém ouviu de madrugada' },
-  { chave: 'repeteco', titulo: 'Repeteco', unidade: 'vezes a mesma música num dia', casas: 0, minimo: 1, vazio: 'ninguém repetiu uma música no mesmo dia' },
-  { chave: 'fa', titulo: 'Fã nº 1', unidade: '% no artista favorito', casas: 1, vazio: 'ninguém ouviu' },
-  { chave: 'paciencia', titulo: 'Paciência', unidade: '% de músicas puladas', casas: 1, menor: true },
-];
 
 // Todas as métricas são ≥ 0: Math.round basta (sem o caso do .5 negativo).
 export const arredondar = (v, casas) => Math.round(v * 10 ** casas) / 10 ** casas;
@@ -64,15 +50,20 @@ export function numerosDoLutador(c, nome, fuso) {
 // Posição olímpica: 1 + quantos têm valor estritamente melhor (empate divide a posição).
 export const posicoes = (valores, menor) => valores.map((v) => 1 + valores.filter((x) => (menor ? x < v : x > v)).length);
 
+// Os temas do registro que dão para todos. `fora`: { chave, titulo, tipo: 'dado' | 'vazio' | 'empate', motivo }.
+// undefined = tema que estes números não trazem (fica de fora calado); null = dado ausente (sai com o motivo).
 export function rodadas(lutadores) {
   const dentro = [], fora = [];
-  for (const r of RODADAS) {
-    const brutos = lutadores.map((l) => l.numeros[r.chave]);
-    if (brutos.some((v) => v === null || v === undefined)) { fora.push({ chave: r.chave, titulo: r.titulo, motivo: 'nem todo histórico informa as músicas puladas' }); continue; }
-    const valores = brutos.map((v) => arredondar(v, r.casas));
-    if (!r.menor && valores.every((v) => v <= (r.minimo ?? 0))) { fora.push({ chave: r.chave, titulo: r.titulo, motivo: r.vazio }); continue; }
-    if (valores.every((v) => v === valores[0])) { fora.push({ chave: r.chave, titulo: r.titulo, motivo: 'todos empataram' }); continue; }
-    dentro.push({ chave: r.chave, titulo: r.titulo, unidade: r.unidade, casas: r.casas, menor: !!r.menor, valores, posicoes: posicoes(valores, r.menor) });
+  for (const t of TEMAS) {
+    const brutos = lutadores.map((l) => l.numeros[t.chave]);
+    if (brutos.every((v) => v === undefined)) continue;
+    const sai = (tipo, motivo) => fora.push({ chave: t.chave, titulo: t.titulo, tipo, motivo });
+    if (brutos.some((v) => v === null || v === undefined)) { sai('dado', ausente(t)); continue; }
+    if (t.pct && lutadores.some((l) => l.numeros.plays < MINIMO_PLAYS_WRAPPED)) { sai('dado', `alguém tem menos de ${MINIMO_PLAYS_WRAPPED} plays de 30 s`); continue; }
+    const valores = brutos.map((v) => arredondar(v, t.casas));
+    if (!t.menor && valores.every((v) => v <= (t.minimo ?? 0))) { sai('vazio', t.vazio); continue; }
+    if (valores.every((v) => v === valores[0])) { sai('empate', 'todos empataram'); continue; }
+    dentro.push({ chave: t.chave, titulo: t.titulo, unidade: t.unidade, casas: t.casas, menor: !!t.menor, valores, posicoes: posicoes(valores, t.menor) });
   }
   return { dentro, fora };
 }

@@ -2,6 +2,7 @@
 // Ordem: abertura, uma rodada por story, dupla mais afinada, quadro de medalhas e o pódio por último (regra do Carlos).
 // Selos e títulos na tipografia do Kicker; pódio sem mola nem quique (trava anti-slop do plano).
 import { html } from 'preact-htm';
+import { TEMA } from '../batalha-temas.js';
 import { fmtNum, NOTA_APROX } from './logica.js';
 import { Contador, Entra, Kicker, Slide } from './slides.js';
 
@@ -28,13 +29,8 @@ function Abertura({ b, i }) {
 }
 
 // Cada rodada tem um desenho ligado ao que mede (pista, discos, constelação…), na ordem da classificação.
-// Frações: do maior valor da rodada, ou da escala natural (% e 24 h). Animações: só transform, opacidade e traço.
-const FRASES = {
-  horas: 'Horas de música no período.', plays: 'Plays de pelo menos 30 segundos.', artistas: 'Artistas diferentes que cada um ouviu.',
-  musicas: 'Músicas diferentes na estante de cada um.', sequencia: 'Dias seguidos ouvindo, sem falhar um.', dia: 'O dia em que mais ouviu, nas 24 horas.',
-  coruja: 'Fatia dos plays entre meia-noite e 6 h.', repeteco: 'A mesma música, repetida num dia só.', fa: 'Fatia dos plays no artista favorito.',
-  paciencia: 'Fatia de músicas puladas. Aqui, menos é melhor.',
-};
+// Frações: do maior valor da rodada, ou da escala do registro (% e 24 h). Animações: só transform, opacidade e traço.
+// Frase, escala e nota "≈" vêm do registro (batalha-temas.js); os temas novos usam a pista do Maratonista até o passo 6.
 const arco = (f, classe = '') => html`<circle class="sb-arco-fundo" cx="20" cy="20" r="15" pathLength="1" />
   <circle class=${`sb-arco ${classe}`} cx="20" cy="20" r="15" pathLength="1" style=${{ '--f': f, strokeDasharray: `${f} 1` }} />`;
 const GLIFOS = {
@@ -68,7 +64,8 @@ function Rodada({ b, r, i }) {
   const ordem = r.valores.map((_, k) => k).sort((x, y) => r.posicoes[x] - r.posicoes[y] || x - y);
   const venc = ordem.filter((k) => r.posicoes[k] === 1);
   const maior = Math.max(...r.valores) || 1;
-  const escala = { coruja: 100, fa: 100, paciencia: 100, dia: 24 }[r.chave] ?? maior;
+  const tema = TEMA[r.chave];
+  const escala = tema.escala ?? maior;
   const fracao = (v) => Math.min(1, v / escala);
   const pessoa = (k) => b.lutadores[k];
   let corpo;
@@ -92,7 +89,7 @@ function Rodada({ b, r, i }) {
     <${Entra} i=${1} tag="h3" classe="st-titulo menor sb-vence">${venc.map((k) => pessoa(k).nome).join(' e ')}<//>
     <${Entra} i=${2} tag="p" classe="sb-valor"><b>${fmtNum(r.valores[venc[0]], r.casas)}</b> ${r.unidade}<//>
     ${corpo}
-    <${Entra} i=${6} tag="p" classe="st-nota">${FRASES[r.chave]}${b.aproximado && (r.chave === 'horas' || r.chave === 'dia') ? ` ${NOTA_APROX}` : ''}<//>
+    <${Entra} i=${6} tag="p" classe="st-nota">${tema.frase}${b.aproximado && tema.aprox ? ` ${NOTA_APROX}` : ''}<//>
     ${r.alerta && html`<${Entra} i=${7} tag="p" classe="sb-rodape"><span class="sb-selo">Dedinho nervoso</span> ${r.alerta.nome} pulou ${fmtNum(r.alerta.valor, 1)}%<//>`}
   <//>`;
 }

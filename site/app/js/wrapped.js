@@ -1,5 +1,6 @@
 // Tela Wrapped: o histórico de uma pessoa vira stories da vida toda e um PNG.
 // O cálculo roda em JavaScript num Worker próprio (wrapped-worker.js): esta aba não baixa o Python.
+import { HISTORICO_CURTO } from './calculo.js';
 import { html, useMemo, useRef, useState } from 'preact-htm';
 import { AVISO_ARQUETIPOS, formatarValor, REGRAS } from './calculo.js';
 import { criarBuscador } from './capas.js';
@@ -109,6 +110,7 @@ export function Wrapped() {
     try {
       const inicio = performance.now();
       const r = await montarNoWorker(await ler(), nomeUsado, opcoes);
+      if (!r.dados.amostra_suficiente) throw new Error(HISTORICO_CURTO);
       rodada.current++;
       setCapas(null);
       if (exemplo) r.trilha = TRILHA_EXEMPLO;

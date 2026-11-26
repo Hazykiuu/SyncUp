@@ -111,7 +111,7 @@ export function Intro({ d, ativo, i }) {
       <div class="st-mega">${aprox(d.aproximado)}<${Contador} valor=${d.horas} ativo=${ativo} /></div>
       <span class="st-rotulo">horas de música</span>
     <//>
-    <${Entra} i=${4} tag="p">Isso dá <strong>${fmtNum(dias, 1)} dias inteiros</strong> sem parar, em ${fmtNum(d.dias_com_musica)} dias com música.<//>
+    <${Entra} i=${4} tag="p">Isso dá <strong>${fmtNum(dias, 1)} dias inteiros</strong> sem parar, em ${fmtNum(d.dias_com_musica)} ${d.dias_com_musica === 1 ? 'dia' : 'dias'} com música.<//>
     ${d.aproximado && html`<${Entra} i=${5} tag="p" classe="st-nota">${NOTA_APROX}<//>`}
   <//>`;
 }

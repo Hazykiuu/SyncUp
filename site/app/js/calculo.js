@@ -8,6 +8,9 @@ export const TEMPO_MINIMO_PLAY_MS = 30_000; // rankings usam plays de pelo menos
 const HORA = 3_600_000, DIA = 24 * HORA;
 export const DIAS_SEMANA = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
 const PERIODOS = [['Madrugada', 0, 6], ['Manhã', 6, 12], ['Tarde', 12, 18], ['Noite', 18, 24]];
+// Abaixo disso o artista nº 1 muitas vezes tem 1 ou 2 plays: não há retrato para mostrar (VALIDACAO.md).
+export const MINIMO_PLAYS_WRAPPED = 100;
+export const HISTORICO_CURTO = `Histórico curto demais: o Wrapped precisa de pelo menos ${MINIMO_PLAYS_WRAPPED} plays de 30 s ou mais. Envie todas as partes do ZIP do Histórico Estendido do Spotify.`;
 const MINIMO_CONHECIDOS = 0.5; // fração mínima de eventos com o campo preenchido
 
 // Ordem de texto do Python (ponto de código); o `<` do JS compara UTF-16 e erra com emoji.
@@ -244,6 +247,7 @@ export function calcularWrapped(c, nome, fuso = '') {
     plays: total,
     quantidade_artistas: artistas.size,
     quantidade_musicas: musicas.length,
+    amostra_suficiente: total >= MINIMO_PLAYS_WRAPPED,
     artista_vida: artistaVida,
     descoberta_artista_vida: iso(artistas.get(artistaVida.nome).primeira),
     participacao_artista_vida: artistaVida.plays / total,

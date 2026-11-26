@@ -16,7 +16,7 @@ from ui.comum import (
 from ui.dupla import (
     carregar_demo,
 )
-from wrapped import Wrapped, wrapped_de_arquivos
+from wrapped import HISTORICO_CURTO, Wrapped, wrapped_de_arquivos
 
 
 def executar_wrapped(
@@ -37,6 +37,8 @@ def executar_wrapped(
         progress(0.1, desc='Lendo o histórico completo')
         config = _configuracao(fuso, musicas, artistas, varios, disco, deduplicar)
         w = wrapped_de_arquivos(arquivos, nome, config)
+        if not w.amostra_suficiente:
+            raise ValueError(HISTORICO_CURTO)
         progress(0.8, desc='Montando os stories')
         saidas = [
             w,

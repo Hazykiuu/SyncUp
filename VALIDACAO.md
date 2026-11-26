@@ -171,6 +171,22 @@ O notebook distribuído está sem saídas e sem arquivos de dados/exports reais.
 
 Não há um corte óbvio na curva: 30 é uma escolha a partir dela. Os 12 perfis completos têm de 73 a 137 artistas. Com trechos seguidos do histórico (em vez de cortes do ranking), o erro continua alto mesmo com muitos artistas, porque o gosto muda com o período; o mínimo não resolve isso.
 
+## Wrapped: piso de plays (2026-11-26)
+
+**Piso: 100 plays de 30 s ou mais** (escolha do Carlos). Em 12 históricos reais, 5 trechos seguidos de N plays por pessoa. Cada trecho foi reamostrado 6 vezes, para ver se o arquétipo e o artista nº 1 se repetem.
+
+| N | Dias com música (mediana) | Horas (mediana) | Mesmo arquétipo | Mesmo artista nº 1 | Artista nº 1 com só 1 ou 2 plays |
+|---|---|---|---|---|---|
+| 1 | 1 | 0,1 | 100% | 100% | 100% |
+| 10 | 1 | 0,5 | 83% | 51% | 47% |
+| 30 | 2 | 1,5 | 82% | 63% | 8% |
+| 50 | 2 | 2,4 | 91% | 64% | 3% |
+| 100 | 4 | 4,8 | 88% | 78% | 0% |
+| 200 | 6 | 9,8 | 92% | 82% | 0% |
+| 1000 | 28 | 49,6 | 94% | 94% | 0% |
+
+A reamostragem mede o quanto o resultado depende de poucos plays. Ela não diz se o trecho representa o resto da vida da pessoa.
+
 ## Estudo de similaridade com 12 históricos (2026-11-16)
 
 Históricos reais, usados com autorização e guardados fora do repositório. Método: dividir o histórico de cada pessoa em duas partes e ver se a medida aponta a própria pessoa como a mais parecida.

@@ -6,6 +6,7 @@ import html
 import json
 from pathlib import Path
 
+import gradio as gr
 import pytest
 from PIL import Image
 
@@ -189,3 +190,22 @@ def test_stories_escapam_nomes_e_png(historico: Path, tmp_path: Path) -> None:
     png = gerar_cartao_wrapped(w, tmp_path / 'story.png')
     with Image.open(png) as imagem:
         assert imagem.size == (1080, 1920) and imagem.mode == 'RGB'
+
+
+# R2-01: abaixo de 100 plays de 30 s ou mais, não há Wrapped para mostrar.
+@pytest.mark.parametrize('plays, suficiente', [(1, False), (99, False), (100, True)])
+def test_historico_curto_e_marcado_e_nao_vira_stories_no_pc(
+    tmp_path: Path, plays: int, suficiente: bool
+) -> None:
+    eventos = [_evento(f'2023-12-29T{i % 24:02d}:{i // 24:02d}:00Z', 'Zé') for i in range(plays)]
+    caminho = tmp_path / 'h.json'
+    caminho.write_text(json.dumps(eventos), encoding='utf-8')
+    assert wrapped_de_arquivos([str(caminho)], 'Zé').amostra_suficiente is suficiente
+    from ui.meu_wrapped import executar_wrapped
+
+    argumentos = ([str(caminho)], 'Zé', 'UTC', '', '', 'manter', False, False, lambda *a, **k: None)
+    if suficiente:
+        assert executar_wrapped(*argumentos)
+    else:
+        with pytest.raises(gr.Error, match='Histórico curto demais'):
+            executar_wrapped(*argumentos)

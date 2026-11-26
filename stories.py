@@ -130,7 +130,7 @@ def stories_html(w: Wrapped) -> str:
             + _a(f'<div class="su-mega">{_n(w.horas, 0)}<span>horas de música</span></div>', 3)
             + _a(
                 f'<p>Isso dá <strong>{fmt_num(dias_inteiros, 1)} dias inteiros</strong> sem parar, '
-                f'em {fmt_num(w.dias_com_musica)} dias com música.</p>',
+                f'em {fmt_num(w.dias_com_musica)} {"dia" if w.dias_com_musica == 1 else "dias"} com música.</p>',
                 4,
             ),
         )

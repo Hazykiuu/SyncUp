@@ -87,6 +87,7 @@ def _pares() -> list[tuple[str, str, str, object]]:
         ('play mínimo', 'calculo.js', 'TEMPO_MINIMO_PLAY_MS', analise.TEMPO_MINIMO_PLAY_MS),
         ('campos conhecidos', 'calculo.js', 'MINIMO_CONHECIDOS', wrapped.MINIMO_CONHECIDOS),
         ('arquétipos', 'calculo.js', 'REGRAS', [_regra(r) for r in arquetipos.REGRAS]),
+        ('piso do Wrapped', 'calculo.js', 'MINIMO_PLAYS_WRAPPED', wrapped.MINIMO_PLAYS_WRAPPED),
         ('meia-vida', 'dupla.js', 'MEIA_VIDA_DIAS', analise.MEIA_VIDA_DIAS),
         ('profundidade do RBO', 'dupla.js', 'PROFUNDIDADE_RBO', analise.PROFUNDIDADE_RBO),
         ('top de artistas', 'dupla.js', 'TOP', analise.QUANTIDADE_TOP_ARTISTAS),

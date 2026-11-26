@@ -85,3 +85,21 @@ def test_chegada_com_menos_movimento_sem_logo_grande(nova_pagina, site_url):
 def test_abrir_o_app_direto_sem_entrada(page, site_url):
     page.goto(f'{site_url}/app/#wrapped')
     expect(page.locator('.pouso')).to_have_count(0)
+
+
+def test_wrapped_com_historico_curto_avisa_em_vez_dos_stories(page, site_url, tmp_path):
+    curto = tmp_path / 'curto.json'
+    curto.write_text(
+        '[{"ts": "2023-12-29T03:00:00Z", "ms_played": 200000,'
+        ' "master_metadata_track_name": "Faixa", "master_metadata_album_artist_name": "Banda"}]',
+        encoding='utf-8',
+    )
+    page.goto(f'{site_url}/app/#wrapped')
+    tela = page.get_by_role('region', name='Seu histórico')
+    tela.locator('input[type=file]').first.set_input_files(curto)
+    expect(tela.get_by_text('Lido neste aparelho')).to_be_visible(timeout=TEMPO)
+    page.get_by_role('button', name='Montar meu Wrapped').click()
+    expect(page.locator('[role=alert]:visible')).to_contain_text(
+        'Histórico curto demais', timeout=TEMPO
+    )
+    expect(page.locator('.resultado .st-player:visible')).to_have_count(0)

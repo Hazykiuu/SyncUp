@@ -88,7 +88,7 @@ p { text-wrap: pretty; } /* sem palavra sozinha no fim do parágrafo */
 
 /* ---------- Página inicial ---------- */
 section[id] { scroll-margin-top: 6rem; }
-.titulo-secao { font-size: clamp(2rem, 4.2vw, 3.2rem); font-weight: 900; letter-spacing: -.03em; line-height: 1.04; text-wrap: balance; }
+.titulo-secao { font-size: clamp(2rem, 4.2vw, 3.2rem); font-weight: 900; letter-spacing: -.04em; line-height: 1.04; text-wrap: balance; }
 
 /* Topo fixo em vidro escuro (fundo ≥ 72%: capa que passa por baixo não aparece borrada) */
 .topo { position: fixed; inset-inline: 0; top: .75rem; z-index: 50; padding-inline: clamp(.75rem, 3vw, 3rem); }
@@ -124,7 +124,7 @@ section[id] { scroll-margin-top: 6rem; }
 .hero .shell { display: grid; gap: 3rem; align-items: center; }
 @media (min-width: 1024px) { .hero { min-height: 100svh; display: grid; align-items: center; padding-top: 6rem; padding-bottom: 2rem; } .hero .shell { grid-template-columns: 7fr 5fr; } }
 .hero-texto { display: flex; flex-direction: column; gap: 1.75rem; }
-.hero h1 { max-width: 21ch; font-size: clamp(2.5rem, 4.8vw, 4.25rem); font-weight: 900; line-height: 1; letter-spacing: -.035em; text-wrap: balance; }
+.hero h1 { max-width: 21ch; font-size: clamp(2.5rem, 4.8vw, 4.25rem); font-weight: 900; line-height: 1; letter-spacing: -.045em; text-wrap: balance; }
 .hero h1 em { font-style: normal; color: var(--rosa); }
 .hero-sub { max-width: 36rem; font-size: clamp(1.05rem, 1.4vw, 1.25rem); line-height: 1.55; color: rgba(255, 255, 255, .78); text-wrap: pretty; }
 .hero-ctas { display: flex; flex-wrap: wrap; gap: .75rem; }
@@ -445,9 +445,6 @@ section[id] { scroll-margin-top: 6rem; }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .palco-placa { background: var(--sup-2); } }
 @media (prefers-reduced-transparency: reduce) { .palco-placa { background: var(--sup-2); -webkit-backdrop-filter: none; backdrop-filter: none; } }
 
-/* Tipografia: títulos mais pesados e apertados, como os do Spotify. */
-.hero h1 { letter-spacing: -.045em; }
-.titulo-secao { letter-spacing: -.04em; }
 /* O pódio fica na base do story; o título "Quem levou" no alto. */
 .mock .sb .st-conteudo { height: 100%; }
 

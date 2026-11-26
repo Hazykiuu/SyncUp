@@ -140,7 +140,8 @@ test('batalha completa: rodadas, medalhas, campeão e dupla afinada', () => {
     { ...lutador('Bia', { horas: 20 }), contagens: m({ x: 5, y: 1 }) },
     { ...lutador('Caio', { horas: 30, plays: 50 }), contagens: m({ z: 3 }) },
   ]);
-  assert.deepEqual(b.rodadas.map((r) => r.chave), ['horas', 'plays']);
+  // Ruling (Batalha v2, passo 2): "Só eu conheço" sai das contagens; Caio é o único com um artista só dele.
+  assert.deepEqual(b.rodadas.map((r) => r.chave), ['horas', 'plays', 'soeu']);
   assert.deepEqual(b.campeoes, [0]);
   assert.deepEqual(b.afinada.par, [0, 1]);
   assert.deepEqual(b.lutadores.map((l) => l.cor), CORES.slice(0, 3));
@@ -341,6 +342,165 @@ test('porcentagens pedem 100 plays de 30 s de cada pessoa', () => {
   assert.equal(f.tipo, 'dado');
   assert.match(f.motivo, /100 plays/);
   assert.ok(rodada([lutador('Ana', { horas: 9 }), lutador('Bia', { plays: 99 }), lutador('Caio')], 'horas')); // horas não é porcentagem
+});
+
+/* ---------- Batalha v2: cálculo dos temas novos (contas feitas à mão) ---------- */
+// [hora local 'AAAA-MM-DD HH:MM', ms, música, artista, campos opcionais]. Fuso -3: utc = local + 3 h, e utc é o FIM do play.
+function hist(eventos) {
+  const c = { utc: [], local: [], ms: [], musica: [], artista: [], uri: [], pulada: [], aleatorio: [], offline: [], plataforma: [], motivo: [] };
+  for (const [quando, ms, musica, artista, x = {}] of eventos) {
+    const local = Date.parse(`${quando.replace(' ', 'T')}:00Z`);
+    c.utc.push(local + 3 * HORA); c.local.push(local); c.ms.push(ms); c.musica.push(musica); c.artista.push(artista); c.uri.push(null);
+    for (const k of ['pulada', 'aleatorio', 'offline', 'plataforma', 'motivo']) c[k].push(x[k] ?? null);
+  }
+  return c;
+}
+const num = (eventos) => numerosDoLutador(hist(eventos), 'Ana', 'America/Sao_Paulo').numeros;
+const perto = (a, b) => assert.ok(Math.abs(a - b) < 1e-9, `${a} ≠ ${b}`);
+const MIN = 60_000;
+
+test('volume, variedade e repetição', () => {
+  const n = num([
+    ['2024-03-04 10:00', MIN, 'm1', 'a1'], ['2024-03-04 10:05', MIN, 'm1', 'a1'], ['2024-03-04 12:00', MIN, 'm4', 'a3'],
+    ['2024-03-04 23:59', 20_000, 'm2', 'a2'], // < 30 s: conta nas horas, não nos plays
+    ['2024-03-05 00:00', 2 * MIN, 'm3', 'a2'], // meia-noite já é o dia 5
+  ]);
+  assert.equal(n.metralhadora, 3);
+  perto(n.cruzeiro, (1 + 1 + 1 + 1 / 3 + 2) / 2);
+  assert.equal(n.buffet, 2);
+  perto(n.umavez, 200 / 3); // (m4, a3) e (m3, a2) de 3 músicas
+  perto(n.visita, 200 / 3); // a3 e a2 de 3 artistas
+  assert.equal(n.elenco, 75); // 3 artistas em 4 plays
+  assert.equal(n.disco, 2);
+  assert.equal(n.hino, 2);
+  assert.equal(n.panelinha, 100);
+  assert.equal(n.playlist, 100);
+  assert.equal(n.obra, 1);
+});
+
+test('em sequência: a ordem é a do início (fim − duração), não a do fim gravado', () => {
+  // m1 termina 10:10 depois de 9 min (começou 10:01); m2 termina 10:05 e começou 10:04; m1 de novo às 10:19.
+  const n = num([['2024-03-04 10:05', MIN, 'm2', 'a'], ['2024-03-04 10:10', 9 * MIN, 'm1', 'a'], ['2024-03-04 10:20', MIN, 'm1', 'a']]);
+  assert.equal(n.disco, 1); // pela ordem do fim seriam 2 seguidas
+  assert.equal(num([['2024-03-04 10:00', MIN, 'm1', 'a'], ['2024-03-04 10:01', 10_000, 'm9', 'a'], ['2024-03-04 10:02', MIN, 'm1', 'a']]).disco, 2); // pulo curto no meio não quebra
+});
+
+test('sessões e pausas: intervalo de 30 min, com a sobreposição de plays', () => {
+  const n = num([
+    ['2024-03-04 10:00', 10 * MIN, 'm1', 'a'], ['2024-03-04 10:20', 10 * MIN, 'm2', 'a'], // 9:50–10:20, uma sessão
+    ['2024-03-04 12:00', 30 * MIN, 'm3', 'a'], // começa 11:30: 70 min depois, outra sessão
+    ['2024-03-06 12:00', 60 * MIN, 'm4', 'a'], // começa 11:00 do dia 6: 47 h de pausa
+  ]);
+  assert.equal(n.sessao, 1);
+  assert.equal(n.sessoes, 1.5); // 3 sessões em 2 dias com música
+  perto(n.sumico, 47 / 24);
+  perto(n.nuncasome, 47 / 24);
+  // Um play longo (10:00–11:00) cobre um curto no meio (10:05–10:10): a pausa conta do fim do longo.
+  const s = num([['2024-03-04 11:00', 60 * MIN, 'm1', 'a'], ['2024-03-04 10:10', 5 * MIN, 'm2', 'a'], ['2024-03-04 11:25', 5 * MIN, 'm3', 'a']]);
+  perto(s.sessao, 85 / 60);
+  assert.equal(s.sessoes, 1);
+  perto(s.sumico, 20 / (24 * 60));
+  const um = num([['2024-03-04 10:00', MIN, 'm1', 'a']]);
+  assert.equal(um.sumico, null);
+  assert.equal(um.nuncasome, null);
+});
+
+test('dias de maratona e mês lendário usam todas as reproduções', () => {
+  const n = num([
+    ['2024-01-31 23:00', 3 * 60 * MIN, 'm1', 'a'], ['2024-02-01 10:00', 179 * MIN, 'm2', 'a'],
+    ['2024-02-02 10:00', 20_000, 'm3', 'a'], ['2024-02-03 10:00', MIN, 'm3', 'a'],
+  ]);
+  assert.equal(n.maratona, 1); // 31/1 com 3 h; 1º/2 com 2 h 59
+  perto(n.mes, (180 * MIN + 20_000) / HORA); // fevereiro passa janeiro (3 h) só por causa do play de 20 s
+});
+
+test('relógio e calendário pela hora local', () => {
+  const n = num([
+    ['2024-03-01 18:00', MIN, 'm', 'a'], // sexta, 18 h: sextou, fim de tarde e noite
+    ['2024-03-01 17:59', MIN, 'm', 'a'], // sexta, 17 h: só fim de tarde
+    ['2024-03-02 12:30', MIN, 'm', 'a'], // sábado: almoço e fim de semana
+    ['2024-03-04 00:00', MIN, 'm', 'a'], // segunda, meia-noite: madrugada
+    ['2024-03-04 06:00', MIN, 'm', 'a'], // segunda, 6 h: manhã
+  ]);
+  assert.deepEqual([n.madrugador, n.almoco, n.tarde, n.noite, n.fimdesemana, n.sextou, n.segunda], [20, 20, 40, 20, 20, 20, 40]);
+  perto(n.espalhado, (Math.log(5) / Math.log(24)) * 100); // 5 horas com um play cada
+  perto(num(Array.from({ length: 24 }, (_, h) => [`2024-03-04 ${String(h).padStart(2, '0')}:10`, MIN, 'm', 'a'])).espalhado, 100);
+});
+
+test('Natal e virada: pela data local, e só quando o período passa por elas', () => {
+  const n = num([
+    ['2023-12-20 10:00', MIN, 'm', 'a'], ['2023-12-24 00:00', MIN, 'm', 'a'], ['2023-12-26 23:59', MIN, 'm', 'a'], ['2023-12-27 00:00', MIN, 'm', 'a'],
+    ['2023-12-31 23:00', MIN, 'm', 'a'], ['2024-01-01 22:00', MIN, 'm', 'a'], // já é 2 de janeiro em UTC
+    ['2024-01-03 10:00', MIN, 'm', 'a'],
+  ]);
+  assert.equal(n.natal, 2);
+  assert.equal(n.virada, 2);
+  const curto = num([['2023-12-20 10:00', MIN, 'm', 'a'], ['2023-12-25 10:00', MIN, 'm', 'a']]);
+  assert.equal(curto.natal, null); // não chega ao dia 26
+  assert.equal(curto.virada, null);
+  assert.equal(num([['2024-03-04 10:00', MIN, 'm', 'a'], ['2024-12-24 10:00', MIN, 'm2', 'a'], ['2024-12-29 10:00', MIN, 'm', 'a']]).natal, 1);
+  assert.equal(num([['2024-12-20 10:00', MIN, 'm', 'a'], ['2025-01-02 10:00', MIN, 'm', 'a']]).virada, 0); // passou pela virada sem ouvir: 0, não null
+});
+
+test('pulos, modo e aparelho: null quando o histórico não traz o campo', () => {
+  const sem = num([['2024-03-04 10:00', MIN, 'm', 'a'], ['2024-03-04 11:00', MIN, 'm', 'a']]);
+  for (const k of ['paciencia', 'dedo', 'ultimanota', 'destino', 'adedo', 'offline', 'bolso', 'mesa', 'aparelhos']) assert.equal(sem[k], null, k);
+  const x = [
+    { pulada: true, aleatorio: true, offline: true, plataforma: 'Android', motivo: 'fwdbtn' },
+    { pulada: false, aleatorio: true, offline: false, plataforma: 'iOS', motivo: 'trackdone' },
+    { pulada: false, aleatorio: false, offline: false, plataforma: 'Windows', motivo: 'trackdone' },
+    { pulada: false, aleatorio: false, offline: false, plataforma: null, motivo: 'endplay' },
+  ];
+  const n = num(x.map((campos, i) => [`2024-03-04 1${i}:00`, MIN, `m${i}`, 'a', campos]));
+  assert.deepEqual([n.paciencia, n.dedo, n.ultimanota, n.destino, n.adedo, n.offline], [25, 25, 50, 50, 50, 25]);
+  perto(n.bolso, 200 / 3);
+  perto(n.mesa, 100 / 3);
+  assert.equal(n.aparelhos, 3);
+  // Um play perdido numa TV (menos de 1% do que tem aparelho) não conta como aparelho.
+  const tv = Array.from({ length: 101 }, (_, i) => [`2024-03-04 10:${String(i % 60).padStart(2, '0')}`, MIN, 'm', 'a', { plataforma: i ? 'Android' : 'TV, console ou caixa de som' }]);
+  assert.equal(num(tv).aparelhos, 1);
+});
+
+test('descoberta e fidelidade', () => {
+  const n = num([
+    ['2023-01-10 10:00', MIN, 'm', 'a1'], ['2023-01-20 10:00', MIN, 'm', 'a2'], ['2023-02-05 10:00', MIN, 'm', 'a3'],
+    ['2023-03-01 10:00', MIN, 'm', 'a1'], ['2023-08-15 10:00', MIN, 'm', 'a1'], // 167 dias depois: não é reencontro
+    ['2024-01-10 10:00', MIN, 'm', 'a2'], // 355 dias depois: reencontro
+    ['2024-01-15 10:00', MIN, 'm', 'a4'],
+  ]);
+  perto(n.novidades, 2 / 12); // a3 e a4 nos 12 meses depois de janeiro de 2023
+  assert.equal(n.antigo, 355);
+  assert.equal(n.fidelidade, 3); // a1 em jan, mar e ago
+  assert.equal(n.reencontro, 1);
+  perto(n.faro, 100 / 7); // a4, descoberto nos últimos 6 meses
+  perto(n.raizes, 600 / 7); // a1, a2 e a3, nos primeiros 6 meses
+  const curto = num([['2023-12-10 10:00', MIN, 'm', 'a1'], ['2023-12-20 10:00', MIN, 'm', 'a2']]);
+  assert.deepEqual([curto.novidades, curto.faro, curto.raizes], [null, null, null]);
+  perto(num([['2023-12-10 10:00', MIN, 'm', 'a1'], ['2024-01-02 10:00', MIN, 'm', 'a2']]).novidades, 1); // dezembro → janeiro é 1 mês
+});
+
+test('temas do grupo a partir das contagens e do primeiro play de cada artista', async () => {
+  const { numerosDoGrupo } = await import('../../site/app/js/batalha-medidas.js');
+  const m = (obj) => new Map(Object.entries(obj));
+  const lista = [
+    { contagens: m({ x: 5, y: 3, s: 2 }), primeiros: m({ x: 100, y: 500, s: 10 }) },
+    { contagens: m({ x: 1, y: 4 }), primeiros: m({ x: 50, y: 500 }) },
+    { contagens: m({ x: 2, z: 8 }), primeiros: m({ x: 300, z: 1 }) },
+  ];
+  assert.deepEqual(numerosDoGrupo(lista), [
+    { soeu: 1, turma: 50, primeiro: 0, dj: 80 },
+    { soeu: 0, turma: 20, primeiro: 1, dj: 100 }, // y empatado no mesmo instante: ninguém chega antes
+    { soeu: 1, turma: 20, primeiro: 0, dj: 20 },
+  ]);
+  assert.deepEqual(numerosDoGrupo(lista.map(({ contagens }) => ({ contagens }))).map((g) => g.primeiro), [null, null, null]);
+});
+
+test('numerosDoLutador traz todos os temas que não dependem do grupo, e o primeiro play por artista', async () => {
+  const { TEMAS } = await import('../../site/app/js/batalha-temas.js');
+  const { numeros, primeiros } = numerosDoLutador(historicoFixo(), 'Ana', 'America/Sao_Paulo');
+  for (const t of TEMAS) assert.equal(t.chave in numeros, t.familia !== 'grupo', t.chave);
+  for (const t of TEMAS) if (t.familia !== 'grupo') assert.ok(numeros[t.chave] === null || Number.isFinite(numeros[t.chave]), t.chave);
+  assert.deepEqual([...primeiros.keys()].sort(), ['a0', 'a1', 'a2', 'a3', 'a4']);
 });
 
 test('textos legíveis sobre a superfície sólida da 1.19 (#181818)', () => {

@@ -1,5 +1,6 @@
 // Batalha (no app web, no lugar do Grupo do app para PC): de 3 a 6 históricos disputam rodadas de números do período.
 // Funções puras: o Worker (batalha-worker.js) lê os arquivos e chama numerosDoLutador e montarBatalha.
+import { medidasNovas, numerosDoGrupo } from './batalha-medidas.js';
 import { ausente, TEMAS } from './batalha-temas.js';
 import { calcularWrapped, compararTexto, MINIMO_PLAYS_WRAPPED, TEMPO_MINIMO_PLAY_MS } from './calculo.js';
 import { cosseno, ponderar } from './dupla.js';
@@ -30,10 +31,16 @@ export function recortar(c, inicio, fim) {
   return Object.fromEntries(Object.entries(c).map(([k, v]) => [k, Array.isArray(v) ? dentro.map((i) => v[i]) : v]));
 }
 
-// Os 10 números das rodadas e os plays por artista (para a dupla afinada) de um histórico já recortado.
+// Os números de todos os temas que não dependem do grupo, de um histórico já recortado, e o resumo para os
+// temas do grupo: plays por artista (também para a dupla afinada) e o início do primeiro play de cada artista (UTC).
 export function numerosDoLutador(c, nome, fuso) {
-  const contagens = new Map();
-  for (let i = 0; i < c.ms.length; i++) if (c.ms[i] >= TEMPO_MINIMO_PLAY_MS) contagens.set(c.artista[i], (contagens.get(c.artista[i]) || 0) + 1);
+  const contagens = new Map(), primeiros = new Map();
+  for (let i = 0; i < c.ms.length; i++) {
+    if (c.ms[i] < TEMPO_MINIMO_PLAY_MS) continue;
+    const art = c.artista[i], inicio = c.utc[i] - c.ms[i];
+    contagens.set(art, (contagens.get(art) || 0) + 1);
+    if (!(primeiros.get(art) <= inicio)) primeiros.set(art, inicio);
+  }
   if (!contagens.size) throw new Error(`Não há plays ≥30s para ${nome} no período escolhido. Tente desmarcar o recorte comum.`);
   const d = calcularWrapped(c, nome, fuso);
   return {
@@ -42,8 +49,10 @@ export function numerosDoLutador(c, nome, fuso) {
       sequencia: d.sequencia, dia: d.horas_dia_recorde, coruja: d.periodos.Madrugada * 100,
       repeteco: d.repeticao_dia.plays, fa: d.participacao_artista_vida * 100,
       paciencia: d.habitos.pulos === null ? null : d.habitos.pulos * 100,
+      ...medidasNovas(c, d, contagens),
     },
     contagens: new Map([...contagens].sort(([a], [b]) => compararTexto(a, b))),
+    primeiros,
   };
 }
 
@@ -192,8 +201,10 @@ export function trilhaBatalha(b, favoritos) {
   };
 }
 
-// `lutadores`: [{ nome, numeros, contagens }] na ordem do formulário. Devolve o JSON da tela.
+// `lutadores`: [{ nome, numeros, contagens, primeiros? }] na ordem do formulário. Devolve o JSON da tela.
 export function montarBatalha(lutadores) {
+  const grupo = numerosDoGrupo(lutadores);
+  lutadores = lutadores.map((l, i) => ({ ...l, numeros: { ...l.numeros, ...grupo[i] } }));
   const { dentro, fora } = rodadas(lutadores);
   if (!dentro.length) throw new Error('Não há números suficientes para uma batalha neste período.');
   const nomes = lutadores.map((l) => l.nome);

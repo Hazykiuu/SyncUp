@@ -616,6 +616,18 @@ test('sorteio: com menos de 10 elegíveis usa todos, menos um de cada par oposto
   assert.ok(['horas', 'plays', 'artistas'].every((k) => b.temas.includes(k)));
 });
 
+test('trilha: cada tema sorteado tem o seu story com o favorito de quem venceu, em qualquer sorteio', async () => {
+  const { TEMAS } = await temas();
+  const todos = elenco(TEMAS.filter((t) => t.familia !== 'grupo').map((t) => t.chave));
+  for (let semente = 1; semente <= 30; semente++) {
+    const b = montarBatalha(todos, { semente });
+    const rodadasDaTrilha = Object.keys(b.trilha.slides).filter((k) => k.startsWith('rodada-'));
+    assert.deepEqual(rodadasDaTrilha, b.temas.map((k) => `rodada-${k}`));
+    for (const r of b.rodadas) assert.deepEqual(b.trilha.slides[`rodada-${r.chave}`], [{ artista: `x${r.posicoes.indexOf(1)}` }]);
+    assert.deepEqual(b.trilha.fila, [{ artista: 'x0' }, { artista: 'x1' }, { artista: 'x2' }]);
+  }
+});
+
 test('Dedinho nervoso vale também no Dedo nervoso, onde quem pula mais vence', () => {
   assert.deepEqual(alertaPaciencia(r([10, 20, 70], false, 'dedo'), ['Ana', 'Bia', 'Caio']), { nome: 'Caio', valor: 70 });
 });

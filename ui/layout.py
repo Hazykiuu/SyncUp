@@ -869,7 +869,7 @@ def criar_interface() -> gr.Blocks:
         demo.load(resumo_html, None, meus_dados_html, api_visibility='private')
         gr.Markdown(
             'Plays: ≥30 segundos. Horas e resumo dos minutos: todas as execuções válidas. '
-            'O Ruzicka usa pesos absolutos e é sensível ao volume de escuta. ' + AVISO_TRACOS,
+            'O Ruzicka compara os pesos sem igualar o volume de cada um, por isso é sensível a ele. ' + AVISO_TRACOS,
             elem_classes=['su-note', 'su-footer'],
         )
     return demo.queue(default_concurrency_limit=CONCORRENCIA)

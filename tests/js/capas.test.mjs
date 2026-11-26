@@ -102,3 +102,17 @@ test('cache vencido é apagado ao criar o buscador; "apagar tudo" esvazia', asyn
   await b.apagarTudo();
   assert.equal(await cache.ler('t:nova'), undefined);
 });
+
+// R3-06: erro do servidor não pode virar "sem capa" por 30 dias; 404 pode.
+test('500 não é guardado no cache; 404 é', async () => {
+  const cache = cacheMemoria();
+  let hoje = resposta(500, {});
+  const { fetch, pedidos } = falso([[`track%2F${ID}`, () => hoje]]);
+  assert.equal(await criarBuscador({ fetch, esperar, cache }).faixa(`spotify:track:${ID}`), null);
+  hoje = resposta(200, { title: 'X', thumbnail_url: 'https://i.scdn.co/image/capa' });
+  assert.equal((await criarBuscador({ fetch, esperar, cache }).faixa(`spotify:track:${ID}`))?.url, 'https://i.scdn.co/image/capa');
+  const semCapa = falso([]), outro = cacheMemoria();
+  for (let i = 0; i < 2; i++) assert.equal(await criarBuscador({ fetch: semCapa.fetch, esperar, cache: outro }).faixa(`spotify:track:${ID}`), null);
+  assert.equal(semCapa.pedidos.length, 1);
+  assert.ok(pedidos.length >= 2);
+});

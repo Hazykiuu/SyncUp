@@ -11,6 +11,7 @@
 - **Match com poucos dados:** com menos de 30 artistas em um dos rankings, a faixa vira "Amostra pequena" (a porcentagem continua). Antes, 1 artista em comum podia dar "Sintonia rara". As faixas passam a aparecer como provisórias, e o `VALIDACAO.md` registra de onde vieram.
 
 ### Corrigido
+- **Capas:** um erro do servidor do Spotify ou do MusicBrainz não vira mais "sem capa" por 30 dias.
 - **Cache de gêneros:** um arquivo editado ou corrompido não vira mais "gêneros" de uma letra nem derruba o Match. O cache antigo é refeito uma vez.
 - **Teclado no app para PC:** o player de stories mostra onde está o foco e se apresenta aos leitores de tela.
 - **Teclado no celular:** o item em foco não fica mais escondido atrás da barra de modos.

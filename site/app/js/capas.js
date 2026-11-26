@@ -105,7 +105,8 @@ export function criarBuscador({ fetch = globalThis.fetch.bind(globalThis), esper
       // Tempo-limite: um pedido pendurado (rede ruim) não pode segurar a fila nem deixar "Buscando…" para sempre.
       const r = await vez(() => fetch(url, { signal: AbortSignal.timeout?.(8000) }));
       if (r.ok) return r.json();
-      if (r.status !== 429 && r.status !== 503) return null;
+      if (r.status === 404) return null; // não existe: pode guardar
+      if (r.status !== 429 && r.status < 500) return null;
       if (tentativa < 3) await esperar(2000 * 2 ** tentativa);
     }
     throw new Error('serviço ocupado');

@@ -287,3 +287,14 @@ def test_amostra_pequena_nao_ganha_faixa(artistas: int, pequena: bool) -> None:
     c = comparar_perfis(cheio, outro)
     assert c.amostra_pequena is pequena
     assert (c.nivel == 'Amostra pequena') is pequena
+
+
+# R3-14: um perfil de versão futura não é lido como se fosse desta.
+@pytest.mark.parametrize('versao', [99, 'x', True, 0])
+def test_de_dict_recusa_versao_desconhecida(versao) -> None:
+    with pytest.raises(ValueError):
+        PerfilGosto.de_dict({'nome': 'A', 'versao': versao, 'top_artistas': {'short_term': ['X']}})
+
+
+def test_de_dict_sem_versao_continua_valendo() -> None:
+    assert PerfilGosto.de_dict({'nome': 'A', 'top_artistas': {'short_term': ['X']}}).nome == 'A'

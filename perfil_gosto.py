@@ -66,6 +66,11 @@ class PerfilGosto:
     def de_dict(cls, dados: dict) -> PerfilGosto:
         if not isinstance(dados, dict) or not dados.get('nome'):
             raise ValueError('Perfil inválido: falta o nome.')
+        versao = dados.get('versao', VERSAO_PERFIL)
+        if type(versao) is not int or versao < 1:
+            raise ValueError('Perfil inválido: versão ilegível.')
+        if versao > VERSAO_PERFIL:
+            raise ValueError('Perfil de uma versão mais nova do SyncUp.')
         campos = {k: dados[k] for k in cls.__dataclass_fields__ if k in dados}
         campos.setdefault('fonte', 'desconhecida')
         campos.setdefault('coletado_em', '')

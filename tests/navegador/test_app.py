@@ -103,3 +103,9 @@ def test_wrapped_com_historico_curto_avisa_em_vez_dos_stories(page, site_url, tm
         'Histórico curto demais', timeout=TEMPO
     )
     expect(page.locator('.resultado .st-player:visible')).to_have_count(0)
+
+
+def test_app_abre_sem_o_unpkg(page, site_url):
+    page.route('https://unpkg.com/**', lambda rota: rota.abort())
+    page.goto(f'{site_url}/app/#wrapped')
+    expect(page.get_by_role('button', name='Montar meu Wrapped')).to_be_attached(timeout=TEMPO)

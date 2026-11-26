@@ -3,6 +3,7 @@
 ## Não lançado
 
 ### Mudado
+- **O app abre sem o unpkg:** o Preact com htm passa a vir do próprio site, o mesmo arquivo de antes. Com o CDN fora do ar ou bloqueado, a tela ficava no esqueleto para sempre.
 - **Mesma sintonia no PC e no navegador:** o app para PC passa a usar por padrão a ponderação logarítmica, a mesma do navegador. Antes o PC usava a bruta, e os mesmos arquivos davam números diferentes. Dá para trocar na própria tela.
 - **Wrapped com histórico curto:** com menos de 100 plays de 30 s ou mais, o app avisa "Histórico curto demais" em vez de montar os stories. Antes, 1 play virava um Wrapped com "0 horas" e arquétipo. "Em 1 dias" virou "em 1 dia".
 - **Match com poucos dados:** com menos de 30 artistas em um dos rankings, a faixa vira "Amostra pequena" (a porcentagem continua). Antes, 1 artista em comum podia dar "Sintonia rara". As faixas passam a aparecer como provisórias, e o `VALIDACAO.md` registra de onde vieram.

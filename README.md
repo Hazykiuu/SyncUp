@@ -185,7 +185,7 @@ print(r.metricas.cosseno)
 ```
 
 
-**Dependências**, todas abertas (`tests/test_licencas.py` confere): Gradio e orjson (Apache-2.0), FastAPI e Plotly (MIT), httpx e pandas (BSD-3-Clause), Pillow (MIT-CMU), pytest e Ruff (MIT) e a fonte Figtree (SIL OFL 1.1). O site (`site/`) usa a Lenis (MIT) e o Preact com htm (MIT).
+**Dependências**, todas abertas (`tests/test_licencas.py` confere): Gradio e orjson (Apache-2.0), FastAPI e Plotly (MIT), httpx e pandas (BSD-3-Clause), Pillow (MIT-CMU), pytest e Ruff (MIT) e a fonte Figtree (SIL OFL 1.1). O site (`site/`) usa a Lenis (MIT), o Preact (MIT) e o htm (Apache-2.0); o app serve uma cópia dos dois últimos, com as licenças em `site/app/vendor/`.
 
 **Contribuir:** abra uma *issue* ou um *pull request*. Nunca envie históricos reais: são dados pessoais. O histórico de cada versão está no [CHANGELOG](CHANGELOG.md).
 

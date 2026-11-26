@@ -63,7 +63,14 @@ def _get(cliente: httpx.Client, caminho: str, **params) -> dict:
     if resposta.status_code == 204:
         return {}
     resposta.raise_for_status()
-    return resposta.json().get('payload') or {}
+    try:
+        corpo = resposta.json()
+    except ValueError:
+        corpo = None
+    payload = corpo.get('payload') or {} if isinstance(corpo, dict) else None
+    if not isinstance(payload, dict):
+        raise ValueError('O ListenBrainz respondeu algo inesperado. Tente de novo mais tarde.')
+    return payload
 
 
 def _base(usuario: str) -> str:

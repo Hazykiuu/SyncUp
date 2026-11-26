@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from itertools import combinations
 from pathlib import Path
 from typing import Any
@@ -28,6 +29,7 @@ from graficos import (
 )
 from listenbrainz import coletar_escutas_listenbrainz, coletar_perfil_listenbrainz
 from perfil_gosto import (
+    PerfilGosto,
     escutas_de_arquivos,
     perfil_de_arquivos,
     tem_perfil_em_cache,
@@ -49,6 +51,40 @@ def _mais_em_sintonia(sintonias: dict[tuple[str, str], Sintonia], nome: str) -> 
     ]
     minutos, outro = max(juntos, default=(0.0, ''))
     return f'{outro} ({fmt_num(minutos, 0)} min)' if minutos > 0 else '—'
+
+
+def _motivo_listenbrainz(erro: Exception) -> str:
+    """Servidor com defeito não é problema da internet de quem usa."""
+    if isinstance(erro, httpx.HTTPStatusError):
+        return 'o ListenBrainz está com problemas agora. Tente de novo mais tarde.'
+    return 'o ListenBrainz não respondeu. Confira a internet.'
+
+
+MAXIMO_DEMORAS = 3  # seguidas: o serviço está lento e cada pessoa custaria um tempo-limite
+
+
+def _perfis_listenbrainz(
+    usuarios: list[str], avancar: Callable[[int], object]
+) -> tuple[list[tuple[str, PerfilGosto]], list[str]]:
+    """Perfis que deram certo e, para os demais, o motivo."""
+    perfis, fora, demoras = [], [], 0
+    for i, usuario in enumerate(usuarios):
+        if demoras >= MAXIMO_DEMORAS:
+            fora.append(
+                f'{usuario}: o ListenBrainz está demorando demais. Tente de novo mais tarde.'
+            )
+            continue
+        avancar(i)
+        try:
+            perfis.append((usuario, coletar_perfil_listenbrainz(usuario)))
+            demoras = 0
+        except ValueError as erro:  # usuário inexistente, sem estatísticas ou serviço ocupado
+            fora.append(f'{usuario}: {erro}')
+            demoras = 0
+        except httpx.HTTPError as erro:
+            demoras = demoras + 1 if isinstance(erro, httpx.TimeoutException) else 0
+            fora.append(f'{usuario}: {_motivo_listenbrainz(erro)}')
+    return perfis, fora
 
 
 def executar_match(
@@ -96,16 +132,14 @@ def executar_match(
             escutas_por_nome[perfil.nome] = escutas_de_arquivos(arquivo, config)
         fora: list[str] = []
         sem_sintonia: list[str] = []
-        for i, usuario in enumerate(usuarios):
-            progress(0.6 + 0.05 * i / len(usuarios), desc=f'Lendo o ListenBrainz de {usuario}')
-            try:
-                perfil = coletar_perfil_listenbrainz(usuario)
-            except ValueError as erro:  # usuário inexistente, sem estatísticas ou serviço ocupado
-                fora.append(f'{usuario}: {erro}')
-                continue
-            except httpx.HTTPError:
-                fora.append(f'{usuario}: o ListenBrainz não respondeu. Confira a internet.')
-                continue
+        do_listenbrainz, falhas = _perfis_listenbrainz(
+            usuarios,
+            lambda i: progress(
+                0.6 + 0.05 * i / len(usuarios), desc=f'Lendo o ListenBrainz de {usuarios[i]}'
+            ),
+        )
+        fora.extend(falhas)
+        for usuario, perfil in do_listenbrainz:
             perfis.append(perfil)
             fontes[perfil.nome] = 'ListenBrainz'
             try:

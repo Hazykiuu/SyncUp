@@ -231,3 +231,22 @@ def test_datas_lidas_iguais_nos_dois_motores() -> None:
         d = pd.to_datetime(pd.Series([texto]), utc=True, format='ISO8601', errors='coerce')[0]
         py.append(None if pd.isna(d) else d.value // 10**6)
     assert dict(zip(DATAS, js)) == dict(zip(DATAS, py))
+
+
+def test_as_quatro_metricas_tem_o_mesmo_nome_no_pc_e_no_navegador() -> None:
+    """R3-12: um nome por métrica."""
+    nomes = ['Escuta em comum', 'Artistas em comum', 'Favoritos em comum', 'Contagens em comum']
+    web = re.findall(
+        r"^  \['(?:cosseno|jaccard|rbo_top50|ruzicka)', '([^']+)'", _fonte('resultado.js'), re.M
+    )
+    pc = (RAIZ / 'componentes.py').read_text(encoding='utf-8')
+    assert web == nomes
+    assert (
+        re.findall(r"\('([^']+)', m\.(?:cosseno|jaccard|rbo_top50|jaccard_ponderado),", pc) == nomes
+    )
+    for arquivo in ('cartao.py', 'apresentacao.py'):
+        texto = (RAIZ / arquivo).read_text(encoding='utf-8').casefold()
+        assert 'similaridade musical' not in texto and 'similaridade de escuta' not in texto, (
+            arquivo
+        )
+    assert 'volume' in _fonte('resultado.js').split("['ruzicka'")[1].split('\n')[0]

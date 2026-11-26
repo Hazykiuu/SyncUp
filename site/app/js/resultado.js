@@ -56,10 +56,10 @@ function Rankings({ nomes, listas }) {
 
 // As 4 medidas da comparação, cada uma com o que mede em uma frase (o jargão fica aqui, não nos stories).
 const MEDIDAS = [
-  ['cosseno', 'Escuta em comum', 'Cosseno', 'Compara quanto cada um ouviu de cada artista. É o número da abertura dos stories.'],
-  ['jaccard', 'Artistas em comum', 'Jaccard', 'De todos os artistas que aparecem nos dois históricos, quantos os dois ouviram.'],
+  ['cosseno', 'Escuta em comum', 'Cosseno', 'Compara quanto cada um ouviu de cada artista, com a ponderação das opções. É o número da abertura dos stories.'],
+  ['jaccard', 'Artistas em comum', 'Jaccard', 'Dos artistas com plays de 30 s ou mais no período comparado, quantos os dois ouviram.'],
   ['rbo_top50', 'Favoritos em comum', 'RBO do top 50', 'Compara os rankings dos 50 artistas mais ouvidos de cada um: pesa mais o topo do ranking.'],
-  ['ruzicka', 'Plays em comum', 'Ruzicka', 'Como o de artistas em comum, mas pesando pela quantidade de plays.'],
+  ['ruzicka', 'Contagens em comum', 'Ruzicka', 'Como o de artistas em comum, mas pesando pelos plays, com a ponderação das opções. Quem tem muito mais volume de escuta puxa o número para baixo.'],
 ];
 function Medidas({ metricas }) {
   return html`<dl class="dp-medidas">${MEDIDAS.map(([chave, titulo, tecnico, frase]) => html`

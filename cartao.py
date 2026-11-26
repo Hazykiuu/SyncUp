@@ -149,7 +149,7 @@ def gerar_cartao(
     texto(64, 245, resultado.perfil_a.nome, 42, VERDE, True)
     texto(64, 306, '×  ' + resultado.perfil_b.nome, 42, ROXO, True)
     d.rounded_rectangle((64, 392, 1016, 620), radius=30, fill=PAINEL)
-    texto(100, 415, 'SIMILARIDADE DE ESCUTA · COSSENO', 26, SECUNDARIO)
+    texto(100, 415, 'ESCUTA EM COMUM · COSSENO', 26, SECUNDARIO)
     texto(96, 455, fmt_pct(resultado.metricas.cosseno), 104, VERDE, True, 690)
     _anel(d, (812, 420, 984, 592), resultado.metricas.cosseno)  # à direita do painel
     texto(100, 580, f'Ponderação: {resultado.ponderacao} · plays ≥30 segundos', 24, SECUNDARIO)

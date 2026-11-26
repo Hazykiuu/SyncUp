@@ -173,7 +173,7 @@ export function resenha(b, nomes) {
   const selo = b.rodadas.find((r) => r.destaque === 'massacre') || b.rodadas.find((r) => r.destaque === 'por-um-triz');
   if (selo) fatos.push(`${NOME_SELO[selo.destaque]} em ${selo.titulo}: ${nomes[selo.posicoes.indexOf(1)]} venceu ${selo.destaque === 'massacre' ? 'com folga' : 'por pouco'}.`);
   const [x, y] = b.menosAfinada.par;
-  fatos.push(`${nomes[x]} e ${nomes[y]} têm o gosto mais distante (${String(b.menosAfinada.valor).replace('.', ',')}% de sintonia).`);
+  fatos.push(`${nomes[x]} e ${nomes[y]} têm o gosto mais distante (${String(b.menosAfinada.valor).replace('.', ',')}% de escuta em comum, pelo cosseno).`);
   return fatos.join(' ');
 }
 

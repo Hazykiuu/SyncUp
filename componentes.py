@@ -67,10 +67,10 @@ def blend_html(resultado: ResultadoComparacao, texto_periodo: str) -> str:
     """Cabeçalho estilo "Blend": avatares, anel de similaridade e quatro métricas."""
     m, a, b = resultado.metricas, resultado.perfil_a, resultado.perfil_b
     cards = [
-        ('Similaridade musical', m.cosseno, f'Cosseno · ponderação {resultado.ponderacao}'),
-        ('Artistas em comum', m.jaccard, 'Jaccard · todos os artistas'),
-        ('Favoritos compartilhados', m.rbo_top50, 'RBO · Top 50'),
-        ('Contagens compartilhadas', m.jaccard_ponderado, 'Ruzicka · ponderação selecionada'),
+        ('Escuta em comum', m.cosseno, f'Cosseno · ponderação {resultado.ponderacao}'),
+        ('Artistas em comum', m.jaccard, 'Jaccard · plays de 30 s ou mais'),
+        ('Favoritos em comum', m.rbo_top50, 'RBO · Top 50'),
+        ('Contagens em comum', m.jaccard_ponderado, 'Ruzicka · sensível ao volume de escuta'),
     ]
     metricas = ''.join(
         f'<div class="su-metric{" primary" if i == 0 else ""}" style="--i:{i}">'

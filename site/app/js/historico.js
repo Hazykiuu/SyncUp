@@ -125,7 +125,9 @@ export const TETO_MS = 86_400_000;
 
 // Instante em ISO 8601 → milissegundos UTC. Sem fuso no texto, vale UTC (como o pandas com utc=True).
 // Hora opcional (só a data = meia-noite UTC) e segundos opcionais, como o pandas aceita no Python.
-const ISO = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?)?(Z|[+-]\d{2}:?\d{2})?$/;
+const ISO = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?)?(Z|[+-]\d{2}(?::?\d{2})?)?$/;
+// ISO básico (sem separadores), que o pandas também lê.
+const ISO_BASICO = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(.*)$/;
 export function instanteUtc(ts) {
   if (typeof ts !== 'string') return NaN;
   // Formato do Spotify ("2023-12-30T03:00:00Z"): caminho rápido pelo Date.parse nativo. Ele aceita
@@ -134,14 +136,15 @@ export function instanteUtc(ts) {
     const ms = Date.parse(ts), dia = ts.slice(8, 10);
     return ms === ms && ts.slice(11, 13) < '24' && (dia <= '28' || new Date(ms).getUTCDate() === Number(dia)) ? ms : NaN;
   }
-  const m = ISO.exec(ts.trim());
+  const m = ISO.exec(ts.trim().replace(ISO_BASICO, '$1-$2-$3T$4:$5:$6$7'));
   if (!m) return NaN;
   const [ano, mes, dia, hora, min, seg] = m.slice(1, 7).map((x) => Number(x ?? 0)); // grupo ausente = 0
   if (mes < 1 || mes > 12 || dia < 1 || hora > 23 || min > 59 || seg > 59) return NaN;
   const ms = Date.UTC(ano, mes - 1, dia, hora, min, seg) + Number(`0.${m[7] || 0}`) * 1000;
   if (new Date(ms).getUTCDate() !== dia) return NaN; // 30 de fevereiro e afins
   if (!m[8] || m[8] === 'Z') return Math.floor(ms);
-  const sinal = m[8][0] === '-' ? -1 : 1, [h, mm] = [m[8].slice(1, 3), m[8].slice(-2)].map(Number);
+  const sinal = m[8][0] === '-' ? -1 : 1, [h, mm] = [m[8].slice(1, 3), m[8].length > 3 ? m[8].slice(-2) : 0].map(Number);
+  if (h > 23 || mm > 59) return NaN;
   return Math.floor(ms - sinal * (h * 60 + mm) * 60000);
 }
 

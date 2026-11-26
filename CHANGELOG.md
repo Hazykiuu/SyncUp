@@ -14,6 +14,7 @@
 - **Match com poucos dados:** com menos de 30 artistas em um dos rankings, a faixa vira "Amostra pequena" (a porcentagem continua). Antes, 1 artista em comum podia dar "Sintonia rara". As faixas passam a aparecer como provisórias, e o `VALIDACAO.md` registra de onde vieram.
 
 ### Corrigido
+- **Datas incomuns:** o navegador e o app para PC aceitam e recusam os mesmos formatos de data.
 - **Nomes com ı, sigma final ou Cherokee:** o navegador passa a juntar e separar esses artistas como o app para PC.
 - **Sem internet:** o painel do som diz "Stories sem som" (ou aponta o botão, quando o navegador bloqueia) em vez de ficar em "Preparando o som…".
 - **Stories da Dupla:** com nomes muito longos, o texto encolhe para caber, em vez de sair da moldura.

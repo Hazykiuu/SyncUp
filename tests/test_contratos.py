@@ -13,6 +13,7 @@ import random
 import re
 import subprocess
 
+import pandas as pd
 import pytest
 
 import analise
@@ -206,3 +207,27 @@ def test_nomes_normalizados_iguais_nos_dois_motores() -> None:
         NOMES,
     )
     assert js == [normalizar_nome(n) for n in NOMES]
+
+
+# R1-09: o mesmo texto de data vale (ou não) o mesmo instante nos dois motores.
+DATAS = [
+    '2023-12-30T03:00:00Z', '2023-12-30T03:00:00+05:45', '2023-12-30T03:00:00-03:30', '2023-12-30T03:00:00+0545',
+    '2023-12-30T03:00:00', '2023-12-30 03:00', '2023-12-30', '2023-02-30T03:00:00Z', '2023-02-29T03:00:00Z',
+    '2024-02-29T03:00:00Z', '2023-12-30T24:00:00Z', '2023-12-30T23:59:60Z', '2023-12-30T03:00:00.123456789Z',
+    '2023-12-30T03:00:00+14:00', '2023-12-30T03:00:00+23:59', '2023-12-30T03:00:00+24:00', '2023-12-30T03:00:00z',
+    '2023-12-30T03:00Z', '20231230T030000Z', '2023-12-30T03:00:00+05', '1969-12-31T23:59:59Z', '  2023-12-30T03:00:00Z  ',
+]  # fmt: skip
+
+
+def test_datas_lidas_iguais_nos_dois_motores() -> None:
+    js = _node(
+        "import { instanteUtc } from './site/app/js/historico.js';"
+        "let s = ''; for await (const c of process.stdin) s += c;"
+        'process.stdout.write(JSON.stringify(JSON.parse(s).map((t) => { const v = instanteUtc(t); return Number.isNaN(v) ? null : v; })));',
+        DATAS,
+    )
+    py = []
+    for texto in DATAS:
+        d = pd.to_datetime(pd.Series([texto]), utc=True, format='ISO8601', errors='coerce')[0]
+        py.append(None if pd.isna(d) else d.value // 10**6)
+    assert dict(zip(DATAS, js)) == dict(zip(DATAS, py))

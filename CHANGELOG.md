@@ -1,8 +1,20 @@
 # Changelog — SyncUp
 
-## Não lançado
+## [1.28.0] — 2026-11-26
+
+A Batalha passa a sortear 10 de 56 temas a cada cálculo, e esta versão junta as correções da auditoria do app.
+
+### Novo
+- **Batalha com temas sorteados:** em vez de 10 rodadas fixas, cada batalha sorteia 10 temas de uma lista de 56, em 10 tipos (volume, variedade, repetição, relógio, calendário, constância, pulos, aparelhos, descoberta e o grupo). O mesmo grupo pode ter outro campeão a cada cálculo.
+- **Regras do sorteio:** só entra o que dá para calcular para todos (quem usa o Last.fm ou um ZIP antigo não tem pulos, modo aleatório, offline nem aparelho); no máximo 2 temas do mesmo tipo; temas opostos (como "pula menos" e "pula mais") nunca saem juntos; tema em que todos empatam fica fora; porcentagens só entram se cada pessoa tiver 100 plays ou mais. Enquanto a página estiver aberta, calcular de novo evita os temas da batalha anterior, quando sobram temas suficientes.
+- **Os mesmos 10 em todo lugar:** a tela, os stories, o "Ver de novo" e o pôster mostram os temas daquele sorteio.
+- **Stories dos temas novos** em 6 modelos de desenho (corrida de barras, medidor de porcentagem, relógio de 24 h, calendário, sequência de dias e placar), cada tema com título, unidade e frase próprios. Os 10 temas de antes mantêm o desenho.
+- **Título do campeão pelo tipo de tema** em que fez mais ouros (pelo menos 2), como "Enciclopédia Musical" ou "Agenda Cheia". Sem isso, continua "Dono(a) do Aux". A resenha diz quais rodadas deram o título.
 
 ### Mudado
+- **Batalha, "Ficaram fora do sorteio":** a nota abaixo do placar diz só os temas que faltaram por falta de dado, agrupados pelo motivo.
+- **Batalha, "Dedinho nervoso":** vale também quando o tema sorteado é "Dedo nervoso".
+- **Batalha, empates e repetições:** quantas vezes cada tema empata ou repete o vencedor de outro foi medido só com históricos fictícios. Com históricos de verdade, alguns temas podem empatar mais do que o esperado.
 - **App para PC:** a tabela e o rodapé deixam de falar em "describe()".
 - **Um nome por métrica:** "Escuta em comum", "Artistas em comum", "Favoritos em comum" e "Contagens em comum" no PC, no navegador e no cartão, com descrições que dizem o recorte usado.
 - **Match, a escala da nota:** cada par diz que, nessa escala, 25% já é "Sintonia rara", e "Como a nota é calculada" explica a conta.
@@ -32,6 +44,7 @@
 - **Teclado no app para PC:** o player de stories mostra onde está o foco e se apresenta aos leitores de tela.
 - **Teclado no celular:** o item em foco não fica mais escondido atrás da barra de modos.
 - **Match sem dados comparáveis:** quem tem rankings só com nomes de pontuação ou emoji (como a banda "!!!") aparecia com 0% "Mundos diferentes", virava par e puxava a média do grupo. Agora sai do Match, com aviso, no PC e no navegador.
+- **Pôster da Batalha com nomes longos:** a porcentagem da dupla mais afinada sumia junto com o fim dos nomes; agora só os nomes são cortados. O nome de quem levou e a lista do empate geral encolhem um pouco mais antes de cortar.
 
 ## [1.27.0] — 2026-11-24
 

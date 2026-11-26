@@ -1,4 +1,4 @@
-# SyncUp v1.27
+# SyncUp v1.28
 
 Compare o seu histórico do Spotify com o dos amigos e veja com quem você está em sintonia, em stories. **Use direto no navegador**, no computador ou no celular: sem instalar, sem conta, sem anúncios, e o histórico não sai do seu aparelho. Há também um app para PC com o Grupo e as fontes extras do Match (ListenBrainz e gêneros). Projeto de ciência de dados, **código aberto** ([licença MIT](LICENSE)).
 
@@ -101,7 +101,7 @@ Envie o seu histórico completo e veja, em stories com as capas e trechos das su
 
 ### Batalha: de 3 a 6 pessoas (navegador)
 
-Um histórico por pessoa, no mesmo período. Cada número vira uma rodada (mais horas, mais artistas, coruja, repeteco, menos músicas puladas…), com ouro, prata e bronze. Os stories mostram cada rodada com um desenho próprio, a dupla mais afinada, o quadro de medalhas e, por último, o pódio. No fim, um pôster em PNG para postar. É uma brincadeira com os números do período: não mede gosto nem personalidade.
+Um histórico por pessoa, no mesmo período. A cada cálculo, o SyncUp sorteia 10 temas de uma lista de 56 (mais horas, mais artistas, coruja, fim de semana, maior sequência de dias, menos músicas puladas…), e cada tema vira uma rodada com ouro, prata e bronze. Só entram temas que dão para calcular para todos do grupo, no máximo 2 do mesmo tipo e, enquanto a página estiver aberta, nenhum da batalha anterior (quando sobram temas suficientes). Por isso, o mesmo grupo pode ter outro campeão a cada vez. Os stories mostram cada rodada, a dupla mais afinada, o quadro de medalhas e, por último, o pódio, com um título para o campeão conforme o tipo de tema em que mais venceu. "Ver de novo" e o pôster em PNG mostram os mesmos 10 temas. É uma brincadeira com os números do período: não mede gosto nem personalidade.
 
 ### Grupo: de 3 a 6 pessoas (app para PC)
 

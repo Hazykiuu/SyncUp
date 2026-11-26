@@ -17,7 +17,7 @@ import { abrirWorker } from './worker.js';
 const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos pessoas.';
 const DEMO = [['demo-wrapped.zip', 'Rafa'], ['demo-bruno.zip', 'Lu'], ['demo-carla.zip', 'Teo'], ['demo-davi.zip', 'Nina']];
 const NOTA_SOM = 'Para o som, o SyncUp envia à Apple (iTunes) os nomes dos artistas em comum de cada par, além do seu endereço IP. Os históricos e os nomes de vocês não saem do aparelho. Trechos: iTunes.';
-const AVISO = 'O Match compara só os rankings de artistas e músicas.';
+const AVISO = 'O Match compara só os rankings de artistas e músicas. As faixas são provisórias.';
 const EXEMPLOS = ['Mari', 'Juca', 'Bel', 'Zé', 'Pri', 'Dani'];
 const cor = (i) => CORES[i % CORES.length];
 const pct = (v) => `${fmtNum(v, 1)}%`;

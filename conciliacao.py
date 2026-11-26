@@ -26,6 +26,8 @@ from metricas import contribuicoes_cosseno, cosseno, jaccard
 from perfil_gosto import PerfilGosto, musicas_favoritas, nomes_exibicao, vetor_artistas
 
 MAXIMO_PESSOAS = 16
+# Menos artistas que isso em um dos lados e a nota oscila demais para ganhar faixa (VALIDACAO.md).
+AMOSTRA_MINIMA = 30
 # Faixas calibradas com 4 históricos reais (2017–2026). Rankings de top 50 se
 # sobrepõem pouco mesmo entre amigos: 10 pontos já indicam muitos favoritos comuns.
 NIVEIS = (
@@ -54,6 +56,7 @@ class Compatibilidade:
     # Segundo eixo (v0.9): estilo. None quando alguém não tem gêneros conhecidos.
     pontuacao_generos: float | None = None
     generos_comuns: list[str] = field(default_factory=list)
+    amostra_pequena: bool = False  # menos de AMOSTRA_MINIMA artistas em um dos lados
 
 
 @dataclass(frozen=True)
@@ -104,11 +107,18 @@ def comparar_perfis(a: PerfilGosto, b: PerfilGosto, n_exemplos: int = 8) -> Comp
         for chave, c in sorted(contribuicoes.items(), key=lambda x: (-x[1], x[0]))
         if c > 0
     ]
-    rotulo, frase = (
-        ('Comparação indisponível', 'Falta nome de artista comparável em um dos rankings.')
-        if pontuacao is None
-        else nivel(pontuacao)
-    )
+    pequena = min(len(va), len(vb)) < AMOSTRA_MINIMA
+    if pontuacao is None:
+        rotulo = 'Comparação indisponível'
+        frase = 'Falta nome de artista comparável em um dos rankings.'
+    elif pequena:
+        rotulo = 'Amostra pequena'
+        frase = (
+            f'Menos de {AMOSTRA_MINIMA} artistas em um dos rankings: '
+            'a nota pode mudar muito com mais dados.'
+        )
+    else:
+        rotulo, frase = nivel(pontuacao)
     ga, gb = vetor_generos(a), vetor_generos(b)
     valor_generos = cosseno(ga, gb) if ga and gb else None
     # Só gêneros de verdade; as palavras derivadas ("rock" de "brazilian rock") ficam de fora.
@@ -131,6 +141,7 @@ def comparar_perfis(a: PerfilGosto, b: PerfilGosto, n_exemplos: int = 8) -> Comp
         recomendacoes_para_b=_recomendar(va, vb, nomes_exibicao(a), n_exemplos),
         pontuacao_generos=None if valor_generos is None else round(valor_generos * 100, 1),
         generos_comuns=generos_comuns,
+        amostra_pequena=pequena,
     )
 
 

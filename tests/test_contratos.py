@@ -75,6 +75,7 @@ def _pares() -> list[tuple[str, str, str, object]]:
         ('tamanho do ranking', 'match.js', 'TAMANHO_RANKING', perfil_gosto.TAMANHO_RANKING),
         ('faixas do Match', 'match.js', 'NIVEIS', conciliacao.NIVEIS),
         ('máximo de pessoas', 'match.js', 'MAXIMO_PESSOAS', conciliacao.MAXIMO_PESSOAS),
+        ('amostra mínima', 'match.js', 'AMOSTRA_MINIMA', conciliacao.AMOSTRA_MINIMA),
         ('convite: prefixo', 'convite.js', 'PREFIXO', convite.PREFIXO),
         ('convite: código', 'convite.js', 'MAXIMO_CODIGO', convite.MAXIMO_CODIGO),
         ('convite: JSON', 'convite.js', 'MAXIMO_JSON', convite.MAXIMO_JSON),

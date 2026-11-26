@@ -11,6 +11,9 @@ const PESO_MUSICAS = 0.5;
 export const TAMANHO_RANKING = 50;
 const DIA_MS = 86_400_000;
 
+// Menos artistas que isso em um dos lados e a nota oscila demais para ganhar faixa (VALIDACAO.md).
+export const AMOSTRA_MINIMA = 30;
+
 // Faixas calibradas no Python com 4 históricos reais (conciliacao.NIVEIS).
 const NIVEIS = [
   [25, 'Sintonia rara', 'Rankings muito parecidos: compartilhar playlists é garantia.'],
@@ -113,7 +116,10 @@ export function compararPerfis(a, b, nExemplos = 8) {
   const nomes = new Map([...nb, ...na]);
   const contrib = va.size && vb.size ? contribuicoes(va, vb) : [];
   const comuns = contrib.filter(([, v]) => v > 0).sort(([ka, x], [kb, y]) => y - x || compararTexto(ka, kb)).map(([k]) => nomes.get(k) ?? k);
-  const [rotulo, frase] = pontuacao === null ? ['Comparação indisponível', 'Falta nome de artista comparável em um dos rankings.'] : nivel(pontuacao);
+  const pequena = Math.min(va.size, vb.size) < AMOSTRA_MINIMA;
+  const [rotulo, frase] = pontuacao === null ? ['Comparação indisponível', 'Falta nome de artista comparável em um dos rankings.']
+    : pequena ? ['Amostra pequena', `Menos de ${AMOSTRA_MINIMA} artistas em um dos rankings: a nota pode mudar muito com mais dados.`]
+      : nivel(pontuacao);
   const fb = musicasFavoritas(b);
   return {
     a: a.nome, b: b.nome, pontuacao, nivel: rotulo, descricao: frase,
@@ -122,6 +128,7 @@ export function compararPerfis(a, b, nExemplos = 8) {
     jaccard_artistas: jaccard(va.keys(), vb.keys()) || 0,
     recomendacoes_para_a: recomendar(vb, va, nb, nExemplos),
     recomendacoes_para_b: recomendar(va, vb, na, nExemplos),
+    amostra_pequena: pequena,
   };
 }
 

@@ -517,7 +517,7 @@ def stories_match_html(
             )
             + _a(
                 '<p class="su-foot">Compara os rankings musicais enviados. '
-                'Não mede personalidade nem afinidade pessoal.</p>',
+                'Não mede personalidade nem afinidade pessoal. As faixas são provisórias.</p>',
                 3,
             )
             + _a('<button type="button" class="su-replay">↺ Ver de novo</button>', 4),

@@ -103,3 +103,13 @@ test('sem dados comparáveis: menos de duas pessoas é erro com os nomes', async
   const { conciliar } = await import('../../site/app/js/match.js');
   assert.throws(() => conciliar([grupo()[0], duda()]), /Sem artistas comparáveis: Duda/);
 });
+
+test('amostra pequena: abaixo de 30 artistas em um dos lados a faixa não vale', async () => {
+  const { compararPerfis } = await import('../../site/app/js/match.js');
+  const nomes = (n) => Array.from({ length: n }, (_, i) => `Banda ${i}`);
+  for (const [n, pequena] of [[1, true], [29, true], [30, false]]) {
+    const c = compararPerfis(pessoa('Ana', nomes(40)), pessoa('Eva', nomes(n)));
+    assert.equal(c.amostra_pequena, pequena);
+    assert.equal(c.nivel === 'Amostra pequena', pequena);
+  }
+});

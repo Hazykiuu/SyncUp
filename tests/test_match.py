@@ -277,3 +277,13 @@ def test_quem_nao_tem_dados_sai_do_match(quantos: int) -> None:
 def test_menos_de_duas_pessoas_comparaveis_e_erro_com_os_nomes() -> None:
     with pytest.raises(ValueError, match='Sem artistas comparáveis: Duda'):
         conciliar([_grupo()[0], _perfil('Duda', SEM_DADOS)])
+
+
+# R1-02: abaixo de 30 artistas comparáveis em um dos lados, a faixa não vale.
+@pytest.mark.parametrize('artistas, pequena', [(1, True), (29, True), (30, False)])
+def test_amostra_pequena_nao_ganha_faixa(artistas: int, pequena: bool) -> None:
+    cheio = _perfil('Ana', [f'Banda {i}' for i in range(40)])
+    outro = _perfil('Eva', [f'Banda {i}' for i in range(artistas)])
+    c = comparar_perfis(cheio, outro)
+    assert c.amostra_pequena is pequena
+    assert (c.nivel == 'Amostra pequena') is pequena

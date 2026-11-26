@@ -300,3 +300,30 @@ def test_tokens_de_cor_iguais_no_pc_e_no_site() -> None:
         assert pc[no_pc] == site[no_site], (no_pc, no_site)
     for fixo in ('--su-card', '--su-line'):
         assert nucleo[fixo] == pc[fixo], fixo
+
+
+@pytest.mark.parametrize(
+    'arquivo', ['estilo.css', 'app/app.css', 'app/nucleo.css', 'app/stories.css']
+)
+def test_todo_hover_do_site_so_vale_com_mouse(arquivo: str) -> None:
+    """R2-13: no toque, um :hover solto fica preso até a pessoa tocar em outro lugar."""
+    css = re.sub(
+        r'/\*.*?\*/', '', (RAIZ / 'site' / arquivo).read_text(encoding='utf-8'), flags=re.S
+    )
+    pilha, soltos = [], []
+    for preludio, abre, fecha in re.findall(r'([^{}]*)(?:(\{)|(\}))', css):
+        if fecha:
+            pilha.pop()
+            continue
+        seletor = preludio.split(';')[-1].strip()
+        if ':hover' in seletor and not any(
+            re.search(r'\(hover:\s*hover\)', p) for p in [*pilha, seletor]
+        ):
+            soltos.append(seletor)
+        pilha.append(seletor)
+    assert soltos == []
+
+
+def test_toque_sem_retangulo_cinza() -> None:
+    estilo = (RAIZ / 'site/estilo.css').read_text(encoding='utf-8')
+    assert '-webkit-tap-highlight-color: transparent' in estilo and ':active' in estilo

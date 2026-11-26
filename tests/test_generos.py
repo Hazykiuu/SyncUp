@@ -230,3 +230,28 @@ def test_cache_de_generos_grava_versao_e_tem_teto(tmp_path: Path, monkeypatch) -
     gravado = json.loads(caminho.read_text(encoding='utf-8'))
     assert gravado['versao'] == 1 and list(gravado['artistas']) == ['a2', 'a3', 'a4']
     assert ConsultaMusicBrainz(cache=caminho)._cache == gravado['artistas']
+
+
+@pytest.mark.parametrize(
+    'pausa, pedidos_esperados, esperas_esperadas', [(30, 1, []), (5, 3, [5.0, 5.0])]
+)
+def test_musicbrainz_respeita_a_pausa_pedida(
+    tmp_path: Path, pausa, pedidos_esperados, esperas_esperadas
+) -> None:
+    """R3-10: o MusicBrainz responde 503 ao limite; pausa longa encerra as consultas sem guardar nada."""
+    pedidos: list[int] = []
+    esperas: list[float] = []
+
+    def responder(pedido: httpx.Request) -> httpx.Response:
+        pedidos.append(1)
+        return httpx.Response(503, headers={'Retry-After': str(pausa)})
+
+    consulta = ConsultaMusicBrainz(
+        httpx.Client(transport=httpx.MockTransport(responder)),
+        tmp_path / 'g.json',
+        relogio=lambda: 0.0,
+        dormir=esperas.append,
+    )
+    assert consulta.generos('Pitty') == [] and consulta.generos('Outra') == []
+    assert len(pedidos) == pedidos_esperados and [e for e in esperas if e > 1] == esperas_esperadas
+    assert consulta._cache == {}

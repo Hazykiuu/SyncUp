@@ -116,3 +116,20 @@ test('500 não é guardado no cache; 404 é', async () => {
   assert.equal(semCapa.pedidos.length, 1);
   assert.ok(pedidos.length >= 2);
 });
+
+// R3-10
+test('Retry-After longo: um pedido só e nada guardado no cache', async () => {
+  const cache = cacheMemoria();
+  const { fetch, pedidos } = falso([[`track%2F${ID}`, { ...resposta(429, {}), headers: new Map([['retry-after', '60']]) }]]);
+  assert.equal(await criarBuscador({ fetch, esperar, cache }).faixa(`spotify:track:${ID}`), null);
+  assert.equal(pedidos.length, 1);
+  assert.equal(await cache.ler(`faixa:${ID}`) ?? null, null);
+});
+
+test('limitador: no máximo N tarefas ao mesmo tempo (usado também no iTunes)', async () => {
+  const { limitador } = await import('../../site/app/js/capas.js');
+  const vez = limitador(3, 0, esperar);
+  let voando = 0, pico = 0;
+  await Promise.all(Array.from({ length: 10 }, () => vez(async () => { pico = Math.max(pico, ++voando); await new Promise((ok) => setTimeout(ok, 2)); voando--; })));
+  assert.equal(pico, 3);
+});

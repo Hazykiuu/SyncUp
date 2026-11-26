@@ -2,7 +2,7 @@
 // Um único <audio>, desbloqueado pelo toque em "Começar com som" (validado no iPhone),
 // troca de src sozinho. Volume por Web Audio: no iOS o audio.volume é ignorado.
 import { html, useEffect, useRef, useState } from 'preact-htm';
-import { HOSTS_AUDIO, urlSegura } from './capas.js';
+import { HOSTS_AUDIO, urlSegura, limitador } from './capas.js';
 import { chegarPouco, rolarAte } from './chegada.js';
 import { normalizar } from './stories/logica.js';
 
@@ -17,8 +17,10 @@ const cache = new Map();
 
 const chave = (m) => `${normalizar(m.artista)}|${normalizar(m.faixa)}`;
 
+// O iTunes limita por IP: no máximo 3 buscas no ar (o prazo de 8 s conta só depois que a busca sai da fila).
+const vezItunes = limitador(3, 0, (ms) => new Promise((ok) => setTimeout(ok, ms)));
 async function itunes(params) {
-  const r = await fetch(`https://itunes.apple.com/search?${new URLSearchParams({ entity: 'song', country: 'BR', ...params })}`, { signal: AbortSignal.timeout?.(8000) });
+  const r = await vezItunes(() => fetch(`https://itunes.apple.com/search?${new URLSearchParams({ entity: 'song', country: 'BR', ...params })}`, { signal: AbortSignal.timeout?.(8000) }));
   if (!r.ok) throw new Error(`iTunes ${r.status}`);
   return (await r.json()).results || [];
 }

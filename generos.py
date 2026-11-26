@@ -39,6 +39,7 @@ MAXIMO_FALHAS = 3
 TENTATIVAS = 2
 ARQUIVO_CACHE = 'generos_musicbrainz.json'
 VERSAO_CACHE = 1
+PAUSA_MAXIMA_S = 10  # Retry-After maior que isso: para de consultar nesta sessão
 MAXIMO_ENTRADAS_CACHE = 20_000  # artistas; acima disso saem os gravados há mais tempo
 # Mesma pasta do cache Parquet (ConfiguracaoCarga.diretorio_cache); a UI passa a configurada.
 CACHE_PADRAO = Path(ConfiguracaoCarga().diretorio_cache) / ARQUIVO_CACHE
@@ -63,6 +64,7 @@ class ConsultaMusicBrainz:
         self.caminho = Path(cache)
         self._relogio, self._dormir = relogio, dormir
         self._ultima: float | None = None
+        self._pausa = 0.0  # pedida pelo servidor (Retry-After), antes do próximo pedido
         self.falhas = 0
         self._cache = self._ler_disco()
 
@@ -96,7 +98,7 @@ class ConsultaMusicBrainz:
             if self.falhas >= MAXIMO_FALHAS:
                 return []  # Sem internet ou serviço fora: não espera o timeout de cada artista.
             if self._ultima is not None:
-                espera = INTERVALO_S - (self._relogio() - self._ultima)
+                espera = max(INTERVALO_S, self._pausa) - (self._relogio() - self._ultima)
                 if espera > 0:
                     self._dormir(espera)
             self._ultima = self._relogio()
@@ -109,8 +111,13 @@ class ConsultaMusicBrainz:
                 resposta.raise_for_status()
                 artistas = resposta.json().get('artists') or []
                 break
-            except (httpx.HTTPError, ValueError):
+            except (httpx.HTTPError, ValueError) as erro:
                 self.falhas += 1
+                ruim = erro.response if isinstance(erro, httpx.HTTPStatusError) else None
+                pedida = ruim.headers.get('Retry-After', '') if ruim is not None else ''
+                self._pausa = float(pedida) if pedida.isdigit() else 0.0
+                if self._pausa > PAUSA_MAXIMA_S:
+                    self.falhas = MAXIMO_FALHAS  # sem gravar nada: tenta de novo outro dia
         if artistas is None:
             return []  # Falha de rede não entra no cache: tenta de novo na próxima vez.
         tags: list[str] = []

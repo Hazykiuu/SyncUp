@@ -77,7 +77,7 @@ export function cacheMemoria() {
 }
 
 // Limite de concorrência: no máximo `n` tarefas ao mesmo tempo, com espaço mínimo entre os inícios.
-function limitador(n, espaco, esperar) {
+export function limitador(n, espaco, esperar) {
   let ativos = 0, ultimo = -Infinity;
   const fila = [];
   const proximo = () => {
@@ -107,7 +107,9 @@ export function criarBuscador({ fetch = globalThis.fetch.bind(globalThis), esper
       if (r.ok) return r.json();
       if (r.status === 404) return null; // não existe: pode guardar
       if (r.status !== 429 && r.status < 500) return null;
-      if (tentativa < 3) await esperar(2000 * 2 ** tentativa);
+      const pausa = Number(r.headers?.get?.('retry-after')) || 0;
+      if (pausa > 10) break; // pausa longa: desiste sem guardar nada no cache
+      if (tentativa < 3) await esperar(Math.max(2000 * 2 ** tentativa, pausa * 1000));
     }
     throw new Error('serviço ocupado');
   }

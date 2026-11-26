@@ -148,7 +148,7 @@ def test_429_passageiro_respeita_a_espera_pedida(monkeypatch) -> None:
     respostas = iter(
         [
             httpx.Response(429, headers={'Retry-After': '4'}),
-            httpx.Response(429, headers={'X-RateLimit-Reset-In': '99'}),  # teto de 10 s
+            httpx.Response(429, headers={'X-RateLimit-Reset-In': '9'}),
         ]
     )
     normal = _api([])
@@ -159,7 +159,7 @@ def test_429_passageiro_respeita_a_espera_pedida(monkeypatch) -> None:
     perfil = coletar_perfil_listenbrainz(
         'nick', cliente=httpx.Client(transport=httpx.MockTransport(responder))
     )
-    assert esperas[:2] == [4, 10]
+    assert esperas[:2] == [4, 9]
     assert perfil.top_artistas['long_term']
 
 
@@ -199,3 +199,19 @@ def test_tres_demoras_seguidas_desistem_das_proximas_pessoas(monkeypatch) -> Non
     perfis, fora = match._perfis_listenbrainz([f'u{i}' for i in range(6)], lambda i: None)
     assert chamados == ['u0', 'u1', 'u2'] and perfis == [] and len(fora) == 6
     assert 'demorando demais' in fora[-1]
+
+
+def test_429_com_pausa_longa_desiste_no_primeiro_pedido(monkeypatch) -> None:
+    """R3-10: insistir contra um Retry-After de 30 s só prolonga o bloqueio."""
+    monkeypatch.setattr('listenbrainz.time.sleep', lambda s: None)
+    pedidos: list[str] = []
+
+    def responder(pedido: httpx.Request) -> httpx.Response:
+        pedidos.append(pedido.url.path)
+        return httpx.Response(429, headers={'Retry-After': '30'})
+
+    with pytest.raises(ValueError, match='ocupado'):
+        coletar_perfil_listenbrainz(
+            'nick', 'Nick', httpx.Client(transport=httpx.MockTransport(responder))
+        )
+    assert len(pedidos) == 1

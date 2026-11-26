@@ -13,6 +13,7 @@ const PAGINAS_TOP = 3;
 const INTERVALO_MS = 250; // até 4 pedidos por segundo (o Last.fm pede no máximo 5)
 const EM_PARALELO = 3; // medido (1.23): 3 em voo, 152 mil escutas em ~5 min; com 6, o Last.fm passou a travar
 const ESPERAS_LIMITE = [1000, 2000, 4000, 8000];
+const PAUSA_MAXIMA_MS = 10_000; // pausa maior que isso (Retry-After): desiste em vez de insistir
 // Falhas passageiras: 8 (backend), 11 (fora do ar), 16 (indisponível), 29 (limite) e HTTP 429/5xx. Medido em 1.23:
 // o erro 8 com HTTP 500 aparece de vez em quando no meio de históricos grandes.
 const PASSAGEIRO = new Set([8, 11, 16, 29, 429, 500, 502, 503, 504]);
@@ -30,6 +31,7 @@ export class ErroLastfm extends Error {
 }
 
 const dormir = (ms, sinal) => new Promise((ok, erro) => {
+  if (sinal?.aborted) { erro(sinal.reason); return; }
   const t = setTimeout(ok, ms);
   sinal?.addEventListener('abort', () => { clearTimeout(t); erro(sinal.reason); }, { once: true });
 });
@@ -51,7 +53,8 @@ export async function pedir(metodo, params, { buscar = fetch, esperar = dormir, 
     }
     const codigo = dados?.error ?? (resp.ok && dados && typeof dados === 'object' ? null : resp.status);
     if (codigo == null) return dados;
-    if (PASSAGEIRO.has(codigo) && tentativa < ESPERAS_LIMITE.length) { await esperar(ESPERAS_LIMITE[tentativa], sinal); continue; }
+    const pausa = (Number(resp.headers?.get?.('retry-after')) || 0) * 1000;
+    if (PASSAGEIRO.has(codigo) && tentativa < ESPERAS_LIMITE.length && pausa <= PAUSA_MAXIMA_MS) { await esperar(Math.max(ESPERAS_LIMITE[tentativa], pausa), sinal); continue; }
     throw new ErroLastfm(MENSAGENS[codigo === 429 ? 29 : codigo] ?? `O Last.fm recusou o pedido (código ${codigo}). Tente de novo daqui a pouco.`, codigo);
   }
 }
@@ -79,17 +82,21 @@ function validar(usuario) {
 // O Last.fm leva ~1,5 s por página: várias páginas ao mesmo tempo, mas cada pedido começa 250 ms depois do
 // anterior (no máximo 4 por segundo). Pula a faixa tocando agora.
 // `capas` (Map opcional): recebe a capa de cada música (chave artista|música), a primeira que aparecer.
-export async function baixarScrobbles(usuario, { desde, buscar, esperar = dormir, agora = () => performance.now(), sinal, aoProgresso, capas } = {}) {
+export async function baixarScrobbles(usuario, { desde, ate, buscar, esperar = dormir, agora = () => performance.now(), sinal, aoProgresso, capas } = {}) {
   validar(usuario);
   const saida = [];
   const inicio = agora();
   let proximo = -Infinity, feitas = 0, paginas = 1, total = 0;
+  const porPagina = []; // para saber até onde veio sem buraco, se uma página falhar
+  const desistir = new AbortController(); // uma página que desiste para as outras
+  const interno = sinal ? AbortSignal.any([sinal, desistir.signal]) : desistir.signal;
   const baixar = async (pagina) => {
-    sinal?.throwIfAborted();
+    interno.throwIfAborted();
     const espera = proximo - agora();
     proximo = Math.max(agora(), proximo) + INTERVALO_MS; // reserva o horário antes de esperar
-    if (espera > 0) await esperar(espera, sinal);
-    const dados = await pedir('user.getrecenttracks', { user: usuario, limit: '200', page: String(pagina), ...(desde ? { from: String(desde) } : {}) }, { buscar, esperar, sinal });
+    if (espera > 0) await esperar(espera, interno);
+    const dados = await pedir('user.getrecenttracks', { user: usuario, limit: '200', page: String(pagina), ...(desde ? { from: String(desde) } : {}), ...(ate ? { to: String(ate) } : {}) }, { buscar, esperar, sinal: interno });
+    const daPagina = (porPagina[pagina - 1] = []);
     const rt = dados?.recenttracks;
     paginas = Number(rt?.['@attr']?.totalPages) || 0;
     total = Number(rt?.['@attr']?.total) || 0;
@@ -98,6 +105,7 @@ export async function baixarScrobbles(usuario, { desde, buscar, esperar = dormir
       const uts = Number(t.date.uts), musica = texto(t.name), artista = texto(t.artist?.['#text'] ?? t.artist?.name);
       if (!(Number.isFinite(uts) && musica && artista)) continue;
       saida.push({ uts, musica, artista });
+      daPagina.push({ uts, musica, artista });
       const k = capas && chave(artista, musica);
       if (k && !capas.has(k)) { const url = capaDoScrobble(t); if (url) capas.set(k, url); }
     }
@@ -107,8 +115,18 @@ export async function baixarScrobbles(usuario, { desde, buscar, esperar = dormir
   };
   await baixar(1); // a primeira diz quantas páginas há
   let seguinte = 2;
-  const trabalhar = async () => { while (seguinte <= paginas) await baixar(seguinte++); };
+  const trabalhar = async () => {
+    try { while (seguinte <= paginas) await baixar(seguinte++); } catch (e) { desistir.abort(e); }
+  };
   await Promise.all(Array.from({ length: EM_PARALELO }, trabalhar));
+  if (desistir.signal.aborted) {
+    // Só as páginas seguidas desde a 1ª (as mais novas) formam um trecho sem buraco.
+    const erro = desistir.signal.reason;
+    const falta = Array.from(porPagina).findIndex((p) => !p);
+    const inteiras = porPagina.slice(0, falta < 0 ? porPagina.length : falta).flat();
+    if (inteiras.length && erro && typeof erro === 'object') erro.parciais = inteiras;
+    throw erro;
+  }
   return saida;
 }
 
@@ -177,14 +195,36 @@ export async function historicoDoLastfm(usuario, { periodo = 'tudo', armazem = a
   if (cache && agora() - cache.quando > VALIDADE_LASTFM) cache = null;
   // O cache guarda desde quando cobre (null = histórico inteiro). "Todo o histórico" sobre um cache de um ano baixa de novo.
   const completo = cache && (periodo === 'ano' ? cache.desde == null || cache.desde <= anoAtras : cache.desde == null);
-  const desde = completo ? cache.ultimo + 1 : periodo === 'ano' ? anoAtras : undefined;
+  // Download interrompido (limite do Last.fm, rede): o trecho sem buraco fica guardado e a próxima vez continua dele.
+  const chaveParcial = `${id}|parcial`;
+  let parcial = null;
+  if (!completo) try { parcial = (await armazem.ler(chaveParcial)) ?? null; } catch { /* sem cache */ }
+  if (parcial && (parcial.periodo !== periodo || !(agora() - parcial.quando <= VALIDADE_LASTFM))) parcial = null;
+  const inicio = parcial ? parcial.desde ?? undefined : periodo === 'ano' ? anoAtras : undefined;
+  const desde = completo ? cache.ultimo + 1 : inicio;
   const capas = new Map(completo ? cache.capas ?? [] : []);
-  const novos = await baixarScrobbles(usuario, { ...rede, desde, capas });
+  let novos;
+  try {
+    novos = await baixarScrobbles(usuario, { ...rede, desde, ate: parcial?.ate, capas });
+  } catch (e) {
+    if (!completo && e?.parciais?.length) {
+      const juntas = juntar(parcial?.escutas ?? [], e.parciais);
+      // `ate` com 1 s de folga: o mesmo segundo vem de novo e juntar() tira a repetição.
+      const valor = { escutas: juntas, ate: juntas.at(-1).uts + 1, desde: inicio ?? null, periodo, quando: agora() };
+      try { await armazem.gravar(chaveParcial, valor); } catch { /* sem cache */ }
+    }
+    throw e;
+  }
+  if (parcial) {
+    const depois = await baixarScrobbles(usuario, { ...rede, desde: parcial.escutas[0].uts + 1, capas });
+    novos = juntar(juntar(parcial.escutas, novos), depois);
+  }
   const escutas = juntar(completo ? cache.escutas : [], novos);
   const duracoes = cache?.duracoes ? new Map(cache.duracoes) : await baixarDuracoes(usuario, rede);
   if (escutas.length) {
-    const valor = { escutas, ultimo: escutas[0].uts, desde: completo ? cache.desde : (desde ?? null), duracoes: [...duracoes], capas: [...capas], quando: agora() };
+    const valor = { escutas, ultimo: escutas[0].uts, desde: completo ? cache.desde : (inicio ?? null), duracoes: [...duracoes], capas: [...capas], quando: agora() };
     try { await armazem.gravar(id, valor); } catch { /* aba anônima: segue sem cache */ }
+    if (parcial) try { await armazem.gravar(chaveParcial, { quando: 0 }); } catch { /* vence sozinho */ }
   }
   const usadas = periodo === 'ano' ? escutas.filter((s) => s.uts >= anoAtras) : escutas;
   if (!usadas.length) throw new ErroLastfm(periodo === 'ano' ? 'Nenhum scrobble no último ano nesse perfil.' : 'Nenhum scrobble nesse perfil do Last.fm.', 'vazio');

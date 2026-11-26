@@ -17,7 +17,8 @@ function lastfm({ recentes = [], top = [], porPagina = 200, topPorPagina = 1000,
     const pagina = Number(p.get('page') || 1);
     if (p.get('method') === 'user.getrecenttracks') {
       const desde = Number(p.get('from') || 0);
-      const lista = recentes.filter((t) => !t.date || Number(t.date.uts) >= desde);
+      const ate = Number(p.get('to') || Infinity);
+      const lista = recentes.filter((t) => !t.date || (Number(t.date.uts) >= desde && Number(t.date.uts) < ate));
       const totalPages = Math.ceil(lista.length / porPagina);
       return resposta({ recenttracks: { track: lista.slice((pagina - 1) * porPagina, pagina * porPagina), '@attr': { page: String(pagina), totalPages: String(totalPages), total: String(lista.length) } } });
     }
@@ -296,4 +297,42 @@ test('cache vencido há mais de 7 dias é ignorado e o histórico é baixado de 
     const pedidos = lf.pedidos.filter((p) => p.method === 'user.getrecenttracks');
     assert.equal(pedidos.every((p) => p.from === '1001'), doCache, `${quando / dia}`);
   }
+});
+
+// R3-10: pausa longa pedida pelo servidor é desistência, não insistência.
+const limitado = (segundos) => ({ ...resposta({ error: 29 }, 429), headers: new Map([['retry-after', String(segundos)]]) });
+
+test('429 com Retry-After de 60 s desiste no primeiro pedido; de 5 s, espera os 5', async () => {
+  let pedidos = 0;
+  await assert.rejects(pedir('user.getrecenttracks', { user: 'alguem' }, { buscar: async () => { pedidos++; return limitado(60); }, ...semEspera }), (e) => e.codigo === 29 && /pausa/.test(e.message));
+  assert.equal(pedidos, 1);
+  const esperas = [];
+  pedidos = 0;
+  await pedir('user.getrecenttracks', { user: 'alguem' }, { buscar: async () => (++pedidos === 1 ? limitado(5) : resposta({ ok: 1 })), esperar: async (ms) => { esperas.push(ms); } });
+  assert.deepEqual(esperas, [5000]);
+});
+
+test('limite no meio do download: as outras páginas param e o que veio inteiro fica guardado', async () => {
+  const armazem = memoria();
+  const recentes = Array.from({ length: 12 }, (_, i) => scrobble(2000 - i, `m${i}`));
+  const lf = lastfm({ recentes, porPagina: 2 });
+  let bloquear = true, pedidos = 0;
+  const buscar = async (url) => {
+    const p = new URL(url).searchParams;
+    if (p.get('method') === 'user.getrecenttracks') pedidos++;
+    if (bloquear && p.get('method') === 'user.getrecenttracks' && Number(p.get('page')) >= 2) return limitado(60);
+    return lf.buscar(url);
+  };
+  await assert.rejects(historicoDoLastfm('carlos', { buscar, armazem, agora: () => 5000, ...semEspera }), /pausa/);
+  const antes = pedidos;
+  assert.ok(antes <= 4, `pedidos ${antes}`);
+  await new Promise((ok) => setTimeout(ok, 20));
+  assert.equal(pedidos, antes); // nada depois da mensagem
+  assert.equal(armazem.m.get('carlos|parcial').escutas.length, 2);
+
+  bloquear = false;
+  lf.pedidos.length = 0;
+  const r = await historicoDoLastfm('carlos', { buscar, armazem, agora: () => 6000, ...semEspera });
+  assert.equal(r.reproducoes, 12); // sem buraco e sem repetição
+  assert.ok(lf.pedidos.some((p) => p.to === '2000'), 'continua de onde parou');
 });

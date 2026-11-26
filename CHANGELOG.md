@@ -11,6 +11,7 @@
 - **Match com poucos dados:** com menos de 30 artistas em um dos rankings, a faixa vira "Amostra pequena" (a porcentagem continua). Antes, 1 artista em comum podia dar "Sintonia rara". As faixas passam a aparecer como provisórias, e o `VALIDACAO.md` registra de onde vieram.
 
 ### Corrigido
+- **Serviços externos:** quando o Last.fm, o Spotify, o MusicBrainz ou o ListenBrainz pedem uma pausa longa, o SyncUp para de insistir. O iTunes recebe no máximo 3 buscas por vez. Um download do Last.fm interrompido continua de onde parou.
 - **Windows:** encerrar o app à força não deixa mais processos de leitura parados na memória.
 - **ListenBrainz:** resposta inesperada aparece em português (antes, "Expecting value: line 1 column 1"), erro do servidor não culpa mais a sua internet, e depois de 3 demoras seguidas o Match não espera pelas próximas pessoas.
 - **Capas:** um erro do servidor do Spotify ou do MusicBrainz não vira mais "sem capa" por 30 dias.

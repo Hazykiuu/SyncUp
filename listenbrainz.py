@@ -35,12 +35,12 @@ ESPERA_MAXIMA_S = 10  # a cota do ListenBrainz é de 30 chamadas a cada 10 s
 TENTATIVAS_429 = 3  # quem leva 429 tenta de novo antes de desistir
 
 
-def _espera(resposta: httpx.Response, padrao: int) -> int:
+def _espera(resposta: httpx.Response, padrao: int, teto: int | None = ESPERA_MAXIMA_S) -> int:
     """Segundos que o servidor pede (Reset-In ou Retry-After), com teto; senão o padrão."""
     for cabecalho in ('X-RateLimit-Reset-In', 'Retry-After'):
         valor = resposta.headers.get(cabecalho, '')
         if valor.isdigit():
-            return min(int(valor), ESPERA_MAXIMA_S)
+            return int(valor) if teto is None else min(int(valor), teto)
     return padrao
 
 
@@ -49,6 +49,9 @@ def _get(cliente: httpx.Client, caminho: str, **params) -> dict:
         resposta = cliente.get(f'{URL_API}{caminho}', params=params)
         if resposta.status_code != 429:
             break
+        if _espera(resposta, 0, teto=None) > ESPERA_MAXIMA_S:
+            # Pausa longa: insistir só prolonga o bloqueio.
+            raise ValueError('O ListenBrainz está ocupado agora. Tente de novo em instantes.')
         if tentativa < TENTATIVAS_429 - 1:
             time.sleep(_espera(resposta, 2**tentativa))  # sem cabeçalho: 1 s, depois 2 s
     else:

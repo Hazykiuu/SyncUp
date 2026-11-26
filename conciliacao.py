@@ -43,7 +43,7 @@ class Compatibilidade:
 
     a: str
     b: str
-    pontuacao: float  # 0–100
+    pontuacao: float | None  # 0–100; None quando um dos lados não tem artista comparável
     nivel: str
     descricao: str
     artistas_comuns: list[str]  # ordenados pela contribuição ao cosseno
@@ -66,6 +66,8 @@ class ResultadoConciliacao:
     pontuacao_media_pares: float
     detalhes: dict[frozenset[str], Compatibilidade]
     melhores: dict[str, list[tuple[str, float]]]
+    # Quem saiu antes da matriz por não ter nenhum artista comparável.
+    sem_dados: list[str] = field(default_factory=list)
 
     def par(self, x: str, y: str) -> Compatibilidade:
         return self.detalhes[frozenset((x, y))]
@@ -94,7 +96,7 @@ def comparar_perfis(a: PerfilGosto, b: PerfilGosto, n_exemplos: int = 8) -> Comp
     """Compatibilidade entre duas pessoas, com explicação."""
     va, vb = vetor_artistas(a), vetor_artistas(b)
     valor = cosseno(va, vb) if va and vb else None
-    pontuacao = round((valor or 0.0) * 100, 1)
+    pontuacao = None if valor is None else round(valor * 100, 1)
     nomes = {**nomes_exibicao(b), **nomes_exibicao(a)}
     contribuicoes = contribuicoes_cosseno(va, vb) if va and vb else {}
     comuns = [
@@ -102,7 +104,11 @@ def comparar_perfis(a: PerfilGosto, b: PerfilGosto, n_exemplos: int = 8) -> Comp
         for chave, c in sorted(contribuicoes.items(), key=lambda x: (-x[1], x[0]))
         if c > 0
     ]
-    rotulo, frase = nivel(pontuacao)
+    rotulo, frase = (
+        ('Comparação indisponível', 'Falta nome de artista comparável em um dos rankings.')
+        if pontuacao is None
+        else nivel(pontuacao)
+    )
     ga, gb = vetor_generos(a), vetor_generos(b)
     valor_generos = cosseno(ga, gb) if ga and gb else None
     # Só gêneros de verdade; as palavras derivadas ("rock" de "brazilian rock") ficam de fora.
@@ -183,6 +189,16 @@ def conciliar(perfis: list[PerfilGosto]) -> ResultadoConciliacao:
     nomes = [p.nome for p in perfis]
     if len(set(nomes)) != len(nomes):
         raise ValueError('Cada pessoa precisa de um nome diferente.')
+    # Sem vetor não há o que comparar: um 0% pareceria falta de afinidade.
+    sem_dados = [p.nome for p in perfis if not vetor_artistas(p)]
+    if sem_dados:
+        perfis = [p for p in perfis if p.nome not in sem_dados]
+        if len(perfis) < 2:
+            raise ValueError(
+                'O Match precisa de pelo menos duas pessoas com artistas para comparar. '
+                f'Sem artistas comparáveis: {", ".join(sem_dados)}.'
+            )
+        nomes = [p.nome for p in perfis]
     detalhes: dict[frozenset[str], Compatibilidade] = {}
     matriz = pd.DataFrame(100.0, index=nomes, columns=nomes)
     for a, b in combinations(perfis, 2):
@@ -207,4 +223,5 @@ def conciliar(perfis: list[PerfilGosto]) -> ResultadoConciliacao:
         pontuacao_media_pares=sum(pontuacoes) / len(pontuacoes) if pontuacoes else 0.0,
         detalhes=detalhes,
         melhores=melhores,
+        sem_dados=sem_dados,
     )

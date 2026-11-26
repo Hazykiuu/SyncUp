@@ -21,7 +21,7 @@ try {
   const pares = [];
   for (let i = 0; i < perfis.length; i++) for (let j = i + 1; j < perfis.length; j++) pares.push(compararPerfis(perfis[i], perfis[j]));
   const r = perfis.length > 1 ? conciliar(perfis) : null;
-  process.stdout.write(JSON.stringify({ perfis, pares, conciliacao: r && { pares: r.pares, melhores: r.melhores, media: r.pontuacao_media_pares } }));
+  process.stdout.write(JSON.stringify({ perfis, pares, conciliacao: r && { pares: r.pares, melhores: r.melhores, media: r.pontuacao_media_pares, sem_dados: r.sem_dados } }));
   }
 } catch (e) {
   process.stdout.write(JSON.stringify({ erro: e.message }));

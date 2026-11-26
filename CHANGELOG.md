@@ -1,5 +1,10 @@
 # Changelog — SyncUp
 
+## Não lançado
+
+### Corrigido
+- **Match sem dados comparáveis:** quem tem rankings só com nomes de pontuação ou emoji (como a banda "!!!") aparecia com 0% "Mundos diferentes", virava par e puxava a média do grupo. Agora sai do Match, com aviso, no PC e no navegador.
+
 ## [1.27.0] — 2026-11-24
 
 Pedir o histórico ao Spotify ficou mais fácil de entender. O resto do app não muda.

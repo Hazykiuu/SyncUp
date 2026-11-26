@@ -147,6 +147,9 @@ def executar_match(
                 )
         progress(0.75, desc='Comparando todos com todos')
         r = conciliar(perfis)
+        if r.sem_dados:
+            aviso('Ficaram de fora do Match, sem artistas comparáveis: ' + ', '.join(r.sem_dados))
+            perfis = [p for p in perfis if p.nome not in r.sem_dados]  # a playlist da festa também
         nomes_escuta = [n for n in r.nomes if n in escutas_por_nome]
         pares_escuta = list(combinations(nomes_escuta, 2))
         sintonias = {}

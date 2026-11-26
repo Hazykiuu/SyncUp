@@ -244,3 +244,36 @@ def test_nome_repetido_acusa_antes_de_ler_os_historicos(tmp_path: Path, monkeypa
     with pytest.raises(Error, match='nome diferente'):
         ui.executar_match(['a.json'], 'Bia', *opcoes, 'bia', progress=lambda *a, **k: None)
     assert lidos == []
+
+
+# R1-01: nomes só de pontuação ou emoji viram texto vazio no normalizar_nome.
+SEM_DADOS = ['!!!', '🎵']
+
+
+def _grupo() -> list[PerfilGosto]:
+    return [
+        _perfil('Ana', ['Banda A', 'Banda B', 'Banda C']),
+        _perfil('Bia', ['Banda X', 'Banda Y', 'Banda Z']),
+        _perfil('Cris', ['Banda A', 'Banda X', 'Banda Q']),
+        _perfil('Eli', ['Banda B', 'Banda Y', 'Banda R']),
+    ]
+
+
+def test_par_sem_dados_nao_vira_zero() -> None:
+    c = comparar_perfis(_grupo()[0], _perfil('Duda', SEM_DADOS))
+    assert c.pontuacao is None and c.nivel == 'Comparação indisponível'
+
+
+@pytest.mark.parametrize('quantos', [4, 3])  # com Duda: grupo ímpar e grupo par
+def test_quem_nao_tem_dados_sai_do_match(quantos: int) -> None:
+    grupo = _grupo()[:quantos]
+    sem = conciliar(grupo)
+    com = conciliar([*grupo, _perfil('Duda', SEM_DADOS)])
+    assert com.sem_dados == ['Duda'] and sem.sem_dados == []
+    assert com.nomes == sem.nomes and com.pares == sem.pares
+    assert com.pontuacao_media_pares == sem.pontuacao_media_pares
+
+
+def test_menos_de_duas_pessoas_comparaveis_e_erro_com_os_nomes() -> None:
+    with pytest.raises(ValueError, match='Sem artistas comparáveis: Duda'):
+        conciliar([_grupo()[0], _perfil('Duda', SEM_DADOS)])

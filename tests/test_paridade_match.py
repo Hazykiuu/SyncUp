@@ -66,6 +66,7 @@ def _py(pessoas: list[tuple[str, Path]], opcoes: dict) -> dict:
             'pares': [list(g) for g in r.pares],
             'melhores': {n: [list(x) for x in v] for n, v in r.melhores.items()},
             'media': r.pontuacao_media_pares,
+            'sem_dados': r.sem_dados,
         },
     }
 
@@ -84,6 +85,17 @@ def test_match_igual_ao_python(arquivos, chaves, opcoes):  # noqa: F811
     if chaves[:2] == ('a', 'b'):  # a e b têm artistas em comum: o teste não compara só vazios
         assert js['pares'][0]['pontuacao'] > 0 and js['pares'][0]['artistas_comuns']
     _igual(_py(pessoas, opcoes), js, 'match')
+
+
+def test_quem_nao_tem_dados_sai_igual(arquivos, tmp_path):  # noqa: F811
+    duda = tmp_path / 'duda.json'
+    evento = {'ts': '2026-01-01T10:00:00Z', 'ms_played': 60_000}
+    evento |= {'master_metadata_track_name': 'F', 'master_metadata_album_artist_name': '!!!'}
+    duda.write_text(json.dumps([evento]), encoding='utf-8')
+    pessoas = [('Ana', arquivos['a']), ('Bia', arquivos['b']), ('Duda', duda)]
+    js, py = _js(pessoas, {}), _py(pessoas, {})
+    assert js['conciliacao']['sem_dados'] == ['Duda']
+    _igual(py, js, 'match')
 
 
 def test_sem_plays_validos_falha_igual(arquivos):  # noqa: F811

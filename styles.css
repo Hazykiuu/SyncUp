@@ -48,7 +48,7 @@ main.fillable { padding: 0 clamp(0px, 2vw, 32px) 16px !important; }
 .gradio-container .download-link { display: inline-flex; align-items: center; min-height: 44px; }
 .gradio-container button:focus-visible, .gradio-container a:focus-visible,
 .gradio-container input:focus-visible, .gradio-container [role="tab"]:focus-visible,
-.su-race-progress:focus-visible {
+.su-race-progress:focus-visible, .su-stories:focus-visible {
   outline: 3px solid var(--su-green) !important; outline-offset: 3px;
 }
 .gradio-container ::selection { background: var(--su-green); color: #000; }

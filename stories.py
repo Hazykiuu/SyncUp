@@ -380,7 +380,7 @@ def stories_html(w: Wrapped) -> str:
     )
     avisos = ''.join(f'<p class="su-note">{_e(a)}</p>' for a in w.avisos)
     return (
-        f'<div class="su-stories" data-stories tabindex="0" aria-label="Wrapped de {_e(w.nome)}">'
+        f'<div class="su-stories" data-stories tabindex="0" role="region" aria-roledescription="stories" aria-label="Wrapped de {_e(w.nome)}">'
         f'<div class="su-stories-frame">{"".join(slides)}</div></div>{avisos}'
     )
 
@@ -524,7 +524,7 @@ def stories_match_html(
         )
     )
     return (
-        '<div class="su-stories" data-stories tabindex="0" aria-label="Revelação do Match">'
+        '<div class="su-stories" data-stories tabindex="0" role="region" aria-roledescription="stories" aria-label="Revelação do Match">'
         f'<div class="su-stories-frame">{"".join(slides)}</div></div>'
     )
 
@@ -622,6 +622,6 @@ def stories_sintonia_html(nome_a: str, nome_b: str, s: Sintonia, quase: int) -> 
         )
     )
     return (
-        f'<div class="su-stories" data-stories tabindex="0" aria-label="Sintonia de {a} e {b}">'
+        f'<div class="su-stories" data-stories tabindex="0" role="region" aria-roledescription="stories" aria-label="Sintonia de {a} e {b}">'
         f'<div class="su-stories-frame">{"".join(slides)}</div></div>'
     )

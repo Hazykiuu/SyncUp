@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import html
 import json
+import re
 from pathlib import Path
 
 import gradio as gr
@@ -209,3 +210,17 @@ def test_historico_curto_e_marcado_e_nao_vira_stories_no_pc(
     else:
         with pytest.raises(gr.Error, match='Histórico curto demais'):
             executar_wrapped(*argumentos)
+
+
+def test_player_do_pc_tem_papel_e_foco_visivel(historico: Path) -> None:
+    """R2-03 (WCAG 2.4.7 e 4.1.2): as três divs de stories têm papel, e o foco aparece."""
+    raiz = Path(__file__).resolve().parents[1]
+    fonte = (raiz / 'stories.py').read_text(encoding='utf-8')
+    marca = 'class="su-stories" data-stories tabindex="0" '
+    assert fonte.count(marca) == 3
+    assert fonte.count(marca + 'role="region" aria-roledescription="stories" ') == 3
+    assert 'role="region"' in stories_html(
+        calcular_wrapped(carregar_historico(historico).dados, 'Zé')
+    )
+    estilos = (raiz / 'styles.css').read_text(encoding='utf-8')
+    assert re.search(r'\.su-stories:focus-visible[^{]*\{[^}]*outline: 3px', estilos)

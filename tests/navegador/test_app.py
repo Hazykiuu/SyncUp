@@ -203,3 +203,45 @@ def test_capas_e_som_decide_o_que_sai_do_aparelho(
     expect(page.locator('.resultado .st-player:visible').first).to_be_visible(timeout=TEMPO)
     page.wait_for_timeout(2_000)
     assert bool(pedidos) is ligado, pedidos[:3]
+
+
+@pytest.mark.parametrize('pessoa_a, pessoa_b, artista', [
+    ('Rafa', 'Lu', 'Orquestra Filarmonica Imaginaria de Instrumentos Antigos e Sintetizadores'),
+    ('Maria Eduarda Albuquerque Figueiredo dos Santos', 'Ana Clara Vasconcelos Bittencourt', 'Banda Longa'),
+])  # fmt: skip
+def test_stories_da_dupla_cabem_com_nomes_longos(
+    nova_pagina, site_url, tmp_path, pessoa_a, pessoa_b, artista
+):
+    """R2-04: nenhum texto sai da moldura do story."""
+    pagina = nova_pagina(viewport={'width': 390, 'height': 844}, reduced_motion='reduce')
+    pagina.goto(f'{site_url}/app/#dupla')
+    pessoas = pagina.locator('#principal section.pessoa:visible')
+    for j, nome in enumerate([pessoa_a, pessoa_b]):
+        eventos = [
+            {'ts': f'2023-{1 + i % 12:02d}-{1 + i % 27:02d}T{i % 24:02d}:00:00Z', 'ms_played': 200_000,
+             'master_metadata_track_name': f'Faixa {(i * (j + 3)) % 30}', 'spotify_track_uri': f'spotify:track:{i % 40}',
+             'master_metadata_album_artist_name': artista if i % 3 == 0 else f'Banda {(i * (j + 5)) % 12}'}
+            for i in range(400)
+        ]  # fmt: skip
+        caminho = tmp_path / f'{j}.json'
+        caminho.write_text(json.dumps(eventos), encoding='utf-8')
+        pessoas.nth(j).locator('input.entrada').first.fill(nome)
+        pessoas.nth(j).locator('input[type=file]').first.set_input_files(caminho)
+    pagina.get_by_role('button', name=re.compile('Comparar hist')).first.click()
+    player = pagina.locator('.resultado .st-player:visible').first
+    expect(player).to_be_visible(timeout=TEMPO)
+    player.focus()
+    player.press(' ')
+    fora = """() => { const p = [...document.querySelectorAll('.st-player')].find((e) => e.offsetParent);
+      const f = p.querySelector('.st-slot.ativo').getBoundingClientRect(), tipo = p.querySelector('.st-slot.ativo section').className;
+      return [...p.querySelectorAll('.st-slot.ativo *')].filter((e) => {
+        if (e.childElementCount || !e.textContent.trim() || e.closest('.st-avatares')) return false;
+        const b = e.getBoundingClientRect();
+        return b.width && Math.max(f.top - b.top, b.bottom - f.bottom, f.left - b.left, b.right - f.right) > 1;
+      }).map((e) => `${tipo}: ${e.textContent.trim().slice(0, 20)}`); }"""
+    ruins = []
+    for _ in range(int(player.locator('.st-contador').inner_text().split('/')[1])):
+        pagina.wait_for_timeout(250)
+        ruins += pagina.evaluate(fora)
+        player.press('ArrowRight')
+    assert ruins == []

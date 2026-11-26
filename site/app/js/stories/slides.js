@@ -349,7 +349,7 @@ const tamanho = (texto, max, min, folga) => `${Math.max(min, Math.min(max, (max 
 
 // Último story = o pôster que vai para o Instagram: termina com o convite para comparar no SyncUp.
 // Nomes muito longos: se o conteúdo não couber na altura do story, encolhe tudo por igual (--e) até caber.
-function useCaber(ref, deps) {
+export function useCaber(ref, deps) {
   useLayoutEffect(() => {
     const c = ref.current?.closest('.st-conteudo');
     if (!c) return undefined;

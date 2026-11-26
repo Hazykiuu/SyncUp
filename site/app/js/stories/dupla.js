@@ -1,8 +1,8 @@
 // Stories da Dupla, desenhados a partir de `dupla` (JSON da ponte), na moldura do Wrapped.
 // Cor com significado fixo: verde = pessoa A, violeta = pessoa B, rosa = os dois juntos (sintonia).
-import { html } from 'preact-htm';
+import { html, useRef } from 'preact-htm';
 import { aprox, dataBr, fmtNum, fraseEmComum, frasePosicao, fraseRelogios, mesAno, NOTA_APROX, textoCents } from './logica.js';
-import { Contador, Entra, Kicker, Slide } from './slides.js';
+import { Contador, Entra, Kicker, Slide, useCaber } from './slides.js';
 
 const ROSA = [245, 115, 160];
 const inicial = (nome) => (nome.trim()[0] || '?').toUpperCase();
@@ -23,7 +23,10 @@ function Afinador({ match }) {
 }
 
 function Abertura({ d, ativo, i }) {
-  return html`<${Slide} tipo="abertura" classe="st-duo" i=${i}>
+  const medida = useRef(null);
+  useCaber(medida, [d]); // nomes longos: encolhe tudo por igual até caber
+  return html`<${Slide} tipo="abertura" classe="st-duo st-cabe" i=${i}>
+    <span ref=${medida} hidden></span>
     <${Kicker}>SyncUp · Dupla<//>
     <${Entra} i=${1}><${Avatares} d=${d} /><//>
     <${Entra} i=${2} tag="h2" classe="st-titulo menor st-quebra"><${Nomes} d=${d} /><//>
@@ -59,7 +62,10 @@ function Frente({ d, i }) {
     <b>${favorito.nome}</b>
     <small>${fmtNum(favorito.plays)} plays · ${frasePosicao(favorito.posicao_no_outro, outra.nome)}</small>
   <//>`;
-  return html`<${Slide} tipo="frente" classe="st-duo" i=${i}>
+  const medida = useRef(null);
+  useCaber(medida, [d]);
+  return html`<${Slide} tipo="frente" classe="st-duo st-cabe" i=${i}>
+    <span ref=${medida} hidden></span>
     <${Kicker}>Frente a frente<//>
     <${Entra} i=${1} tag="h3" classe="st-titulo menor">O favorito de cada um<//>
     <div class="st-frente">${cartao(d.a, d.b, d.favoritos[0], 'a', 2)}${cartao(d.b, d.a, d.favoritos[1], 'b', 3)}</div>
@@ -72,7 +78,10 @@ function Frente({ d, i }) {
 
 // Os links não trocam de story (data-interativo) e abrem a busca do Spotify em outra aba.
 function Apresentar({ d, i }) {
-  return html`<${Slide} tipo="apresentar" classe="st-duo" i=${i}>
+  const medida = useRef(null);
+  useCaber(medida, [d]);
+  return html`<${Slide} tipo="apresentar" classe="st-duo st-cabe" i=${i}>
+    <span ref=${medida} hidden></span>
     <${Kicker}>Para apresentar<//>
     <${Entra} i=${1} tag="h3" classe="st-titulo menor">Um som de cada um para o outro<//>
     <ul class="st-pontes">${d.apresentar.map((p, k) => html`

@@ -8,7 +8,7 @@
 - **Match, a escala da nota:** cada par diz que, nessa escala, 25% já é "Sintonia rara", e "Como a nota é calculada" explica a conta.
 - **Transparência reduzida:** o dock dos stories também fica sólido. No app para PC, os chips deixam de borrar o fundo.
 - **Cancelar o cálculo:** Dupla, Wrapped, Batalha e Match ganham o botão "Cancelar" enquanto leem e calculam.
-- **Privacidade, prazos de verdade:** o histórico do Last.fm guardado no navegador agora vence depois de 7 dias sem uso, e a página não diz mais "Fechou a página, sumiu". No app para PC, a limpeza passou a cumprir o prazo de 1 hora.
+- **Privacidade, prazos de verdade:** o histórico do Last.fm guardado no navegador agora vence depois de 7 dias sem uso (é apagado quando o app abre de novo), e a página não diz mais "Fechou a página, sumiu". No app para PC, a limpeza passou a cumprir o prazo de 1 hora, e o que sobrar de um fechamento à força é apagado na próxima abertura.
 - **"Capas e som" é uma escolha sua, antes:** a opção aparece no topo de cada modo, ligada por padrão e lembrada no navegador. Desligada, nada é pedido ao Spotify, ao MusicBrainz nem à Apple. Os textos que diziam "Nada sai do seu aparelho" agora dizem o que sai.
 - **O app abre sem o unpkg:** o Preact com htm passa a vir do próprio site, o mesmo arquivo de antes. Com o CDN fora do ar ou bloqueado, a tela ficava no esqueleto para sempre.
 - **Mesma sintonia no PC e no navegador:** o app para PC passa a usar por padrão a ponderação logarítmica, a mesma do navegador. Antes o PC usava a bruta, e os mesmos arquivos davam números diferentes. Dá para trocar na própria tela.
@@ -24,7 +24,7 @@
 - **Nomes com ı, sigma final ou Cherokee:** o navegador passa a juntar e separar esses artistas como o app para PC.
 - **Sem internet:** o painel do som diz "Stories sem som" (ou aponta o botão, quando o navegador bloqueia) em vez de ficar em "Preparando o som…".
 - **Stories da Dupla:** com nomes muito longos, o texto encolhe para caber, em vez de sair da moldura.
-- **Serviços externos:** quando o Last.fm, o Spotify, o MusicBrainz ou o ListenBrainz pedem uma pausa longa, o SyncUp para de insistir. O iTunes recebe no máximo 3 buscas por vez. Um download do Last.fm interrompido continua de onde parou.
+- **Serviços externos:** quando o MusicBrainz ou o ListenBrainz pedem uma pausa longa, o app para PC para de insistir; no navegador isso vale quando o serviço deixa a página ler a pausa pedida. O iTunes recebe no máximo 3 buscas por vez. Um download do Last.fm interrompido continua de onde parou.
 - **Windows:** encerrar o app à força não deixa mais processos de leitura parados na memória.
 - **ListenBrainz:** resposta inesperada aparece em português (antes, "Expecting value: line 1 column 1"), erro do servidor não culpa mais a sua internet, e depois de 3 demoras seguidas o Match não espera pelas próximas pessoas.
 - **Capas:** um erro do servidor do Spotify ou do MusicBrainz não vira mais "sem capa" por 30 dias.

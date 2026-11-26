@@ -69,4 +69,9 @@ def test_nenhum_subtitulo_do_app_diz_que_nada_sai() -> None:
 
 def test_privacidade_nao_promete_que_o_lastfm_some_ao_fechar() -> None:
     """R3-11: o que vem do Last.fm fica no navegador até vencer ou ser apagado."""
-    assert 'sumiu' not in HTML and '7 dias' in HTML and 'Apagar dados guardados' in HTML
+    assert (
+        'sumiu' not in HTML
+        and 'por até 7 dias' not in HTML
+        and '7 dias' in HTML
+        and 'Apagar dados guardados' in HTML
+    )

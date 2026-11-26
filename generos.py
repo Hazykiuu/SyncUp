@@ -110,6 +110,7 @@ class ConsultaMusicBrainz:
                 )
                 resposta.raise_for_status()
                 artistas = resposta.json().get('artists') or []
+                self._pausa = 0.0
                 break
             except (httpx.HTTPError, ValueError) as erro:
                 self.falhas += 1

@@ -145,12 +145,14 @@ export function Match() {
 
   const rodar = async (ler, nomesUsados, textoConvites, exemplo = false) => {
     setFase({ tipo: 'processando', etapa: 'Preparando o Match…' });
-    const minha = rodada.current + 1;
-    const antes = rodada.current;
+    cancelar();
+    let minha = rodada.current;
     try {
       const lista = await ler();
-      if (antes !== rodada.current) return; // cancelado enquanto lia: não abre o Worker
-      const dados = await pedir({ tipo: 'match', arquivos: lista, nomes: nomesUsados, convites: textoConvites, opcoes }, (etapa) => setFase({ tipo: 'processando', etapa }));
+      if (minha !== rodada.current) return; // cancelado enquanto lia: não abre o Worker
+      const pedido = pedir({ tipo: 'match', arquivos: lista, nomes: nomesUsados, convites: textoConvites, opcoes }, (etapa) => setFase({ tipo: 'processando', etapa }));
+      minha = rodada.current; // pedir() abre uma rodada nova antes de esperar o Worker
+      const dados = await pedido;
       mostrarResultado(() => setFase({ tipo: 'resultado', dados: { ...dados, exemplo } }), 'resultado-match');
     } catch (e) {
       if (e.name === 'AbortError' || minha !== rodada.current) return;

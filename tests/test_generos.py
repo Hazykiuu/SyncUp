@@ -255,3 +255,22 @@ def test_musicbrainz_respeita_a_pausa_pedida(
     assert consulta.generos('Pitty') == [] and consulta.generos('Outra') == []
     assert len(pedidos) == pedidos_esperados and [e for e in esperas if e > 1] == esperas_esperadas
     assert consulta._cache == {}
+
+
+def test_pausa_pedida_vale_uma_vez_so(tmp_path: Path) -> None:
+    """Revisão da v1.28: depois de uma resposta boa, volta o intervalo normal."""
+    esperas: list[float] = []
+    respostas = [httpx.Response(503, headers={'Retry-After': '10'})]
+
+    def responder(pedido: httpx.Request) -> httpx.Response:
+        return respostas.pop() if respostas else httpx.Response(200, json={'artists': []})
+
+    consulta = ConsultaMusicBrainz(
+        httpx.Client(transport=httpx.MockTransport(responder)),
+        tmp_path / 'g.json',
+        relogio=lambda: 0.0,
+        dormir=esperas.append,
+    )
+    for nome in ('Um', 'Dois', 'Tres'):
+        consulta.generos(nome)
+    assert esperas == [10.0, 1.0, 1.0]

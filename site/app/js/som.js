@@ -78,9 +78,11 @@ export let silenciado = lerMudo();
 
 // Estado do som que o dock dos stories mostra (stories/dock.js): o trecho atual, se toca e o mudo.
 // Um só para a página: só o modo na tela toca (a troca de modo pausa o <audio>).
-const estadoSom = { trecho: null, tocando: false, mudo: silenciado, semSom: null }; // semSom: o que o painel diz quando não há som
+const estadoSom = { trecho: null, tocando: false, mudo: silenciado, semSom: new Map() }; // semSom: por player (alvo), o que o painel dele diz quando não há som
 const ouvintes = new Set();
 const avisar = (mudanca) => { Object.assign(estadoSom, mudanca); ouvintes.forEach((f) => f({ ...estadoSom })); };
+// Os quatro modos ficam montados: o "sem som" de um não pode aparecer no painel de outro.
+const marcarSemSom = (alvo, texto) => avisar({ semSom: new Map(estadoSom.semSom).set(alvo, texto) });
 export function useSom() {
   const [s, setS] = useState(() => ({ ...estadoSom }));
   useEffect(() => { ouvintes.add(setS); return () => ouvintes.delete(setS); }, []);
@@ -94,9 +96,11 @@ export function definirMudo(mudo) {
 
 // "Capas e som": escolhida antes de calcular, vale nos 4 modos e fica neste aparelho. Ligada por padrão.
 const CHAVE_CAPAS = 'syncup-capas-e-som';
-export const capasESom = () => { try { return localStorage.getItem(CHAVE_CAPAS) !== '0'; } catch { return true; } };
+let comCapasESom = (() => { try { return localStorage.getItem(CHAVE_CAPAS) !== '0'; } catch { return true; } })();
+export const capasESom = () => comCapasESom;
 export function definirCapasESom(ligado) {
-  try { localStorage.setItem(CHAVE_CAPAS, ligado ? '1' : '0'); } catch { /* sem armazenamento: vale a opção padrão */ }
+  comCapasESom = ligado;
+  try { localStorage.setItem(CHAVE_CAPAS, ligado ? '1' : '0'); } catch { /* sem armazenamento: vale só nesta visita */ }
 }
 
 // Um só <audio>: um elemento novo precisaria de outro toque no iPhone. Criado no primeiro toque em
@@ -153,7 +157,7 @@ export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
   const raiz = () => alvo.current?.querySelector('.st-player');
   const [aviso, setAviso] = useState('');
   // "Sem som" muda o aviso (aqui) e o painel do palco juntos: um não pode dizer "Preparando" e o outro "sem som".
-  const ficarSem = (texto, painel = 'Stories sem som') => { setEstado('sem'); setAviso(texto); avisar({ semSom: painel }); };
+  const ficarSem = (texto, painel = 'Stories sem som') => { setEstado('sem'); setAviso(texto); marcarSemSom(alvo, painel); };
 
   const rampa = (valor, segundos = ENTRA) => {
     const m = som; if (!m) return;
@@ -176,7 +180,7 @@ export function SomStories({ trilha, alvo, aoLigar, nota = NOTA_WRAPPED }) {
   const iniciarSom = async () => {
     destravarSom(); // no botão "Ligar", dentro do toque e antes de qualquer await
     if (!som) throw new Error('sem Web Audio'); // vira "sem som" no catch de comecar
-    setEstado('carregando'); setAviso(''); avisar({ semSom: null });
+    setEstado('carregando'); setAviso(''); marcarSemSom(alvo, null);
     const porSlide = Object.fromEntries(await Promise.all(Object.entries(trilha.slides).map(
       async ([tipo, candidatas]) => [tipo, (await Promise.all(candidatas.map(resolver))).flat()])));
     // Intercala: a 1ª de cada candidata, depois a 2ª… (não esgota um artista antes do próximo).

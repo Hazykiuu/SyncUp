@@ -308,3 +308,57 @@ def test_transparencia_reduzida_tira_todo_o_vidro(page, site_url):
       return c.backdropFilter !== 'none' && r.width && r.bottom > 0 && r.top < innerHeight && c.visibility !== 'hidden' && +c.opacity > 0;
     }).map((e) => String(e.className))""")
     assert borrados == []
+
+
+def test_match_nao_fica_preso_quando_o_exemplo_nao_baixa(page, site_url):
+    """Revisão da v1.28: a falha vira alerta; depois de cancelar, nada aparece."""
+    page.route('**/demo-*.zip', lambda r: r.fulfill(status=500))
+    page.goto(f'{site_url}/app/#match')
+    exemplo = page.get_by_role('button', name='Ver um exemplo').locator('visible=true')
+    exemplo.click()
+    expect(page.locator('[role=alert]:visible')).to_be_visible(timeout=TEMPO)
+    expect(page.locator('.processando:visible')).to_have_count(0)
+    page.unroute('**/demo-*.zip')
+    page.evaluate("""() => { const real = window.fetch; window.fetch = (u, o) => String(u).includes('demo-')
+      ? new Promise((ok) => setTimeout(() => ok(new Response('', { status: 500 })), 1500)) : real(u, o); }""")
+    exemplo.click()
+    page.locator('.processando:visible').get_by_role('button', name='Cancelar').click()
+    page.wait_for_timeout(2_500)
+    expect(page.locator('[role=alert]:visible')).to_have_count(0)
+
+
+def test_sem_armazenamento_a_caixa_desligada_ainda_vale(page, site_url, tmp_path):
+    """Revisão da v1.28: se o navegador não deixa guardar a escolha, ela vale nesta visita."""
+    page.add_init_script(
+        "Storage.prototype.setItem = Storage.prototype.getItem = () => { throw new Error('bloqueado'); };"
+    )
+    pedidos = []
+    page.on(
+        'request', lambda r: r.url.startswith((site_url, 'blob:', 'data:')) or pedidos.append(r.url)
+    )
+    page.goto(f'{site_url}/app/#wrapped')
+    page.get_by_role('checkbox', name=re.compile('^Capas e som')).uncheck()
+    tela = page.get_by_role('region', name='Seu histórico')
+    tela.locator('input[type=file]').first.set_input_files(_historico(tmp_path, 'p', 0))
+    page.wait_for_timeout(1_500)
+    page.get_by_role('button', name='Montar meu Wrapped').click()
+    expect(page.locator('.resultado .st-player:visible').first).to_be_visible(timeout=TEMPO)
+    page.wait_for_timeout(2_000)
+    assert pedidos == []
+
+
+def test_painel_do_som_de_um_modo_nao_muda_o_de_outro(nova_pagina, site_url):
+    """Revisão da v1.28: os quatro modos ficam montados; "sem som" é de cada um."""
+    pagina = nova_pagina(viewport={'width': 1280, 'height': 900})
+    _abrir_exemplo(pagina, site_url, 'wrapped')
+    painel = pagina.locator('.palco-agora:visible .palco-faixa small').first
+    expect(painel).to_have_text('Stories sem som', timeout=TEMPO)
+    pagina.route(re.compile('apple[.]com'), lambda r: None)  # a busca da Dupla fica no ar
+    pagina.locator('.nav-item[href="#dupla"]').click()
+    expect(pagina.locator('.app-corpo')).to_have_attribute('data-modo', 'dupla')
+    pagina.wait_for_timeout(1_000)  # a troca de modo ainda mostra os dois lados por um instante
+    pagina.get_by_role('button', name='Ver um exemplo').locator('visible=true').click()
+    expect(pagina.locator('.resultado .st-player:visible').first).to_be_visible(timeout=TEMPO)
+    pagina.wait_for_timeout(1_000)
+    pagina.locator('.nav-item[href="#wrapped"]').click()
+    expect(painel).to_have_text('Stories sem som')

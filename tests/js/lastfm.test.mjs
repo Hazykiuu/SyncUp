@@ -336,3 +336,38 @@ test('limite no meio do download: as outras páginas param e o que veio inteiro 
   assert.equal(r.reproducoes, 12); // sem buraco e sem repetição
   assert.ok(lf.pedidos.some((p) => p.to === '2000'), 'continua de onde parou');
 });
+
+// Revisão da v1.28: a retomada não pode perder as capas nem o que já baixou.
+const comCapa = (uts, musica) => ({ ...scrobble(uts, musica), image: [{ size: 'extralarge', '#text': `https://lastfm.freetls.fastly.net/i/u/300x300/${musica}.jpg` }] });
+function servidorComFalha(recentes) {
+  const lf = lastfm({ recentes, porPagina: 2 });
+  const falha = { de: () => false };
+  const buscar = async (url) => (falha.de(new URL(url).searchParams) ? limitado(60) : lf.buscar(url));
+  return { lf, falha, buscar };
+}
+const segundaPagina = (p) => p.get('method') === 'user.getrecenttracks' && Number(p.get('page')) >= 2;
+
+test('retomada: as capas das páginas guardadas voltam junto', async () => {
+  const armazem = memoria();
+  const { falha, buscar } = servidorComFalha(Array.from({ length: 12 }, (_, i) => comCapa(2000 - i, `m${i}`)));
+  falha.de = segundaPagina;
+  await assert.rejects(historicoDoLastfm('carlos', { buscar, armazem, agora: () => 5000, ...semEspera }), /pausa/);
+  falha.de = () => false;
+  const r = await historicoDoLastfm('carlos', { buscar, armazem, agora: () => 6000, ...semEspera });
+  assert.equal(r.capas.size, 12);
+  assert.equal(armazem.m.get('carlos').capas.length, 12);
+});
+
+test('retomada: falha depois do download (novidades ou durações) não joga fora o que veio', async () => {
+  for (const quebra of [(p) => p.get('method') === 'user.getrecenttracks' && p.get('from') === '2001', (p) => p.get('method') === 'user.gettoptracks']) {
+    const armazem = memoria();
+    const { falha, buscar } = servidorComFalha(Array.from({ length: 12 }, (_, i) => scrobble(2000 - i, `m${i}`)));
+    falha.de = segundaPagina;
+    await assert.rejects(historicoDoLastfm('carlos', { buscar, armazem, agora: () => 5000, ...semEspera }), /pausa/);
+    falha.de = quebra;
+    await assert.rejects(historicoDoLastfm('carlos', { buscar, armazem, agora: () => 6000, ...semEspera }), /pausa/);
+    assert.equal(armazem.m.get('carlos|parcial').escutas.length, 12);
+    falha.de = () => false;
+    assert.equal((await historicoDoLastfm('carlos', { buscar, armazem, agora: () => 7000, ...semEspera })).reproducoes, 12);
+  }
+});

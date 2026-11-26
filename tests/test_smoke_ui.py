@@ -65,3 +65,42 @@ def test_textos_do_pc_sem_jargao_de_codigo() -> None:
 
     layout = (Path(__file__).resolve().parents[1] / 'ui/layout.py').read_text(encoding='utf-8')
     assert 'describe()' not in layout
+
+
+def test_ao_abrir_o_app_apaga_o_que_ficou_de_antes(tmp_path, monkeypatch) -> None:
+    """Revisão da v1.28: o texto promete apagar na próxima abertura; o Gradio sozinho não faz isso."""
+    import app
+
+    padrao = tmp_path / 'syncup-envios'
+    (padrao / 'abc').mkdir(parents=True)
+    (padrao / 'abc' / 'meu_historico.zip').write_bytes(b'x')
+    (padrao / 'solto.json').write_text('[]')
+    monkeypatch.setattr(app, 'PASTA_ENVIOS', padrao)
+    monkeypatch.setenv('GRADIO_TEMP_DIR', str(padrao))
+    app.apagar_envios_antigos()
+    assert list(padrao.iterdir()) == []
+    # Pasta escolhida por quem usa o computador: não é nossa para apagar.
+    outra = tmp_path / 'minha'
+    outra.mkdir()
+    (outra / 'fica.txt').write_text('x')
+    monkeypatch.setenv('GRADIO_TEMP_DIR', str(outra))
+    app.apagar_envios_antigos()
+    assert (outra / 'fica.txt').exists()
+
+
+def test_trio_com_amostra_pequena_nao_ganha_faixa_no_pc() -> None:
+    """Revisão da v1.28: o cartão do trio mostra uma média; ela não pode levar a faixa de um par."""
+    from componentes import match_html
+    from conciliacao import conciliar
+    from perfil_gosto import PerfilGosto
+    from stories import stories_match_html
+
+    def pessoa(nome: str, artistas: list[str]) -> PerfilGosto:
+        tops = {p: artistas for p in ('short_term', 'medium_term', 'long_term')}
+        return PerfilGosto(nome, 'teste', '', tops, {})
+
+    cheio = [f'Banda {i}' for i in range(40)]
+    r = conciliar([pessoa('Ana', cheio), pessoa('Bia', cheio), pessoa('Cris', cheio[:3])])
+    assert len(r.pares) == 1 and len(r.pares[0]) == 3
+    for html in (match_html(r, {}, {}), stories_match_html(r, {})):
+        assert 'Amostra pequena' in html and 'Sintonia rara' not in html

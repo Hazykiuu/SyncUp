@@ -449,6 +449,9 @@ def stories_match_html(
     for grupo in r.pares:
         internos = [r.par(x, y) for i, x in enumerate(grupo) for y in grupo[i + 1 :]]
         principal = max(internos, key=lambda c: c.pontuacao)
+        faixa = next(
+            (c for c in internos if c.amostra_pequena), principal
+        )  # ver componentes.match_html
         media = sum(c.pontuacao for c in internos) / len(internos)
         comuns = ''.join(
             f'<span class="su-chip">{_e(a)}</span>' for a in principal.artistas_comuns[:4]
@@ -472,7 +475,7 @@ def stories_match_html(
                     for i, nome in enumerate(grupo)
                 )
                 + _a(
-                    f'<div class="su-mega">{_n(media, 1, "%")}<span>{_e(principal.nivel)}</span></div>',
+                    f'<div class="su-mega">{_n(media, 1, "%")}<span>{_e(faixa.nivel)}</span></div>',
                     4,
                 )
                 + (_a(f'<div class="su-badges">{comuns}</div>', 5) if comuns else '')

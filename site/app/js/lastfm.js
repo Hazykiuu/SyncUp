@@ -202,25 +202,31 @@ export async function historicoDoLastfm(usuario, { periodo = 'tudo', armazem = a
   if (parcial && (parcial.periodo !== periodo || !(agora() - parcial.quando <= VALIDADE_LASTFM))) parcial = null;
   const inicio = parcial ? parcial.desde ?? undefined : periodo === 'ano' ? anoAtras : undefined;
   const desde = completo ? cache.ultimo + 1 : inicio;
-  const capas = new Map(completo ? cache.capas ?? [] : []);
+  const capas = new Map(completo ? cache.capas ?? [] : parcial?.capas ?? []);
+  // Trecho sem buraco, do mais novo até `ate`: guardado para a próxima vez continuar dele.
+  const guardarParcial = async (lista) => {
+    const valor = { escutas: lista, ate: lista.at(-1).uts + 1, desde: inicio ?? null, periodo, capas: [...capas], quando: agora() };
+    try { await armazem.gravar(chaveParcial, valor); } catch { /* sem cache */ }
+  };
   let novos;
   try {
     novos = await baixarScrobbles(usuario, { ...rede, desde, ate: parcial?.ate, capas });
   } catch (e) {
-    if (!completo && e?.parciais?.length) {
-      const juntas = juntar(parcial?.escutas ?? [], e.parciais);
-      // `ate` com 1 s de folga: o mesmo segundo vem de novo e juntar() tira a repetição.
-      const valor = { escutas: juntas, ate: juntas.at(-1).uts + 1, desde: inicio ?? null, periodo, quando: agora() };
-      try { await armazem.gravar(chaveParcial, valor); } catch { /* sem cache */ }
-    }
+    // `ate` com 1 s de folga: o mesmo segundo vem de novo e juntar() tira a repetição.
+    if (!completo && e?.parciais?.length) await guardarParcial(juntar(parcial?.escutas ?? [], e.parciais));
     throw e;
   }
-  if (parcial) {
-    const depois = await baixarScrobbles(usuario, { ...rede, desde: parcial.escutas[0].uts + 1, capas });
-    novos = juntar(juntar(parcial.escutas, novos), depois);
+  if (parcial) novos = juntar(parcial.escutas, novos);
+  let duracoes;
+  try {
+    // Depois de uma retomada, falta o que chegou desde o parcial.
+    if (parcial) novos = juntar(novos, await baixarScrobbles(usuario, { ...rede, desde: parcial.escutas[0].uts + 1, capas }));
+    duracoes = cache?.duracoes ? new Map(cache.duracoes) : await baixarDuracoes(usuario, rede);
+  } catch (e) {
+    if (!completo && novos.length) await guardarParcial(novos);
+    throw e;
   }
   const escutas = juntar(completo ? cache.escutas : [], novos);
-  const duracoes = cache?.duracoes ? new Map(cache.duracoes) : await baixarDuracoes(usuario, rede);
   if (escutas.length) {
     const valor = { escutas, ultimo: escutas[0].uts, desde: completo ? cache.desde : (inicio ?? null), duracoes: [...duracoes], capas: [...capas], quando: agora() };
     try { await armazem.gravar(id, valor); } catch { /* aba anônima: segue sem cache */ }

@@ -327,3 +327,41 @@ def test_todo_hover_do_site_so_vale_com_mouse(arquivo: str) -> None:
 def test_toque_sem_retangulo_cinza() -> None:
     estilo = (RAIZ / 'site/estilo.css').read_text(encoding='utf-8')
     assert '-webkit-tap-highlight-color: transparent' in estilo and ':active' in estilo
+
+
+def _fora_de_media(caminho: Path) -> list[str]:
+    """Os seletores das regras de topo (fora de @media, @supports e @keyframes), um por regra."""
+    css = re.sub(r'/\*.*?\*/', '', caminho.read_text(encoding='utf-8'), flags=re.S)
+    pilha, seletores = [], []
+    for preludio, abre, fecha in re.findall(r'([^{}]*)(?:(\{)|(\}))', css):
+        if fecha:
+            pilha.pop()
+            continue
+        seletor = ' '.join(preludio.split(';')[-1].split())
+        if not pilha and not seletor.startswith('@'):
+            seletores.append(seletor)
+        pilha.append(seletor)
+    return seletores
+
+
+def test_estilos_dos_stories_sem_sobrescrita_no_fim() -> None:
+    """R2-11: o valor de uma peça fica na regra dela, não numa segunda regra no fim do arquivo."""
+    seletores = _fora_de_media(RAIZ / 'site/app/stories.css')
+    alvos = [
+        '.st-fundo',
+        '.st-veu',
+        '.st-vidro',
+        '.st-kicker',
+        *{s for s in seletores if s.startswith('.s-resumo ')},
+    ]
+    assert len(alvos) > 20
+    assert {s: seletores.count(s) for s in alvos if seletores.count(s) != 1} == {}
+
+
+@pytest.mark.parametrize('arquivo, seletor', [
+    ('estilo.css', '.hero h1'), ('estilo.css', '.titulo-secao'), ('app/app.css', '.dock'),
+    ('app/app.css', '.app-cabeca'), ('app/app.css', '.app-cabeca h1'),
+    ('app/app.css', '.nav-item[aria-current="page"]'),
+])  # fmt: skip
+def test_regra_unica_fora_de_media(arquivo: str, seletor: str) -> None:
+    assert _fora_de_media(RAIZ / 'site' / arquivo).count(seletor) == 1

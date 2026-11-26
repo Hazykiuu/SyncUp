@@ -244,7 +244,7 @@ textarea.entrada { resize: vertical; }
 .btn-verde .seta { font-weight: 900; }
 .processando, .erro { display: flex; align-items: center; gap: var(--e3); border-radius: var(--r-cartao); padding: var(--e4) var(--pad-cartao); margin-bottom: var(--e4); }
 .erro { color: #ffd0da; }
-.giro { width: 1.2rem; height: 1.2rem; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .2); border-top-color: var(--verde); animation: giro .8s linear infinite; }
+.giro { flex: none; width: 1.2rem; height: 1.2rem; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .2); border-top-color: var(--verde); animation: giro .8s linear infinite; }
 @keyframes giro { to { transform: rotate(360deg); } }
 
 .resultado { display: flex; flex-direction: column; gap: var(--e5); scroll-margin-top: 1rem; }

@@ -212,6 +212,8 @@
 .st-par .st-barra-valor { height: 3.4cqw; }
 .st-barra-valor.a { background: var(--verde); } .st-barra-valor.b { background: var(--roxo); }
 /* Nomes longos (useCaber): cada bloco do story encolhe pelo mesmo fator até tudo caber, sem reticências. */
+/* "safe": cheio, o conteúdo transborda só para baixo; o useCaber enxerga e encolhe, e nada sobe para cima do contador. */
+.st-cabe .st-conteudo { justify-content: safe center; }
 .st-cabe .st-conteudo > * { zoom: var(--e, 1); }
 .st-frente { display: grid; gap: 3cqw; }
 .st-frente { margin: 1cqw 0; }

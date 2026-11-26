@@ -239,10 +239,15 @@ def test_stories_da_dupla_cabem_com_nomes_longos(
         const b = e.getBoundingClientRect();
         return b.width && Math.max(f.top - b.top, b.bottom - f.bottom, f.left - b.left, b.right - f.right) > 1;
       }).map((e) => `${tipo}: ${e.textContent.trim().slice(0, 20)}`); }"""
+    sobre_o_contador = """() => { const p = [...document.querySelectorAll('.st-player')].find((e) => e.offsetParent);
+      const c = p.querySelector('.st-contador').getBoundingClientRect(), s = p.querySelector('.st-slot.ativo');
+      if (!s.querySelector('.st-cabe')) return [];
+      return [...s.querySelectorAll('.st-conteudo *')].filter((e) => !e.childElementCount && e.textContent.trim()
+        && e.getBoundingClientRect().width && e.getBoundingClientRect().top < c.bottom - 1).map((e) => 'sob o contador: ' + e.textContent.trim().slice(0, 20)); }"""
     ruins = []
     for _ in range(int(player.locator('.st-contador').inner_text().split('/')[1])):
         pagina.wait_for_timeout(250)
-        ruins += pagina.evaluate(fora)
+        ruins += pagina.evaluate(fora) + pagina.evaluate(sobre_o_contador)
         player.press('ArrowRight')
     assert ruins == []
 

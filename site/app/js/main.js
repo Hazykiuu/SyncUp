@@ -162,7 +162,7 @@ function App() {
             <h1>${CABECA[modo][0]}</h1>
             <p class="sub">${CABECA[modo][1]}</p>
             <label class="marcar app-capas-som"><input type="checkbox" checked=${comCapas} onChange=${(e) => { definirCapasESom(e.target.checked); setComCapas(e.target.checked); }} />
-              Capas e som <small>(busca capas e trechos no Spotify, no MusicBrainz e na Apple)</small></label>
+              <span>Capas e som <small>(busca capas e trechos no Spotify, no MusicBrainz e na Apple)</small></span></label>
             <a class="app-como-pedir" href="../#como-pedir">Ainda não tem o ZIP? Veja como pedir</a>
           </div>
         </div>

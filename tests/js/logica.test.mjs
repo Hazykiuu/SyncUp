@@ -206,3 +206,14 @@ test('luz ambiente: duas cores vivas e distantes; capa sem cor vira verde e viol
   const [, sozinha] = coresVivas(pinta([[250, 40, 40], 256]));
   assert.deepEqual(sozinha, CORES_PADRAO[1]); // uma matiz só: a secundária é o violeta
 });
+
+test('piso dos desenhos da Batalha: valor maior que 0 sempre aparece; 0 não acende nada', async () => {
+  const { acesas, piso } = await import('../../site/app/js/stories/logica.js');
+  assert.equal(acesas(6, 0.06, 10), 1); // Sextou 6%: uma casa, não zero
+  assert.equal(acesas(0.4, 0.004, 20), 1);
+  assert.equal(acesas(0, 0, 20), 0);
+  assert.equal(acesas(50, 0.5, 20), 10);
+  assert.equal(piso(0.4, 0.004, 0.05), 0.05);
+  assert.equal(piso(0, 0, 0.05), 0);
+  assert.equal(piso(64.2, 0.642, 0.05), 0.642);
+});

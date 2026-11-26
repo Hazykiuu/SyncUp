@@ -2,9 +2,17 @@
 // modelo de desenho, frase do story e, quando não é o padrão, `menor` (menor vence), `minimo` (valor que não
 // conta como ponto), `vazio` (por que sai quando ninguém pontua), `ausente` (por que sai quando falta o dado),
 // `campos` (colunas que nem todo histórico traz), `pct` (porcentagem: pede 100 plays e escala 100),
-// `escala` (fração do desenho; null = o maior da rodada) e `aprox` (leva a nota "≈" do Last.fm: usa a duração dos plays).
+// `escala` (fração do desenho; null = o maior da rodada), `desenho` (variante do modelo, DESENHOS), `janela` (horas
+// [início, fim) que o relógio marca) e `aprox` (leva a nota "≈" do Last.fm: usa a duração dos plays).
 export const FAMILIAS = ['volume', 'variedade', 'repeticao', 'relogio', 'calendario', 'constancia', 'pulos', 'aparelhos', 'descoberta', 'grupo'];
 export const MODELOS = ['corrida', 'porcentagem', 'relogio', 'calendario', 'sequencia', 'contagem'];
+// Desenhos de cada modelo (stories/batalha.js); o primeiro é o padrão. Os outros são os desenhos já aprovados de
+// 6 dos 10 temas de antes, que continuam iguais: vinil (Play infinito), estante (Colecionador), tally (Repeteco),
+// casas (Paciência), 24 traços (Dia mais insano) e lua (Coruja). Só a folha do calendário e a janela do relógio são novas.
+export const DESENHOS = {
+  corrida: ['pista'], porcentagem: ['anel', 'casas'], relogio: ['janela', 'horas24', 'lua'], calendario: ['folha'],
+  sequencia: ['corrente'], contagem: ['pontos', 'vinil', 'estante', 'tally'],
+};
 export const OPOSTOS = [['nuncasome', 'sumico'], ['paciencia', 'dedo'], ['destino', 'adedo']];
 // Título do campeão que fez 2 ouros numa família (batalha.js). Cada um vale para qualquer tema da família,
 // inclusive os opostos (Grande sumiço e Sem parar; Paciência e Dedo nervoso; Só eu conheço e Gosto de turma).
@@ -22,21 +30,21 @@ const UM_ANO = 'o período de alguém tem menos de um ano';
 const LISTA = {
   volume: [
     ['horas', 'Maratonista', 'h', 0, 'corrida', 'Horas de música no período.', A],
-    ['plays', 'Play infinito', 'plays', 0, 'contagem', 'Plays de pelo menos 30 segundos.', { vazio: 'ninguém deu play' }],
-    ['dia', 'Dia mais insano', 'h num dia', 1, 'relogio', 'O dia em que mais ouviu, nas 24 horas.', { escala: 24, ...A }],
+    ['plays', 'Play infinito', 'plays', 0, 'contagem', 'Plays de pelo menos 30 segundos.', { vazio: 'ninguém deu play', desenho: 'vinil' }],
+    ['dia', 'Dia mais insano', 'h num dia', 1, 'relogio', 'O dia em que mais ouviu, nas 24 horas.', { escala: 24, desenho: 'horas24', ...A }],
     ['metralhadora', 'Metralhadora', 'plays num dia', 0, 'contagem', 'O dia com mais plays de cada um.', { vazio: 'ninguém deu play' }],
     ['cruzeiro', 'Ritmo de cruzeiro', 'min por dia com música', 0, 'corrida', 'Minutos de música, em média, nos dias em que ouviu.', A],
   ],
   variedade: [
     ['artistas', 'Explorador(a)', 'artistas', 0, 'contagem', 'Artistas diferentes que cada um ouviu.'],
-    ['musicas', 'Colecionador(a)', 'músicas', 0, 'contagem', 'Músicas diferentes na estante de cada um.'],
+    ['musicas', 'Colecionador(a)', 'músicas', 0, 'contagem', 'Músicas diferentes na estante de cada um.', { desenho: 'estante' }],
     ['buffet', 'Buffet livre', 'artistas num dia', 0, 'contagem', 'O dia com mais artistas diferentes.'],
     ['umavez', 'Uma vez e nunca mais', '% de músicas ouvidas uma vez', 1, 'porcentagem', 'Músicas que tocaram uma vez e não voltaram.', { ...P, vazio: 'ninguém ouviu uma música uma vez só' }],
     ['visita', 'Visita rápida', '% de artistas ouvidos uma vez', 1, 'porcentagem', 'Artistas com um play só no período.', { ...P, vazio: 'ninguém ouviu um artista uma vez só' }],
     ['elenco', 'Elenco rotativo', 'artistas a cada 100 plays', 1, 'contagem', 'Quantos artistas diferentes aparecem a cada 100 plays.', P],
   ],
   repeticao: [
-    ['repeteco', 'Repeteco', 'vezes a mesma música num dia', 0, 'contagem', 'A mesma música, repetida num dia só.', { minimo: 1, vazio: 'ninguém repetiu uma música no mesmo dia' }],
+    ['repeteco', 'Repeteco', 'vezes a mesma música num dia', 0, 'contagem', 'A mesma música, repetida num dia só.', { minimo: 1, vazio: 'ninguém repetiu uma música no mesmo dia', desenho: 'tally' }],
     ['fa', 'Fã nº 1', '% no artista favorito', 1, 'porcentagem', 'Fatia dos plays no artista favorito.', P],
     ['disco', 'Disco furado', 'vezes seguidas a mesma música', 0, 'sequencia', 'A mesma música, um play atrás do outro.', { minimo: 1, vazio: 'ninguém tocou uma música duas vezes seguidas' }],
     ['hino', 'Hino pessoal', 'plays na música nº 1', 0, 'contagem', 'Plays da música mais tocada de cada um.'],
@@ -45,12 +53,12 @@ const LISTA = {
     ['obra', 'Obra completa', 'músicas de um só artista', 0, 'contagem', 'Mais músicas diferentes de um mesmo artista.'],
   ],
   relogio: [
-    ['coruja', 'Coruja', '% na madrugada', 1, 'relogio', 'Fatia dos plays entre meia-noite e 6 h.', { ...P, vazio: 'ninguém ouviu de madrugada' }],
-    ['madrugador', 'Madrugador(a)', '% de manhã', 1, 'relogio', 'Fatia dos plays entre 6 h e meio-dia.', { ...P, vazio: 'ninguém ouviu de manhã' }],
-    ['almoco', 'Hora do almoço', '% no almoço', 1, 'relogio', 'Fatia dos plays entre meio-dia e 14 h.', { ...P, vazio: 'ninguém ouviu na hora do almoço' }],
-    ['tarde', 'Fim de tarde', '% no fim da tarde', 1, 'relogio', 'Fatia dos plays entre 17 h e 19 h.', { ...P, vazio: 'ninguém ouviu no fim da tarde' }],
-    ['noite', 'Trilha da noite', '% à noite', 1, 'relogio', 'Fatia dos plays entre 18 h e meia-noite.', { ...P, vazio: 'ninguém ouviu à noite' }],
-    ['espalhado', 'Relógio imprevisível', 'de 100 no espalhamento', 1, 'relogio', 'Quanto os plays se espalham pelas 24 horas: 100 é igual em todas.', P],
+    ['coruja', 'Coruja', '% na madrugada', 1, 'relogio', 'Fatia dos plays entre meia-noite e 6 h.', { ...P, vazio: 'ninguém ouviu de madrugada', desenho: 'lua' }],
+    ['madrugador', 'Madrugador(a)', '% de manhã', 1, 'relogio', 'Fatia dos plays entre 6 h e meio-dia.', { ...P, vazio: 'ninguém ouviu de manhã', janela: [6, 12] }],
+    ['almoco', 'Hora do almoço', '% no almoço', 1, 'relogio', 'Fatia dos plays entre meio-dia e 14 h.', { ...P, vazio: 'ninguém ouviu na hora do almoço', janela: [12, 14] }],
+    ['tarde', 'Fim de tarde', '% no fim da tarde', 1, 'relogio', 'Fatia dos plays entre 17 h e 19 h.', { ...P, vazio: 'ninguém ouviu no fim da tarde', janela: [17, 19] }],
+    ['noite', 'Trilha da noite', '% à noite', 1, 'relogio', 'Fatia dos plays entre 18 h e meia-noite.', { ...P, vazio: 'ninguém ouviu à noite', janela: [18, 24] }],
+    ['espalhado', 'Relógio imprevisível', 'de 100 no espalhamento', 1, 'relogio', 'Quanto os plays se espalham pelas 24 horas: 100 é igual em todas.', { ...P, janela: [0, 24] }],
   ],
   calendario: [
     ['fimdesemana', 'Fim de semana', '% no sábado e no domingo', 1, 'calendario', 'Fatia dos plays no sábado e no domingo.', { ...P, vazio: 'ninguém ouviu no fim de semana' }],
@@ -70,7 +78,7 @@ const LISTA = {
     ['maratona', 'Dias de maratona', 'dias com 3 h ou mais', 0, 'calendario', 'Dias com pelo menos 3 horas de música.', { vazio: 'ninguém ouviu 3 h num dia', ...A }],
   ],
   pulos: [
-    ['paciencia', 'Paciência', '% de músicas puladas', 1, 'porcentagem', 'Fatia de músicas puladas. Aqui, menos é melhor.', { ...P, menor: true, campos: ['pulos'] }],
+    ['paciencia', 'Paciência', '% de músicas puladas', 1, 'porcentagem', 'Fatia de músicas puladas. Aqui, menos é melhor.', { ...P, menor: true, campos: ['pulos'], desenho: 'casas' }],
     ['dedo', 'Dedo nervoso', '% de músicas puladas', 1, 'porcentagem', 'Fatia de músicas puladas antes do fim.', { ...P, vazio: 'ninguém pulou', campos: ['pulos'] }],
     ['ultimanota', 'Até a última nota', '% até o fim', 1, 'porcentagem', 'Fatia das faixas que tocaram até o fim.', { ...P, vazio: 'nenhuma música tocou até o fim', campos: ['motivo'] }],
     ['destino', 'Deixa o destino', '% no aleatório', 1, 'porcentagem', 'Fatia das reproduções no modo aleatório.', { ...P, vazio: 'ninguém usou o aleatório', campos: ['aleatorio'] }],
@@ -99,7 +107,7 @@ const LISTA = {
 };
 
 export const TEMAS = FAMILIAS.flatMap((familia) => LISTA[familia].map(([chave, titulo, unidade, casas, modelo, frase, extra]) => ({
-  chave, titulo, unidade, casas, modelo, frase, familia, vazio: 'ninguém ouviu', campos: [], pct: false, escala: null, aprox: false, ...extra,
+  chave, titulo, unidade, casas, modelo, frase, familia, vazio: 'ninguém ouviu', campos: [], pct: false, escala: null, aprox: false, desenho: DESENHOS[modelo][0], ...extra,
 })));
 export const TEMA = Object.fromEntries(TEMAS.map((t) => [t.chave, t]));
 

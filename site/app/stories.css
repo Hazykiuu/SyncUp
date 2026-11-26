@@ -383,11 +383,16 @@
 .sb-glifo { width: min(23cqw, 100%); height: auto; overflow: visible; }
 .sb-arco-fundo { fill: none; stroke: rgba(255, 255, 255, .14); stroke-width: 4; }
 .sb-arco { fill: none; stroke: var(--lut); stroke-width: 4; stroke-linecap: round; transform: rotate(-90deg); transform-origin: center; transform-box: fill-box; }
-.sb-fa .sb-arco, .sb-fa .sb-arco-fundo { stroke-width: 7; }
+.sb-d-anel .sb-arco, .sb-d-anel .sb-arco-fundo { stroke-width: 7; } .sb-d-janela .sb-arco, .sb-d-janela .sb-arco-fundo { stroke-width: 5; }
 .sb-vinil { fill: #0d0d0d; stroke: rgba(255, 255, 255, .12); stroke-width: .6; } .sb-sulco { fill: none; stroke: rgba(255, 255, 255, .08); stroke-width: .6; }
 .sb-selo-disco { fill: var(--lut); }
 .sb-hora { stroke: rgba(255, 255, 255, .16); stroke-width: 2.2; stroke-linecap: round; } .sb-hora.acesa { stroke: var(--lut); }
 .sb-lua { fill: rgba(255, 255, 255, .1); } .sb-lua.acesa { fill: var(--lut); }
+/* Relógio novo: as horas do tema em branco no mostrador; a fatia de cada um no anel de dentro. */
+.sb-hora.na-janela { stroke: rgba(255, 255, 255, .62); }
+/* Calendário: folha com cabeçalho e 35 dias; os acesos na cor do lutador. */
+.sb-folha { fill: rgba(255, 255, 255, .04); stroke: rgba(255, 255, 255, .16); stroke-width: .6; } .sb-folha-topo { fill: rgba(255, 255, 255, .14); }
+.sb-dia { fill: rgba(255, 255, 255, .12); } .sb-dia.acesa { fill: var(--lut); }
 .sb-estante { list-style: none; margin: 1cqw 0 0; padding: 0; display: flex; align-items: flex-end; gap: 2.4cqw; height: 62cqw; margin-block: 2cqw; }
 .sb-estante li { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 1cqw; min-width: 0; height: 100%; font-size: 3cqw; }
 .sb-estante .sb-nome { max-width: 100%; }
@@ -404,12 +409,13 @@
   .st-slot.ativo .lider .sb-corredor { animation-duration: 1.05s; }
   .st-slot.ativo .sb-pontos .aceso, .st-slot.ativo .sb-corrente .aceso, .st-slot.ativo .sb-casas .pulou, .st-slot.ativo .sb-tally i {
     animation: sb-pop .3s var(--sai) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo) + var(--n, 0) * 25ms); }
+  .st-slot.ativo .sb-dia.acesa { animation: sb-acende .3s var(--sai) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo) + var(--n, 0) * 12ms); }
   .st-slot.ativo .sb-hora.acesa { animation: sb-acende .3s var(--sai) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo) + var(--n, 0) * 25ms); }
   .st-slot.ativo .sb-lombada { animation: st-cresce-y .8s var(--sai) both; animation-delay: calc(400ms + var(--i, 0) * var(--passo)); }
   .st-slot.ativo .lider .sb-lombada { animation-duration: .95s; }
 }
 @media (prefers-reduced-motion: reduce) { .st-slot.ativo .sb-podio .sb-bloco, .st-slot.ativo .sb-podio li > * { animation: none; } }
-@media (forced-colors: active) { .sb-pontos i, .sb-corrente i, .sb-casas i, .sb-tally b, .sb-lombada, .sb-corredor::after, .sb-arco, .sb-hora, .sb-lua { forced-color-adjust: none; } }
+@media (forced-colors: active) { .sb-pontos i, .sb-corrente i, .sb-casas i, .sb-tally b, .sb-lombada, .sb-corredor::after, .sb-arco, .sb-hora, .sb-lua, .sb-dia { forced-color-adjust: none; } }
 /* Alto contraste: progresso dos stories e colunas com as cores do sistema (sem forced-color-adjust: none). */
 @media (forced-colors: active) {
   .st-seg { border: 1px solid CanvasText; }

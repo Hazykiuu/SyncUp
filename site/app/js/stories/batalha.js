@@ -3,7 +3,7 @@
 // Selos e títulos na tipografia do Kicker; pódio sem mola nem quique (trava anti-slop do plano).
 import { html } from 'preact-htm';
 import { TEMA } from '../batalha-temas.js';
-import { fmtNum, NOTA_APROX } from './logica.js';
+import { acesas, fmtNum, NOTA_APROX, piso } from './logica.js';
 import { Contador, Entra, Kicker, Slide } from './slides.js';
 
 const rgb = (hex) => [1, 3, 5].map((k) => parseInt(hex.slice(k, k + 2), 16));
@@ -28,36 +28,50 @@ function Abertura({ b, i }) {
   <//>`;
 }
 
-// Cada rodada tem um desenho ligado ao que mede (pista, discos, constelação…), na ordem da classificação.
-// Frações: do maior valor da rodada, ou da escala do registro (% e 24 h). Animações: só transform, opacidade e traço.
-// Frase, escala e nota "≈" vêm do registro (batalha-temas.js); os temas novos usam a pista do Maratonista até o passo 6.
-const arco = (f, classe = '') => html`<circle class="sb-arco-fundo" cx="20" cy="20" r="15" pathLength="1" />
-  <circle class=${`sb-arco ${classe}`} cx="20" cy="20" r="15" pathLength="1" style=${{ '--f': f, strokeDasharray: `${f} 1` }} />`;
-const GLIFOS = {
-  // Pequenos múltiplos: um desenho por pessoa, numa grade.
-  plays: (f) => html`<svg viewBox="0 0 40 40" class="sb-glifo"><circle cx="20" cy="20" r="18" class="sb-vinil" />
-    ${[13, 9.5].map((r) => html`<circle cx="20" cy="20" r=${r} class="sb-sulco" />`)}${arco(f)}<circle cx="20" cy="20" r="3.4" class="sb-selo-disco" /></svg>`,
-  fa: (f) => html`<svg viewBox="0 0 40 40" class="sb-glifo">${arco(f, 'grosso')}</svg>`,
-  dia: (f) => html`<svg viewBox="0 0 40 40" class="sb-glifo">${Array.from({ length: 24 }, (_, h) => {
-    const a = (h / 24) * 2 * Math.PI, x = 20 + 17 * Math.sin(a), y = 20 - 17 * Math.cos(a), x2 = 20 + 14.5 * Math.sin(a), y2 = 20 - 14.5 * Math.cos(a);
-    return html`<line x1=${x.toFixed(1)} y1=${y.toFixed(1)} x2=${x2.toFixed(1)} y2=${y2.toFixed(1)} class=${h < Math.round(f * 24) ? 'sb-hora acesa' : 'sb-hora'} style=${{ '--n': h }} />`;
-  })}</svg>`,
-  coruja: (f, k) => html`<svg viewBox="0 0 40 40" class="sb-glifo"><defs><clipPath id=${`sb-lua-${k}`}><rect x="2" y="2" width=${(36 * f).toFixed(1)} height="36" class="sb-lua-luz" /></clipPath></defs>
-    <circle cx="20" cy="20" r="16" class="sb-lua" /><circle cx="20" cy="20" r="16" class="sb-lua acesa" clip-path=${`url(#sb-lua-${k})`} /></svg>`,
+// Cada rodada usa o desenho do seu modelo (registro: `desenho` em batalha-temas.js), na ordem da classificação.
+// Os 10 temas de antes guardam os desenhos já aprovados; os outros usam o padrão do modelo: pista (corrida), anel
+// (porcentagem), janela (relógio), folha (calendário), corrente (sequência) e pontos (contagem).
+// Frações: do maior valor da rodada, ou da escala do registro (% e 24 h). Valor maior que 0 sempre aparece (piso);
+// o número vem escrito ao lado. Animações: só transform, opacidade e traço.
+const arco = (f, classe = '', r = 15) => html`<circle class="sb-arco-fundo" cx="20" cy="20" r=${r} pathLength="1" />
+  ${f > 0 && html`<circle class=${`sb-arco ${classe}`} cx="20" cy="20" r=${r} pathLength="1" style=${{ '--f': f, strokeDasharray: `${f} 1` }} />`}`; // 0: sem ponto
+const traco = (h, classe) => {
+  const a = (h / 24) * 2 * Math.PI, s = Math.sin(a), c = Math.cos(a);
+  return html`<line x1=${(20 + 17 * s).toFixed(1)} y1=${(20 - 17 * c).toFixed(1)} x2=${(20 + 14.5 * s).toFixed(1)} y2=${(20 - 14.5 * c).toFixed(1)} class=${classe} style=${{ '--n': h }} />`;
 };
-// Lineares: uma linha por pessoa.
+const HORAS = Array.from({ length: 24 }, (_, h) => h);
+// Pequenos múltiplos: um desenho por pessoa, numa grade. (f, v, k, tema)
+const GLIFOS = {
+  vinil: (f, v) => html`<svg viewBox="0 0 40 40" class="sb-glifo"><circle cx="20" cy="20" r="18" class="sb-vinil" />
+    ${[13, 9.5].map((r) => html`<circle cx="20" cy="20" r=${r} class="sb-sulco" />`)}${arco(piso(v, f, 0.04))}<circle cx="20" cy="20" r="3.4" class="sb-selo-disco" /></svg>`,
+  anel: (f, v) => html`<svg viewBox="0 0 40 40" class="sb-glifo">${arco(piso(v, f, 0.04), 'grosso')}</svg>`,
+  horas24: (f, v) => html`<svg viewBox="0 0 40 40" class="sb-glifo">${HORAS.map((h) => traco(h, h < acesas(v, f, 24) ? 'sb-hora acesa' : 'sb-hora'))}</svg>`,
+  lua: (f, v, k, t) => html`<svg viewBox="0 0 40 40" class="sb-glifo"><defs><clipPath id=${`sb-lua-${t.chave}-${k}`}><rect x="2" y="2" width=${(36 * piso(v, f, 0.06)).toFixed(1)} height="36" class="sb-lua-luz" /></clipPath></defs>
+    <circle cx="20" cy="20" r="16" class="sb-lua" /><circle cx="20" cy="20" r="16" class="sb-lua acesa" clip-path=${`url(#sb-lua-${t.chave}-${k})`} /></svg>`,
+  // Relógio: as horas do tema marcadas no mostrador e, dentro, o anel da fatia de cada um.
+  janela: (f, v, k, t) => html`<svg viewBox="0 0 40 40" class="sb-glifo">${HORAS.map((h) => traco(h, h >= t.janela[0] && h < t.janela[1] ? 'sb-hora na-janela' : 'sb-hora'))}
+    ${arco(piso(v, f, 0.04), 'grosso', 9)}</svg>`,
+  // Calendário: uma folha de 35 dias; acende, linha a linha, a fração de cada um.
+  folha: (f, v) => {
+    const n = acesas(v, f, 35);
+    return html`<svg viewBox="0 0 40 40" class="sb-glifo"><rect x="3" y="4" width="34" height="33" rx="3" class="sb-folha" /><rect x="3" y="4" width="34" height="6" rx="3" class="sb-folha-topo" />
+      ${Array.from({ length: 35 }, (_, d) => html`<rect x=${(4.9 + (d % 7) * 4.5).toFixed(1)} y=${(12.6 + Math.floor(d / 7) * 4.5).toFixed(1)} width="3.2" height="3.2" rx=".6"
+        class=${d < n ? 'sb-dia acesa' : 'sb-dia'} style=${{ '--n': d }} />`)}</svg>`;
+  },
+};
+// Lineares: uma linha por pessoa. (f, v, maior)
 const LINHAS = {
-  horas: (f) => html`<span class="sb-pista"><i class="sb-corredor" style=${{ '--f': f }}></i></span>`,
-  artistas: (f) => html`<span class="sb-pontos">${Array.from({ length: 20 }, (_, n) => html`<i class=${n < Math.max(1, Math.round(f * 20)) ? 'aceso' : ''} style=${{ '--n': n }}></i>`)}</span>`,
-  sequencia: (f) => html`<span class="sb-corrente">${Array.from({ length: 14 }, (_, n) => html`<i class=${n < Math.max(1, Math.round(f * 14)) ? 'aceso' : ''} style=${{ '--n': n }}></i>`)}</span>`,
-  repeteco: (f, v, maior) => {
-    const marcas = maior <= 25 ? v : Math.round(f * 25);
+  pista: (f, v) => html`<span class="sb-pista">${v > 0 && html`<i class="sb-corredor" style=${{ '--f': f }}></i>`}</span>`,
+  pontos: (f, v) => html`<span class="sb-pontos">${Array.from({ length: 20 }, (_, n) => html`<i class=${n < acesas(v, f, 20) ? 'aceso' : ''} style=${{ '--n': n }}></i>`)}</span>`,
+  corrente: (f, v) => html`<span class="sb-corrente">${Array.from({ length: 14 }, (_, n) => html`<i class=${n < acesas(v, f, 14) ? 'aceso' : ''} style=${{ '--n': n }}></i>`)}</span>`,
+  tally: (f, v, maior) => {
+    const marcas = maior <= 25 ? v : acesas(v, f, 25);
     return html`<span class="sb-tally">${Array.from({ length: Math.ceil(marcas / 5) }, (_, g) => {
       const n = Math.min(5, marcas - g * 5);
       return html`<i class=${`g${n}`} style=${{ '--n': g }}>${Array.from({ length: Math.min(n, 4) }, () => html`<b></b>`)}${n === 5 && html`<s></s>`}</i>`;
     })}</span>`;
   },
-  paciencia: (f) => html`<span class="sb-casas">${Array.from({ length: 10 }, (_, n) => html`<i class=${n < Math.round(f * 10) ? 'pulou' : ''} style=${{ '--n': n }}></i>`)}</span>`,
+  casas: (f, v) => html`<span class="sb-casas">${Array.from({ length: 10 }, (_, n) => html`<i class=${n < acesas(v, f, 10) ? 'pulou' : ''} style=${{ '--n': n }}></i>`)}</span>`,
 };
 
 function Rodada({ b, r, i }) {
@@ -68,21 +82,21 @@ function Rodada({ b, r, i }) {
   const escala = tema.escala ?? maior;
   const fracao = (v) => Math.min(1, v / escala);
   const pessoa = (k) => b.lutadores[k];
+  const d = tema.desenho;
   let corpo;
-  if (GLIFOS[r.chave]) {
-    corpo = html`<ol class=${`sb-grade sb-${r.chave}`}>${ordem.map((k, n) => html`
+  if (GLIFOS[d]) {
+    corpo = html`<ol class=${`sb-grade sb-${r.chave} sb-d-${d}`}>${ordem.map((k, n) => html`
       <li class=${`entra${r.posicoes[k] === 1 ? ' lider' : ''}`} style=${{ '--i': 3 + n * 0.4, '--lut': pessoa(k).cor }}>
-        ${GLIFOS[r.chave](fracao(r.valores[k]), k)}<span class="sb-nome">${pessoa(k).nome}</span><em>${fmtNum(r.valores[k], r.casas)}</em></li>`)}</ol>`;
-  } else if (r.chave === 'musicas') {
-    corpo = html`<ol class="sb-estante">${ordem.map((k, n) => html`
-      <li class=${`entra${r.posicoes[k] === 1 ? ' lider' : ''}`} style=${{ '--i': 3 + n * 0.4, '--lut': pessoa(k).cor, '--f': Math.max(0.03, fracao(r.valores[k])) }}>
+        ${GLIFOS[d](fracao(r.valores[k]), r.valores[k], k, tema)}<span class="sb-nome">${pessoa(k).nome}</span><em>${fmtNum(r.valores[k], r.casas)}</em></li>`)}</ol>`;
+  } else if (d === 'estante') {
+    corpo = html`<ol class=${`sb-estante sb-${r.chave}`}>${ordem.map((k, n) => html`
+      <li class=${`entra${r.posicoes[k] === 1 ? ' lider' : ''}`} style=${{ '--i': 3 + n * 0.4, '--lut': pessoa(k).cor, '--f': piso(r.valores[k], fracao(r.valores[k]), 0.03) }}>
         <em>${fmtNum(r.valores[k], r.casas)}</em><span class="sb-lombada"></span><span class="sb-nome">${pessoa(k).nome}</span></li>`)}</ol>`;
   } else {
-    const linha = LINHAS[r.chave] || LINHAS.horas;
-    corpo = html`<ol class=${`sb-linhas sb-${r.chave}`}>${ordem.map((k, n) => html`
+    corpo = html`<ol class=${`sb-linhas sb-${r.chave} sb-d-${d}`}>${ordem.map((k, n) => html`
       <li class=${`entra${r.posicoes[k] === 1 ? ' lider' : ''}`} style=${{ '--i': 3 + n * 0.4, '--lut': pessoa(k).cor }}>
         <span class="sb-pos">${r.posicoes[k]}º</span><span class="sb-nome">${pessoa(k).nome}</span>
-        ${linha(fracao(r.valores[k]), r.valores[k], maior)}<em>${fmtNum(r.valores[k], r.casas)}</em></li>`)}</ol>`;
+        ${LINHAS[d](fracao(r.valores[k]), r.valores[k], maior)}<em>${fmtNum(r.valores[k], r.casas)}</em></li>`)}</ol>`;
   }
   return html`<${Slide} tipo=${`rodada-${r.chave}`} classe=${`sb sb-r-${r.chave}`} i=${i} cor=${rgb(pessoa(venc[0]).cor)}>
     <${Entra} i=${0} classe="sb-cabeca"><span class="st-kicker">${r.titulo}</span>${r.destaque && html`<span class="sb-selo">${SELOS[r.destaque]}</span>`}<//>

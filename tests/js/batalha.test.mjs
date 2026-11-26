@@ -624,3 +624,17 @@ test('textos legíveis sobre a superfície sólida da 1.19 (#181818)', () => {
   assert.ok(contraste('#e6e6e6', '#181818') >= 4.5, contraste('#e6e6e6', '#181818').toFixed(2));
   assert.ok(contraste('#b3b3b3', '#181818') >= 4.5, contraste('#b3b3b3', '#181818').toFixed(2)); // --sub
 });
+
+test('registro: cada tema tem um desenho do seu modelo; os 10 de antes mantêm o desenho aprovado', async () => {
+  const { TEMAS, TEMA, DESENHOS, MODELOS } = await import('../../site/app/js/batalha-temas.js');
+  assert.deepEqual(Object.keys(DESENHOS), MODELOS);
+  for (const t of TEMAS) assert.ok(DESENHOS[t.modelo].includes(t.desenho), `${t.chave}: ${t.desenho} não é de ${t.modelo}`);
+  const antes = { horas: 'pista', plays: 'vinil', dia: 'horas24', artistas: 'pontos', musicas: 'estante', sequencia: 'corrente', repeteco: 'tally', fa: 'anel', coruja: 'lua', paciencia: 'casas' };
+  for (const [chave, desenho] of Object.entries(antes)) assert.equal(TEMA[chave].desenho, desenho, chave);
+  // Fora os 10, cada tema usa o desenho padrão do modelo (6 modelos, como no plano).
+  for (const t of TEMAS) if (!antes[t.chave]) assert.equal(t.desenho, DESENHOS[t.modelo][0], t.chave);
+  for (const t of TEMAS.filter((x) => x.desenho === 'janela')) {
+    const [ini, fim] = t.janela;
+    assert.ok(Number.isInteger(ini) && Number.isInteger(fim) && ini >= 0 && fim <= 24 && ini < fim, t.chave);
+  }
+});

@@ -3,6 +3,8 @@
 ## Não lançado
 
 ### Mudado
+- **Match, a escala da nota:** cada par diz que, nessa escala, 25% já é "Sintonia rara", e "Como a nota é calculada" explica a conta.
+- **Transparência reduzida:** o dock dos stories também fica sólido. No app para PC, os chips deixam de borrar o fundo.
 - **Cancelar o cálculo:** Dupla, Wrapped, Batalha e Match ganham o botão "Cancelar" enquanto leem e calculam.
 - **Privacidade, prazos de verdade:** o histórico do Last.fm guardado no navegador agora vence depois de 7 dias sem uso, e a página não diz mais "Fechou a página, sumiu". No app para PC, a limpeza passou a cumprir o prazo de 1 hora.
 - **"Capas e som" é uma escolha sua, antes:** a opção aparece no topo de cada modo, ligada por padrão e lembrada no navegador. Desligada, nada é pedido ao Spotify, ao MusicBrainz nem à Apple. Os textos que diziam "Nada sai do seu aparelho" agora dizem o que sai.

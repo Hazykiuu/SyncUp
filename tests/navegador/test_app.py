@@ -273,3 +273,33 @@ def test_da_para_cancelar_o_calculo(page, site_url, modo):
     page.unroute(rota)
     exemplo.click()  # o envio seguinte funciona
     expect(page.locator('.resultado .st-player:visible').first).to_be_visible(timeout=TEMPO)
+
+
+def test_match_diz_em_que_escala_esta_a_nota(page, site_url):
+    """R2-07: 7% pode ser "Boa": cada par diz onde fica o topo da escala."""
+    page.goto(f'{site_url}/app/#match')
+    page.get_by_role('button', name='Ver um exemplo').locator('visible=true').click()
+    expect(page.locator('.dueto:visible').first).to_be_visible(timeout=TEMPO)
+    pares = page.locator('.dueto-par:visible').all()
+    assert pares
+    for par in pares:
+        expect(par.locator('.dueto-escala')).to_contain_text('25% já é sintonia rara')
+    expect(page.get_by_text('Como a nota é calculada').first).to_be_visible()
+
+
+def test_transparencia_reduzida_tira_todo_o_vidro(page, site_url):
+    """R2-08: com "transparência reduzida" no sistema, nada na tela fica borrado, nem o dock."""
+    page.context.new_cdp_session(page).send(
+        'Emulation.setEmulatedMedia',
+        {'features': [{'name': 'prefers-reduced-transparency', 'value': 'reduce'}]},
+    )
+    page.set_viewport_size({'width': 390, 'height': 844})
+    _abrir_exemplo(page, site_url, 'wrapped')
+    page.wait_for_timeout(1_500)  # a transição para o resultado troca os elementos
+    page.evaluate("document.querySelector('.resultado .st-player').scrollIntoView()")
+    expect(page.locator('.dock.visivel')).to_be_visible()
+    borrados = page.evaluate("""() => [...document.querySelectorAll('*')].filter((e) => {
+      const c = getComputedStyle(e), r = e.getBoundingClientRect();
+      return c.backdropFilter !== 'none' && r.width && r.bottom > 0 && r.top < innerHeight && c.visibility !== 'hidden' && +c.opacity > 0;
+    }).map((e) => String(e.className))""")
+    assert borrados == []

@@ -4,7 +4,7 @@ import { CORES } from './batalha.js';
 import { chegarPouco, mostrarResultado } from './chegada.js';
 import { Pessoa, Processando } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
-import { duetos, MAXIMO_PESSOAS, melhorPar, trilhaMatch } from './match.js';
+import { duetos, MAXIMO_PESSOAS, melhorPar, TOPO_DA_ESCALA, trilhaMatch } from './match.js';
 import { avisoPoster, compartilhar, desenharPosterMatch } from './poster.js';
 import { destravarSom, ICONE, SomStories, TRILHA_EXEMPLO } from './som.js';
 import { Dock } from './stories/dock.js';
@@ -33,6 +33,7 @@ function Dueto({ d, cor }) {
     ${d.linhas.map((l) => html`<div class="dueto-par">
       ${trio && html`<p class="dueto-subpar">${l.x} × ${l.y}</p>`}
       <p class="dueto-nota"><b>${pct(l.pontuacao)}</b><span>${l.nivel}</span></p>
+      <p class="dueto-escala">Nesta escala, ${TOPO_DA_ESCALA}% já é sintonia rara.</p>
       <p class="dueto-frase">${l.descricao}</p>
       <${Faixas} l=${l} cor=${cor} />
     </div>`)}
@@ -75,6 +76,8 @@ function ResultadoMatch({ dados: { r, fontes, fora, exemplo } }) {
     <//>
     <p class="batalha-resumo">Média dos pares: <b>${pct(r.pontuacao_media_pares)}</b>. Os pares somam a maior compatibilidade possível do grupo${r.nomes.length % 2 ? '; com número ímpar, uma pessoa entra no par onde mais combina e vira trio' : ''}.</p>
     <ul class="duetos">${duetos(r).map((d) => html`<${Dueto} d=${d} cor=${(n) => cores[n]} />`)}</ul>
+    <details class="superficie detalhe"><summary>Como a nota é calculada</summary>
+      <p>É o cosseno entre os rankings de artistas das duas pessoas, em que as primeiras posições pesam mais. Rankings de 50 artistas se repetem pouco, mesmo entre amigos, por isso a escala é baixa. A barra de cada par mede outra coisa: os artistas que as duas listas têm em comum.</p></details>
     <details class="superficie detalhe"><summary>Com quem cada um mais combina</summary>
       <div class="tabela-rolagem" role="region" aria-label="Com quem cada um mais combina" tabindex="0">
         <table class="placar"><thead><tr><th scope="col">Pessoa</th><th scope="col">Fonte</th><th scope="col">1º match</th><th scope="col">2º match</th></tr></thead>

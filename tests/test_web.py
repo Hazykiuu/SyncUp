@@ -251,3 +251,52 @@ def test_simples_troca_nan_e_numpy() -> None:
         'b': 3,
         'c': [None, 1.5],
     }
+
+
+def _regras(caminho: Path) -> dict[str, set[str]]:
+    texto = re.sub(r'/\*.*?\*/', '', caminho.read_text(encoding='utf-8'), flags=re.S)
+    texto = re.sub(r'@keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}', '', texto)
+    regras: dict[str, set[str]] = {}
+    for seletor, corpo in re.findall(r'([^{}@;]+)\{([^{}]*)\}', texto):
+        chave = ' '.join(seletor.split())
+        regras.setdefault(chave, set()).add(re.sub(r'\s+', '', corpo).rstrip(';'))
+    return regras
+
+
+# Diferenças de propósito entre o recorte do navegador e o app para PC.
+NUCLEO_DIFERENTE = {
+    ':root',  # os tokens têm teste próprio (R2-10)
+    '.su-race', '.su-race-progress::before', '.su-stories', '.su-stories:not(.su-js) .su-story',
+    '.su-js .su-story.ativo',  # no navegador o stories.css desliga a animação do fundo
+    '.su-arch-detail', '.su-arch-detail li',
+}  # fmt: skip
+
+
+def test_nucleo_css_e_o_mesmo_recorte_do_styles_css() -> None:
+    """R2-09: uma correção num lado não pode ficar sem chegar ao outro."""
+    nucleo, pc = _regras(RAIZ / 'site/app/nucleo.css'), _regras(RAIZ / 'styles.css')
+    comuns = set(nucleo) & set(pc)
+    assert len(comuns) > 60
+    diferentes = {s for s in comuns if not nucleo[s] & pc[s]}
+    assert sorted(diferentes - NUCLEO_DIFERENTE) == []
+    assert sorted(NUCLEO_DIFERENTE - diferentes - {':root'}) == [], (
+        'tire da lista o que voltou a ser igual'
+    )
+
+
+def _tokens(caminho: str) -> dict[str, str]:
+    texto = (RAIZ / caminho).read_text(encoding='utf-8')
+    return {n: v.strip().lower() for n, v in re.findall(r'(--[\w-]+)\s*:\s*([^;}]+)', texto)}
+
+
+def test_tokens_de_cor_iguais_no_pc_e_no_site() -> None:
+    """R2-10: duas famílias de nomes, os mesmos valores."""
+    pc, site, nucleo = (
+        _tokens(a) for a in ('styles.css', 'site/estilo.css', 'site/app/nucleo.css')
+    )
+    pares = [('--su-bg', '--sup-1'), ('--su-card', '--sup-2'), ('--su-text', '--texto'),
+             ('--su-sub', '--sub'), ('--su-green', '--verde'), ('--su-violet', '--roxo')]  # fmt: skip
+    for no_pc, no_site in pares:
+        assert pc[no_pc] == site[no_site], (no_pc, no_site)
+    for fixo in ('--su-card', '--su-line'):
+        assert nucleo[fixo] == pc[fixo], fixo

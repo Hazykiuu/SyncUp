@@ -524,6 +524,7 @@ html[data-luz="b"] body::before { opacity: 0; }
 .dueto-nota b { font-size: clamp(2.6rem, 9vw, 4rem); font-weight: 900; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
 .dueto-nota span { font-weight: 800; }
 .dueto-frase { color: var(--sub); text-wrap: pretty; }
+.dueto-escala { color: var(--sub); font-size: .85rem; }
 .dueto-texto { display: grid; gap: var(--e1) var(--e4); max-width: 46rem; margin: 0; }
 @media (min-width: 640px) { .dueto-texto { grid-template-columns: minmax(8rem, 13rem) 1fr; } }
 .dueto-texto dt { font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); padding-top: .25em; }
@@ -634,3 +635,6 @@ html[data-luz="b"] body::before { opacity: 0; }
 @keyframes entrada-resgate { from { opacity: 0; } to { opacity: 1; } }
 /* Depois da entrada, a logo do app pulsa com as barras juntas: o app abre "em sintonia". */
 body.sintonizado .vivo .logo i { animation-delay: -1.4s; }
+/* Sem transparência (preferência do sistema ou navegador sem backdrop-filter): o dock fica sólido. */
+@media (prefers-reduced-transparency: reduce) { .dock { background: #242424; -webkit-backdrop-filter: none; backdrop-filter: none; } }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .dock { background: #181818; } }

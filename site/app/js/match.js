@@ -23,6 +23,8 @@ const NIVEIS = [
   [0, 'Mundos diferentes', 'Quase nada em comum nos rankings enviados.'],
 ];
 
+export const TOPO_DA_ESCALA = NIVEIS[0][0]; // a tela mostra: a partir daqui é "Sintonia rara"
+
 // Contagem decrescente, depois as chaves em ordem de ponto de código (perfil_gosto._ranking).
 function ranking(contagem) {
   const cmp = (x, y) => { for (let k = 0; k < x.length; k++) { const c = compararTexto(x[k], y[k]); if (c) return c; } return 0; };

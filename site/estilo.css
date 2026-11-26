@@ -1,5 +1,6 @@
 /* Estilo compartilhado pela página inicial (index.html) e pelo app (app/). */
 @font-face { font-family: 'Figtree'; src: url('assets/Figtree.ttf') format('truetype'); font-weight: 300 900; font-display: swap; }
+/* O app para PC repete estas cores como --su-* (styles.css); tests/test_web.py compara os pares. */
 :root {
   /* Canvas e superfícies (escala do Spotify): o fundo é o mais escuro; cartões sólidos em --sup-1/--sup-2. */
   --canvas: #0a0a0c; --sup-1: #121212; --sup-2: #181818; --verde-hover: #3be477;

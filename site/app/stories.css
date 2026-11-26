@@ -66,7 +66,7 @@
 .st-lista li { display: grid; grid-template-columns: 5cqw 16cqw minmax(0, 1fr) auto; gap: 3cqw; align-items: center; }
 .st-pos { font-size: 4.6cqw; font-weight: 900; color: rgba(255, 255, 255, .7); }
 /* Capas em escada: a nº 1 maior. */
-.st-lista .st-capa, .st-capa-vazia { justify-self: center; width: 11cqw; font-size: 5cqw; }
+.st-lista .st-capa { justify-self: center; width: 11cqw; font-size: 5cqw; }
 .st-lista .st-capa.n1 { width: 16cqw; font-size: 7cqw; }
 .st-lista .st-capa.n2 { width: 13.5cqw; }
 .st-meta { display: grid; gap: .4cqw; min-width: 0; }
@@ -172,7 +172,6 @@
 .s-resumo .st-veu { background: none; }
 /* O bloco da pessoa fica no meio: o espaço livre se divide entre o topo e o pé. */
 .st-poster-topo + * { margin-top: auto !important; }
-.st-capa.pequena { width: 14cqw; font-size: 7cqw; border-radius: 50%; }
 /* "Sua trilha": a nº 1 em 2×2 e as outras 8 em volta; nomes fora das capas (regras do Spotify). */
 .st-mosaico { width: 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.6cqw; }
 .st-mosaico .st-capa { width: 100%; font-size: 7cqw; box-shadow: none; }

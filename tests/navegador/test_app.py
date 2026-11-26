@@ -109,3 +109,20 @@ def test_app_abre_sem_o_unpkg(page, site_url):
     page.route('https://unpkg.com/**', lambda rota: rota.abort())
     page.goto(f'{site_url}/app/#wrapped')
     expect(page.get_by_role('button', name='Montar meu Wrapped')).to_be_attached(timeout=TEMPO)
+
+
+def test_foco_do_teclado_nao_fica_sob_a_barra_no_celular(nova_pagina, site_url):
+    """R2-02 (WCAG 2.4.11): nenhum elemento focado fica inteiro atrás da barra de modos."""
+    pagina = nova_pagina(viewport={'width': 390, 'height': 844}, reduced_motion='reduce')
+    _abrir_exemplo(pagina, site_url, 'dupla').focus()
+    coberto = """() => { const e = document.activeElement;
+      if (!e || e === document.body || e.closest('.nav-app')) return null;
+      const r = e.getBoundingClientRect(), n = document.querySelector('.nav-app').getBoundingClientRect();
+      return r.top >= n.top - 1 && r.bottom <= n.bottom + 1 ? e.innerText.slice(0, 40) : null; }"""
+    cobertos = []
+    for _ in range(80):
+        pagina.keyboard.press('Tab')
+        pagina.wait_for_timeout(60)
+        if texto := pagina.evaluate(coberto):
+            cobertos.append(texto)
+    assert cobertos == []

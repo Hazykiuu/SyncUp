@@ -34,6 +34,9 @@ a.nav-item:hover { color: var(--texto); }
 .nav-site:hover { color: var(--texto); }
 
 @media (max-width: 899px) {
+  /* O foco do teclado não para atrás da barra (nem do dock, quando ele aparece): WCAG 2.4.11. */
+  html { --barra: calc(4.75rem + env(safe-area-inset-bottom, 0px)); scroll-padding-bottom: var(--barra); }
+  html:has(.dock.visivel) { scroll-padding-bottom: calc(var(--barra) + 4.5rem); }
   .nav-app { inset: auto 0 0; padding: var(--e1) max(var(--e2), env(safe-area-inset-right, 0px)) max(var(--e1), env(safe-area-inset-bottom, 0px)) max(var(--e2), env(safe-area-inset-left, 0px)); border-top: 1px solid var(--linha); }
   .nav-app > .marca, .nav-selo, .nav-site { display: none; }
   .nav-app ul { justify-content: space-around; }
@@ -499,7 +502,7 @@ html[data-luz="b"] body::before { opacity: 0; }
 .dock-mudo[aria-pressed="true"] { color: var(--sub); }
 .dock-poster { flex: none; min-height: 44px; }
 /* Celular: o dock fica acima da barra de modos. */
-@media (max-width: 899px) { .dock { bottom: calc(4.75rem + env(safe-area-inset-bottom)); } }
+@media (max-width: 899px) { .dock { bottom: var(--barra); } }
 @media (max-width: 479px) { .dock-poster { padding-inline: 1rem; } .dock.com-trecho .dock-poster { font-size: 0; gap: 0; } .dock.com-trecho .dock-poster svg { font-size: 1.1rem; } }
 /* Match: caixa de convites, código para copiar e o porquê de cada par. */
 .match-colar, .match-codigo { display: flex; flex-direction: column; gap: var(--e2); margin-top: var(--vao); }

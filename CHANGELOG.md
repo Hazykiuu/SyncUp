@@ -9,6 +9,7 @@
 - **Match com poucos dados:** com menos de 30 artistas em um dos rankings, a faixa vira "Amostra pequena" (a porcentagem continua). Antes, 1 artista em comum podia dar "Sintonia rara". As faixas passam a aparecer como provisórias, e o `VALIDACAO.md` registra de onde vieram.
 
 ### Corrigido
+- **Teclado no celular:** o item em foco não fica mais escondido atrás da barra de modos.
 - **Match sem dados comparáveis:** quem tem rankings só com nomes de pontuação ou emoji (como a banda "!!!") aparecia com 0% "Mundos diferentes", virava par e puxava a média do grupo. Agora sai do Match, com aviso, no PC e no navegador.
 
 ## [1.27.0] — 2026-11-24

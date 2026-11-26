@@ -1,6 +1,7 @@
 """App web de ponta a ponta: exemplo dos quatro modos, pré-leitura e "menos movimento"."""
 
 import re
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -126,3 +127,24 @@ def test_foco_do_teclado_nao_fica_sob_a_barra_no_celular(nova_pagina, site_url):
         if texto := pagina.evaluate(coberto):
             cobertos.append(texto)
     assert cobertos == []
+
+
+@pytest.mark.parametrize('nome, mensagem', [
+    ('quebrado.zip', 'inválido ou incompleto'),
+    ('grande.zip', 'passa de 64 MB'),
+    ('outro.json', 'Use o histórico estendido de áudio do Spotify'),
+])  # fmt: skip
+def test_erro_de_entrada_aparece_na_tela(page, site_url, tmp_path, nome, mensagem):
+    """R1-06: os erros de leitura do arquivo chegam à tela, num alerta."""
+    arquivo = tmp_path / nome
+    if nome == 'quebrado.zip':
+        arquivo.write_bytes(b'PK\x03\x04isto nao e um zip')
+    elif nome == 'outro.json':
+        arquivo.write_text('[{"x": 1}]', encoding='utf-8')
+    else:
+        with zipfile.ZipFile(arquivo, 'w', zipfile.ZIP_DEFLATED) as pacote:
+            pacote.writestr('Streaming_History_Audio_2023.json', '[]' + ' ' * (65 * 2**20))
+    page.goto(f'{site_url}/app/#wrapped')
+    tela = page.get_by_role('region', name='Seu histórico')
+    tela.locator('input[type=file]').first.set_input_files(arquivo)
+    expect(tela.get_by_role('alert').first).to_contain_text(mensagem, timeout=TEMPO)

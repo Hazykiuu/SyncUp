@@ -492,7 +492,7 @@ def criar_interface() -> gr.Blocks:
                             interactive=False, label='Diversidade e desigualdade observadas'
                         )
                         stats = gr.Dataframe(
-                            interactive=False, label='describe() · minutos por execução'
+                            interactive=False, label='Resumo dos minutos por reprodução'
                         )
                         gr.Markdown(
                             'Descartes exclusivos: podcast → duração → data → identificação → '
@@ -868,7 +868,7 @@ def criar_interface() -> gr.Blocks:
         )
         demo.load(resumo_html, None, meus_dados_html, api_visibility='private')
         gr.Markdown(
-            'Plays: ≥30 segundos. Horas e describe(): todas as execuções válidas. '
+            'Plays: ≥30 segundos. Horas e resumo dos minutos: todas as execuções válidas. '
             'O Ruzicka usa pesos absolutos e é sensível ao volume de escuta. ' + AVISO_TRACOS,
             elem_classes=['su-note', 'su-footer'],
         )

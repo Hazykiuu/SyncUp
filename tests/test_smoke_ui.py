@@ -57,3 +57,11 @@ def test_prazo_de_apagar_cumpre_o_que_o_texto_promete() -> None:
     frequencia, idade = map(int, re.search(r'delete_cache=\((\d+), (\d+)\)', layout).groups())
     assert frequencia + idade <= 3600
     assert 'em até 1 hora com o app aberto' in PRIVACIDADE and 'próxima vez' in PRIVACIDADE
+
+
+def test_textos_do_pc_sem_jargao_de_codigo() -> None:
+    """R2-14: "describe()" é nome de função, não é texto para quem usa."""
+    from pathlib import Path
+
+    layout = (Path(__file__).resolve().parents[1] / 'ui/layout.py').read_text(encoding='utf-8')
+    assert 'describe()' not in layout

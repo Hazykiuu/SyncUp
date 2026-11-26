@@ -3,6 +3,7 @@
 ## Não lançado
 
 ### Mudado
+- **App para PC:** a tabela e o rodapé deixam de falar em "describe()".
 - **Um nome por métrica:** "Escuta em comum", "Artistas em comum", "Favoritos em comum" e "Contagens em comum" no PC, no navegador e no cartão, com descrições que dizem o recorte usado.
 - **Match, a escala da nota:** cada par diz que, nessa escala, 25% já é "Sintonia rara", e "Como a nota é calculada" explica a conta.
 - **Transparência reduzida:** o dock dos stories também fica sólido. No app para PC, os chips deixam de borrar o fundo.

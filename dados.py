@@ -11,10 +11,11 @@ from concurrent.futures import ProcessPoolExecutor
 from dataclasses import asdict, dataclass, replace
 from functools import lru_cache
 from importlib.util import find_spec
-from multiprocessing import get_context
+from multiprocessing import get_context, parent_process
+from multiprocessing.connection import wait
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from threading import RLock
+from threading import RLock, Thread
 from typing import Any
 
 import pandas as pd
@@ -676,6 +677,19 @@ def habilitar_leitura_paralela(ativo: bool = True) -> None:
                 pass
 
 
+def _morrer_com_o_app() -> None:
+    """Roda em cada processo do pool: se o app for encerrado à força, ele não fica órfão."""
+    pai = parent_process()
+    if pai is None:
+        return
+
+    def vigiar() -> None:
+        wait([pai.sentinel])
+        os._exit(0)
+
+    Thread(target=vigiar, daemon=True).start()
+
+
 def _aquecer() -> None:
     """Tarefa vazia: força a criação do processo e a importação do pandas."""
 
@@ -698,7 +712,9 @@ def _executor(trabalhos: int) -> ProcessPoolExecutor | None:
     if maximo < 2 or trabalhos < 2:
         return None
     if _processos is None:
-        _processos = ProcessPoolExecutor(max_workers=maximo, mp_context=get_context('spawn'))
+        _processos = ProcessPoolExecutor(
+            max_workers=maximo, mp_context=get_context('spawn'), initializer=_morrer_com_o_app
+        )
     return _processos
 
 

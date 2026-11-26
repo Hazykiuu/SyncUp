@@ -14,6 +14,7 @@
 - **Match com poucos dados:** com menos de 30 artistas em um dos rankings, a faixa vira "Amostra pequena" (a porcentagem continua). Antes, 1 artista em comum podia dar "Sintonia rara". As faixas passam a aparecer como provisórias, e o `VALIDACAO.md` registra de onde vieram.
 
 ### Corrigido
+- **Convite de versão futura:** o SyncUp pede para atualizar o app, em vez de dizer que aquilo não parece um convite.
 - **Convite alterado:** uma música em formato errado recusa o convite, em vez de sumir sem aviso.
 - **Arquivo grande demais no navegador:** a mensagem passa a indicar o app para PC, em vez de pedir o histórico que a pessoa já enviou.
 - **Datas incomuns:** o navegador e o app para PC aceitam e recusam os mesmos formatos de data.

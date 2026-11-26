@@ -17,11 +17,15 @@ from __future__ import annotations
 import base64
 import binascii
 import json
+import re
 import zlib
 
 from perfil_gosto import PERIODOS, TAMANHO_RANKING, PerfilGosto, agora_iso
 
 PREFIXO = 'SYNCUP1.'
+VERSAO = 1  # campo opcional "v" do JSON; sem ele, vale 1
+QUALQUER_VERSAO = re.compile(r'SYNCUP(\d+)\.')
+VERSAO_NOVA = 'Este convite foi feito numa versão mais nova do SyncUp. Atualize o app para ler.'
 MAXIMO_CODIGO = 20_000  # caracteres: um código real tem ~3 mil
 MAXIMO_JSON = 100_000  # bytes depois de descompactar: barra "zip bomb" no código
 MAXIMO_NOME = 60
@@ -65,6 +69,9 @@ def _musica(valor: object) -> dict[str, str]:
 def ler_convite(codigo: str) -> PerfilGosto:
     """Perfil de um código de convite; ``ValueError`` com mensagem em português se inválido."""
     codigo = ''.join((codigo or '').split())  # tolera quebras de linha do aplicativo de mensagem
+    prefixo = QUALQUER_VERSAO.match(codigo)
+    if prefixo and int(prefixo[1]) > VERSAO:
+        raise ValueError(VERSAO_NOVA)
     if not codigo.startswith(PREFIXO):
         raise ValueError('Isso não parece um convite do SyncUp (ele começa com "SYNCUP1.").')
     if len(codigo) > MAXIMO_CODIGO:
@@ -79,6 +86,10 @@ def ler_convite(codigo: str) -> PerfilGosto:
         dados = json.loads(texto.decode('utf-8'))
         if not isinstance(dados, dict):
             raise ValueError
+        versao = dados.get('v', VERSAO)
+        if type(versao) is not int or versao < 1:
+            raise ValueError
+        futuro = versao > VERSAO
         nome = _texto(dados.get('n'), MAXIMO_NOME)
         artistas, musicas = dados.get('a'), dados.get('m')
         if not isinstance(artistas, dict) or not isinstance(musicas, dict):
@@ -89,6 +100,8 @@ def ler_convite(codigo: str) -> PerfilGosto:
         raise ValueError(
             'O convite está incompleto ou foi alterado. Copie o código inteiro de novo.'
         ) from erro
+    if futuro:  # fora do try: não é convite alterado
+        raise ValueError(VERSAO_NOVA)
     if not any(top_artistas.values()):
         raise ValueError(f'O convite de {nome} não tem nenhum ranking de artistas.')
     return PerfilGosto(nome, 'convite', agora_iso(), top_artistas, top_musicas)
@@ -101,7 +114,7 @@ def separar_convites(texto: str) -> list[str]:
     """
     codigos: list[str] = []
     for pedaco in (texto or '').split():
-        if pedaco.startswith(PREFIXO) or not codigos:
+        if QUALQUER_VERSAO.match(pedaco) or not codigos:
             codigos.append(pedaco)
         else:
             codigos[-1] += pedaco

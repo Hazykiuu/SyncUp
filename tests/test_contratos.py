@@ -23,6 +23,7 @@ import convite
 import dados
 import perfil_gosto
 import recursos
+import ui.dupla
 import wrapped
 from metricas import cosseno, jaccard, jaccard_ponderado, rbo
 from tests.test_paridade_wrapped import NODE, RAIZ
@@ -179,3 +180,13 @@ def test_invariantes_das_metricas_nos_dois_motores() -> None:
         assert all(-1e-12 <= x <= 1 + 1e-12 for x in ab + ab_js)
         assert _metricas(a, b, ra, rb) == ab and de_novo == ab_js
         assert ab_js == tol(ab, abs=1e-12)
+
+
+def test_telas_do_pc_e_do_navegador_usam_a_mesma_ponderacao() -> None:
+    """R3-01: só as telas; a API (analise.comparar) segue em 'bruta' por causa dos testes e de quem a chama."""
+    web = re.search(r"ponderacao: '(\w+)'", _fonte('opcoes.js')).group(1)
+    layout = (RAIZ / 'ui/layout.py').read_text(encoding='utf-8')
+    pc = re.findall(r"value=(.+?),\s*label='Pondera", layout)
+    assert web == 'log1p' and pc and set(pc) == {'PONDERACAO_DAS_TELAS'}
+    assert ui.dupla.PONDERACAO_DAS_TELAS == web
+    assert inspect.signature(analise.comparar).parameters['ponderacao'].default == 'bruta'

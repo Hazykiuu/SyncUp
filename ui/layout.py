@@ -15,6 +15,7 @@ from perfis import AVISO_TRACOS, LIMIAR_FAVORITOS, LIMIAR_MADRUGADA, LIMIAR_REPE
 from ui.comum import (
     CONCORRENCIA,
     OPCOES_PONDERACAO,
+    PONDERACAO_DAS_TELAS,
     _limpar_exportacoes,
 )
 from ui.dupla import (
@@ -360,7 +361,7 @@ def criar_interface() -> gr.Blocks:
                     comum = gr.Checkbox(value=True, label='Período coberto pelos dois históricos')
                     peso = gr.Dropdown(
                         choices=OPCOES_PONDERACAO,
-                        value='bruta',
+                        value=PONDERACAO_DAS_TELAS,
                         label='Ponderação do cosseno e Ruzicka',
                     )
                     recente = gr.Checkbox(
@@ -800,7 +801,7 @@ def criar_interface() -> gr.Blocks:
                     cg = gr.Checkbox(value=True, label='Período comum a todos os perfis')
                     pg = gr.Dropdown(
                         choices=OPCOES_PONDERACAO,
-                        value='bruta',
+                        value=PONDERACAO_DAS_TELAS,
                         label='Ponderação do cosseno do grupo',
                     )
                     grupo = gr.Button('Comparar grupo', variant='primary', elem_classes='su-play')

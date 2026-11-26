@@ -13,6 +13,7 @@ import gradio as gr
 
 from apresentacao import (  # noqa: F401 (reexportados para as telas)
     OPCOES_PONDERACAO,
+    PONDERACAO_DAS_TELAS,
     TEXTO_LIMIARES,
     _configuracao,
     _linhas,

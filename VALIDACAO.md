@@ -187,6 +187,10 @@ Não há um corte óbvio na curva: 30 é uma escolha a partir dela. Os 12 perfis
 
 A reamostragem mede o quanto o resultado depende de poucos plays. Ela não diz se o trecho representa o resto da vida da pessoa.
 
+## Ponderação padrão das telas (2026-11-26)
+
+As telas do PC e do navegador usam `log1p` por padrão (escolha do Carlos). No estudo abaixo, o cosseno bruto errou 17% das vezes ao comparar as duas metades do tempo de cada pessoa, e o `log1p` acertou todas. A API Python (`analise.comparar`) e o motor JS continuam com `bruta` quando ninguém passa a opção.
+
 ## Estudo de similaridade com 12 históricos (2026-11-16)
 
 Históricos reais, usados com autorização e guardados fora do repositório. Método: dividir o histórico de cada pessoa em duas partes e ver se a medida aponta a própria pessoa como a mais parecida.

@@ -21,6 +21,8 @@ from wrapped import Wrapped, wrapped_de_arquivos
 if TYPE_CHECKING:
     from plotly.graph_objects import Figure
 
+# O mesmo padrão do navegador (opcoes.js); a API (analise.comparar) continua em 'bruta' (VALIDACAO.md).
+PONDERACAO_DAS_TELAS = 'log1p'
 OPCOES_PONDERACAO = [
     ('Bruta (x)', 'bruta'),
     ('Raiz quadrada (√x)', 'raiz'),

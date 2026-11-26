@@ -128,3 +128,21 @@ def test_gerar_convite_pede_zip_e_nome(tmp_path) -> None:
         ui.match.gerar_meu_convite(None, 'Bia', *OPCOES)
     with pytest.raises(Error, match='seu nome'):
         ui.match.gerar_meu_convite([_historico(tmp_path, 'x', ['X'])], ' ', *OPCOES)
+
+
+# R1-10: música malformada é sinal de convite alterado, como artista malformado.
+@pytest.mark.parametrize('musica', ['lixo', [1], ['a', 'b', 'c'], {'x': 1}])
+def test_musica_malformada_recusa_o_convite(musica) -> None:
+    import base64
+    import json
+    import zlib
+
+    from convite import PREFIXO, ler_convite
+
+    dados = {'n': 'Teste', 'a': {'short_term': ['Banda A']},
+             'm': {'short_term': [['Faixa 1', 'Banda A'], musica]}}  # fmt: skip
+    codigo = PREFIXO + base64.urlsafe_b64encode(
+        zlib.compress(json.dumps(dados).encode())
+    ).decode().rstrip('=')
+    with pytest.raises(ValueError, match='incompleto ou foi alterado'):
+        ler_convite(codigo)

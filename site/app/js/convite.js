@@ -49,6 +49,10 @@ function lista(v) {
   return v;
 }
 const objeto = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+function musica(v) {
+  if (!Array.isArray(v) || v.length !== 2) throw new Error(ALTERADO);
+  return { musica: texto(v[0]), artista: texto(v[1]) };
+}
 
 export async function lerConvite(codigo) {
   codigo = (codigo || '').replace(/\s+/g, ''); // tolera quebras de linha do aplicativo de mensagem
@@ -64,7 +68,7 @@ export async function lerConvite(codigo) {
     nome = texto(dados.n, MAXIMO_NOME);
     top_artistas = Object.fromEntries(PERIODOS.map((p) => [p, lista(dados.a[p] ?? []).map((a) => texto(a))]));
     top_musicas = Object.fromEntries(PERIODOS.map((p) => [p, lista(dados.m[p] ?? [])
-      .filter((m) => Array.isArray(m) && m.length === 2).map(([musica, artista]) => ({ musica: texto(musica), artista: texto(artista) }))]));
+      .map(musica)]));
   } catch {
     throw new Error(ALTERADO);
   }

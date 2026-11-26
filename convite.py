@@ -56,6 +56,12 @@ def _lista(valor: object) -> list:
     return valor
 
 
+def _musica(valor: object) -> dict[str, str]:
+    if not isinstance(valor, list) or len(valor) != 2:
+        raise ValueError
+    return {'musica': _texto(valor[0]), 'artista': _texto(valor[1])}
+
+
 def ler_convite(codigo: str) -> PerfilGosto:
     """Perfil de um código de convite; ``ValueError`` com mensagem em português se inválido."""
     codigo = ''.join((codigo or '').split())  # tolera quebras de linha do aplicativo de mensagem
@@ -78,14 +84,7 @@ def ler_convite(codigo: str) -> PerfilGosto:
         if not isinstance(artistas, dict) or not isinstance(musicas, dict):
             raise ValueError
         top_artistas = {p: [_texto(a) for a in _lista(artistas.get(p, []))] for p in PERIODOS}
-        top_musicas = {
-            p: [
-                {'musica': _texto(m[0]), 'artista': _texto(m[1])}
-                for m in _lista(musicas.get(p, []))
-                if isinstance(m, list) and len(m) == 2
-            ]
-            for p in PERIODOS
-        }
+        top_musicas = {p: [_musica(m) for m in _lista(musicas.get(p, []))] for p in PERIODOS}
     except (ValueError, TypeError, binascii.Error, zlib.error, UnicodeDecodeError) as erro:
         raise ValueError(
             'O convite está incompleto ou foi alterado. Copie o código inteiro de novo.'

@@ -7,7 +7,7 @@ import { Batalha } from './batalha-tela.js';
 import { MAXIMO_PESSOAS } from './match.js';
 import { limparLastfmVencido } from './lastfm.js';
 import { Match } from './match-tela.js';
-import { Pessoa } from './envio.js';
+import { Pessoa, Processando } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { Resultado } from './resultado.js';
 import { TelaAtiva } from './stories/player.js';
@@ -19,7 +19,7 @@ const DEMO = [['demo-wrapped.zip', 'Rafa'], ['demo-bruno.zip', 'Lu']];
 
 // A comparação roda em JavaScript num Worker (dupla-worker.js), sem baixar o Python. Um Worker por
 // comparação: ao terminar, o navegador devolve toda a memória (importa no celular).
-const compararNoWorker = (a, b, nomes, opcoes) => rodarNoWorker('dupla-worker.js', { a, b, nomes, opcoes }, [...a, ...b].map((x) => x.bytes));
+const compararNoWorker = (a, b, nomes, opcoes, sinal) => rodarNoWorker('dupla-worker.js', { a, b, nomes, opcoes }, [...a, ...b].map((x) => x.bytes), sinal);
 
 const lerArquivos = (lista) => Promise.all(lista.map(async (f) => ({ nome: f.name, bytes: await f.arrayBuffer() })));
 
@@ -33,13 +33,16 @@ function Dupla() {
   // Qual foi a última tentativa ("comparar" ou "demo"), para o "Tentar de novo" do erro. Guarda o tipo, não a
   // função: o botão chama a da renderização atual, com os arquivos e opções que a tela mostra agora.
   const ultima = useRef(null);
+  const controle = useRef(null);
+  const cancelar = () => { controle.current?.abort(); setFase({ tipo: 'parado' }); };
 
   // `ler` devolve os dois lados ([{nome, bytes}]); ler os arquivos conta no tempo (é o que a pessoa espera).
   const rodar = async (ler, nomesUsados, exemplo = false) => {
+    const { signal } = (controle.current = new AbortController());
     setFase({ tipo: 'processando', etapa: 'Lendo os históricos e calculando a sintonia…' });
     try {
       const [a, b] = await ler();
-      const r = await compararNoWorker(a, b, nomesUsados, opcoes);
+      const r = await compararNoWorker(a, b, nomesUsados, opcoes, signal);
       if (exemplo && r.dupla.trilha) r.dupla.trilha = TRILHA_EXEMPLO;
       // Last.fm: minutos pela duração das músicas ("≈" nos stories). A sintonia junta os dois lados.
       if (!exemplo) {
@@ -48,7 +51,7 @@ function Dupla() {
         r.dupla.aproximado = r.dupla.a.aproximado || r.dupla.b.aproximado;
       }
       mostrarResultado(() => setFase({ tipo: 'resultado', r }), 'resultado');
-    } catch (e) { if (e.name !== 'AbortError') setFase({ tipo: 'erro', mensagem: e.message }); }
+    } catch (e) { if (!signal.aborted && e.name !== 'AbortError') setFase({ tipo: 'erro', mensagem: e.message }); }
   };
   const comparar = () => {
     ultima.current = 'comparar';
@@ -82,7 +85,7 @@ function Dupla() {
       <small id="dica-comparar">${arquivos[0].length && arquivos[1].length ? '' : 'Envie pelo menos um arquivo para cada pessoa.'}</small>
     </div>
     <div aria-live="polite">
-      ${fase.tipo === 'processando' && html`<p ref=${chegarPouco} class="processando superficie"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
+      ${fase.tipo === 'processando' && html`<${Processando} etapa=${fase.etapa} aoCancelar=${cancelar} aoMontar=${chegarPouco} />`}
       ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro superficie" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
         ${ultima.current && html`<button type="button" class="btn btn-borda superficie" onClick=${ultima.current === 'demo' ? demo : comparar}>Tentar de novo</button>`}</div>`}
       ${fase.tipo === 'resultado' && html`<p class="sr-only">Resultado de ${fase.r.nomes[0]} e ${fase.r.nomes[1]} pronto, logo abaixo.</p>`}

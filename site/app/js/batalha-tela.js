@@ -2,7 +2,7 @@
 import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { CORES, janelaComum, validarNomes } from './batalha.js';
 import { chegarPouco, mostrarResultado } from './chegada.js';
-import { Pessoa } from './envio.js';
+import { Pessoa, Processando } from './envio.js';
 import { avisoPoster, compartilhar, desenharPosterBatalha } from './poster.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { destravarSom, ICONE, SomStories, TRILHA_EXEMPLO } from './som.js';
@@ -221,7 +221,7 @@ export function Batalha() {
       <small id="dica-batalhar">${pode || ocupado || fase.tipo === 'resultado' ? '' : 'Envie pelo menos um arquivo para cada pessoa.'}</small>
     </div>
     <div aria-live="polite">
-      ${fase.tipo === 'processando' && html`<p ref=${chegarPouco} class="processando superficie"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
+      ${fase.tipo === 'processando' && html`<${Processando} etapa=${fase.etapa} aoCancelar=${() => { cancelar(); setFase({ tipo: 'parado' }); }} aoMontar=${chegarPouco} />`}
       ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro superficie" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
         ${ultima.current && html`<button type="button" class="btn btn-borda superficie" onClick=${ultima.current === 'demo' ? demo : batalhar}>Tentar de novo</button>`}</div>`}
       ${fase.tipo === 'resultado' && html`<p class="sr-only">Resultado da batalha pronto, logo abaixo.</p>`}

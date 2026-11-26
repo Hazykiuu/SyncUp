@@ -3,6 +3,7 @@
 ## Não lançado
 
 ### Mudado
+- **Cancelar o cálculo:** Dupla, Wrapped, Batalha e Match ganham o botão "Cancelar" enquanto leem e calculam.
 - **Privacidade, prazos de verdade:** o histórico do Last.fm guardado no navegador agora vence depois de 7 dias sem uso, e a página não diz mais "Fechou a página, sumiu". No app para PC, a limpeza passou a cumprir o prazo de 1 hora.
 - **"Capas e som" é uma escolha sua, antes:** a opção aparece no topo de cada modo, ligada por padrão e lembrada no navegador. Desligada, nada é pedido ao Spotify, ao MusicBrainz nem à Apple. Os textos que diziam "Nada sai do seu aparelho" agora dizem o que sai.
 - **O app abre sem o unpkg:** o Preact com htm passa a vir do próprio site, o mesmo arquivo de antes. Com o CDN fora do ar ou bloqueado, a tela ficava no esqueleto para sempre.

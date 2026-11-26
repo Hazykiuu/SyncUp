@@ -6,7 +6,7 @@ import { AVISO_ARQUETIPOS, formatarValor, REGRAS } from './calculo.js';
 import { criarBuscador } from './capas.js';
 import { chegar, chegarPouco, mostrarResultado } from './chegada.js';
 import { avisoPoster, compartilhar, desenharPoster, segundos } from './poster.js';
-import { Pessoa } from './envio.js';
+import { Pessoa, Processando } from './envio.js';
 import { armazemLastfm, chave as chaveLastfm } from './lastfm.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { ICONE, SomStories, destravarSom, TRILHA_EXEMPLO } from './som.js';
@@ -20,7 +20,7 @@ import { rodarNoWorker } from './worker.js';
 const DEMO = 'Rafa'; // demo-wrapped.zip: o mesmo histórico de exemplo da Dupla
 
 // Um Worker por montagem: ao terminar, o navegador devolve toda a memória (importa no celular).
-const montarNoWorker = (arquivos, nome, opcoes) => rodarNoWorker('wrapped-worker.js', { arquivos, nome, opcoes }, arquivos.map((a) => a.bytes));
+const montarNoWorker = (arquivos, nome, opcoes, sinal) => rodarNoWorker('wrapped-worker.js', { arquivos, nome, opcoes }, arquivos.map((a) => a.bytes), sinal);
 
 // Todas as regras avaliadas, com o valor da pessoa e o limiar (o mesmo de stories.arquetipos_detalhe_html).
 function ArquetiposDetalhe({ arquetipos }) {
@@ -105,11 +105,14 @@ export function Wrapped() {
   // Qual foi a última tentativa ("montar" ou "demo"): o "Tentar de novo" chama a função desta renderização,
   // com os arquivos e opções que a tela mostra agora (não os da tentativa que falhou).
   const ultima = useRef(null);
+  const controle = useRef(null);
+  const cancelar = () => { controle.current?.abort(); setFase({ tipo: 'parado' }); };
   const rodar = async (ler, nomeUsado, exemplo = false) => {
+    const { signal } = (controle.current = new AbortController());
     setFase({ tipo: 'processando', etapa: 'Lendo o histórico completo e montando os stories…' });
     try {
       const inicio = performance.now();
-      const r = await montarNoWorker(await ler(), nomeUsado, opcoes);
+      const r = await montarNoWorker(await ler(), nomeUsado, opcoes, signal);
       if (!r.dados.amostra_suficiente) throw new Error(HISTORICO_CURTO);
       rodada.current++;
       setCapas(null);
@@ -120,7 +123,7 @@ export function Wrapped() {
         if (lastfm?.capas) { r.dados.capasLastfm = lastfm.capas; marcarCapasLastfm(r.dados, lastfm.capas); }
       }
       mostrarResultado(() => setFase({ tipo: 'resultado', r, ms: performance.now() - inicio, exemplo }), 'resultado-wrapped');
-    } catch (e) { if (e.name !== 'AbortError') setFase({ tipo: 'erro', mensagem: e.message }); }
+    } catch (e) { if (!signal.aborted && e.name !== 'AbortError') setFase({ tipo: 'erro', mensagem: e.message }); }
   };
   const montar = () => { ultima.current = 'montar'; destravarSom(); return rodar(() => Promise.all(arquivos.map(async (f) => ({ nome: f.name, bytes: await f.arrayBuffer() }))), nome || 'Você'); };
   const demo = () => {
@@ -165,7 +168,7 @@ export function Wrapped() {
       <button type="button" class="btn btn-borda superficie" onClick=${demo} disabled=${ocupado}>Ver um exemplo</button>
     </div>
     <div aria-live="polite">
-      ${ocupado && html`<p ref=${chegarPouco} class="processando superficie"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
+      ${ocupado && html`<${Processando} etapa=${fase.etapa} aoCancelar=${cancelar} aoMontar=${chegarPouco} />`}
       ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro superficie" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
         ${ultima.current && html`<button type="button" class="btn btn-borda superficie" onClick=${ultima.current === 'demo' ? demo : montar}>Tentar de novo</button>`}</div>`}
       ${fase.tipo === 'resultado' && html`<p class="sr-only">Wrapped de ${fase.r.nome} pronto, logo abaixo.</p>`}

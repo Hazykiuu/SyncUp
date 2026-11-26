@@ -36,7 +36,9 @@ export function abrirWorker(url, { aoProgresso, semResposta = SEM_RESPOSTA } = {
 }
 
 // Uma requisição num Worker só dela (Dupla e Wrapped): ao terminar, o navegador devolve toda a memória.
-export async function rodarNoWorker(url, mensagem, transferiveis) {
+export async function rodarNoWorker(url, mensagem, transferiveis, sinal) {
+  if (sinal?.aborted) throw abortado();
   const w = abrirWorker(url);
+  sinal?.addEventListener('abort', w.cancelar, { once: true });
   try { return (await w.pedir(mensagem, transferiveis)).dados; } finally { w.cancelar(); }
 }

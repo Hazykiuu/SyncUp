@@ -161,3 +161,9 @@ export function Pessoa({ rotulo, cor, nome, aoMudarNome, arquivos, aoMudarArquiv
         </ul>`}
     </section>`;
 }
+
+// "Calculando…" dos 4 modos, com a saída: Cancelar volta à tela de envio.
+export function Processando({ etapa, aoCancelar, aoMontar }) {
+  return html`<p ref=${aoMontar} class="processando superficie"><span class="giro" aria-hidden="true"></span><span>${etapa}</span>
+    <button type="button" class="btn btn-borda superficie" onClick=${aoCancelar}>Cancelar</button></p>`;
+}

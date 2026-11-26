@@ -254,3 +254,22 @@ def test_sem_rede_o_painel_do_som_nao_fica_preparando(nova_pagina, site_url):
     expect(pagina.get_by_text(re.compile('buscar os trechos')).first).to_be_visible(timeout=TEMPO)
     painel = pagina.locator('.palco-agora:visible .palco-faixa small').first
     expect(painel).to_have_text('Stories sem som')
+
+
+@pytest.mark.parametrize('modo', ['wrapped', 'dupla', 'batalha', 'match'])
+def test_da_para_cancelar_o_calculo(page, site_url, modo):
+    """R2-06: um Worker que não responde deixa o cálculo parado; "Cancelar" volta à tela de envio."""
+    rota = '**/*-worker.js'
+    page.route(rota, lambda r: r.fulfill(body='', content_type='text/javascript'))
+    page.goto(f'{site_url}/app/#{modo}')
+    exemplo = page.get_by_role('button', name='Ver um exemplo').locator('visible=true')
+    exemplo.click()
+    processando = page.locator('.processando:visible')
+    expect(processando).to_be_visible(timeout=TEMPO)
+    processando.get_by_role('button', name='Cancelar').click()
+    expect(processando).to_have_count(0)
+    expect(page.locator('[role=alert]:visible')).to_have_count(0)
+    expect(exemplo).to_be_enabled()
+    page.unroute(rota)
+    exemplo.click()  # o envio seguinte funciona
+    expect(page.locator('.resultado .st-player:visible').first).to_be_visible(timeout=TEMPO)

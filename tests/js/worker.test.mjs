@@ -98,3 +98,14 @@ test('rodarNoWorker: devolve .dados e encerra o Worker uma vez, com sucesso ou e
   await assert.rejects(p2, (e) => e.message === SEM_RESPOSTA);
   assert.equal(ultimo().encerrado, 1);
 });
+
+test('rodarNoWorker: o sinal cancela, encerra o Worker e rejeita com AbortError', async () => {
+  const controle = new AbortController();
+  const p = rodarNoWorker('d.js', { a: 1 }, [], controle.signal);
+  controle.abort();
+  await assert.rejects(p, abortado);
+  assert.equal(ultimo().encerrado, 1);
+  const antes = criados.length;
+  await assert.rejects(rodarNoWorker('d.js', {}, [], controle.signal), abortado);
+  assert.equal(criados.length, antes); // já cancelado: nem cria o Worker
+});

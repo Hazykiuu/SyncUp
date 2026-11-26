@@ -2,7 +2,7 @@
 import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { CORES } from './batalha.js';
 import { chegarPouco, mostrarResultado } from './chegada.js';
-import { Pessoa } from './envio.js';
+import { Pessoa, Processando } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { duetos, MAXIMO_PESSOAS, melhorPar, trilhaMatch } from './match.js';
 import { avisoPoster, compartilhar, desenharPosterMatch } from './poster.js';
@@ -143,8 +143,10 @@ export function Match() {
   const rodar = async (ler, nomesUsados, textoConvites, exemplo = false) => {
     setFase({ tipo: 'processando', etapa: 'Preparando o Match…' });
     const minha = rodada.current + 1;
+    const antes = rodada.current;
     try {
       const lista = await ler();
+      if (antes !== rodada.current) return; // cancelado enquanto lia: não abre o Worker
       const dados = await pedir({ tipo: 'match', arquivos: lista, nomes: nomesUsados, convites: textoConvites, opcoes }, (etapa) => setFase({ tipo: 'processando', etapa }));
       mostrarResultado(() => setFase({ tipo: 'resultado', dados: { ...dados, exemplo } }), 'resultado-match');
     } catch (e) {
@@ -193,7 +195,7 @@ export function Match() {
       <small id="dica-match">${pode || ocupado || fase.tipo === 'resultado' ? '' : 'Junte pelo menos duas pessoas, com ZIP ou convite. Quem tem nome precisa de arquivo.'}</small>
     </div>
     <div aria-live="polite">
-      ${fase.tipo === 'processando' && html`<p ref=${chegarPouco} class="processando superficie"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
+      ${fase.tipo === 'processando' && html`<${Processando} etapa=${fase.etapa} aoCancelar=${() => { cancelar(); setFase({ tipo: 'parado' }); }} aoMontar=${chegarPouco} />`}
       ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro superficie" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
         ${ultima.current && html`<button type="button" class="btn btn-borda superficie" onClick=${ultima.current === 'demo' ? demo : combinar}>Tentar de novo</button>`}</div>`}
       ${fase.tipo === 'resultado' && html`<p class="sr-only">Resultado do Match pronto, logo abaixo.</p>`}

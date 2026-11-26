@@ -11,12 +11,20 @@ permissions:
 
 jobs:
   testes:
-    name: Python ${{ matrix.python }}
-    runs-on: ubuntu-latest
+    # No Linux o nome do check fica igual ao de hoje ("Python 3.10"): a protecao da main nao muda.
+    name: Python ${{ matrix.python }}${{ matrix.os == 'windows-latest' && ' (Windows)' || '' }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         python: ['3.10', '3.12']
+        include:
+          - os: windows-latest
+            python: '3.12'
+          # O "py -3" do iniciar.bat pega o Python mais novo instalado; o 3.13+ usa o pandas 2.3.3.
+          - os: windows-latest
+            python: '3.14'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -34,8 +42,15 @@ jobs:
         run: python -m pytest -q
 
   js:
-    name: JavaScript (node --test)
-    runs-on: ubuntu-latest
+    name: JavaScript (node --test)${{ matrix.os == 'windows-latest' && ' (Windows)' || '' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash  # o passo "Sintaxe do app" e um laco de bash; no Windows o padrao seria o pwsh
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

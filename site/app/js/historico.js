@@ -103,7 +103,9 @@ async function* jsonsDoArquivo({ nome, bytes }) {
 
 /* ---------- Limpeza (mesma ordem de descartes de dados._limpar) ---------- */
 // casefold do Python ≈ maiúsculas e depois minúsculas ("ß" → "ss"); \W do Python tira marcas também.
-export const normalizarNome = (nome) => nome.normalize('NFKC').toUpperCase().toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+// Onde maiúscula→minúscula não é o casefold: o "ı" sem ponto fica, o sigma final vira σ e o Cherokee vai para maiúscula.
+const dobrar = (t) => t.toUpperCase().toLowerCase().replace(/ς/g, 'σ').replace(/[\u13f8-\u13fd\uab70-\uabbf]/g, (c) => c.toUpperCase());
+export const normalizarNome = (nome) => nome.normalize('NFKC').split('ı').map(dobrar).join('ı').replace(/[^\p{L}\p{N}]+/gu, '');
 const VARIOS = normalizarNome('Various Artists');
 
 // Família do aparelho (Android, Windows…), nunca o modelo ou a versão: igual a dados.familia_plataforma.

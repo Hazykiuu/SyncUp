@@ -25,6 +25,7 @@ import perfil_gosto
 import recursos
 import ui.dupla
 import wrapped
+from configuracao import normalizar_nome
 from metricas import cosseno, jaccard, jaccard_ponderado, rbo
 from tests.test_paridade_wrapped import NODE, RAIZ
 
@@ -190,3 +191,18 @@ def test_telas_do_pc_e_do_navegador_usam_a_mesma_ponderacao() -> None:
     assert web == 'log1p' and pc and set(pc) == {'PONDERACAO_DAS_TELAS'}
     assert ui.dupla.PONDERACAO_DAS_TELAS == web
     assert inspect.signature(analise.comparar).parameters['ponderacao'].default == 'bruta'
+
+
+# R1-08: o mesmo nome tem de virar a mesma chave nos dois motores.
+NOMES = ['Stra\u00dfe', '\u0131stanbul', 'Istanbul', '\ufb01nal', 'Bey\u200bonc\u00e9',
+         '\u03a3\u038a\u03a3\u03a5\u03a6\u039f\u03a3', '\u13a0', '\uab70', '\u13f8']  # fmt: skip
+
+
+def test_nomes_normalizados_iguais_nos_dois_motores() -> None:
+    js = _node(
+        "import { normalizarNome } from './site/app/js/historico.js';"
+        "let s = ''; for await (const c of process.stdin) s += c;"
+        'process.stdout.write(JSON.stringify(JSON.parse(s).map(normalizarNome)));',
+        NOMES,
+    )
+    assert js == [normalizar_nome(n) for n in NOMES]

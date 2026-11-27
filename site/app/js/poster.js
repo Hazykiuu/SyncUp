@@ -341,12 +341,16 @@ export async function desenharPosterBatalha(b) {
   const geral = campeoes.length >= 3;
   kicker(campeoes.length === 1 ? 'Quem levou' : campeoes.length === 2 ? 'Empate no topo' : 'Empate geral', 330);
   if (!geral) {
-    // O nome encolhe até 80 px; dois campeões que não cabem numa linha vão um em cada linha.
+    // O nome encolhe até 80 px; dois campeões que não cabem numa linha vão um em cada linha. Nome longo ainda
+    // encolhe até 64 px antes de ser cortado (o nome de quem levou é o que o pôster mostra).
     let px = 130;
-    const nome = campeoes.map((l) => l.nome).join(' e ');
+    const nomes = campeoes.map((l) => l.nome);
+    let linhas = [nomes.join(' e ')];
+    const larga = () => Math.max(...linhas.map((t) => ctx.measureText(t).width)) > UTIL;
     ctx.font = FONTE(900, px);
-    while (px > 80 && ctx.measureText(nome).width > UTIL) ctx.font = FONTE(900, (px -= 4));
-    const linhas = ctx.measureText(nome).width > UTIL && campeoes.length === 2 ? [`${campeoes[0].nome} e`, campeoes[1].nome] : [nome];
+    while (px > 80 && larga()) ctx.font = FONTE(900, (px -= 4));
+    if (larga() && nomes.length === 2) linhas = [`${nomes[0]} e`, nomes[1]];
+    while (px > 64 && larga()) ctx.font = FONTE(900, (px -= 4));
     ctx.fillStyle = '#fff';
     linhas.forEach((texto, k) => ctx.fillText(cortar(ctx, texto, UTIL), M, 330 + px + 20 + k * (px + 10)));
     if (b.titulo) kicker(b.titulo, 330 + px + 90);
@@ -368,10 +372,12 @@ export async function desenharPosterBatalha(b) {
       avatar(l, x + w / 2, y - 150 - r, r);
     });
   } else {
-    let y = 450;
+    let y = 450, px = 60; // os nomes encolhem juntos até 48 px antes de cortar
+    ctx.font = FONTE(900, px);
+    while (px > 48 && campeoes.some((l) => ctx.measureText(l.nome).width > UTIL - 130)) ctx.font = FONTE(900, (px -= 2));
     for (const l of campeoes) {
       avatar(l, M + 44, y - 16, 44);
-      ctx.fillStyle = '#fff'; ctx.font = FONTE(900, 60); ctx.fillText(cortar(ctx, l.nome, UTIL - 130), M + 120, y + 4);
+      ctx.fillStyle = '#fff'; ctx.font = FONTE(900, px); ctx.fillText(cortar(ctx, l.nome, UTIL - 130), M + 120, y + 4);
       y += 130;
     }
     const m = campeoes[0].medalhas;
@@ -383,7 +389,8 @@ export async function desenharPosterBatalha(b) {
   const [nomeX, nomeY] = b.afinada.par.map((k) => b.lutadores[k].nome);
   kicker('A dupla mais afinada', A - 360);
   ctx.fillStyle = '#fff'; ctx.font = FONTE(800, 42);
-  ctx.fillText(cortar(ctx, `${nomeX} & ${nomeY} — ${fmtNum(b.afinada.valor, 1)}%`, UTIL), M, A - 300);
+  const pct = ` — ${fmtNum(b.afinada.valor, 1)}%`; // nomes longos são cortados, a porcentagem nunca
+  ctx.fillText(cortar(ctx, `${nomeX} & ${nomeY}`, UTIL - ctx.measureText(pct).width) + pct, M, A - 300);
   pe(ctx);
 
   return new Promise((ok, falha) => canvas.toBlob((blob) => (blob ? ok(blob) : falha(new Error('Não deu para gerar a imagem.'))), 'image/png'));

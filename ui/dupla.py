@@ -48,6 +48,7 @@ from graficos import (
 )
 from perfis import AVISO_TRACOS
 from ui.comum import (
+    PONDERACAO_DAS_TELAS,
     _configuracao,
     _em_pasta_temporaria,
     _linhas,
@@ -83,7 +84,7 @@ def executar_dupla(
             nome_b,
             bool(comum),
             configuracao=config,
-            ponderacao=ponderacao or 'bruta',
+            ponderacao=ponderacao or PONDERACAO_DAS_TELAS,
             recente=bool(recente),
         )
         progress(0.75, desc='Preparando gráficos e tabelas')
@@ -175,7 +176,7 @@ def executar_grupo(
             [EntradaPerfil(nome, arquivo) for nome, arquivo in zip(nomes_lista, arquivos)],
             bool(comum),
             configuracao=config,
-            ponderacao=ponderacao or 'bruta',
+            ponderacao=ponderacao or PONDERACAO_DAS_TELAS,
         )
         progress(0.85, desc='Construindo matriz e perfis')
 

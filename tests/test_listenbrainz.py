@@ -148,7 +148,7 @@ def test_429_passageiro_respeita_a_espera_pedida(monkeypatch) -> None:
     respostas = iter(
         [
             httpx.Response(429, headers={'Retry-After': '4'}),
-            httpx.Response(429, headers={'X-RateLimit-Reset-In': '99'}),  # teto de 10 s
+            httpx.Response(429, headers={'X-RateLimit-Reset-In': '9'}),
         ]
     )
     normal = _api([])
@@ -159,5 +159,59 @@ def test_429_passageiro_respeita_a_espera_pedida(monkeypatch) -> None:
     perfil = coletar_perfil_listenbrainz(
         'nick', cliente=httpx.Client(transport=httpx.MockTransport(responder))
     )
-    assert esperas[:2] == [4, 10]
+    assert esperas[:2] == [4, 9]
     assert perfil.top_artistas['long_term']
+
+
+# R3-07: resposta de terceiro é dado não confiável; cada falha com a sua mensagem.
+@pytest.mark.parametrize('resposta', [
+    httpx.Response(200, text='<html>manutenção</html>'),
+    httpx.Response(200, json=['lista']),
+    httpx.Response(200, json={'payload': 'texto'}),
+])  # fmt: skip
+def test_corpo_inesperado_vira_mensagem_em_portugues(resposta: httpx.Response) -> None:
+    cliente = httpx.Client(transport=httpx.MockTransport(lambda pedido: resposta))
+    with pytest.raises(ValueError, match='respondeu algo inesperado'):
+        coletar_perfil_listenbrainz('nick', 'Nick', cliente)
+
+
+@pytest.mark.parametrize('erro, mensagem', [
+    (httpx.HTTPStatusError('x', request=httpx.Request('GET', 'http://x'), response=httpx.Response(500)), 'está com problemas agora'),
+    (httpx.ReadTimeout('lento'), 'Confira a internet'),
+])  # fmt: skip
+def test_match_separa_servidor_com_defeito_de_rede(erro: Exception, mensagem: str) -> None:
+    from ui.match import _motivo_listenbrainz
+
+    assert mensagem in _motivo_listenbrainz(erro)
+
+
+def test_tres_demoras_seguidas_desistem_das_proximas_pessoas(monkeypatch) -> None:
+    """Um serviço que ainda responde, mas devagar, não pode custar um tempo-limite por pessoa."""
+    from ui import match
+
+    chamados: list[str] = []
+
+    def demorar(usuario: str):
+        chamados.append(usuario)
+        raise httpx.ReadTimeout('lento')
+
+    monkeypatch.setattr(match, 'coletar_perfil_listenbrainz', demorar)
+    perfis, fora = match._perfis_listenbrainz([f'u{i}' for i in range(6)], lambda i: None)
+    assert chamados == ['u0', 'u1', 'u2'] and perfis == [] and len(fora) == 6
+    assert 'demorando demais' in fora[-1]
+
+
+def test_429_com_pausa_longa_desiste_no_primeiro_pedido(monkeypatch) -> None:
+    """R3-10: insistir contra um Retry-After de 30 s só prolonga o bloqueio."""
+    monkeypatch.setattr('listenbrainz.time.sleep', lambda s: None)
+    pedidos: list[str] = []
+
+    def responder(pedido: httpx.Request) -> httpx.Response:
+        pedidos.append(pedido.url.path)
+        return httpx.Response(429, headers={'Retry-After': '30'})
+
+    with pytest.raises(ValueError, match='ocupado'):
+        coletar_perfil_listenbrainz(
+            'nick', 'Nick', httpx.Client(transport=httpx.MockTransport(responder))
+        )
+    assert len(pedidos) == 1

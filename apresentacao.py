@@ -21,6 +21,8 @@ from wrapped import Wrapped, wrapped_de_arquivos
 if TYPE_CHECKING:
     from plotly.graph_objects import Figure
 
+# O mesmo padrão do navegador (opcoes.js); a API (analise.comparar) continua em 'bruta' (VALIDACAO.md).
+PONDERACAO_DAS_TELAS = 'log1p'
 OPCOES_PONDERACAO = [
     ('Bruta (x)', 'bruta'),
     ('Raiz quadrada (√x)', 'raiz'),
@@ -112,7 +114,7 @@ def resumo_html(resultado: ResultadoComparacao) -> str:
 def resumo_markdown(resultado: ResultadoComparacao) -> str:
     """Mantém a apresentação textual da v0.4 para o benchmark e a regressão."""
     m, a, b = resultado.metricas, resultado.perfil_a, resultado.perfil_b
-    texto = f"""## Similaridade musical: {fmt_pct(m.cosseno)}
+    texto = f"""## Escuta em comum: {fmt_pct(m.cosseno)}
 **Cosseno:** compara o padrão de frequência por artista. **Jaccard geral:** {fmt_pct(m.jaccard)}. **Favoritos em comum (RBO do top 50, pesa mais o topo):** {fmt_pct(m.rbo_top50)}.
 
 Período: {escape_markdown(texto_periodo(resultado))}

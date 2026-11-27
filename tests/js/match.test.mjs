@@ -75,3 +75,41 @@ test('duetos: os 7 cenários com os números de compararPerfis, sem métrica nov
   assert.deepEqual(nada.refrao, []);
   assert.equal(nada.linhas[0].pontuacao, 0);
 });
+
+// R1-01: mesmos casos de tests/test_match.py.
+const pessoa = (nome, a) => ({ nome, top_artistas: { short_term: a, medium_term: a, long_term: a }, top_musicas: {} });
+const grupo = () => [pessoa('Ana', ['Banda A', 'Banda B', 'Banda C']), pessoa('Bia', ['Banda X', 'Banda Y', 'Banda Z']),
+  pessoa('Cris', ['Banda A', 'Banda X', 'Banda Q']), pessoa('Eli', ['Banda B', 'Banda Y', 'Banda R'])];
+const duda = () => pessoa('Duda', ['!!!', '🎵']);
+
+test('sem dados comparáveis: o par não vira 0%', async () => {
+  const { compararPerfis } = await import('../../site/app/js/match.js');
+  const c = compararPerfis(grupo()[0], duda());
+  assert.equal(c.pontuacao, null);
+  assert.equal(c.nivel, 'Comparação indisponível');
+});
+
+test('sem dados comparáveis: sai do Match, em grupo ímpar e par', async () => {
+  const { conciliar } = await import('../../site/app/js/match.js');
+  for (const quantos of [4, 3]) {
+    const sem = conciliar(grupo().slice(0, quantos)), com = conciliar([...grupo().slice(0, quantos), duda()]);
+    assert.deepEqual(com.sem_dados, ['Duda']);
+    assert.deepEqual(sem.sem_dados, []);
+    assert.deepEqual([com.nomes, com.pares, com.pontuacao_media_pares], [sem.nomes, sem.pares, sem.pontuacao_media_pares]);
+  }
+});
+
+test('sem dados comparáveis: menos de duas pessoas é erro com os nomes', async () => {
+  const { conciliar } = await import('../../site/app/js/match.js');
+  assert.throws(() => conciliar([grupo()[0], duda()]), /Sem artistas comparáveis: Duda/);
+});
+
+test('amostra pequena: abaixo de 30 artistas em um dos lados a faixa não vale', async () => {
+  const { compararPerfis } = await import('../../site/app/js/match.js');
+  const nomes = (n) => Array.from({ length: n }, (_, i) => `Banda ${i}`);
+  for (const [n, pequena] of [[1, true], [29, true], [30, false]]) {
+    const c = compararPerfis(pessoa('Ana', nomes(40)), pessoa('Eva', nomes(n)));
+    assert.equal(c.amostra_pequena, pequena);
+    assert.equal(c.nivel === 'Amostra pequena', pequena);
+  }
+});

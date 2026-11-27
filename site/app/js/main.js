@@ -2,10 +2,12 @@
 import { html, render, useEffect, useRef, useState } from 'preact-htm';
 import { chegarPouco, mostrarResultado } from './chegada.js';
 import { ligarOndas } from './corrida.js';
-import { audioCtx, destravarSom, pausarSom, silenciado, TRILHA_EXEMPLO } from './som.js';
+import { audioCtx, capasESom, definirCapasESom, destravarSom, pausarSom, silenciado, TRILHA_EXEMPLO } from './som.js';
 import { Batalha } from './batalha-tela.js';
+import { MAXIMO_PESSOAS } from './match.js';
+import { limparLastfmVencido } from './lastfm.js';
 import { Match } from './match-tela.js';
-import { Pessoa } from './envio.js';
+import { Pessoa, Processando } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { Resultado } from './resultado.js';
 import { TelaAtiva } from './stories/player.js';
@@ -17,7 +19,7 @@ const DEMO = [['demo-wrapped.zip', 'Rafa'], ['demo-bruno.zip', 'Lu']];
 
 // A comparação roda em JavaScript num Worker (dupla-worker.js), sem baixar o Python. Um Worker por
 // comparação: ao terminar, o navegador devolve toda a memória (importa no celular).
-const compararNoWorker = (a, b, nomes, opcoes) => rodarNoWorker('dupla-worker.js', { a, b, nomes, opcoes }, [...a, ...b].map((x) => x.bytes));
+const compararNoWorker = (a, b, nomes, opcoes, sinal) => rodarNoWorker('dupla-worker.js', { a, b, nomes, opcoes }, [...a, ...b].map((x) => x.bytes), sinal);
 
 const lerArquivos = (lista) => Promise.all(lista.map(async (f) => ({ nome: f.name, bytes: await f.arrayBuffer() })));
 
@@ -31,13 +33,16 @@ function Dupla() {
   // Qual foi a última tentativa ("comparar" ou "demo"), para o "Tentar de novo" do erro. Guarda o tipo, não a
   // função: o botão chama a da renderização atual, com os arquivos e opções que a tela mostra agora.
   const ultima = useRef(null);
+  const controle = useRef(null);
+  const cancelar = () => { controle.current?.abort(); setFase({ tipo: 'parado' }); };
 
   // `ler` devolve os dois lados ([{nome, bytes}]); ler os arquivos conta no tempo (é o que a pessoa espera).
   const rodar = async (ler, nomesUsados, exemplo = false) => {
+    const { signal } = (controle.current = new AbortController());
     setFase({ tipo: 'processando', etapa: 'Lendo os históricos e calculando a sintonia…' });
     try {
       const [a, b] = await ler();
-      const r = await compararNoWorker(a, b, nomesUsados, opcoes);
+      const r = await compararNoWorker(a, b, nomesUsados, opcoes, signal);
       if (exemplo && r.dupla.trilha) r.dupla.trilha = TRILHA_EXEMPLO;
       // Last.fm: minutos pela duração das músicas ("≈" nos stories). A sintonia junta os dois lados.
       if (!exemplo) {
@@ -46,7 +51,7 @@ function Dupla() {
         r.dupla.aproximado = r.dupla.a.aproximado || r.dupla.b.aproximado;
       }
       mostrarResultado(() => setFase({ tipo: 'resultado', r }), 'resultado');
-    } catch (e) { if (e.name !== 'AbortError') setFase({ tipo: 'erro', mensagem: e.message }); }
+    } catch (e) { if (!signal.aborted && e.name !== 'AbortError') setFase({ tipo: 'erro', mensagem: e.message }); }
   };
   const comparar = () => {
     ultima.current = 'comparar';
@@ -80,7 +85,7 @@ function Dupla() {
       <small id="dica-comparar">${arquivos[0].length && arquivos[1].length ? '' : 'Envie pelo menos um arquivo para cada pessoa.'}</small>
     </div>
     <div aria-live="polite">
-      ${fase.tipo === 'processando' && html`<p ref=${chegarPouco} class="processando superficie"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
+      ${fase.tipo === 'processando' && html`<${Processando} etapa=${fase.etapa} aoCancelar=${cancelar} aoMontar=${chegarPouco} />`}
       ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro superficie" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
         ${ultima.current && html`<button type="button" class="btn btn-borda superficie" onClick=${ultima.current === 'demo' ? demo : comparar}>Tentar de novo</button>`}</div>`}
       ${fase.tipo === 'resultado' && html`<p class="sr-only">Resultado de ${fase.r.nomes[0]} e ${fase.r.nomes[1]} pronto, logo abaixo.</p>`}
@@ -104,13 +109,14 @@ function cliqueFader(paraDireita) {
 }
 
 const CABECA = {
-  dupla: ['Compare dois históricos', 'Envie o Histórico Estendido do Spotify de duas pessoas. Nada é enviado para nenhum servidor.'],
+  dupla: ['Compare dois históricos', 'Envie o Histórico Estendido do Spotify de duas pessoas. O histórico não sai do seu aparelho; com “Capas e som” ligado, nomes de artistas e músicas em comum vão para o iTunes.'],
   wrapped: ['Seu Wrapped da vida toda', 'Envie o seu Histórico Estendido do Spotify e veja a sua vida musical em stories. O histórico não sai do seu aparelho.'],
-  match: ['Match do grupo', 'Junte históricos e convites de 2 a 16 pessoas e veja quem combina com quem. Nada sai do seu aparelho.'],
-  batalha: ['Batalha de históricos', 'Junte de 3 a 6 históricos do Spotify e veja quem leva cada rodada. Nada sai do seu aparelho.'],
+  match: ['Match do grupo', `Junte históricos e convites de 2 a ${MAXIMO_PESSOAS} pessoas e veja quem combina com quem. O histórico não sai do seu aparelho; com “Capas e som” ligado, nomes de artistas vão para o iTunes.`],
+  batalha: ['Batalha de históricos', 'Junte de 3 a 6 históricos do Spotify e veja quem leva cada rodada. O histórico não sai do seu aparelho; com “Capas e som” ligado, nomes de artistas vão para o iTunes.'],
 };
 
 function App() {
+  const [comCapas, setComCapas] = useState(capasESom);
   // As telas ficam montadas (hidden): trocar de aba não perde o resultado.
   // Só hash conhecido troca de modo: "Pular para o conteúdo" (#principal) fica onde a pessoa está.
   const lerModo = (atual = 'dupla') => ({ '#wrapped': 'wrapped', '#batalha': 'batalha', '#match': 'match', '#dupla': 'dupla', '': 'dupla' })[location.hash] ?? atual;
@@ -155,6 +161,8 @@ function App() {
             <span class="app-tipo">Modo · ${MODOS.find(([id]) => id === modo)[1]}</span>
             <h1>${CABECA[modo][0]}</h1>
             <p class="sub">${CABECA[modo][1]}</p>
+            <label class="marcar app-capas-som"><input type="checkbox" checked=${comCapas} onChange=${(e) => { definirCapasESom(e.target.checked); setComCapas(e.target.checked); }} />
+              <span>Capas e som <small>(busca capas e trechos no Spotify, no MusicBrainz e na Apple)</small></span></label>
             <a class="app-como-pedir" href="../#como-pedir">Ainda não tem o ZIP? Veja como pedir</a>
           </div>
         </div>
@@ -179,4 +187,5 @@ document.addEventListener('touchstart', () => {}, { passive: true });
 const raiz = document.getElementById('app');
 raiz.replaceChildren();
 ligarOndas();
+limparLastfmVencido();
 render(html`<${App} />`, raiz);

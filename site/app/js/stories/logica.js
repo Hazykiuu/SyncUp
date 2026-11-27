@@ -246,3 +246,8 @@ export function fraseRelogios(picoA, picoB) {
   if (distancia <= 4) return 'Horários parecidos.';
   return 'Cada um no seu turno.';
 }
+
+/* ---------- Batalha: piso dos desenhos ---------- */
+// Valor maior que 0 sempre aparece (Sextou com 6% acende uma casa, não zero); 0 não acende nada.
+export const acesas = (v, f, n) => (v > 0 ? Math.max(1, Math.round(f * n)) : 0);
+export const piso = (v, f, minimo) => (v > 0 ? Math.max(minimo, f) : 0);

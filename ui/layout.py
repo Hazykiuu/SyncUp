@@ -15,6 +15,7 @@ from perfis import AVISO_TRACOS, LIMIAR_FAVORITOS, LIMIAR_MADRUGADA, LIMIAR_REPE
 from ui.comum import (
     CONCORRENCIA,
     OPCOES_PONDERACAO,
+    PONDERACAO_DAS_TELAS,
     _limpar_exportacoes,
 )
 from ui.dupla import (
@@ -263,7 +264,7 @@ def criar_interface() -> gr.Blocks:
     with gr.Blocks(
         title='SyncUp',
         analytics_enabled=False,
-        delete_cache=(3600, 3600),
+        delete_cache=(600, 3000),  # no pior caso, 1 hora (o texto de Meus dados)
     ) as demo:
         gr.HTML(TOPO)
         # Opções avançadas numa gaveta lateral fechada: a página mostra só o que encanta.
@@ -360,7 +361,7 @@ def criar_interface() -> gr.Blocks:
                     comum = gr.Checkbox(value=True, label='Período coberto pelos dois históricos')
                     peso = gr.Dropdown(
                         choices=OPCOES_PONDERACAO,
-                        value='bruta',
+                        value=PONDERACAO_DAS_TELAS,
                         label='Ponderação do cosseno e Ruzicka',
                     )
                     recente = gr.Checkbox(
@@ -491,7 +492,7 @@ def criar_interface() -> gr.Blocks:
                             interactive=False, label='Diversidade e desigualdade observadas'
                         )
                         stats = gr.Dataframe(
-                            interactive=False, label='describe() · minutos por execução'
+                            interactive=False, label='Resumo dos minutos por reprodução'
                         )
                         gr.Markdown(
                             'Descartes exclusivos: podcast → duração → data → identificação → '
@@ -800,7 +801,7 @@ def criar_interface() -> gr.Blocks:
                     cg = gr.Checkbox(value=True, label='Período comum a todos os perfis')
                     pg = gr.Dropdown(
                         choices=OPCOES_PONDERACAO,
-                        value='bruta',
+                        value=PONDERACAO_DAS_TELAS,
                         label='Ponderação do cosseno do grupo',
                     )
                     grupo = gr.Button('Comparar grupo', variant='primary', elem_classes='su-play')
@@ -867,8 +868,9 @@ def criar_interface() -> gr.Blocks:
         )
         demo.load(resumo_html, None, meus_dados_html, api_visibility='private')
         gr.Markdown(
-            'Plays: ≥30 segundos. Horas e describe(): todas as execuções válidas. '
-            'O Ruzicka usa pesos absolutos e é sensível ao volume de escuta. ' + AVISO_TRACOS,
+            'Plays: ≥30 segundos. Horas e resumo dos minutos: todas as execuções válidas. '
+            'O Ruzicka compara os pesos sem igualar o volume de cada um, por isso é sensível a ele. '
+            + AVISO_TRACOS,
             elem_classes=['su-note', 'su-footer'],
         )
     return demo.queue(default_concurrency_limit=CONCORRENCIA)

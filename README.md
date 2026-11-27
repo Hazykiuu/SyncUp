@@ -1,4 +1,4 @@
-# SyncUp v1.27
+# SyncUp v1.28
 
 Compare o seu histórico do Spotify com o dos amigos e veja com quem você está em sintonia, em stories. **Use direto no navegador**, no computador ou no celular: sem instalar, sem conta, sem anúncios, e o histórico não sai do seu aparelho. Há também um app para PC com o Grupo e as fontes extras do Match (ListenBrainz e gêneros). Projeto de ciência de dados, **código aberto** ([licença MIT](LICENSE)).
 
@@ -101,7 +101,7 @@ Envie o seu histórico completo e veja, em stories com as capas e trechos das su
 
 ### Batalha: de 3 a 6 pessoas (navegador)
 
-Um histórico por pessoa, no mesmo período. Cada número vira uma rodada (mais horas, mais artistas, coruja, repeteco, menos músicas puladas…), com ouro, prata e bronze. Os stories mostram cada rodada com um desenho próprio, a dupla mais afinada, o quadro de medalhas e, por último, o pódio. No fim, um pôster em PNG para postar. É uma brincadeira com os números do período: não mede gosto nem personalidade.
+Um histórico por pessoa, no mesmo período (nos temas de descoberta e em "Chegou primeiro", "novo" é a primeira vez no histórico inteiro de cada um). A cada cálculo, o SyncUp sorteia 10 temas de uma lista de 56 (mais horas, mais artistas, coruja, fim de semana, maior sequência de dias, menos músicas puladas…), e cada tema vira uma rodada com ouro, prata e bronze. Só entram temas que dão para calcular para todos do grupo, no máximo 2 do mesmo tipo (só passa disso se faltar tema para completar os 10) e, enquanto a página estiver aberta, nenhum da batalha anterior (quando sobram temas suficientes). Por isso, o mesmo grupo pode ter outro campeão a cada vez. Os stories mostram cada rodada, a dupla mais afinada, o quadro de medalhas e, por último, o pódio, com um título para o campeão conforme o tipo de tema em que mais venceu. "Ver de novo" e o pôster em PNG mostram os mesmos 10 temas. É uma brincadeira com os números do período: não mede gosto nem personalidade.
 
 ### Grupo: de 3 a 6 pessoas (app para PC)
 
@@ -124,11 +124,11 @@ O SyncUp nasceu como projeto de **Ciência de Dados I (UCL)**. A análise comple
 
 ## Privacidade
 
-- **Fica no computador:** os históricos enviados (apagados em até 1 hora) e o cache. Para ver e apagar, abra *Opções de dados → Meus dados*.
+- **Fica no computador:** os históricos enviados (apagados em até 1 hora com o app aberto; se ele fechar antes, na próxima vez que abrir) e o cache. Para ver e apagar, abra *Opções de dados → Meus dados*.
 - **Vai para a internet só se você pedir:** o ListenBrainz (o nome de usuário digitado) e o MusicBrainz (nomes de artistas, só com a caixa de estilo marcada).
-- **App no navegador, Wrapped:** para as capas e o som (o Wrapped começa com eles), o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify (capas e fotos), o nome dos seus artistas para o MusicBrainz e para a Apple/iTunes, e os nomes das músicas para a Apple/iTunes (trechos de 30 s), além do seu endereço IP. O histórico e o seu nome não saem do aparelho. O navegador guarda só os endereços das capas, por até 30 dias; o botão "Apagar dados guardados" limpa na hora. A escolha de "Silenciar" também fica guardada no navegador.
+- **App no navegador, Wrapped:** para as capas e o som (ligados por padrão; a opção "Capas e som" desliga antes do cálculo), o SyncUp envia os códigos das suas músicas mais ouvidas para o Spotify (capas e fotos), o nome dos seus artistas para o MusicBrainz e para a Apple/iTunes, e os nomes das músicas para a Apple/iTunes (trechos de 30 s), além do seu endereço IP. O histórico e o seu nome não saem do aparelho. O navegador guarda só os endereços das capas, por até 30 dias; o botão "Apagar dados guardados" limpa na hora. A escolha de "Silenciar" também fica guardada no navegador.
 - **App no navegador, Dupla:** para o som dos stories, o SyncUp envia à Apple/iTunes os nomes das músicas e dos artistas em comum das duas pessoas (trechos de 30 s), além do endereço IP. Os históricos e os nomes não saem do aparelho.
-- **App no navegador, Last.fm:** quem usa "Usar o Last.fm" envia ao Last.fm só o nome de usuário digitado (e o IP); as escutas públicas desse perfil vêm de lá direto para o navegador, sem passar por servidor do SyncUp. As capas dessas músicas vêm do CDN do Last.fm (com o IP). Elas ficam guardadas no navegador para a próxima vez buscar só as novas; "Apagar dados guardados" limpa na hora. Os minutos são estimados pela duração das músicas no Last.fm (com "≈").
+- **App no navegador, Last.fm:** quem usa "Usar o Last.fm" envia ao Last.fm só o nome de usuário digitado (e o IP); as escutas públicas desse perfil vêm de lá direto para o navegador, sem passar por servidor do SyncUp. As capas dessas músicas vêm do CDN do Last.fm (com o IP). Elas ficam guardadas no navegador para a próxima vez buscar só as novas; depois de 7 dias sem uso, são apagadas quando o app abrir de novo. No Wrapped, com um resultado na tela, "Apagar dados guardados" limpa na hora. Os minutos são estimados pela duração das músicas no Last.fm (com "≈").
 - **Nunca é guardado:** o IP e o modelo do aparelho.
 
 **Créditos:** capas e fotos de artistas vêm do Spotify; o logo do Spotify é marca da Spotify AB, usado conforme as [diretrizes de design](https://developer.spotify.com/documentation/design) e fora da licença MIT. Trechos de áudio: iTunes (Apple). Dados de artistas: MusicBrainz.
@@ -185,7 +185,7 @@ print(r.metricas.cosseno)
 ```
 
 
-**Dependências**, todas abertas (`tests/test_licencas.py` confere): Gradio e orjson (Apache-2.0), FastAPI e Plotly (MIT), httpx e pandas (BSD-3-Clause), Pillow (MIT-CMU), pytest e Ruff (MIT) e a fonte Figtree (SIL OFL 1.1). O site (`site/`) usa a Lenis (MIT) e o Preact com htm (MIT).
+**Dependências**, todas abertas (`tests/test_licencas.py` confere): Gradio e orjson (Apache-2.0), FastAPI e Plotly (MIT), httpx e pandas (BSD-3-Clause), Pillow (MIT-CMU), pytest e Ruff (MIT) e a fonte Figtree (SIL OFL 1.1). O site (`site/`) usa a Lenis (MIT), o Preact (MIT) e o htm (Apache-2.0); o app serve uma cópia dos dois últimos, com as licenças em `site/app/vendor/`.
 
 **Contribuir:** abra uma *issue* ou um *pull request*. Nunca envie históricos reais: são dados pessoais. O histórico de cada versão está no [CHANGELOG](CHANGELOG.md).
 

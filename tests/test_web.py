@@ -251,3 +251,117 @@ def test_simples_troca_nan_e_numpy() -> None:
         'b': 3,
         'c': [None, 1.5],
     }
+
+
+def _regras(caminho: Path) -> dict[str, set[str]]:
+    texto = re.sub(r'/\*.*?\*/', '', caminho.read_text(encoding='utf-8'), flags=re.S)
+    texto = re.sub(r'@keyframes[^{]*\{(?:[^{}]*\{[^{}]*\})*[^{}]*\}', '', texto)
+    regras: dict[str, set[str]] = {}
+    for seletor, corpo in re.findall(r'([^{}@;]+)\{([^{}]*)\}', texto):
+        chave = ' '.join(seletor.split())
+        regras.setdefault(chave, set()).add(re.sub(r'\s+', '', corpo).rstrip(';'))
+    return regras
+
+
+# Diferenças de propósito entre o recorte do navegador e o app para PC.
+NUCLEO_DIFERENTE = {
+    ':root',  # os tokens têm teste próprio (R2-10)
+    '.su-race', '.su-race-progress::before', '.su-stories', '.su-stories:not(.su-js) .su-story',
+    '.su-js .su-story.ativo',  # no navegador o stories.css desliga a animação do fundo
+    '.su-arch-detail', '.su-arch-detail li',
+}  # fmt: skip
+
+
+def test_nucleo_css_e_o_mesmo_recorte_do_styles_css() -> None:
+    """R2-09: uma correção num lado não pode ficar sem chegar ao outro."""
+    nucleo, pc = _regras(RAIZ / 'site/app/nucleo.css'), _regras(RAIZ / 'styles.css')
+    comuns = set(nucleo) & set(pc)
+    assert len(comuns) > 60
+    diferentes = {s for s in comuns if not nucleo[s] & pc[s]}
+    assert sorted(diferentes - NUCLEO_DIFERENTE) == []
+    assert sorted(NUCLEO_DIFERENTE - diferentes - {':root'}) == [], (
+        'tire da lista o que voltou a ser igual'
+    )
+
+
+def _tokens(caminho: str) -> dict[str, str]:
+    texto = (RAIZ / caminho).read_text(encoding='utf-8')
+    return {n: v.strip().lower() for n, v in re.findall(r'(--[\w-]+)\s*:\s*([^;}]+)', texto)}
+
+
+def test_tokens_de_cor_iguais_no_pc_e_no_site() -> None:
+    """R2-10: duas famílias de nomes, os mesmos valores."""
+    pc, site, nucleo = (
+        _tokens(a) for a in ('styles.css', 'site/estilo.css', 'site/app/nucleo.css')
+    )
+    pares = [('--su-bg', '--sup-1'), ('--su-card', '--sup-2'), ('--su-text', '--texto'),
+             ('--su-sub', '--sub'), ('--su-green', '--verde'), ('--su-violet', '--roxo')]  # fmt: skip
+    for no_pc, no_site in pares:
+        assert pc[no_pc] == site[no_site], (no_pc, no_site)
+    for fixo in ('--su-card', '--su-line'):
+        assert nucleo[fixo] == pc[fixo], fixo
+
+
+@pytest.mark.parametrize(
+    'arquivo', ['estilo.css', 'app/app.css', 'app/nucleo.css', 'app/stories.css']
+)
+def test_todo_hover_do_site_so_vale_com_mouse(arquivo: str) -> None:
+    """R2-13: no toque, um :hover solto fica preso até a pessoa tocar em outro lugar."""
+    css = re.sub(
+        r'/\*.*?\*/', '', (RAIZ / 'site' / arquivo).read_text(encoding='utf-8'), flags=re.S
+    )
+    pilha, soltos = [], []
+    for preludio, abre, fecha in re.findall(r'([^{}]*)(?:(\{)|(\}))', css):
+        if fecha:
+            pilha.pop()
+            continue
+        seletor = preludio.split(';')[-1].strip()
+        if ':hover' in seletor and not any(
+            re.search(r'\(hover:\s*hover\)', p) for p in [*pilha, seletor]
+        ):
+            soltos.append(seletor)
+        pilha.append(seletor)
+    assert soltos == []
+
+
+def test_toque_sem_retangulo_cinza() -> None:
+    estilo = (RAIZ / 'site/estilo.css').read_text(encoding='utf-8')
+    assert '-webkit-tap-highlight-color: transparent' in estilo and ':active' in estilo
+
+
+def _fora_de_media(caminho: Path) -> list[str]:
+    """Os seletores das regras de topo (fora de @media, @supports e @keyframes), um por regra."""
+    css = re.sub(r'/\*.*?\*/', '', caminho.read_text(encoding='utf-8'), flags=re.S)
+    pilha, seletores = [], []
+    for preludio, abre, fecha in re.findall(r'([^{}]*)(?:(\{)|(\}))', css):
+        if fecha:
+            pilha.pop()
+            continue
+        seletor = ' '.join(preludio.split(';')[-1].split())
+        if not pilha and not seletor.startswith('@'):
+            seletores.append(seletor)
+        pilha.append(seletor)
+    return seletores
+
+
+def test_estilos_dos_stories_sem_sobrescrita_no_fim() -> None:
+    """R2-11: o valor de uma peça fica na regra dela, não numa segunda regra no fim do arquivo."""
+    seletores = _fora_de_media(RAIZ / 'site/app/stories.css')
+    alvos = [
+        '.st-fundo',
+        '.st-veu',
+        '.st-vidro',
+        '.st-kicker',
+        *{s for s in seletores if s.startswith('.s-resumo ')},
+    ]
+    assert len(alvos) > 20
+    assert {s: seletores.count(s) for s in alvos if seletores.count(s) != 1} == {}
+
+
+@pytest.mark.parametrize('arquivo, seletor', [
+    ('estilo.css', '.hero h1'), ('estilo.css', '.titulo-secao'), ('app/app.css', '.dock'),
+    ('app/app.css', '.app-cabeca'), ('app/app.css', '.app-cabeca h1'),
+    ('app/app.css', '.nav-item[aria-current="page"]'),
+])  # fmt: skip
+def test_regra_unica_fora_de_media(arquivo: str, seletor: str) -> None:
+    assert _fora_de_media(RAIZ / 'site' / arquivo).count(seletor) == 1

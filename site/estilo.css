@@ -1,5 +1,9 @@
 /* Estilo compartilhado pela página inicial (index.html) e pelo app (app/). */
 @font-face { font-family: 'Figtree'; src: url('assets/Figtree.ttf') format('truetype'); font-weight: 300 900; font-display: swap; }
+/* Toque no celular: sem o retângulo cinza; quem não tem :active próprio escurece enquanto o dedo está em cima. */
+html { -webkit-tap-highlight-color: transparent; }
+:where(a, button, summary, label):active { opacity: .75; }
+/* O app para PC repete estas cores como --su-* (styles.css); tests/test_web.py compara os pares. */
 :root {
   /* Canvas e superfícies (escala do Spotify): o fundo é o mais escuro; cartões sólidos em --sup-1/--sup-2. */
   --canvas: #0a0a0c; --sup-1: #121212; --sup-2: #181818; --verde-hover: #3be477;
@@ -77,14 +81,14 @@ p { text-wrap: pretty; } /* sem palavra sozinha no fim do parágrafo */
    .dock, .vidro-ctrl (stories) e .palco-placa. */
 .superficie { position: relative; isolation: isolate; background: var(--sup-2); border: 1px solid var(--linha); box-shadow: inset 0 1px 0 rgb(255 255 255 / .06), 0 1px 3px rgb(0 0 0 / .45); }
 .btn-borda.superficie { background: transparent; border-color: rgb(255 255 255 / .28); box-shadow: none; }
-.btn-borda.superficie:hover:not(:disabled) { background: rgb(255 255 255 / .08); border-color: rgb(255 255 255 / .5); }
+@media (hover: hover) and (pointer: fine) { .btn-borda.superficie:hover:not(:disabled) { background: rgb(255 255 255 / .08); border-color: rgb(255 255 255 / .5); } }
 @media (prefers-contrast: more) { .superficie { border-color: #fff; } }
 /* Números de dados (porcentagens, horas, plays): largura fixa e mais juntos. */
 .num { font-variant-numeric: tabular-nums; letter-spacing: -.04em; }
 
 /* ---------- Página inicial ---------- */
 section[id] { scroll-margin-top: 6rem; }
-.titulo-secao { font-size: clamp(2rem, 4.2vw, 3.2rem); font-weight: 900; letter-spacing: -.03em; line-height: 1.04; text-wrap: balance; }
+.titulo-secao { font-size: clamp(2rem, 4.2vw, 3.2rem); font-weight: 900; letter-spacing: -.04em; line-height: 1.04; text-wrap: balance; }
 
 /* Topo fixo em vidro escuro (fundo ≥ 72%: capa que passa por baixo não aparece borrada) */
 .topo { position: fixed; inset-inline: 0; top: .75rem; z-index: 50; padding-inline: clamp(.75rem, 3vw, 3rem); }
@@ -94,7 +98,7 @@ section[id] { scroll-margin-top: 6rem; }
 .topo .marca { font-size: 1.25rem; min-height: 44px; }
 .nav-principal { display: none; gap: 2rem; font-size: .95rem; font-weight: 600; }
 .nav-principal a { display: inline-flex; align-items: center; min-height: 44px; color: rgba(255, 255, 255, .78); transition: color .2s; }
-.nav-principal a:hover { color: var(--texto); }
+@media (hover: hover) and (pointer: fine) { .nav-principal a:hover { color: var(--texto); } }
 @media (min-width: 1024px) { .nav-principal { display: flex; } }
 .topo-dir { display: flex; align-items: center; gap: .5rem; }
 .topo-dir .btn-verde { display: none; }
@@ -113,14 +117,14 @@ section[id] { scroll-margin-top: 6rem; }
   font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--sub); }
 .menu nav { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: .25rem; }
 .menu nav a { display: flex; align-items: center; min-height: 3.5rem; font-size: 2.2rem; font-weight: 800; letter-spacing: -.02em; color: rgba(255, 255, 255, .8); }
-.menu nav a:hover { color: #fff; }
+@media (hover: hover) and (pointer: fine) { .menu nav a:hover { color: #fff; } }
 
 /* Topo da página: o texto e o produto (os stories do app, com nomes de exemplo) */
 .hero { position: relative; padding-top: 7.5rem; padding-bottom: 4rem; overflow-x: clip; } /* a luz do palco passa da tela no celular: corta sem criar rolagem */
 .hero .shell { display: grid; gap: 3rem; align-items: center; }
 @media (min-width: 1024px) { .hero { min-height: 100svh; display: grid; align-items: center; padding-top: 6rem; padding-bottom: 2rem; } .hero .shell { grid-template-columns: 7fr 5fr; } }
 .hero-texto { display: flex; flex-direction: column; gap: 1.75rem; }
-.hero h1 { max-width: 21ch; font-size: clamp(2.5rem, 4.8vw, 4.25rem); font-weight: 900; line-height: 1; letter-spacing: -.035em; text-wrap: balance; }
+.hero h1 { max-width: 21ch; font-size: clamp(2.5rem, 4.8vw, 4.25rem); font-weight: 900; line-height: 1; letter-spacing: -.045em; text-wrap: balance; }
 .hero h1 em { font-style: normal; color: var(--rosa); }
 .hero-sub { max-width: 36rem; font-size: clamp(1.05rem, 1.4vw, 1.25rem); line-height: 1.55; color: rgba(255, 255, 255, .78); text-wrap: pretty; }
 .hero-ctas { display: flex; flex-wrap: wrap; gap: .75rem; }
@@ -156,7 +160,7 @@ section[id] { scroll-margin-top: 6rem; }
 .st-capinhas img + img { margin-left: -4cqw; box-shadow: -1cqw 0 2cqw rgba(0, 0, 0, .5); }
 .st-capinhas span { margin-left: 1cqw; }
 .legal a { text-decoration: underline; text-underline-offset: .2em; }
-.legal a:hover { color: var(--texto); }
+@media (hover: hover) and (pointer: fine) { .legal a:hover { color: var(--texto); } }
 
 /* Entrada do topo (aprovada no Figma): o texto sobe em sequência; o story sobe e para sem passar do ponto (18/11). */
 @keyframes sobe { from { opacity: 0; transform: translateY(var(--dy, 18px)); } }
@@ -191,7 +195,7 @@ section[id] { scroll-margin-top: 6rem; }
 .modo-texto { grid-area: texto; display: grid; gap: .6rem; align-content: start; }
 .modo .mock { grid-area: mock; position: relative; width: 100%; max-width: 14rem; margin-block: 1.5rem; justify-self: center; box-shadow: 0 24px 48px -16px rgb(0 0 0 / .7); }
 .modo-abrir { grid-area: link; width: fit-content; min-height: 44px; display: inline-flex; align-items: center; gap: .4em; font-weight: 700; color: var(--cor-modo); }
-.modo-abrir:hover { text-decoration: underline; text-underline-offset: .2em; }
+@media (hover: hover) and (pointer: fine) { .modo-abrir:hover { text-decoration: underline; text-underline-offset: .2em; } }
 .modo-n { font-size: clamp(3rem, 7vw, 5rem); font-weight: 900; line-height: .9; color: var(--cor-modo); }
 .modo h3 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -.035em; line-height: 1; }
 .modo p { max-width: 34rem; font-size: 1.05rem; line-height: 1.55; color: var(--sub); }
@@ -223,13 +227,15 @@ section[id] { scroll-margin-top: 6rem; }
   background: linear-gradient(var(--logo-1), var(--logo-4)); }
 .tracklist > li:nth-child(1) { --cor-passo: var(--logo-1); } .tracklist > li:nth-child(2) { --cor-passo: var(--logo-2); } .tracklist > li:nth-child(3) { --cor-passo: var(--logo-4); }
 .tracklist > li { display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: .9rem 1rem; border-radius: 12px; transition: background .15s; }
-.tracklist > li:hover { background: rgba(255, 255, 255, .06); }
+@media (hover: hover) and (pointer: fine) { .tracklist > li:hover { background: rgba(255, 255, 255, .06); } }
 .faixa-n { position: relative; display: grid; place-items: center; width: 2.25rem; height: 2.25rem; justify-self: center; border-radius: 50%; font-size: .95rem;
   color: var(--cor-passo, var(--sub)); background: var(--bg); border: 2px solid var(--cor-passo, var(--linha)); }
 .faixa-n svg { position: absolute; width: 1rem; height: 1rem; color: var(--cor-passo, var(--verde)); opacity: 0; transition: opacity .15s; }
 .faixa-n b { font-weight: 800; transition: opacity .15s; }
-.tracklist > li:hover .faixa-n b, .tracklist > li:focus-within .faixa-n b { opacity: 0; }
-.tracklist > li:hover .faixa-n svg, .tracklist > li:focus-within .faixa-n svg { opacity: 1; }
+.tracklist > li:focus-within .faixa-n b { opacity: 0; }
+@media (hover: hover) and (pointer: fine) { .tracklist > li:hover .faixa-n b { opacity: 0; } }
+.tracklist > li:focus-within .faixa-n svg { opacity: 1; }
+@media (hover: hover) and (pointer: fine) { .tracklist > li:hover .faixa-n svg { opacity: 1; } }
 .tracklist h3 { font-size: 1.15rem; font-weight: 800; letter-spacing: -.01em; }
 .tracklist p { margin-top: .25rem; font-size: .95rem; line-height: 1.5; color: var(--sub); }
 .como-pedir { margin-top: .5rem; padding-left: 1.2rem; list-style: decimal; display: grid; gap: .35rem; font-size: .95rem; line-height: 1.5; color: var(--sub); }
@@ -417,7 +423,7 @@ section[id] { scroll-margin-top: 6rem; }
 .cols .tag { margin-top: 1rem; max-width: 22rem; font-size: 1rem; line-height: 1.5; color: var(--sub); }
 .cols h3 { margin-bottom: 1rem; font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--sub); }
 .cols li a { display: inline-flex; align-items: center; min-height: 44px; font-size: .95rem; color: rgba(255, 255, 255, .8); }
-.cols li a:hover { color: var(--texto); }
+@media (hover: hover) and (pointer: fine) { .cols li a:hover { color: var(--texto); } }
 .legal { display: flex; flex-direction: column; align-items: center; gap: 1rem; border-top: 1px solid var(--linha); padding-top: 2rem; font-size: .85rem; color: var(--sub); text-align: center; }
 @media (min-width: 640px) { .legal { flex-direction: row; justify-content: space-between; text-align: left; } }
 
@@ -439,9 +445,6 @@ section[id] { scroll-margin-top: 6rem; }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .palco-placa { background: var(--sup-2); } }
 @media (prefers-reduced-transparency: reduce) { .palco-placa { background: var(--sup-2); -webkit-backdrop-filter: none; backdrop-filter: none; } }
 
-/* Tipografia: títulos mais pesados e apertados, como os do Spotify. */
-.hero h1 { letter-spacing: -.045em; }
-.titulo-secao { letter-spacing: -.04em; }
 /* O pódio fica na base do story; o título "Quem levou" no alto. */
 .mock .sb .st-conteudo { height: 100%; }
 

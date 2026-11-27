@@ -128,3 +128,53 @@ def test_gerar_convite_pede_zip_e_nome(tmp_path) -> None:
         ui.match.gerar_meu_convite(None, 'Bia', *OPCOES)
     with pytest.raises(Error, match='seu nome'):
         ui.match.gerar_meu_convite([_historico(tmp_path, 'x', ['X'])], ' ', *OPCOES)
+
+
+# R1-10: música malformada é sinal de convite alterado, como artista malformado.
+@pytest.mark.parametrize('musica', ['lixo', [1], ['a', 'b', 'c'], {'x': 1}])
+def test_musica_malformada_recusa_o_convite(musica) -> None:
+    import base64
+    import json
+    import zlib
+
+    from convite import PREFIXO, ler_convite
+
+    dados = {'n': 'Teste', 'a': {'short_term': ['Banda A']},
+             'm': {'short_term': [['Faixa 1', 'Banda A'], musica]}}  # fmt: skip
+    codigo = PREFIXO + base64.urlsafe_b64encode(
+        zlib.compress(json.dumps(dados).encode())
+    ).decode().rstrip('=')
+    with pytest.raises(ValueError, match='incompleto ou foi alterado'):
+        ler_convite(codigo)
+
+
+# R3-13: um convite de versão futura pede atualização, em vez de "não parece um convite".
+def _codigo(prefixo: str, extra: dict) -> str:
+    import base64
+    import json
+    import zlib
+
+    dados = {'n': 'Teste', 'a': {'short_term': ['Banda A']}, 'm': {}, **extra}
+    return prefixo + base64.urlsafe_b64encode(
+        zlib.compress(json.dumps(dados).encode())
+    ).decode().rstrip('=')
+
+
+@pytest.mark.parametrize('prefixo, extra, mensagem', [
+    ('SYNCUP2.', {}, 'versão mais nova'), ('SYNCUP12.', {}, 'versão mais nova'),
+    ('SYNCUP1.', {'v': 2}, 'versão mais nova'), ('SYNCUP1.', {'v': '2'}, 'incompleto ou foi alterado'),
+    ('SYNCUP1.', {'v': True}, 'incompleto ou foi alterado'),
+])  # fmt: skip
+def test_convite_de_versao_futura(prefixo: str, extra: dict, mensagem: str) -> None:
+    from convite import ler_convite
+
+    with pytest.raises(ValueError, match=mensagem):
+        ler_convite(_codigo(prefixo, extra))
+
+
+def test_convite_futuro_colado_depois_nao_estraga_o_primeiro() -> None:
+    from convite import ler_convite, separar_convites
+
+    atual, futuro = _codigo('SYNCUP1.', {'v': 1}), _codigo('SYNCUP2.', {})
+    assert separar_convites(f'{atual}\n{futuro}') == [atual, futuro]
+    assert ler_convite(atual).nome == 'Teste'

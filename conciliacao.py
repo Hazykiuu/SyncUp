@@ -26,6 +26,8 @@ from metricas import contribuicoes_cosseno, cosseno, jaccard
 from perfil_gosto import PerfilGosto, musicas_favoritas, nomes_exibicao, vetor_artistas
 
 MAXIMO_PESSOAS = 16
+# Menos artistas que isso em um dos lados e a nota oscila demais para ganhar faixa (VALIDACAO.md).
+AMOSTRA_MINIMA = 30
 # Faixas calibradas com 4 históricos reais (2017–2026). Rankings de top 50 se
 # sobrepõem pouco mesmo entre amigos: 10 pontos já indicam muitos favoritos comuns.
 NIVEIS = (
@@ -43,7 +45,7 @@ class Compatibilidade:
 
     a: str
     b: str
-    pontuacao: float  # 0–100
+    pontuacao: float | None  # 0–100; None quando um dos lados não tem artista comparável
     nivel: str
     descricao: str
     artistas_comuns: list[str]  # ordenados pela contribuição ao cosseno
@@ -54,6 +56,7 @@ class Compatibilidade:
     # Segundo eixo (v0.9): estilo. None quando alguém não tem gêneros conhecidos.
     pontuacao_generos: float | None = None
     generos_comuns: list[str] = field(default_factory=list)
+    amostra_pequena: bool = False  # menos de AMOSTRA_MINIMA artistas em um dos lados
 
 
 @dataclass(frozen=True)
@@ -66,6 +69,8 @@ class ResultadoConciliacao:
     pontuacao_media_pares: float
     detalhes: dict[frozenset[str], Compatibilidade]
     melhores: dict[str, list[tuple[str, float]]]
+    # Quem saiu antes da matriz por não ter nenhum artista comparável.
+    sem_dados: list[str] = field(default_factory=list)
 
     def par(self, x: str, y: str) -> Compatibilidade:
         return self.detalhes[frozenset((x, y))]
@@ -94,7 +99,7 @@ def comparar_perfis(a: PerfilGosto, b: PerfilGosto, n_exemplos: int = 8) -> Comp
     """Compatibilidade entre duas pessoas, com explicação."""
     va, vb = vetor_artistas(a), vetor_artistas(b)
     valor = cosseno(va, vb) if va and vb else None
-    pontuacao = round((valor or 0.0) * 100, 1)
+    pontuacao = None if valor is None else round(valor * 100, 1)
     nomes = {**nomes_exibicao(b), **nomes_exibicao(a)}
     contribuicoes = contribuicoes_cosseno(va, vb) if va and vb else {}
     comuns = [
@@ -102,7 +107,18 @@ def comparar_perfis(a: PerfilGosto, b: PerfilGosto, n_exemplos: int = 8) -> Comp
         for chave, c in sorted(contribuicoes.items(), key=lambda x: (-x[1], x[0]))
         if c > 0
     ]
-    rotulo, frase = nivel(pontuacao)
+    pequena = min(len(va), len(vb)) < AMOSTRA_MINIMA
+    if pontuacao is None:
+        rotulo = 'Comparação indisponível'
+        frase = 'Falta nome de artista comparável em um dos rankings.'
+    elif pequena:
+        rotulo = 'Amostra pequena'
+        frase = (
+            f'Menos de {AMOSTRA_MINIMA} artistas em um dos rankings: '
+            'a nota pode mudar muito com mais dados.'
+        )
+    else:
+        rotulo, frase = nivel(pontuacao)
     ga, gb = vetor_generos(a), vetor_generos(b)
     valor_generos = cosseno(ga, gb) if ga and gb else None
     # Só gêneros de verdade; as palavras derivadas ("rock" de "brazilian rock") ficam de fora.
@@ -125,6 +141,7 @@ def comparar_perfis(a: PerfilGosto, b: PerfilGosto, n_exemplos: int = 8) -> Comp
         recomendacoes_para_b=_recomendar(va, vb, nomes_exibicao(a), n_exemplos),
         pontuacao_generos=None if valor_generos is None else round(valor_generos * 100, 1),
         generos_comuns=generos_comuns,
+        amostra_pequena=pequena,
     )
 
 
@@ -183,6 +200,16 @@ def conciliar(perfis: list[PerfilGosto]) -> ResultadoConciliacao:
     nomes = [p.nome for p in perfis]
     if len(set(nomes)) != len(nomes):
         raise ValueError('Cada pessoa precisa de um nome diferente.')
+    # Sem vetor não há o que comparar: um 0% pareceria falta de afinidade.
+    sem_dados = [p.nome for p in perfis if not vetor_artistas(p)]
+    if sem_dados:
+        perfis = [p for p in perfis if p.nome not in sem_dados]
+        if len(perfis) < 2:
+            raise ValueError(
+                'O Match precisa de pelo menos duas pessoas com artistas para comparar. '
+                f'Sem artistas comparáveis: {", ".join(sem_dados)}.'
+            )
+        nomes = [p.nome for p in perfis]
     detalhes: dict[frozenset[str], Compatibilidade] = {}
     matriz = pd.DataFrame(100.0, index=nomes, columns=nomes)
     for a, b in combinations(perfis, 2):
@@ -207,4 +234,5 @@ def conciliar(perfis: list[PerfilGosto]) -> ResultadoConciliacao:
         pontuacao_media_pares=sum(pontuacoes) / len(pontuacoes) if pontuacoes else 0.0,
         detalhes=detalhes,
         melhores=melhores,
+        sem_dados=sem_dados,
     )

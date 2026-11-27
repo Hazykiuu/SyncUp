@@ -3,6 +3,9 @@
 import { PERIODOS, TAMANHO_RANKING } from './match.js';
 
 export const PREFIXO = 'SYNCUP1.';
+const VERSAO = 1; // campo opcional "v" do JSON; sem ele, vale 1
+const QUALQUER_VERSAO = /^SYNCUP(\d+)\./;
+const VERSAO_NOVA = 'Este convite foi feito numa versão mais nova do SyncUp. Atualize o app para ler.';
 const MAXIMO_CODIGO = 20_000; // caracteres: um código real tem ~3 mil
 const MAXIMO_JSON = 100_000; // bytes depois de descompactar: barra "zip bomb" no código
 const MAXIMO_NOME = 60;
@@ -49,25 +52,33 @@ function lista(v) {
   return v;
 }
 const objeto = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+function musica(v) {
+  if (!Array.isArray(v) || v.length !== 2) throw new Error(ALTERADO);
+  return { musica: texto(v[0]), artista: texto(v[1]) };
+}
 
 export async function lerConvite(codigo) {
   codigo = (codigo || '').replace(/\s+/g, ''); // tolera quebras de linha do aplicativo de mensagem
+  if (Number(QUALQUER_VERSAO.exec(codigo)?.[1]) > VERSAO) throw new Error(VERSAO_NOVA);
   if (!codigo.startsWith(PREFIXO)) throw new Error('Isso não parece um convite do SyncUp (ele começa com "SYNCUP1.").');
   if (tamanho(codigo) > MAXIMO_CODIGO) throw new Error('O convite é grande demais. Peça para a pessoa gerar de novo.');
   if (typeof DecompressionStream === 'undefined') throw new Error(SEM_SUPORTE);
-  let nome, top_artistas, top_musicas;
+  let nome, top_artistas, top_musicas, versao;
   try {
     const bin = atob(codigo.slice(PREFIXO.length).replace(/-/g, '+').replace(/_/g, '/'));
     const dados = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(
       await passar(Uint8Array.from(bin, (c) => c.charCodeAt(0)), new DecompressionStream('deflate'), MAXIMO_JSON)));
     if (!objeto(dados) || !objeto(dados.a) || !objeto(dados.m)) throw new Error(ALTERADO);
+    versao = dados.v === undefined ? VERSAO : dados.v;
+    if (!Number.isInteger(versao) || versao < 1) throw new Error(ALTERADO);
     nome = texto(dados.n, MAXIMO_NOME);
     top_artistas = Object.fromEntries(PERIODOS.map((p) => [p, lista(dados.a[p] ?? []).map((a) => texto(a))]));
     top_musicas = Object.fromEntries(PERIODOS.map((p) => [p, lista(dados.m[p] ?? [])
-      .filter((m) => Array.isArray(m) && m.length === 2).map(([musica, artista]) => ({ musica: texto(musica), artista: texto(artista) }))]));
+      .map(musica)]));
   } catch {
     throw new Error(ALTERADO);
   }
+  if (versao > VERSAO) throw new Error(VERSAO_NOVA); // fora do try: não é convite alterado
   if (!PERIODOS.some((p) => top_artistas[p].length)) throw new Error(`O convite de ${nome} não tem nenhum ranking de artistas.`);
   return { nome, fonte: 'convite', top_artistas, top_musicas };
 }
@@ -76,7 +87,7 @@ export async function lerConvite(codigo) {
 export function separarConvites(textoColado) {
   const codigos = [];
   for (const pedaco of (textoColado || '').split(/\s+/).filter(Boolean)) {
-    if (pedaco.startsWith(PREFIXO) || !codigos.length) codigos.push(pedaco);
+    if (QUALQUER_VERSAO.test(pedaco) || !codigos.length) codigos.push(pedaco);
     else codigos[codigos.length - 1] += pedaco;
   }
   return codigos;

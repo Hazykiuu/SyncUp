@@ -11,6 +11,9 @@ const PESO_MUSICAS = 0.5;
 export const TAMANHO_RANKING = 50;
 const DIA_MS = 86_400_000;
 
+// Menos artistas que isso em um dos lados e a nota oscila demais para ganhar faixa (VALIDACAO.md).
+export const AMOSTRA_MINIMA = 30;
+
 // Faixas calibradas no Python com 4 históricos reais (conciliacao.NIVEIS).
 const NIVEIS = [
   [25, 'Sintonia rara', 'Rankings muito parecidos: compartilhar playlists é garantia.'],
@@ -19,6 +22,8 @@ const NIVEIS = [
   [1, 'Compatibilidade baixa', 'Poucos pontos em comum, mas ótimo para sair da bolha.'],
   [0, 'Mundos diferentes', 'Quase nada em comum nos rankings enviados.'],
 ];
+
+export const TOPO_DA_ESCALA = NIVEIS[0][0]; // a tela mostra: a partir daqui é "Sintonia rara"
 
 // Contagem decrescente, depois as chaves em ordem de ponto de código (perfil_gosto._ranking).
 function ranking(contagem) {
@@ -108,12 +113,15 @@ function recomendar(origem, destino, nomes, n) {
 export function compararPerfis(a, b, nExemplos = 8) {
   const va = vetorArtistas(a), vb = vetorArtistas(b);
   const valor = va.size && vb.size ? cosseno(va, vb) : null;
-  const pontuacao = arredondar1((valor || 0) * 100);
+  const pontuacao = valor === null ? null : arredondar1(valor * 100);
   const na = nomesExibicao(a), nb = nomesExibicao(b);
   const nomes = new Map([...nb, ...na]);
   const contrib = va.size && vb.size ? contribuicoes(va, vb) : [];
   const comuns = contrib.filter(([, v]) => v > 0).sort(([ka, x], [kb, y]) => y - x || compararTexto(ka, kb)).map(([k]) => nomes.get(k) ?? k);
-  const [rotulo, frase] = nivel(pontuacao);
+  const pequena = Math.min(va.size, vb.size) < AMOSTRA_MINIMA;
+  const [rotulo, frase] = pontuacao === null ? ['Comparação indisponível', 'Falta nome de artista comparável em um dos rankings.']
+    : pequena ? ['Amostra pequena', `Menos de ${AMOSTRA_MINIMA} artistas em um dos rankings: a nota pode mudar muito com mais dados.`]
+      : nivel(pontuacao);
   const fb = musicasFavoritas(b);
   return {
     a: a.nome, b: b.nome, pontuacao, nivel: rotulo, descricao: frase,
@@ -122,6 +130,7 @@ export function compararPerfis(a, b, nExemplos = 8) {
     jaccard_artistas: jaccard(va.keys(), vb.keys()) || 0,
     recomendacoes_para_a: recomendar(vb, va, nb, nExemplos),
     recomendacoes_para_b: recomendar(va, vb, na, nExemplos),
+    amostra_pequena: pequena,
   };
 }
 
@@ -177,8 +186,13 @@ export function emparelhamentoOtimo(nomes, valores) {
 export function conciliar(perfis) {
   if (perfis.length < 2) throw new Error('Adicione pelo menos duas pessoas para conciliar.');
   if (perfis.length > MAXIMO_PESSOAS) throw new Error(`Use no máximo ${MAXIMO_PESSOAS} pessoas por conciliação.`);
+  const todos = perfis.map((p) => p.nome);
+  if (new Set(todos).size !== todos.length) throw new Error('Cada pessoa precisa de um nome diferente.');
+  // Sem vetor não há o que comparar: um 0% pareceria falta de afinidade.
+  const sem_dados = perfis.filter((p) => !vetorArtistas(p).size).map((p) => p.nome);
+  perfis = perfis.filter((p) => !sem_dados.includes(p.nome));
+  if (perfis.length < 2) throw new Error(`O Match precisa de pelo menos duas pessoas com artistas para comparar. Sem artistas comparáveis: ${sem_dados.join(', ')}.`);
   const nomes = perfis.map((p) => p.nome);
-  if (new Set(nomes).size !== nomes.length) throw new Error('Cada pessoa precisa de um nome diferente.');
   const matriz = nomes.map(() => nomes.map(() => 100));
   const detalhes = {}; // sem funções no resultado: ele atravessa o postMessage do Worker
   for (let i = 0; i < perfis.length; i++) for (let j = i + 1; j < perfis.length; j++) {
@@ -191,7 +205,7 @@ export function conciliar(perfis) {
   const melhores = Object.fromEntries(nomes.map((nome, i) => [nome,
     nomes.map((outro, j) => [outro, matriz[i][j]]).filter((_, j) => j !== i).sort(([na, a], [nb, b]) => b - a || compararTexto(na, nb))]));
   return {
-    nomes, matriz, pares, detalhes, melhores,
+    nomes, matriz, pares, detalhes, melhores, sem_dados,
     pontuacao_media_pares: pontuacoes.length ? pontuacoes.reduce((s, v) => s + v, 0) / pontuacoes.length : 0,
   };
 }

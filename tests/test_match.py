@@ -244,3 +244,57 @@ def test_nome_repetido_acusa_antes_de_ler_os_historicos(tmp_path: Path, monkeypa
     with pytest.raises(Error, match='nome diferente'):
         ui.executar_match(['a.json'], 'Bia', *opcoes, 'bia', progress=lambda *a, **k: None)
     assert lidos == []
+
+
+# R1-01: nomes só de pontuação ou emoji viram texto vazio no normalizar_nome.
+SEM_DADOS = ['!!!', '🎵']
+
+
+def _grupo() -> list[PerfilGosto]:
+    return [
+        _perfil('Ana', ['Banda A', 'Banda B', 'Banda C']),
+        _perfil('Bia', ['Banda X', 'Banda Y', 'Banda Z']),
+        _perfil('Cris', ['Banda A', 'Banda X', 'Banda Q']),
+        _perfil('Eli', ['Banda B', 'Banda Y', 'Banda R']),
+    ]
+
+
+def test_par_sem_dados_nao_vira_zero() -> None:
+    c = comparar_perfis(_grupo()[0], _perfil('Duda', SEM_DADOS))
+    assert c.pontuacao is None and c.nivel == 'Comparação indisponível'
+
+
+@pytest.mark.parametrize('quantos', [4, 3])  # com Duda: grupo ímpar e grupo par
+def test_quem_nao_tem_dados_sai_do_match(quantos: int) -> None:
+    grupo = _grupo()[:quantos]
+    sem = conciliar(grupo)
+    com = conciliar([*grupo, _perfil('Duda', SEM_DADOS)])
+    assert com.sem_dados == ['Duda'] and sem.sem_dados == []
+    assert com.nomes == sem.nomes and com.pares == sem.pares
+    assert com.pontuacao_media_pares == sem.pontuacao_media_pares
+
+
+def test_menos_de_duas_pessoas_comparaveis_e_erro_com_os_nomes() -> None:
+    with pytest.raises(ValueError, match='Sem artistas comparáveis: Duda'):
+        conciliar([_grupo()[0], _perfil('Duda', SEM_DADOS)])
+
+
+# R1-02: abaixo de 30 artistas comparáveis em um dos lados, a faixa não vale.
+@pytest.mark.parametrize('artistas, pequena', [(1, True), (29, True), (30, False)])
+def test_amostra_pequena_nao_ganha_faixa(artistas: int, pequena: bool) -> None:
+    cheio = _perfil('Ana', [f'Banda {i}' for i in range(40)])
+    outro = _perfil('Eva', [f'Banda {i}' for i in range(artistas)])
+    c = comparar_perfis(cheio, outro)
+    assert c.amostra_pequena is pequena
+    assert (c.nivel == 'Amostra pequena') is pequena
+
+
+# R3-14: um perfil de versão futura não é lido como se fosse desta.
+@pytest.mark.parametrize('versao', [99, 'x', True, 0])
+def test_de_dict_recusa_versao_desconhecida(versao) -> None:
+    with pytest.raises(ValueError):
+        PerfilGosto.de_dict({'nome': 'A', 'versao': versao, 'top_artistas': {'short_term': ['X']}})
+
+
+def test_de_dict_sem_versao_continua_valendo() -> None:
+    assert PerfilGosto.de_dict({'nome': 'A', 'top_artistas': {'short_term': ['X']}}).nome == 'A'

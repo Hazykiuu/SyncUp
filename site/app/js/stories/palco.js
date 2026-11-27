@@ -35,8 +35,8 @@ function useAtual(alvo) {
 // A capa de 100 px do iTunes vem em tamanho maior trocando o sufixo (mesmo host, já conferido por urlSegura).
 const capaGrande = (url) => url?.replace(/\/\d+x\d+bb\./, '/600x600bb.');
 
-function Agora({ titulo, comSom }) {
-  const { trecho, tocando, mudo } = useSom();
+function Agora({ alvo, titulo, comSom }) {
+  const { trecho, tocando, mudo, semSom } = useSom();
   const t = comSom ? trecho : null;
   return html`<div class="palco-agora superficie">
     <p class="palco-rotulo">Tocando agora</p>
@@ -44,7 +44,7 @@ function Agora({ titulo, comSom }) {
       : html`<div class="palco-capa vazia" aria-hidden="true">${ICONE.nota}</div>`}
     <div class="palco-faixa">
       <b>${t ? t.faixa : titulo}</b>
-      <small>${t ? `${t.artista} · trecho de 30 s` : comSom ? 'Preparando o som…' : 'Stories sem som'}</small>
+      <small>${t ? `${t.artista} · trecho de 30 s` : comSom ? semSom.get(alvo) ?? 'Preparando o som…' : 'Stories sem som'}</small>
     </div>
     ${t && html`<span key=${t.url} class=${`dock-progresso palco-progresso${tocando ? '' : ' parado'}`} aria-hidden="true"><i></i></span>`}
     ${comSom && html`<button type="button" class="palco-mudo btn btn-borda superficie" aria-pressed=${mudo} onClick=${() => definirMudo(!mudo)}>
@@ -65,7 +65,7 @@ export function Palco({ alvo, slides, comSom = false, lado = null, children }) {
     </nav>
     <div ref=${alvo} class="nucleo">${children}</div>
     <aside class="palco-lado" aria-label="Som e ações dos stories">
-      <${Agora} titulo=${tituloStory(slides[atual] || slides[0])} comSom=${comSom} />
+      <${Agora} alvo=${alvo} titulo=${tituloStory(slides[atual] || slides[0])} comSom=${comSom} />
       ${lado}
     </aside>
   </div>`;

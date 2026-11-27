@@ -130,7 +130,7 @@ def stories_html(w: Wrapped) -> str:
             + _a(f'<div class="su-mega">{_n(w.horas, 0)}<span>horas de música</span></div>', 3)
             + _a(
                 f'<p>Isso dá <strong>{fmt_num(dias_inteiros, 1)} dias inteiros</strong> sem parar, '
-                f'em {fmt_num(w.dias_com_musica)} dias com música.</p>',
+                f'em {fmt_num(w.dias_com_musica)} {"dia" if w.dias_com_musica == 1 else "dias"} com música.</p>',
                 4,
             ),
         )
@@ -380,7 +380,7 @@ def stories_html(w: Wrapped) -> str:
     )
     avisos = ''.join(f'<p class="su-note">{_e(a)}</p>' for a in w.avisos)
     return (
-        f'<div class="su-stories" data-stories tabindex="0" aria-label="Wrapped de {_e(w.nome)}">'
+        f'<div class="su-stories" data-stories tabindex="0" role="region" aria-roledescription="stories" aria-label="Wrapped de {_e(w.nome)}">'
         f'<div class="su-stories-frame">{"".join(slides)}</div></div>{avisos}'
     )
 
@@ -449,6 +449,9 @@ def stories_match_html(
     for grupo in r.pares:
         internos = [r.par(x, y) for i, x in enumerate(grupo) for y in grupo[i + 1 :]]
         principal = max(internos, key=lambda c: c.pontuacao)
+        faixa = next(
+            (c for c in internos if c.amostra_pequena), principal
+        )  # ver componentes.match_html
         media = sum(c.pontuacao for c in internos) / len(internos)
         comuns = ''.join(
             f'<span class="su-chip">{_e(a)}</span>' for a in principal.artistas_comuns[:4]
@@ -472,7 +475,7 @@ def stories_match_html(
                     for i, nome in enumerate(grupo)
                 )
                 + _a(
-                    f'<div class="su-mega">{_n(media, 1, "%")}<span>{_e(principal.nivel)}</span></div>',
+                    f'<div class="su-mega">{_n(media, 1, "%")}<span>{_e(faixa.nivel)}</span></div>',
                     4,
                 )
                 + (_a(f'<div class="su-badges">{comuns}</div>', 5) if comuns else '')
@@ -517,14 +520,14 @@ def stories_match_html(
             )
             + _a(
                 '<p class="su-foot">Compara os rankings musicais enviados. '
-                'Não mede personalidade nem afinidade pessoal.</p>',
+                'Não mede personalidade nem afinidade pessoal. As faixas são provisórias.</p>',
                 3,
             )
             + _a('<button type="button" class="su-replay">↺ Ver de novo</button>', 4),
         )
     )
     return (
-        '<div class="su-stories" data-stories tabindex="0" aria-label="Revelação do Match">'
+        '<div class="su-stories" data-stories tabindex="0" role="region" aria-roledescription="stories" aria-label="Revelação do Match">'
         f'<div class="su-stories-frame">{"".join(slides)}</div></div>'
     )
 
@@ -622,6 +625,6 @@ def stories_sintonia_html(nome_a: str, nome_b: str, s: Sintonia, quase: int) -> 
         )
     )
     return (
-        f'<div class="su-stories" data-stories tabindex="0" aria-label="Sintonia de {a} e {b}">'
+        f'<div class="su-stories" data-stories tabindex="0" role="region" aria-roledescription="stories" aria-label="Sintonia de {a} e {b}">'
         f'<div class="su-stories-frame">{"".join(slides)}</div></div>'
     )

@@ -17,7 +17,8 @@ function lastfm({ recentes = [], top = [], porPagina = 200, topPorPagina = 1000,
     const pagina = Number(p.get('page') || 1);
     if (p.get('method') === 'user.getrecenttracks') {
       const desde = Number(p.get('from') || 0);
-      const lista = recentes.filter((t) => !t.date || Number(t.date.uts) >= desde);
+      const ate = Number(p.get('to') || Infinity);
+      const lista = recentes.filter((t) => !t.date || (Number(t.date.uts) >= desde && Number(t.date.uts) < ate));
       const totalPages = Math.ceil(lista.length / porPagina);
       return resposta({ recenttracks: { track: lista.slice((pagina - 1) * porPagina, pagina * porPagina), '@attr': { page: String(pagina), totalPages: String(totalPages), total: String(lista.length) } } });
     }
@@ -280,4 +281,93 @@ test('cache que falha (aba anônima) não quebra: baixa tudo', async () => {
 test('sem nenhum scrobble: erro claro', async () => {
   const lf = lastfm({ recentes: [] });
   await assert.rejects(historicoDoLastfm('carlos', { buscar: lf.buscar, armazem: memoria(), ...semEspera }), /nenhum scrobble/i);
+});
+
+// R3-11: o histórico guardado vence 7 dias depois do último uso.
+test('cache vencido há mais de 7 dias é ignorado e o histórico é baixado de novo', async () => {
+  const armazem = memoria();
+  const recentes = [scrobble(1000, 'a')];
+  const lf = lastfm({ recentes });
+  const dia = 86_400_000;
+  await historicoDoLastfm('carlos', { buscar: lf.buscar, armazem, agora: () => 100 * dia, ...semEspera });
+  assert.equal(armazem.m.get('carlos').quando, 100 * dia);
+  for (const [quando, doCache] of [[107 * dia, true], [115 * dia, false]]) {
+    lf.pedidos.length = 0;
+    await historicoDoLastfm('carlos', { buscar: lf.buscar, armazem, agora: () => quando, ...semEspera });
+    const pedidos = lf.pedidos.filter((p) => p.method === 'user.getrecenttracks');
+    assert.equal(pedidos.every((p) => p.from === '1001'), doCache, `${quando / dia}`);
+  }
+});
+
+// R3-10: pausa longa pedida pelo servidor é desistência, não insistência.
+const limitado = (segundos) => ({ ...resposta({ error: 29 }, 429), headers: new Map([['retry-after', String(segundos)]]) });
+
+test('429 com Retry-After de 60 s desiste no primeiro pedido; de 5 s, espera os 5', async () => {
+  let pedidos = 0;
+  await assert.rejects(pedir('user.getrecenttracks', { user: 'alguem' }, { buscar: async () => { pedidos++; return limitado(60); }, ...semEspera }), (e) => e.codigo === 29 && /pausa/.test(e.message));
+  assert.equal(pedidos, 1);
+  const esperas = [];
+  pedidos = 0;
+  await pedir('user.getrecenttracks', { user: 'alguem' }, { buscar: async () => (++pedidos === 1 ? limitado(5) : resposta({ ok: 1 })), esperar: async (ms) => { esperas.push(ms); } });
+  assert.deepEqual(esperas, [5000]);
+});
+
+test('limite no meio do download: as outras páginas param e o que veio inteiro fica guardado', async () => {
+  const armazem = memoria();
+  const recentes = Array.from({ length: 12 }, (_, i) => scrobble(2000 - i, `m${i}`));
+  const lf = lastfm({ recentes, porPagina: 2 });
+  let bloquear = true, pedidos = 0;
+  const buscar = async (url) => {
+    const p = new URL(url).searchParams;
+    if (p.get('method') === 'user.getrecenttracks') pedidos++;
+    if (bloquear && p.get('method') === 'user.getrecenttracks' && Number(p.get('page')) >= 2) return limitado(60);
+    return lf.buscar(url);
+  };
+  await assert.rejects(historicoDoLastfm('carlos', { buscar, armazem, agora: () => 5000, ...semEspera }), /pausa/);
+  const antes = pedidos;
+  assert.ok(antes <= 4, `pedidos ${antes}`);
+  await new Promise((ok) => setTimeout(ok, 20));
+  assert.equal(pedidos, antes); // nada depois da mensagem
+  assert.equal(armazem.m.get('carlos|parcial').escutas.length, 2);
+
+  bloquear = false;
+  lf.pedidos.length = 0;
+  const r = await historicoDoLastfm('carlos', { buscar, armazem, agora: () => 6000, ...semEspera });
+  assert.equal(r.reproducoes, 12); // sem buraco e sem repetição
+  assert.ok(lf.pedidos.some((p) => p.to === '2000'), 'continua de onde parou');
+});
+
+// Revisão da v1.28: a retomada não pode perder as capas nem o que já baixou.
+const comCapa = (uts, musica) => ({ ...scrobble(uts, musica), image: [{ size: 'extralarge', '#text': `https://lastfm.freetls.fastly.net/i/u/300x300/${musica}.jpg` }] });
+function servidorComFalha(recentes) {
+  const lf = lastfm({ recentes, porPagina: 2 });
+  const falha = { de: () => false };
+  const buscar = async (url) => (falha.de(new URL(url).searchParams) ? limitado(60) : lf.buscar(url));
+  return { lf, falha, buscar };
+}
+const segundaPagina = (p) => p.get('method') === 'user.getrecenttracks' && Number(p.get('page')) >= 2;
+
+test('retomada: as capas das páginas guardadas voltam junto', async () => {
+  const armazem = memoria();
+  const { falha, buscar } = servidorComFalha(Array.from({ length: 12 }, (_, i) => comCapa(2000 - i, `m${i}`)));
+  falha.de = segundaPagina;
+  await assert.rejects(historicoDoLastfm('carlos', { buscar, armazem, agora: () => 5000, ...semEspera }), /pausa/);
+  falha.de = () => false;
+  const r = await historicoDoLastfm('carlos', { buscar, armazem, agora: () => 6000, ...semEspera });
+  assert.equal(r.capas.size, 12);
+  assert.equal(armazem.m.get('carlos').capas.length, 12);
+});
+
+test('retomada: falha depois do download (novidades ou durações) não joga fora o que veio', async () => {
+  for (const quebra of [(p) => p.get('method') === 'user.getrecenttracks' && p.get('from') === '2001', (p) => p.get('method') === 'user.gettoptracks']) {
+    const armazem = memoria();
+    const { falha, buscar } = servidorComFalha(Array.from({ length: 12 }, (_, i) => scrobble(2000 - i, `m${i}`)));
+    falha.de = segundaPagina;
+    await assert.rejects(historicoDoLastfm('carlos', { buscar, armazem, agora: () => 5000, ...semEspera }), /pausa/);
+    falha.de = quebra;
+    await assert.rejects(historicoDoLastfm('carlos', { buscar, armazem, agora: () => 6000, ...semEspera }), /pausa/);
+    assert.equal(armazem.m.get('carlos|parcial').escutas.length, 12);
+    falha.de = () => false;
+    assert.equal((await historicoDoLastfm('carlos', { buscar, armazem, agora: () => 7000, ...semEspera })).reproducoes, 12);
+  }
 });

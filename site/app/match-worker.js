@@ -38,7 +38,9 @@ self.onmessage = async ({ data: { tipo, arquivos, nomes, nome, convites, opcoes 
     if (perfis.length < 2) throw new Error(`O Match precisa de pelo menos duas pessoas.${fora.length ? ` ${fora.join(' · ')}` : ''}`);
     if (perfis.length > MAXIMO_PESSOAS) throw new Error(`Use no máximo ${MAXIMO_PESSOAS} pessoas no Match.`);
     self.postMessage({ etapa: 'Comparando todos com todos…' });
-    self.postMessage({ ok: true, dados: { r: conciliar(perfis), fontes, fora } });
+    const r = conciliar(perfis);
+    fora.push(...r.sem_dados.map((n) => `${n}: sem artistas comparáveis nos rankings`));
+    self.postMessage({ ok: true, dados: { r, fontes, fora } });
   } catch (e) {
     const nosso = e?.constructor === Error && e.message;
     self.postMessage({ ok: false, erro: nosso || 'Algo deu errado ao processar os arquivos. Confira se são ZIPs do Histórico Estendido.' });

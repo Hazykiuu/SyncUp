@@ -162,3 +162,16 @@ def test_rbo_casos_de_borda_e_topo_pesa_mais() -> None:
     # Os mesmos números do dupla.js (tests/js/rbo.test.mjs).
     assert rbo(list('abcdefg'), list('bacdegf')) == 0.8901585000000001
     assert rbo(list('abcde'), list('xaybz')) == 0.37089000000000005
+
+
+# R1-04: a mesma tabela de inválidos de tests/js/rbo.test.mjs.
+@pytest.mark.parametrize(
+    'argumentos',
+    [{'p': p} for p in (0, 1, -0.1, 1.5, float('nan'))]
+    + [{'k': k} for k in (-1, 0, True, 2.5)]
+    + [{'a': ['x', 'x', 'x']}, {'b': ['y', 'z', 'y']}],
+)
+def test_rbo_recusa_parametros_invalidos(argumentos: dict) -> None:
+    entrada = {'a': ['x', 'y', 'z'], 'b': ['y', 'x', 'w'], **argumentos}
+    with pytest.raises(ValueError, match='RBO'):
+        rbo(**entrada)

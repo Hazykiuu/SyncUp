@@ -2,9 +2,9 @@
 import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { CORES } from './batalha.js';
 import { chegarPouco, mostrarResultado } from './chegada.js';
-import { Pessoa } from './envio.js';
+import { Pessoa, Processando } from './envio.js';
 import { Opcoes, PADRAO } from './opcoes.js';
-import { duetos, melhorPar, trilhaMatch } from './match.js';
+import { duetos, MAXIMO_PESSOAS, melhorPar, TOPO_DA_ESCALA, trilhaMatch } from './match.js';
 import { avisoPoster, compartilhar, desenharPosterMatch } from './poster.js';
 import { destravarSom, ICONE, SomStories, TRILHA_EXEMPLO } from './som.js';
 import { Dock } from './stories/dock.js';
@@ -17,7 +17,7 @@ import { abrirWorker } from './worker.js';
 const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos pessoas.';
 const DEMO = [['demo-wrapped.zip', 'Rafa'], ['demo-bruno.zip', 'Lu'], ['demo-carla.zip', 'Teo'], ['demo-davi.zip', 'Nina']];
 const NOTA_SOM = 'Para o som, o SyncUp envia à Apple (iTunes) os nomes dos artistas em comum de cada par, além do seu endereço IP. Os históricos e os nomes de vocês não saem do aparelho. Trechos: iTunes.';
-const AVISO = 'O Match compara só os rankings de artistas e músicas.';
+const AVISO = 'O Match compara só os rankings de artistas e músicas. As faixas são provisórias.';
 const EXEMPLOS = ['Mari', 'Juca', 'Bel', 'Zé', 'Pri', 'Dani'];
 const cor = (i) => CORES[i % CORES.length];
 const pct = (v) => `${fmtNum(v, 1)}%`;
@@ -33,6 +33,7 @@ function Dueto({ d, cor }) {
     ${d.linhas.map((l) => html`<div class="dueto-par">
       ${trio && html`<p class="dueto-subpar">${l.x} × ${l.y}</p>`}
       <p class="dueto-nota"><b>${pct(l.pontuacao)}</b><span>${l.nivel}</span></p>
+      <p class="dueto-escala">Nesta escala, ${TOPO_DA_ESCALA}% já é sintonia rara.</p>
       <p class="dueto-frase">${l.descricao}</p>
       <${Faixas} l=${l} cor=${cor} />
     </div>`)}
@@ -75,6 +76,8 @@ function ResultadoMatch({ dados: { r, fontes, fora, exemplo } }) {
     <//>
     <p class="batalha-resumo">Média dos pares: <b>${pct(r.pontuacao_media_pares)}</b>. Os pares somam a maior compatibilidade possível do grupo${r.nomes.length % 2 ? '; com número ímpar, uma pessoa entra no par onde mais combina e vira trio' : ''}.</p>
     <ul class="duetos">${duetos(r).map((d) => html`<${Dueto} d=${d} cor=${(n) => cores[n]} />`)}</ul>
+    <details class="superficie detalhe"><summary>Como a nota é calculada</summary>
+      <p>É o cosseno entre os rankings de artistas das duas pessoas, em que as primeiras posições pesam mais. Rankings de 50 artistas se repetem pouco, mesmo entre amigos, por isso a escala é baixa. A barra de cada par mede outra coisa: os artistas que as duas listas têm em comum.</p></details>
     <details class="superficie detalhe"><summary>Com quem cada um mais combina</summary>
       <div class="tabela-rolagem" role="region" aria-label="Com quem cada um mais combina" tabindex="0">
         <table class="placar"><thead><tr><th scope="col">Pessoa</th><th scope="col">Fonte</th><th scope="col">1º match</th><th scope="col">2º match</th></tr></thead>
@@ -142,10 +145,14 @@ export function Match() {
 
   const rodar = async (ler, nomesUsados, textoConvites, exemplo = false) => {
     setFase({ tipo: 'processando', etapa: 'Preparando o Match…' });
-    const minha = rodada.current + 1;
+    cancelar();
+    let minha = rodada.current;
     try {
       const lista = await ler();
-      const dados = await pedir({ tipo: 'match', arquivos: lista, nomes: nomesUsados, convites: textoConvites, opcoes }, (etapa) => setFase({ tipo: 'processando', etapa }));
+      if (minha !== rodada.current) return; // cancelado enquanto lia: não abre o Worker
+      const pedido = pedir({ tipo: 'match', arquivos: lista, nomes: nomesUsados, convites: textoConvites, opcoes }, (etapa) => setFase({ tipo: 'processando', etapa }));
+      minha = rodada.current; // pedir() abre uma rodada nova antes de esperar o Worker
+      const dados = await pedido;
       mostrarResultado(() => setFase({ tipo: 'resultado', dados: { ...dados, exemplo } }), 'resultado-match');
     } catch (e) {
       if (e.name === 'AbortError' || minha !== rodada.current) return;
@@ -181,7 +188,7 @@ export function Match() {
             extra=${i >= 1 && html`<button type="button" class="tirar tirar-lutador" aria-label=${`Tirar a pessoa ${i + 1}`} onClick=${() => tirar(i)} disabled=${ocupado}>×</button>`} />
         </div>`)}
     </div>
-    ${nomes.length < 16 && html`<button type="button" class="btn btn-borda superficie mais-lutador" onClick=${adicionar} disabled=${ocupado}>+ Adicionar pessoa</button>`}
+    ${nomes.length < MAXIMO_PESSOAS && html`<button type="button" class="btn btn-borda superficie mais-lutador" onClick=${adicionar} disabled=${ocupado}>+ Adicionar pessoa</button>`}
     <label class="superficie match-colar"><span><b>Convites recebidos</b> <small>(opcional) Cole os códigos que começam com SYNCUP1., um por linha.</small></span>
       <textarea rows="3" value=${convites} onInput=${(e) => setConvites(e.target.value)} disabled=${ocupado} spellcheck="false" autocomplete="off"></textarea></label>
     <${MeuConvite} opcoes=${opcoes} rodar=${(m) => pedir(m)} ocupado=${ocupado} />
@@ -193,7 +200,7 @@ export function Match() {
       <small id="dica-match">${pode || ocupado || fase.tipo === 'resultado' ? '' : 'Junte pelo menos duas pessoas, com ZIP ou convite. Quem tem nome precisa de arquivo.'}</small>
     </div>
     <div aria-live="polite">
-      ${fase.tipo === 'processando' && html`<p ref=${chegarPouco} class="processando superficie"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
+      ${fase.tipo === 'processando' && html`<${Processando} etapa=${fase.etapa} aoCancelar=${() => { cancelar(); setFase({ tipo: 'parado' }); }} aoMontar=${chegarPouco} />`}
       ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro superficie" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
         ${ultima.current && html`<button type="button" class="btn btn-borda superficie" onClick=${ultima.current === 'demo' ? demo : combinar}>Tentar de novo</button>`}</div>`}
       ${fase.tipo === 'resultado' && html`<p class="sr-only">Resultado do Match pronto, logo abaixo.</p>`}

@@ -67,10 +67,10 @@ def blend_html(resultado: ResultadoComparacao, texto_periodo: str) -> str:
     """Cabeçalho estilo "Blend": avatares, anel de similaridade e quatro métricas."""
     m, a, b = resultado.metricas, resultado.perfil_a, resultado.perfil_b
     cards = [
-        ('Similaridade musical', m.cosseno, f'Cosseno · ponderação {resultado.ponderacao}'),
-        ('Artistas em comum', m.jaccard, 'Jaccard · todos os artistas'),
-        ('Favoritos compartilhados', m.rbo_top50, 'RBO · Top 50'),
-        ('Contagens compartilhadas', m.jaccard_ponderado, 'Ruzicka · ponderação selecionada'),
+        ('Escuta em comum', m.cosseno, f'Cosseno · ponderação {resultado.ponderacao}'),
+        ('Artistas em comum', m.jaccard, 'Jaccard · plays de 30 s ou mais'),
+        ('Favoritos em comum', m.rbo_top50, 'RBO · Top 50'),
+        ('Contagens em comum', m.jaccard_ponderado, 'Ruzicka · sensível ao volume de escuta'),
     ]
     metricas = ''.join(
         f'<div class="su-metric{" primary" if i == 0 else ""}" style="--i:{i}">'
@@ -299,6 +299,8 @@ def match_html(
     for k, grupo in enumerate(resultado.pares):
         pares_internos = [resultado.par(x, y) for i, x in enumerate(grupo) for y in grupo[i + 1 :]]
         principal = max(pares_internos, key=lambda c: c.pontuacao)
+        # O número do trio é uma média: com um par de amostra pequena, a faixa de outro par não vale para ela.
+        faixa = next((c for c in pares_internos if c.amostra_pequena), principal)
         pontuacao = sum(c.pontuacao for c in pares_internos) / len(pares_internos)
         cores = [CORES_GRUPO[(k * 3 + i) % len(CORES_GRUPO)] for i in range(len(grupo))]
         avatares = ''.join(
@@ -342,8 +344,8 @@ def match_html(
             f'<div class="su-avatars">{avatares}</div>'
             f'<h3 class="su-poster-names">{nomes}</h3>'
             f'<div class="su-poster-score">{_contador(pontuacao, 1, "%")}'
-            f'<span>{escape_html(principal.nivel)}</span></div>'
-            f'<p class="su-poster-sub">{escape_html(principal.descricao)}</p>'
+            f'<span>{escape_html(faixa.nivel)}</span></div>'
+            f'<p class="su-poster-sub">{escape_html(faixa.descricao)}</p>'
             + dividem
             + estilo
             + _sintonia_linha(sintonias, list(grupo))

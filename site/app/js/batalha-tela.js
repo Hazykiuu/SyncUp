@@ -2,7 +2,7 @@
 import { html, useEffect, useMemo, useRef, useState } from 'preact-htm';
 import { CORES, janelaComum, validarNomes } from './batalha.js';
 import { chegarPouco, mostrarResultado } from './chegada.js';
-import { Pessoa } from './envio.js';
+import { Pessoa, Processando } from './envio.js';
 import { avisoPoster, compartilhar, desenharPosterBatalha } from './poster.js';
 import { Opcoes, PADRAO } from './opcoes.js';
 import { destravarSom, ICONE, SomStories, TRILHA_EXEMPLO } from './som.js';
@@ -75,9 +75,20 @@ function Rodadas({ b, nomes }) {
 const textoMedalhas = (m) => [m.ouro && plural(m.ouro, 'ouro', 'ouros'), m.prata && plural(m.prata, 'prata', 'pratas'), m.bronze && plural(m.bronze, 'bronze', 'bronzes')].filter(Boolean).join(', ') || 'sem medalha';
 
 // Um Worker por batalha. Os File vão em cada fase (o Worker nunca relê o que guardou da anterior).
-async function batalharNoWorker(w, arquivos, nomes, opcoes) {
+async function batalharNoWorker(w, arquivos, nomes, opcoes, sorteio) {
   const janela = opcoes.comum ? janelaComum((await w.pedir({ fase: 1, arquivos, opcoes })).faixas) : null;
-  return (await w.pedir({ fase: 2, arquivos, nomes, opcoes, janela })).dados;
+  return (await w.pedir({ fase: 2, arquivos, nomes, opcoes, janela, ...sorteio })).dados;
+}
+
+// ?semente=N: sorteio fixo, para testes e capturas (como ?fps=1 e ?capas=teste).
+const SEMENTE = new URLSearchParams(location.search).get('semente');
+const novaSemente = () => (SEMENTE === null ? Math.floor(Math.random() * 2 ** 32) : Number(SEMENTE) >>> 0);
+
+// Temas que não deram para todos, agrupados pelo motivo (os não sorteados e os empatados não aparecem).
+function textoFora(fora) {
+  const motivos = new Map();
+  for (const f of fora) if (f.tipo === 'dado') motivos.set(f.motivo, (motivos.get(f.motivo) || 0) + 1);
+  return [...motivos].map(([motivo, n]) => `${plural(n, 'tema', 'temas')} porque ${motivo}`).join('; ');
 }
 
 function Placar({ b, nomes }) {
@@ -127,7 +138,7 @@ function ResultadoBatalha({ b, nomes, comum }) {
       <${Rodadas} b=${b} nomes=${nomes} />
       <${Podio} b=${b} nomes=${nomes} ordem=${b.lutadores.map((l, i) => i).sort(porMedalhas(b))} />
       <details class="superficie detalhe"><summary>Placar completo</summary><${Placar} b=${b} nomes=${nomes} /></details>
-      ${b.fora.length > 0 && html`<p class="nota">Ficaram de fora: ${b.fora.map((f) => `${f.titulo} (${f.motivo})`).join('; ')}.</p>`}
+      ${textoFora(b.fora) && html`<p class="nota">Ficaram fora do sorteio: ${textoFora(b.fora)}.</p>`}
       ${!comum && html`<p class="nota">Históricos inteiros: quem tem mais tempo de histórico leva vantagem.</p>`}
       <p class="nota">${AVISO}</p>
     </section>`;
@@ -143,6 +154,7 @@ export function Batalha() {
   const ultima = useRef(null); // "batalhar" ou "demo", para o "Tentar de novo"
   const worker = useRef(null);
   const rodada = useRef(0); // resposta de uma batalha já cancelada é ignorada
+  const anteriores = useRef([]); // temas da última batalha mostrada: a próxima evita repeti-los
 
   const cancelar = () => { worker.current?.cancelar(); worker.current = null; rodada.current++; };
   // Saiu do modo Batalha (ou da página) no meio da leitura: nada fica lendo em segundo plano.
@@ -164,8 +176,9 @@ export function Batalha() {
       const lista = await ler();
       if (minha !== rodada.current) return;
       const w = (worker.current = abrirWorker('batalha-worker.js', { semResposta: SEM_RESPOSTA, aoProgresso: (etapa) => minha === rodada.current && setFase({ tipo: 'processando', etapa }) }));
-      const b = await batalharNoWorker(w, lista, nomesUsados, opcoes);
+      const b = await batalharNoWorker(w, lista, nomesUsados, opcoes, { semente: novaSemente(), evitar: anteriores.current });
       if (minha !== rodada.current) return;
+      anteriores.current = b.temas;
       if (exemplo && b.trilha) b.trilha = TRILHA_EXEMPLO;
       b.aproximado = !exemplo && lista.some((a) => a.some((f) => f.lastfm)); // Last.fm: horas pela duração das músicas
       cancelar();
@@ -221,7 +234,7 @@ export function Batalha() {
       <small id="dica-batalhar">${pode || ocupado || fase.tipo === 'resultado' ? '' : 'Envie pelo menos um arquivo para cada pessoa.'}</small>
     </div>
     <div aria-live="polite">
-      ${fase.tipo === 'processando' && html`<p ref=${chegarPouco} class="processando superficie"><span class="giro" aria-hidden="true"></span>${fase.etapa}</p>`}
+      ${fase.tipo === 'processando' && html`<${Processando} etapa=${fase.etapa} aoCancelar=${() => { cancelar(); setFase({ tipo: 'parado' }); }} aoMontar=${chegarPouco} />`}
       ${fase.tipo === 'erro' && html`<div ref=${chegarPouco} class="erro superficie" role="alert"><p><b>Não deu certo.</b> ${fase.mensagem}</p>
         ${ultima.current && html`<button type="button" class="btn btn-borda superficie" onClick=${ultima.current === 'demo' ? demo : batalhar}>Tentar de novo</button>`}</div>`}
       ${fase.tipo === 'resultado' && html`<p class="sr-only">Resultado da batalha pronto, logo abaixo.</p>`}

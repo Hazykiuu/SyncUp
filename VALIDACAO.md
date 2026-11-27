@@ -151,3 +151,61 @@ O notebook distribuído está sem saídas e sem arquivos de dados/exports reais.
 - Memória (Pyodide, painel do navegador): demo 6× estável em 149 MB, p1 × p2 6× em 179 MB; histórico gigante 3× em 309 MB (antes 371 MB). Transferência sem cópia conferida (buffer da página fica com 0 bytes).
 - Falhas simuladas: sem internet e pacote 404 mostram a mensagem de conexão; plotly.js fora do ar mostra aviso e carrega ao reabrir a aba; arquivo de 51 MB recusado com aviso.
 - Não medido: celular de verdade e rede lenta.
+
+## Match: faixas e amostra mínima (2026-11-26)
+
+**Faixas (25/10/5/1): provisórias.** Foram escolhidas com 4 históricos reais (comentário em `conciliacao.py`). Não há registro de uma conferência com dados separados.
+
+**Distribuição das notas** em 12 históricos reais (66 pares, só números agregados): mediana 5,5; percentil 90, 16,0; máximo 32,7. Pares por faixa: 8 abaixo de 1; 24 de 1 a 5; 16 de 5 a 10; 17 de 10 a 25; 1 com 25 ou mais. Isso descreve as faixas, mas não as valida: não há resposta certa para comparar, e os 12 podem incluir os 4 da escolha.
+
+**Amostra mínima: 30 artistas comparáveis em cada lado** (escolha do Carlos). Os rankings de cada um dos 12 perfis foram cortados nos primeiros N artistas e comparados com os outros 11, contra a nota do perfil completo. O número de artistas do corte soma os 3 períodos.
+
+| Artistas do corte | Comparações | Erro mediano | Erro no percentil 90 | Mesma faixa | Notas de 10 ou mais que eram falsas |
+|---|---|---|---|---|---|
+| 1 a 2 | 121 | 4,3 | 11,4 | 17% | 71% de 7 |
+| 5 a 9 | 198 | 3,0 | 9,6 | 37% | 7% de 29 |
+| 10 a 14 | 154 | 2,0 | 6,0 | 51% | 15% de 27 |
+| 20 a 29 | 143 | 1,3 | 4,0 | 66% | 12% de 32 |
+| 30 a 49 | 231 | 0,6 | 2,9 | 75% | 10% de 52 |
+| 50 a 79 | 77 | 0,4 | 0,9 | 91% | 8% de 12 |
+
+Não há um corte óbvio na curva: 30 é uma escolha a partir dela. Os 12 perfis completos têm de 73 a 137 artistas. Com trechos seguidos do histórico (em vez de cortes do ranking), o erro continua alto mesmo com muitos artistas, porque o gosto muda com o período; o mínimo não resolve isso.
+
+## Wrapped: piso de plays (2026-11-26)
+
+**Piso: 100 plays de 30 s ou mais** (escolha do Carlos). Em 12 históricos reais, 5 trechos seguidos de N plays por pessoa. Cada trecho foi reamostrado 6 vezes, para ver se o arquétipo e o artista nº 1 se repetem.
+
+| N | Dias com música (mediana) | Horas (mediana) | Mesmo arquétipo | Mesmo artista nº 1 | Artista nº 1 com só 1 ou 2 plays |
+|---|---|---|---|---|---|
+| 1 | 1 | 0,1 | 100% | 100% | 100% |
+| 10 | 1 | 0,5 | 83% | 51% | 47% |
+| 30 | 2 | 1,5 | 82% | 63% | 8% |
+| 50 | 2 | 2,4 | 91% | 64% | 3% |
+| 100 | 4 | 4,8 | 88% | 78% | 0% |
+| 200 | 6 | 9,8 | 92% | 82% | 0% |
+| 1000 | 28 | 49,6 | 94% | 94% | 0% |
+
+A reamostragem mede o quanto o resultado depende de poucos plays. Ela não diz se o trecho representa o resto da vida da pessoa.
+
+## Ponderação padrão das telas (2026-11-26)
+
+As telas do PC e do navegador usam `log1p` por padrão (escolha do Carlos). No estudo abaixo, o cosseno bruto errou 17% das vezes ao comparar as duas metades do tempo de cada pessoa, e o `log1p` acertou todas. A API Python (`analise.comparar`) e o motor JS continuam com `bruta` quando ninguém passa a opção.
+
+## Estudo de similaridade com 12 históricos (2026-11-16)
+
+Históricos reais, usados com autorização e guardados fora do repositório. Método: dividir o histórico de cada pessoa em duas partes e ver se a medida aponta a própria pessoa como a mais parecida.
+
+- Em meses pares × ímpares, todas as medidas testadas acertaram 100%.
+- Na 1ª metade × 2ª metade no tempo, o cosseno bruto acertou 83% e o Jaccard 96%; o cosseno com raiz ou `log1p`, o TF-IDF, o Jensen-Shannon e o Ruzicka acertaram 100%.
+- Nos 66 pares entre pessoas diferentes, o cosseno bruto concordou menos com o `log1p` (Spearman 0,65).
+
+
+## Limites de tamanho: PC e navegador (2026-11-26)
+
+| Limite | App para PC | Navegador |
+|---|---|---|
+| Total descompactado | 1 GB | 1 GB |
+| Cada JSON dentro do ZIP | sem limite | 64 MB (protege o iOS, que fecha a aba) |
+| Arquivos enviados por pessoa (compactados) | limite de envio do app | 50 MB |
+
+A diferença é de propósito. O maior JSON real do Spotify visto tinha cerca de 15 MB.

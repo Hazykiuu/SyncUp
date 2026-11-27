@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import os
+import shutil
+import tempfile
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from analise import EntradaPerfil, ResultadoComparacao, ResultadoGrupo, comparar, comparar_grupo
@@ -14,6 +17,10 @@ if TYPE_CHECKING:
     import gradio as gr
 
 PORTA_PADRAO = int(os.environ.get('SYNCUP_PORTA', '7860'))
+# Pasta própria para os envios: o Gradio só apaga o que este processo criou, então o que sobrar de um
+# encerramento à força fica para a limpeza ao abrir.
+PASTA_ENVIOS = Path(tempfile.gettempdir()) / 'syncup-envios'
+os.environ.setdefault('GRADIO_TEMP_DIR', str(PASTA_ENVIOS))
 
 __all__ = [
     'carregar',
@@ -27,6 +34,25 @@ __all__ = [
     'EntradaPerfil',
     'comparar_grupo',
 ]
+
+
+def apagar_envios_antigos() -> None:
+    """Apaga o que ficou da última vez. Uma pasta escolhida por quem usa o PC não é tocada."""
+    if Path(os.environ.get('GRADIO_TEMP_DIR', '')) != PASTA_ENVIOS or not PASTA_ENVIOS.is_dir():
+        return
+    for item in PASTA_ENVIOS.iterdir():
+        if item.is_dir() and not item.is_symlink():
+            shutil.rmtree(item, ignore_errors=True)
+        else:
+            item.unlink(missing_ok=True)
+
+
+def porta_livre(porta: int) -> bool:
+    """Com outro SyncUp aberto, os envios são dele."""
+    import socket
+
+    with socket.socket() as s:
+        return s.connect_ex(('127.0.0.1', porta)) != 0
 
 
 def criar_interface() -> gr.Blocks:
@@ -65,6 +91,8 @@ def executar(abrir_navegador: bool = True) -> None:
 
     import uvicorn
 
+    if porta_livre(PORTA_PADRAO):
+        apagar_envios_antigos()
     url = f'http://127.0.0.1:{PORTA_PADRAO}/'
     if abrir_navegador:
         threading.Timer(2.0, webbrowser.open, args=(url,)).start()

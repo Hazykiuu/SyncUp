@@ -56,7 +56,10 @@ def test_consulta_respeita_intervalo_score_e_cache(tmp_path: Path) -> None:
     assert consulta.generos('LEGIÃO URBANA') == ['mpb', 'rock']  # caixa diferente: cache
     assert esperas == [pytest.approx(1.0), pytest.approx(1.0)]
     consulta.fechar()
-    assert json.loads(cache.read_text(encoding='utf-8'))['legiãourbana'] == ['mpb', 'rock']
+    assert json.loads(cache.read_text(encoding='utf-8'))['artistas']['legiãourbana'] == [
+        'mpb',
+        'rock',
+    ]
     # Nova sessão lê o cache e não chama a rede.
     de_novo = ConsultaMusicBrainz(httpx.Client(transport=_musicbrainz(pedidos)), cache)
     pedidos.clear()
@@ -125,7 +128,10 @@ def test_salvar_mescla_com_o_que_outra_sessao_gravou(tmp_path: Path) -> None:
     primeira.salvar()
     segunda.generos('Quase')
     segunda.salvar()  # não apaga o que a primeira gravou
-    assert set(json.loads(cache.read_text(encoding='utf-8'))) == {'legiãourbana', 'quase'}
+    assert set(json.loads(cache.read_text(encoding='utf-8'))['artistas']) == {
+        'legiãourbana',
+        'quase',
+    }
     assert not list(tmp_path.glob('*.tmp'))
 
 
@@ -197,3 +203,74 @@ def test_falha_passageira_ganha_uma_nova_tentativa(tmp_path: Path) -> None:
         dormir=lambda s: None,
     )
     assert consulta.generos('Legião Urbana') == ['rock'] and consulta.falhas == 1
+
+
+# R1-03: o arquivo do cache vem do disco; o que não tiver o formato certo é ignorado.
+@pytest.mark.parametrize(
+    'conteudo',
+    [
+        {'versao': 1, 'artistas': {'bandaa': 'rock', 'bandab': 5, 'bandac': ['pop', 7]}},
+        {'versao': 99, 'artistas': {'bandaa': ['rock']}},  # versão que este app não conhece
+        {'bandaa': ['rock']},  # formato antigo, sem versão
+        {'versao': 1, 'artistas': ['rock']},
+    ],
+)
+def test_cache_de_generos_com_formato_errado_e_ignorado(tmp_path: Path, conteudo: dict) -> None:
+    caminho = tmp_path / 'g.json'
+    caminho.write_text(json.dumps(conteudo), encoding='utf-8')
+    assert ConsultaMusicBrainz(cache=caminho)._cache == {}
+
+
+def test_cache_de_generos_grava_versao_e_tem_teto(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr('generos.MAXIMO_ENTRADAS_CACHE', 3)
+    caminho = tmp_path / 'g.json'
+    consulta = ConsultaMusicBrainz(cache=caminho)
+    consulta._cache = {f'a{i}': ['rock'] for i in range(5)}
+    consulta.salvar()
+    gravado = json.loads(caminho.read_text(encoding='utf-8'))
+    assert gravado['versao'] == 1 and list(gravado['artistas']) == ['a2', 'a3', 'a4']
+    assert ConsultaMusicBrainz(cache=caminho)._cache == gravado['artistas']
+
+
+@pytest.mark.parametrize(
+    'pausa, pedidos_esperados, esperas_esperadas', [(30, 1, []), (5, 3, [5.0, 5.0])]
+)
+def test_musicbrainz_respeita_a_pausa_pedida(
+    tmp_path: Path, pausa, pedidos_esperados, esperas_esperadas
+) -> None:
+    """R3-10: o MusicBrainz responde 503 ao limite; pausa longa encerra as consultas sem guardar nada."""
+    pedidos: list[int] = []
+    esperas: list[float] = []
+
+    def responder(pedido: httpx.Request) -> httpx.Response:
+        pedidos.append(1)
+        return httpx.Response(503, headers={'Retry-After': str(pausa)})
+
+    consulta = ConsultaMusicBrainz(
+        httpx.Client(transport=httpx.MockTransport(responder)),
+        tmp_path / 'g.json',
+        relogio=lambda: 0.0,
+        dormir=esperas.append,
+    )
+    assert consulta.generos('Pitty') == [] and consulta.generos('Outra') == []
+    assert len(pedidos) == pedidos_esperados and [e for e in esperas if e > 1] == esperas_esperadas
+    assert consulta._cache == {}
+
+
+def test_pausa_pedida_vale_uma_vez_so(tmp_path: Path) -> None:
+    """Revisão da v1.28: depois de uma resposta boa, volta o intervalo normal."""
+    esperas: list[float] = []
+    respostas = [httpx.Response(503, headers={'Retry-After': '10'})]
+
+    def responder(pedido: httpx.Request) -> httpx.Response:
+        return respostas.pop() if respostas else httpx.Response(200, json={'artists': []})
+
+    consulta = ConsultaMusicBrainz(
+        httpx.Client(transport=httpx.MockTransport(responder)),
+        tmp_path / 'g.json',
+        relogio=lambda: 0.0,
+        dormir=esperas.append,
+    )
+    for nome in ('Um', 'Dois', 'Tres'):
+        consulta.generos(nome)
+    assert esperas == [10.0, 1.0, 1.0]

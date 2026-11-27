@@ -41,3 +41,25 @@ test('convite: separa vários códigos colados, com pedaços quebrados', () => {
   assert.deepEqual(separarConvites(`${PREFIXO}abc\ndef  ${PREFIXO}xyz\n`), [`${PREFIXO}abcdef`, `${PREFIXO}xyz`]);
   assert.deepEqual(separarConvites('  '), []);
 });
+
+// R1-10: a mesma tabela de tests/test_convite.py.
+test('música malformada recusa o convite', async () => {
+  const { deflateSync } = await import('node:zlib');
+  const { lerConvite } = await import('../../site/app/js/convite.js');
+  for (const musica of ['lixo', [1], ['a', 'b', 'c'], { x: 1 }]) {
+    const dados = { n: 'Teste', a: { short_term: ['Banda A'] }, m: { short_term: [['Faixa 1', 'Banda A'], musica] } };
+    await assert.rejects(lerConvite(`SYNCUP1.${deflateSync(JSON.stringify(dados)).toString('base64url')}`), /incompleto ou foi alterado/);
+  }
+});
+
+// R3-13: os mesmos casos de tests/test_convite.py.
+test('convite de versão futura pede atualização e não estraga o anterior', async () => {
+  const { deflateSync } = await import('node:zlib');
+  const { lerConvite, separarConvites } = await import('../../site/app/js/convite.js');
+  const codigo = (prefixo, extra = {}) => `${prefixo}${deflateSync(JSON.stringify({ n: 'Teste', a: { short_term: ['Banda A'] }, m: {}, ...extra })).toString('base64url')}`;
+  for (const c of [codigo('SYNCUP2.'), codigo('SYNCUP12.'), codigo('SYNCUP1.', { v: 2 })]) await assert.rejects(lerConvite(c), /versão mais nova/);
+  for (const v of ['2', true]) await assert.rejects(lerConvite(codigo('SYNCUP1.', { v })), /incompleto ou foi alterado/);
+  const atual = codigo('SYNCUP1.', { v: 1 }), futuro = codigo('SYNCUP2.');
+  assert.deepEqual(separarConvites(`${atual}\n${futuro}`), [atual, futuro]);
+  assert.equal((await lerConvite(atual)).nome, 'Teste');
+});

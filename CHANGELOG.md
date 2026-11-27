@@ -1,5 +1,51 @@
 # Changelog — SyncUp
 
+## [1.28.0] — 2026-11-26
+
+A Batalha passa a sortear 10 de 56 temas a cada cálculo, e esta versão junta as correções da auditoria do app.
+
+### Novo
+- **Batalha com temas sorteados:** em vez de 10 rodadas fixas, cada batalha sorteia 10 temas de uma lista de 56, em 10 tipos (volume, variedade, repetição, relógio, calendário, constância, pulos, aparelhos, descoberta e o grupo). O mesmo grupo pode ter outro campeão a cada cálculo.
+- **Regras do sorteio:** só entra o que dá para calcular para todos (quem usa o Last.fm ou um ZIP antigo não tem pulos, modo aleatório, offline nem aparelho); no máximo 2 temas do mesmo tipo (só passa disso se faltar tema para completar os 10); temas opostos (como "pula menos" e "pula mais", ou celular e computador) nunca saem juntos; "novo" é a primeira vez no histórico da própria pessoa, mesmo com o recorte comum; tema em que todos empatam fica fora; porcentagens só entram se cada pessoa tiver 100 plays ou mais. Enquanto a página estiver aberta, calcular de novo evita os temas da batalha anterior, quando sobram temas suficientes.
+- **Os mesmos 10 em todo lugar:** a tela, os stories, o "Ver de novo" e o pôster mostram os temas daquele sorteio.
+- **Stories dos temas novos** em 6 modelos de desenho (corrida de barras, medidor de porcentagem, relógio de 24 h, calendário, sequência de dias e placar), cada tema com título, unidade e frase próprios. Os 10 temas de antes mantêm o desenho.
+- **Título do campeão pelo tipo de tema** em que fez mais ouros (pelo menos 2), como "Enciclopédia Musical" ou "Agenda Cheia". Sem isso, continua "Dono(a) do Aux". A resenha diz quais rodadas deram o título.
+
+### Mudado
+- **Batalha, "Ficaram fora do sorteio":** a nota abaixo do placar diz só os temas que faltaram por falta de dado, agrupados pelo motivo.
+- **Batalha, "Dedinho nervoso":** vale também quando o tema sorteado é "Dedo nervoso".
+- **Batalha, empates e repetições:** quantas vezes cada tema empata ou repete o vencedor de outro foi medido só com históricos fictícios. Com históricos de verdade, alguns temas podem empatar mais do que o esperado.
+- **App para PC:** a tabela e o rodapé deixam de falar em "describe()".
+- **Um nome por métrica:** "Escuta em comum", "Artistas em comum", "Favoritos em comum" e "Contagens em comum" no PC, no navegador e no cartão, com descrições que dizem o recorte usado.
+- **Match, a escala da nota:** cada par diz que, nessa escala, 25% já é "Sintonia rara", e "Como a nota é calculada" explica a conta.
+- **Transparência reduzida:** o dock dos stories também fica sólido. No app para PC, os chips deixam de borrar o fundo.
+- **Cancelar o cálculo:** Dupla, Wrapped, Batalha e Match ganham o botão "Cancelar" enquanto leem e calculam.
+- **Privacidade, prazos de verdade:** o histórico do Last.fm guardado no navegador agora vence depois de 7 dias sem uso (é apagado quando o app abre de novo), e a página não diz mais "Fechou a página, sumiu". No app para PC, a limpeza passou a cumprir o prazo de 1 hora, e o que sobrar de um fechamento à força é apagado na próxima abertura.
+- **"Capas e som" é uma escolha sua, antes:** a opção aparece no topo de cada modo, ligada por padrão e lembrada no navegador. Desligada, nada é pedido ao Spotify, ao MusicBrainz nem à Apple. Os textos que diziam "Nada sai do seu aparelho" agora dizem o que sai.
+- **O app abre sem o unpkg:** o Preact com htm passa a vir do próprio site, o mesmo arquivo de antes. Com o CDN fora do ar ou bloqueado, a tela ficava no esqueleto para sempre.
+- **Mesma sintonia no PC e no navegador:** o app para PC passa a usar por padrão a ponderação logarítmica, a mesma do navegador. Antes o PC usava a bruta, e os mesmos arquivos davam números diferentes. Dá para trocar na própria tela.
+- **Wrapped com histórico curto:** com menos de 100 plays de 30 s ou mais, o app avisa "Histórico curto demais" em vez de montar os stories. Antes, 1 play virava um Wrapped com "0 horas" e arquétipo. "Em 1 dias" virou "em 1 dia".
+- **Match com poucos dados:** com menos de 30 artistas em um dos rankings, a faixa vira "Amostra pequena" (a porcentagem continua). Antes, 1 artista em comum podia dar "Sintonia rara". As faixas passam a aparecer como provisórias, e o `VALIDACAO.md` registra de onde vieram.
+
+### Corrigido
+- **Toque no celular:** os efeitos de passar o mouse não ficam mais presos depois do toque, e some o retângulo cinza do navegador.
+- **Convite de versão futura:** o SyncUp pede para atualizar o app, em vez de dizer que aquilo não parece um convite.
+- **Convite alterado:** uma música em formato errado recusa o convite, em vez de sumir sem aviso.
+- **Arquivo grande demais no navegador:** a mensagem passa a indicar o app para PC, em vez de pedir o histórico que a pessoa já enviou.
+- **Datas incomuns:** o navegador e o app para PC aceitam e recusam os mesmos formatos de data.
+- **Nomes com ı, sigma final ou Cherokee:** o navegador passa a juntar e separar esses artistas como o app para PC.
+- **Sem internet:** o painel do som diz "Stories sem som" (ou aponta o botão, quando o navegador bloqueia) em vez de ficar em "Preparando o som…".
+- **Stories da Dupla:** com nomes muito longos, o texto encolhe para caber, em vez de sair da moldura.
+- **Serviços externos:** quando o MusicBrainz ou o ListenBrainz pedem uma pausa longa, o app para PC para de insistir; no navegador isso vale quando o serviço deixa a página ler a pausa pedida. O iTunes recebe no máximo 3 buscas por vez. Um download do Last.fm interrompido continua de onde parou.
+- **Windows:** encerrar o app à força não deixa mais processos de leitura parados na memória.
+- **ListenBrainz:** resposta inesperada aparece em português (antes, "Expecting value: line 1 column 1"), erro do servidor não culpa mais a sua internet, e depois de 3 demoras seguidas o Match não espera pelas próximas pessoas.
+- **Capas:** um erro do servidor do Spotify ou do MusicBrainz não vira mais "sem capa" por 30 dias.
+- **Cache de gêneros:** um arquivo editado ou corrompido não vira mais "gêneros" de uma letra nem derruba o Match. O cache antigo é refeito uma vez.
+- **Teclado no app para PC:** o player de stories mostra onde está o foco e se apresenta aos leitores de tela.
+- **Teclado no celular:** o item em foco não fica mais escondido atrás da barra de modos.
+- **Match sem dados comparáveis:** quem tem rankings só com nomes de pontuação ou emoji (como a banda "!!!") aparecia com 0% "Mundos diferentes", virava par e puxava a média do grupo. Agora sai do Match, com aviso, no PC e no navegador.
+- **Pôster da Batalha com nomes longos:** a porcentagem da dupla mais afinada sumia junto com o fim dos nomes; agora só os nomes são cortados. O nome de quem levou e a lista do empate geral encolhem um pouco mais antes de cortar.
+
 ## [1.27.0] — 2026-11-24
 
 Pedir o histórico ao Spotify ficou mais fácil de entender. O resto do app não muda.

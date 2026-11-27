@@ -64,6 +64,12 @@ def rbo(a: Sequence[str], b: Sequence[str], p: float = 0.9, k: int = 50) -> floa
     As duas listas são cortadas na mesma profundidade (a menor delas, até `k`). Lista vazia devolve None.
     Iguais dão 1; sem nada em comum, 0.
     """
+    if not 0 < p < 1:  # NaN também cai aqui
+        raise ValueError('RBO: p precisa estar entre 0 e 1.')
+    if type(k) is not int or k < 1:
+        raise ValueError('RBO: k precisa ser um inteiro a partir de 1.')
+    if len(set(a)) < len(a) or len(set(b)) < len(b):
+        raise ValueError('RBO: as listas não podem repetir itens.')
     k = min(k, len(a), len(b))
     if k == 0:
         return None

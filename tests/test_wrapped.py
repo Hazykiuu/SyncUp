@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import html
 import json
+import re
 from pathlib import Path
 
+import gradio as gr
 import pytest
 from PIL import Image
 
@@ -189,3 +191,36 @@ def test_stories_escapam_nomes_e_png(historico: Path, tmp_path: Path) -> None:
     png = gerar_cartao_wrapped(w, tmp_path / 'story.png')
     with Image.open(png) as imagem:
         assert imagem.size == (1080, 1920) and imagem.mode == 'RGB'
+
+
+# R2-01: abaixo de 100 plays de 30 s ou mais, não há Wrapped para mostrar.
+@pytest.mark.parametrize('plays, suficiente', [(1, False), (99, False), (100, True)])
+def test_historico_curto_e_marcado_e_nao_vira_stories_no_pc(
+    tmp_path: Path, plays: int, suficiente: bool
+) -> None:
+    eventos = [_evento(f'2023-12-29T{i % 24:02d}:{i // 24:02d}:00Z', 'Zé') for i in range(plays)]
+    caminho = tmp_path / 'h.json'
+    caminho.write_text(json.dumps(eventos), encoding='utf-8')
+    assert wrapped_de_arquivos([str(caminho)], 'Zé').amostra_suficiente is suficiente
+    from ui.meu_wrapped import executar_wrapped
+
+    argumentos = ([str(caminho)], 'Zé', 'UTC', '', '', 'manter', False, False, lambda *a, **k: None)
+    if suficiente:
+        assert executar_wrapped(*argumentos)
+    else:
+        with pytest.raises(gr.Error, match='Histórico curto demais'):
+            executar_wrapped(*argumentos)
+
+
+def test_player_do_pc_tem_papel_e_foco_visivel(historico: Path) -> None:
+    """R2-03 (WCAG 2.4.7 e 4.1.2): as três divs de stories têm papel, e o foco aparece."""
+    raiz = Path(__file__).resolve().parents[1]
+    fonte = (raiz / 'stories.py').read_text(encoding='utf-8')
+    marca = 'class="su-stories" data-stories tabindex="0" '
+    assert fonte.count(marca) == 3
+    assert fonte.count(marca + 'role="region" aria-roledescription="stories" ') == 3
+    assert 'role="region"' in stories_html(
+        calcular_wrapped(carregar_historico(historico).dados, 'Zé')
+    )
+    estilos = (raiz / 'styles.css').read_text(encoding='utf-8')
+    assert re.search(r'\.su-stories:focus-visible[^{]*\{[^}]*outline: 3px', estilos)

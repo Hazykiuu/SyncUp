@@ -24,6 +24,12 @@ PERIODOS = (
     ('Tarde', 12, 18),
     ('Noite', 18, 24),
 )
+# Abaixo disso o artista nº 1 muitas vezes tem 1 ou 2 plays: não há retrato para mostrar (VALIDACAO.md).
+MINIMO_PLAYS_WRAPPED = 100
+HISTORICO_CURTO = (
+    f'Histórico curto demais: o Wrapped precisa de pelo menos {MINIMO_PLAYS_WRAPPED} plays '
+    'de 30 s ou mais. Envie todas as partes do ZIP do Histórico Estendido do Spotify.'
+)
 MINIMO_CONHECIDOS = 0.5  # Fração mínima de eventos com o campo preenchido.
 
 
@@ -63,6 +69,7 @@ class Wrapped:
     plays: int
     quantidade_artistas: int
     quantidade_musicas: int
+    amostra_suficiente: bool
     artista_vida: ItemRanking
     descoberta_artista_vida: pd.Timestamp
     participacao_artista_vida: float
@@ -306,6 +313,7 @@ def calcular_wrapped(dados: pd.DataFrame, nome: str, fuso_horario: str = '') -> 
         plays=total_plays,
         quantidade_artistas=int(len(contagem_artistas)),
         quantidade_musicas=int(plays.groupby(['musica', 'artista'], observed=True).ngroups),
+        amostra_suficiente=total_plays >= MINIMO_PLAYS_WRAPPED,
         artista_vida=artista_vida,
         descoberta_artista_vida=primeira_vez[artista_vida.nome],
         participacao_artista_vida=artista_vida.plays / total_plays,

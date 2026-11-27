@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import re
 from pathlib import Path
 
@@ -44,3 +46,32 @@ def test_landing_leva_ao_app_e_nao_promete_o_que_saiu() -> None:
         'iniciar.bat',
     ):
         assert velho not in HTML, velho
+
+
+def test_app_serve_o_preact_do_proprio_site() -> None:
+    """R3-02: o app abre sem CDN, e o arquivo copiado é o mesmo que o import map conferia no unpkg."""
+    app = Path(__file__).resolve().parents[1] / 'site' / 'app'
+    pagina = (app / 'index.html').read_text(encoding='utf-8')
+    mapa = re.search(r'<script type="importmap">(.*?)</script>', pagina, re.S).group(1)
+    assert 'https://' not in mapa and './vendor/standalone.module.js' in mapa
+    resumo = hashlib.sha384((app / 'vendor' / 'standalone.module.js').read_bytes()).digest()
+    assert base64.b64encode(resumo).decode() == (
+        'StNNHifqKmppGEDNqrv+YtX8PD3mhAhLtNbioQ4QxbPNqaTnktcDjsIPGjcDoiKa'
+    )
+    assert {'LICENSE-htm', 'LICENSE-preact'} <= {p.name for p in (app / 'vendor').iterdir()}
+
+
+def test_nenhum_subtitulo_do_app_diz_que_nada_sai() -> None:
+    """R3-05: com "Capas e som" ligado, nomes de artistas e músicas vão para terceiros."""
+    fonte = (SITE / 'app/js/main.js').read_text(encoding='utf-8')
+    assert not re.search(r'Nada (sai|é enviado)', fonte)
+
+
+def test_privacidade_nao_promete_que_o_lastfm_some_ao_fechar() -> None:
+    """R3-11: o que vem do Last.fm fica no navegador até vencer ou ser apagado."""
+    assert (
+        'sumiu' not in HTML
+        and 'por até 7 dias' not in HTML
+        and '7 dias' in HTML
+        and 'Apagar dados guardados' in HTML
+    )

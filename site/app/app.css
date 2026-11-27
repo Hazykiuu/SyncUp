@@ -26,14 +26,19 @@ body::after { content: ''; position: fixed; inset: 0; z-index: -1; pointer-event
 .nav-item { display: flex; align-items: center; gap: var(--e3); min-height: 44px; color: var(--sub); font-weight: 700; transition: background .15s, color .15s; }
 .nav-item svg { font-size: 1.375rem; transition: scale .1s ease-out; }
 a.nav-item:active svg { scale: .92; }
-a.nav-item:hover { color: var(--texto); }
-.nav-item[aria-current="page"] { color: var(--texto); }
+@media (hover: hover) and (pointer: fine) { a.nav-item:hover { color: var(--texto); } }
+/* Página atual: pílula sólida e ícone verde (no celular o fundo sai; ver o bloco de até 899 px). */
+.nav-item[aria-current="page"] { background: rgb(255 255 255 / .1); color: var(--texto); }
+.nav-item[aria-current="page"] svg { color: var(--verde); }
 .nav-selo { display: flex; align-items: center; gap: var(--e2); font-size: .85rem; color: var(--sub); }
 .nav-selo .ponto { width: .5rem; height: .5rem; border-radius: 50%; background: var(--verde); }
 .nav-site { font-weight: 700; color: var(--sub); }
-.nav-site:hover { color: var(--texto); }
+@media (hover: hover) and (pointer: fine) { .nav-site:hover { color: var(--texto); } }
 
 @media (max-width: 899px) {
+  /* O foco do teclado não para atrás da barra (nem do dock, quando ele aparece): WCAG 2.4.11. */
+  html { --barra: calc(4.75rem + env(safe-area-inset-bottom, 0px)); scroll-padding-bottom: var(--barra); }
+  html:has(.dock.visivel) { scroll-padding-bottom: calc(var(--barra) + 4.5rem); }
   .nav-app { inset: auto 0 0; padding: var(--e1) max(var(--e2), env(safe-area-inset-right, 0px)) max(var(--e1), env(safe-area-inset-bottom, 0px)) max(var(--e2), env(safe-area-inset-left, 0px)); border-top: 1px solid var(--linha); }
   .nav-app > .marca, .nav-selo, .nav-site { display: none; }
   .nav-app ul { justify-content: space-around; }
@@ -52,7 +57,7 @@ a.nav-item:hover { color: var(--texto); }
   .nav-app > .marca { padding-inline: var(--e3); }
   .nav-app ul { flex-direction: column; gap: var(--e1); }
   .nav-item { padding: 0 var(--e3); border-radius: var(--r-campo); }
-  a.nav-item:hover { background: rgba(255, 255, 255, .06); }
+  @media (hover: hover) and (pointer: fine) { a.nav-item:hover { background: rgba(255, 255, 255, .06); } }
   .nav-selo { margin-top: auto; padding-inline: var(--e3); }
   .nav-site { padding: var(--e2) var(--e3); }
   .app-corpo { margin-left: var(--lateral); padding-bottom: 6rem; }
@@ -82,9 +87,9 @@ a.nav-item:hover { color: var(--texto); }
 .app-corpo[data-modo="dupla"] { --tinta-2: 196 183 255; }
 .app-corpo[data-modo="batalha"] { --tinta-2: 245 115 160; }
 .app-corpo[data-modo="match"] { --tinta-2: 255 164 200; }
-.app-cabeca { display: flex; flex-direction: column; gap: var(--e3); padding-block: 2rem 2.5rem; }
+.app-cabeca { position: relative; display: flex; flex-direction: row; align-items: flex-end; gap: var(--e5); padding-block: 2rem 2.5rem; }
 @media (min-width: 900px) { .app-cabeca { padding-block: 4rem 3rem; } }
-.app-cabeca h1 { text-wrap: balance; font-size: clamp(2.2rem, 6vw, 3.6rem); font-weight: 900; letter-spacing: -.03em; line-height: 1; }
+.app-cabeca h1 { text-wrap: balance; font-size: clamp(2.4rem, 7vw, 5rem); font-weight: 900; letter-spacing: -.045em; line-height: .95; }
 .app-cabeca .sub { max-width: 46ch; color: var(--sub); font-size: 1.05rem; line-height: 1.5; }
 .app-como-pedir { align-self: flex-start; margin-top: var(--e2); color: var(--texto); font-size: .95rem; text-decoration: underline; text-underline-offset: 3px; }
 
@@ -222,7 +227,7 @@ textarea.entrada { resize: vertical; }
 .nome-arquivo { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .peso { color: var(--fraco); font-variant-numeric: tabular-nums; }
 .tirar { width: 44px; height: 44px; border-radius: 50%; font-size: 1.3rem; color: var(--sub); }
-.tirar:hover { background: rgba(255, 255, 255, .08); color: var(--texto); }
+@media (hover: hover) and (pointer: fine) { .tirar:hover { background: rgba(255, 255, 255, .08); color: var(--texto); } }
 
 .opcoes { margin-top: var(--e4); border-radius: var(--r-cartao); padding: 0 var(--pad-cartao); }
 .opcoes summary { display: flex; align-items: center; gap: var(--e2); min-height: 56px; cursor: pointer; font-weight: 800; }
@@ -241,7 +246,7 @@ textarea.entrada { resize: vertical; }
 .btn-verde .seta { font-weight: 900; }
 .processando, .erro { display: flex; align-items: center; gap: var(--e3); border-radius: var(--r-cartao); padding: var(--e4) var(--pad-cartao); margin-bottom: var(--e4); }
 .erro { color: #ffd0da; }
-.giro { width: 1.2rem; height: 1.2rem; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .2); border-top-color: var(--verde); animation: giro .8s linear infinite; }
+.giro { flex: none; width: 1.2rem; height: 1.2rem; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .2); border-top-color: var(--verde); animation: giro .8s linear infinite; }
 @keyframes giro { to { transform: rotate(360deg); } }
 
 .resultado { display: flex; flex-direction: column; gap: var(--e5); scroll-margin-top: 1rem; }
@@ -414,7 +419,7 @@ textarea.entrada { resize: vertical; }
 .resultado .su-tracklist-card { border-radius: var(--r-cartao); }
 .resultado .su-cover { background: rgba(255, 255, 255, .08); color: var(--sub); }
 .resultado .su-playicon { display: none; }
-.resultado .su-tracklist a:hover .su-num { opacity: 1; }
+@media (hover: hover) and (pointer: fine) { .resultado .su-tracklist a:hover .su-num { opacity: 1; } }
 /* Troca de modo como crossfader de DJ (main.js). Os nomes só existem durante a troca (tipo "modo"), para não
    entrarem na chegada em pulsos. Dupla fica à esquerda e Wrapped à direita: o conteúdo desliza 32 px entre os
    dois lados, o destaque do modo ativo corre pela barra como o botão do fader, e a barra fica parada. */
@@ -486,7 +491,8 @@ html[data-luz="b"] body::before { opacity: 0; }
 .dock { position: fixed; z-index: 55; left: 50%; bottom: calc(var(--e5) + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: var(--e3);
   width: min(34rem, calc(100% - 2 * var(--e4))); padding: var(--e2); border-radius: var(--pilula); background: rgba(14, 14, 14, .74);
   -webkit-backdrop-filter: blur(32px) saturate(200%); backdrop-filter: blur(32px) saturate(200%);
-  translate: -50% 1.5rem; opacity: 0; pointer-events: none; transition: translate .25s var(--sai), opacity .2s ease; }
+  translate: -50% 1.5rem; opacity: 0; pointer-events: none; transition: translate .25s var(--sai), opacity .2s ease;
+  border: 1px solid var(--vidro-linha); box-shadow: 0 12px 32px -12px rgb(0 0 0 / .8); overflow: hidden; }
 .dock.visivel { translate: -50% 0; opacity: 1; pointer-events: auto; }
 .dock:not(.com-trecho) { width: auto; }
 .dock-capa { width: 2.75rem; height: 2.75rem; border-radius: 10px; flex: none; }
@@ -495,11 +501,11 @@ html[data-luz="b"] body::before { opacity: 0; }
 .dock-faixa small { color: var(--sub); }
 .dock .eq:not(.tocando) i { animation-play-state: paused; }
 .dock-mudo { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; flex: none; background: rgba(255, 255, 255, .08); transition: background .15s, scale .1s ease-out; }
-.dock-mudo:hover { background: rgba(255, 255, 255, .14); } .dock-mudo:active { scale: .94; }
+@media (hover: hover) and (pointer: fine) { .dock-mudo:hover { background: rgba(255, 255, 255, .14); } } .dock-mudo:active { scale: .94; }
 .dock-mudo[aria-pressed="true"] { color: var(--sub); }
 .dock-poster { flex: none; min-height: 44px; }
 /* Celular: o dock fica acima da barra de modos. */
-@media (max-width: 899px) { .dock { bottom: calc(4.75rem + env(safe-area-inset-bottom)); } }
+@media (max-width: 899px) { .dock { bottom: var(--barra); } }
 @media (max-width: 479px) { .dock-poster { padding-inline: 1rem; } .dock.com-trecho .dock-poster { font-size: 0; gap: 0; } .dock.com-trecho .dock-poster svg { font-size: 1.1rem; } }
 /* Match: caixa de convites, código para copiar e o porquê de cada par. */
 .match-colar, .match-codigo { display: flex; flex-direction: column; gap: var(--e2); margin-top: var(--vao); }
@@ -521,6 +527,7 @@ html[data-luz="b"] body::before { opacity: 0; }
 .dueto-nota b { font-size: clamp(2.6rem, 9vw, 4rem); font-weight: 900; line-height: 1; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
 .dueto-nota span { font-weight: 800; }
 .dueto-frase { color: var(--sub); text-wrap: pretty; }
+.dueto-escala { color: var(--sub); font-size: .85rem; }
 .dueto-texto { display: grid; gap: var(--e1) var(--e4); max-width: 46rem; margin: 0; }
 @media (min-width: 640px) { .dueto-texto { grid-template-columns: minmax(8rem, 13rem) 1fr; } }
 .dueto-texto dt { font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--sub); padding-top: .25em; }
@@ -533,25 +540,19 @@ html[data-luz="b"] body::before { opacity: 0; }
 .app-corpo[data-modo="dupla"], .app-corpo[data-modo="wrapped"] { --tinta: 30 215 96; }
 .app-corpo[data-modo="batalha"] { --tinta: 255 164 43; }
 .app-corpo[data-modo="match"] { --tinta: 245 115 160; }
-.nav-item[aria-current="page"] { background: rgb(255 255 255 / .1); color: var(--texto); }
-.nav-item[aria-current="page"] svg { color: var(--verde); }
 @media (max-width: 899px) { .nav-item[aria-current="page"] { background: none; } }
-.dock { border: 1px solid var(--vidro-linha); box-shadow: 0 12px 32px -12px rgb(0 0 0 / .8); }
 @media (prefers-contrast: more) { .nav-item[aria-current="page"] { background: var(--texto); color: #000; } }
 
 /* Cara de Spotify (1.17): o topo de cada modo é a capa de uma playlist. Faixa de cor do modo descendo do alto,
    a "capa" (o ícone do modo num quadrado com degradê), o tipo e o título enorme e apertado. */
-.app-cabeca { position: relative; flex-direction: row; align-items: flex-end; gap: var(--e5); }
 .app-cabeca-texto { display: flex; flex-direction: column; gap: var(--e3); min-width: 0; }
 .app-tipo { font-size: .8rem; font-weight: 700; letter-spacing: .02em; color: var(--sub); }
 .app-capa { display: none; flex: none; place-items: center; width: clamp(8rem, 14vw, 12rem); aspect-ratio: 1; border-radius: var(--r-campo); color: #000;
   background: linear-gradient(135deg, rgb(var(--tinta)), color-mix(in srgb, rgb(var(--tinta)) 45%, #000)); box-shadow: 0 16px 48px -8px rgb(0 0 0 / .6); }
 .app-capa svg { width: 46%; height: auto; stroke-width: 1.6; }
 @media (min-width: 640px) { .app-capa { display: grid; } }
-.app-cabeca h1 { font-size: clamp(2.4rem, 7vw, 5rem); letter-spacing: -.045em; line-height: .95; }
 /* Dock como a barra "tocando agora": uma linha de progresso dos 30 s do trecho na base da cápsula.
    shortcut: anima 30 s a partir da troca de música, sem ler o tempo do <audio>; ler o currentTime se o trecho vier mais curto. */
-.dock { overflow: hidden; }
 .dock-progresso { position: absolute; left: 1.5rem; right: 1.5rem; bottom: 3px; height: 3px; border-radius: 2px; background: rgb(255 255 255 / .15); pointer-events: none; }
 .dock-progresso i { display: block; height: 100%; width: 100%; border-radius: inherit; background: var(--verde); transform-origin: left; animation: dock-trecho 30s linear forwards; }
 .dock-progresso.parado i { animation-play-state: paused; }
@@ -578,7 +579,7 @@ html[data-luz="b"] body::before { opacity: 0; }
 .palco-fila ol { display: grid; gap: 2px; }
 .palco-fila button { display: grid; grid-template-columns: 1.75rem minmax(0, 1fr); align-items: center; gap: var(--e2); width: 100%; min-height: 44px; padding: 0 var(--e2);
   border-radius: var(--r-campo); color: var(--sub); text-align: left; font-weight: 700; cursor: pointer; transition: background .15s, color .15s; }
-.palco-fila button:hover { background: rgb(255 255 255 / .07); color: var(--texto); }
+@media (hover: hover) and (pointer: fine) { .palco-fila button:hover { background: rgb(255 255 255 / .07); color: var(--texto); } }
 .palco-fila button.atual { color: var(--verde); background: rgb(255 255 255 / .05); }
 .palco-fila button:focus-visible { outline: 2px solid var(--verde); outline-offset: 1px; }
 .palco-n { justify-self: center; font-variant-numeric: tabular-nums; font-size: .9rem; }
@@ -595,7 +596,7 @@ html[data-luz="b"] body::before { opacity: 0; }
 /* Last.fm (1.23): segunda forma de enviar, discreta abaixo do deck. Aberta, é um formulário curto com fio no topo. */
 .lastfm-abrir { align-self: center; min-height: 44px; padding-inline: var(--e2); font-size: .9rem; color: var(--sub); }
 .lastfm-abrir b { color: var(--texto); text-decoration: underline; text-underline-offset: .2em; text-decoration-color: var(--linha); }
-.lastfm-abrir:hover b { text-decoration-color: currentColor; }
+@media (hover: hover) and (pointer: fine) { .lastfm-abrir:hover b { text-decoration-color: currentColor; } }
 .lastfm { display: grid; gap: var(--e3); padding-top: var(--e4); border-top: 1px solid var(--linha); accent-color: var(--cor); }
 .lastfm-titulo { font-size: 1rem; font-weight: 800; letter-spacing: -.01em; }
 .lastfm-periodo { display: flex; flex-wrap: wrap; gap: var(--e1) var(--e4); border: 0; padding: 0; margin: 0; }
@@ -605,7 +606,7 @@ html[data-luz="b"] body::before { opacity: 0; }
 .lastfm-baixando progress { flex: 1 1 100%; inline-size: 100%; }
 .lastfm-baixando small { flex: 1; color: var(--sub); font-variant-numeric: tabular-nums; }
 .lastfm-fechar { min-height: 44px; padding-inline: var(--e2); font-size: .9rem; color: var(--sub); }
-.lastfm-fechar:hover { color: var(--texto); }
+@media (hover: hover) and (pointer: fine) { .lastfm-fechar:hover { color: var(--texto); } }
 
 /* Entrada vindo da página inicial (1.25, entrada.js). A logo do SyncUp aparece grande no centro com as 4 barras
    fora de sintonia (cada uma no seu ritmo); com o app pronto, elas param juntas no formato da logo e ela voa até a
@@ -631,3 +632,6 @@ html[data-luz="b"] body::before { opacity: 0; }
 @keyframes entrada-resgate { from { opacity: 0; } to { opacity: 1; } }
 /* Depois da entrada, a logo do app pulsa com as barras juntas: o app abre "em sintonia". */
 body.sintonizado .vivo .logo i { animation-delay: -1.4s; }
+/* Sem transparência (preferência do sistema ou navegador sem backdrop-filter): o dock fica sólido. */
+@media (prefers-reduced-transparency: reduce) { .dock { background: #242424; -webkit-backdrop-filter: none; backdrop-filter: none; } }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .dock { background: #181818; } }

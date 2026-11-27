@@ -173,7 +173,7 @@ O CI roda os mesmos comandos no GitHub, em Python 3.10 e 3.12, mais `node --test
 | `wrapped.py`, `arquetipos.py`, `stories.py`, `cartao.py` | Wrapped, stories e PNGs |
 | `festa.py`, `exportacoes.py`, `privacidade.py` | Playlist da festa, CSV protegido e "Meus dados" |
 | `ui/`, `componentes.py`, `syncup.js`, `styles.css` | Interface Gradio 6 do app para PC |
-| `site/` | Página inicial e app no navegador (Preact + htm, sem build); Dupla e Wrapped calculados em JavaScript, com paridade testada contra o núcleo Python |
+| `site/` | Página inicial e app no navegador (Preact + htm, sem build; só a publicação marca a versão no endereço dos arquivos); Dupla e Wrapped calculados em JavaScript, com paridade testada contra o núcleo Python |
 | `site/app/js/historico.js`, `calculo.js` | Wrapped do app no navegador em JavaScript, com as regras do Python (teste de paridade em `tests/test_paridade_wrapped.py`) |
 
 ```python

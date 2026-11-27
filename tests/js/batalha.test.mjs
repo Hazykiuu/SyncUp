@@ -348,9 +348,9 @@ test('registro: 56 temas em 10 famílias, 6 modelos de desenho e pares opostos',
   }
   for (const [a, b] of OPOSTOS) {
     assert.equal(TEMA[a].familia, TEMA[b].familia);
-    assert.notEqual(!!TEMA[a].menor, !!TEMA[b].menor, `${a} x ${b}`);
+    if (a !== 'bolso') assert.notEqual(!!TEMA[a].menor, !!TEMA[b].menor, `${a} x ${b}`); // bolso x mesa: um é quase 100 − o outro
   }
-  assert.deepEqual(OPOSTOS, [['nuncasome', 'sumico'], ['paciencia', 'dedo'], ['destino', 'adedo']]);
+  assert.deepEqual(OPOSTOS, [['nuncasome', 'sumico'], ['paciencia', 'dedo'], ['destino', 'adedo'], ['bolso', 'mesa']]);
 });
 
 test('registro: os 10 de antes mantêm chave, título, unidade, frase e escala', async () => {
@@ -499,6 +499,37 @@ test('Natal e virada: pela data local, e só quando o período passa por elas', 
   assert.equal(num([['2024-12-20 10:00', MIN, 'm', 'a'], ['2025-01-02 10:00', MIN, 'm', 'a']]).virada, 0); // passou pela virada sem ouvir: 0, não null
 });
 
+test('Natal e virada incompletos não somam, mesmo com outro completo no período', () => {
+  const n = num([
+    ['2025-01-01 10:00', MIN, 'm', 'a'], ['2025-01-01 11:00', MIN, 'm2', 'a'], // o 31/12/2024 não está no período
+    ['2025-12-31 23:00', MIN, 'm', 'a'], ['2026-01-01 01:00', MIN, 'm2', 'a'],
+  ]);
+  assert.equal(n.virada, 2);
+  const x = num([['2023-12-25 10:00', MIN, 'm', 'a'], ['2024-12-24 10:00', MIN, 'm', 'a'], ['2024-12-27 10:00', MIN, 'm', 'a']]);
+  assert.equal(x.natal, 1); // o de 2023 começa no dia 25
+});
+
+test('com recorte comum, "novo" é a primeira vez no histórico da própria pessoa, não na janela', () => {
+  const c = hist([
+    ['2022-05-10 10:00', MIN, 'm', 'x'], ['2023-01-01 10:00', 20_000, 'm', 'v'], ['2023-03-01 10:00', MIN, 'm', 'u'], // antes da janela (v: só um pulo)
+    ['2024-01-15 10:00', MIN, 'm', 'z'], ['2024-02-01 10:00', MIN, 'm', 'v'], ['2024-06-10 10:00', MIN, 'm', 'x'],
+    ['2024-12-01 10:00', MIN, 'm', 'u'], ['2025-03-01 10:00', MIN, 'm', 'w'],
+    ['2026-02-01 10:00', MIN, 'm', 't'], // depois da janela
+  ]);
+  const janela = [Date.parse('2024-01-01T00:00:00Z'), Date.parse('2025-12-31T00:00:00Z')];
+  const { numeros: n, contagens, primeiros } = numerosDoLutador(c, 'Ana', 'America/Sao_Paulo', janela);
+  assert.equal(n.plays, 5);
+  assert.deepEqual([...contagens.keys()], ['u', 'v', 'w', 'x', 'z']);
+  perto(n.novidades, 2 / 14); // v e w; x e u já eram conhecidos; z é do 1º mês
+  assert.equal(n.antigo, 762); // x: 10/05/2022 a 10/06/2024
+  assert.equal(n.reencontro, 2); // x e u voltam depois de mais de 6 meses
+  perto(n.faro, 20); // w
+  perto(n.raizes, 80); // x, u, z e v
+  assert.equal(primeiros.get('x'), Date.parse('2022-05-10T13:00:00Z') - MIN);
+  assert.equal(primeiros.get('v'), Date.parse('2024-02-01T13:00:00Z') - MIN);
+  assert.equal(primeiros.has('t'), false);
+});
+
 test('pulos, modo e aparelho: null quando o histórico não traz o campo', () => {
   const sem = num([['2024-03-04 10:00', MIN, 'm', 'a'], ['2024-03-04 11:00', MIN, 'm', 'a']]);
   for (const k of ['paciencia', 'dedo', 'ultimanota', 'destino', 'adedo', 'offline', 'bolso', 'mesa', 'aparelhos']) assert.equal(sem[k], null, k);
@@ -512,7 +543,7 @@ test('pulos, modo e aparelho: null quando o histórico não traz o campo', () =>
   assert.deepEqual([n.paciencia, n.dedo, n.ultimanota, n.destino, n.adedo, n.offline], [25, 25, 50, 50, 50, 25]);
   perto(n.bolso, 200 / 3);
   perto(n.mesa, 100 / 3);
-  assert.equal(n.aparelhos, 3);
+  assert.equal(n.aparelhos, 2); // Android e iOS são o mesmo tipo: celular
   // Um play perdido numa TV (menos de 1% do que tem aparelho) não conta como aparelho.
   const tv = Array.from({ length: 101 }, (_, i) => [`2024-03-04 10:${String(i % 60).padStart(2, '0')}`, MIN, 'm', 'a', { plataforma: i ? 'Android' : 'TV, console ou caixa de som' }]);
   assert.equal(num(tv).aparelhos, 1);

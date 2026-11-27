@@ -13,7 +13,7 @@ export const DESENHOS = {
   corrida: ['pista'], porcentagem: ['anel', 'casas'], relogio: ['janela', 'horas24', 'lua'], calendario: ['folha'],
   sequencia: ['corrente'], contagem: ['pontos', 'vinil', 'estante', 'tally'],
 };
-export const OPOSTOS = [['nuncasome', 'sumico'], ['paciencia', 'dedo'], ['destino', 'adedo']];
+export const OPOSTOS = [['nuncasome', 'sumico'], ['paciencia', 'dedo'], ['destino', 'adedo'], ['bolso', 'mesa']];
 // Título do campeão que fez 2 ouros numa família (batalha.js). Cada um vale para qualquer tema da família,
 // inclusive os opostos (Grande sumiço e Sem parar; Paciência e Dedo nervoso; Só eu conheço e Gosto de turma).
 export const TITULOS = {
@@ -74,7 +74,7 @@ const LISTA = {
     ['nuncasome', 'Nunca some', 'dias na maior pausa', 1, 'corrida', 'A maior pausa sem ouvir nada. Aqui, menos é melhor.', { menor: true, ausente: 'alguém tem um play só', ...A }],
     ['sumico', 'Grande sumiço', 'dias na maior pausa', 1, 'corrida', 'A maior pausa sem ouvir nada.', { vazio: 'ninguém ficou sem ouvir', ausente: 'alguém tem um play só', ...A }],
     ['sessao', 'Sessão sem fim', 'h numa sessão', 1, 'corrida', 'A maior sessão: plays com menos de 30 min entre um e outro.', A],
-    ['sessoes', 'Abre e fecha', 'sessões por dia com música', 1, 'contagem', 'Quantas vezes por dia a música volta depois de 30 min parada.', A],
+    ['sessoes', 'Abre e fecha', 'sessões por dia com música', 1, 'contagem', 'Sessões por dia com música. Pausa de 30 min começa outra.', A],
     ['maratona', 'Dias de maratona', 'dias com 3 h ou mais', 0, 'calendario', 'Dias com pelo menos 3 horas de música.', { vazio: 'ninguém ouviu 3 h num dia', ...A }],
   ],
   pulos: [
@@ -91,12 +91,12 @@ const LISTA = {
     ['aparelhos', 'Onipresente', 'tipos de aparelho', 0, 'contagem', 'Tipos de aparelho usados, como celular, computador e TV.', { campos: ['plataforma'] }],
   ],
   descoberta: [
-    ['novidades', 'Caçador de novidades', 'artistas novos por mês', 1, 'contagem', 'Artistas ouvidos pela primeira vez, por mês, depois do primeiro mês.', { vazio: 'ninguém descobriu artistas', ausente: 'o período de alguém tem menos de 2 meses' }],
+    ['novidades', 'Caçador de novidades', 'artistas novos por mês', 1, 'contagem', 'Artistas ouvidos pela primeira vez, por mês, depois do primeiro mês.', { vazio: 'ninguém descobriu artistas', ausente: 'o período de alguém fica dentro de um só mês' }],
     ['antigo', 'Amor antigo', 'dias com o mesmo artista', 0, 'corrida', 'Do primeiro ao último play do mesmo artista.', { vazio: 'ninguém voltou a um artista em outro dia' }],
     ['fidelidade', 'Fidelidade', 'meses com o mesmo artista', 0, 'calendario', 'O artista presente em mais meses do período.'],
     ['reencontro', 'Reencontro', 'artistas reencontrados', 0, 'contagem', 'Artistas que voltaram depois de 6 meses sem tocar.', { vazio: 'ninguém voltou a um artista depois de 6 meses' }],
     ['faro', 'Faro fresco', '% em artistas novos', 1, 'porcentagem', 'Fatia dos plays em artistas descobertos nos últimos 6 meses.', { ...P, vazio: 'ninguém ouviu artistas novos', ausente: UM_ANO }],
-    ['raizes', 'Raízes', '% em artistas dos primeiros 6 meses', 1, 'porcentagem', 'Fatia dos plays em artistas descobertos nos primeiros 6 meses.', { ...P, ausente: UM_ANO }],
+    ['raizes', 'Raízes', '% em artistas dos primeiros 6 meses', 1, 'porcentagem', 'Plays em artistas já conhecidos nos primeiros 6 meses do período.', { ...P, ausente: UM_ANO }],
   ],
   grupo: [
     ['soeu', 'Só eu conheço', 'artistas só seus', 0, 'contagem', 'Artistas que mais ninguém do grupo ouviu.', { vazio: 'ninguém tem artista só seu' }],

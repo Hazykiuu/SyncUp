@@ -6,7 +6,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { basename } from 'node:path';
 
-import { campeoes, janelaComum, medalhas, numerosDoLutador, recortar, rodadas, sortear, tituloCampeao } from '../site/app/js/batalha.js';
+import { campeoes, janelaComum, medalhas, numerosDoLutador, rodadas, sortear, tituloCampeao } from '../site/app/js/batalha.js';
 import { numerosDoGrupo } from '../site/app/js/batalha-medidas.js';
 import { TEMA, TEMAS } from '../site/app/js/batalha-temas.js';
 import { lerHistorico } from '../site/app/js/historico.js';
@@ -55,7 +55,7 @@ for (const g of grupos) {
     let janela;
     try { janela = janelaComum(g.membros.map((i) => faixas[i])); } catch { semJanela++; continue; }
     try {
-      lutadores = g.membros.map((i) => ({ nome: `P${i + 1}`, ...numerosDoLutador(recortar(colunas[i], janela[0], janela[1]), `P${i + 1}`, PADRAO.fuso) }));
+      lutadores = g.membros.map((i) => ({ nome: `P${i + 1}`, ...numerosDoLutador(colunas[i], `P${i + 1}`, PADRAO.fuso, janela) }));
     } catch { semJanela++; continue; }
   } else lutadores = g.membros.map((i) => ({ nome: `P${i + 1}`, ...inteiros[i] }));
   const grupo = numerosDoGrupo(lutadores);

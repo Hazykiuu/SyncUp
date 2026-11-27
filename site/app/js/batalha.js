@@ -31,9 +31,26 @@ export function recortar(c, inicio, fim) {
   return Object.fromEntries(Object.entries(c).map(([k, v]) => [k, Array.isArray(v) ? dentro.map((i) => v[i]) : v]));
 }
 
-// Os números de todos os temas que não dependem do grupo, de um histórico já recortado, e o resumo para os
+// O que a pessoa já tinha ouvido antes do recorte (só plays), por artista: a primeira vez (`local` e `inicio` em
+// UTC) e o início da última. "Novo" é a primeira vez no histórico dela, não na janela comum.
+function antesDe(c, corte) {
+  const antes = new Map();
+  for (let i = 0; i < c.ms.length; i++) {
+    if (c.utc[i] >= corte || c.ms[i] < TEMPO_MINIMO_PLAY_MS) continue;
+    const inicio = c.utc[i] - c.ms[i], a = antes.get(c.artista[i]);
+    if (!a) { antes.set(c.artista[i], { local: c.local[i], inicio, ultimo: inicio }); continue; }
+    a.local = Math.min(a.local, c.local[i]);
+    a.inicio = Math.min(a.inicio, inicio);
+    a.ultimo = Math.max(a.ultimo, inicio);
+  }
+  return antes;
+}
+
+// Os números de todos os temas que não dependem do grupo, do histórico dentro da `janela` (se houver), e o resumo para os
 // temas do grupo: plays por artista (também para a dupla afinada) e o início do primeiro play de cada artista (UTC).
-export function numerosDoLutador(c, nome, fuso) {
+export function numerosDoLutador(c, nome, fuso, janela = null) {
+  const antes = janela ? antesDe(c, janela[0]) : new Map();
+  if (janela) c = recortar(c, ...janela);
   const contagens = new Map(), primeiros = new Map();
   for (let i = 0; i < c.ms.length; i++) {
     if (c.ms[i] < TEMPO_MINIMO_PLAY_MS) continue;
@@ -41,6 +58,7 @@ export function numerosDoLutador(c, nome, fuso) {
     contagens.set(art, (contagens.get(art) || 0) + 1);
     if (!(primeiros.get(art) <= inicio)) primeiros.set(art, inicio);
   }
+  for (const art of contagens.keys()) if (antes.has(art)) primeiros.set(art, antes.get(art).inicio);
   if (!contagens.size) throw new Error(`Não há plays ≥30s para ${nome} no período escolhido. Tente desmarcar o recorte comum.`);
   const d = calcularWrapped(c, nome, fuso);
   return {
@@ -49,7 +67,7 @@ export function numerosDoLutador(c, nome, fuso) {
       sequencia: d.sequencia, dia: d.horas_dia_recorde, coruja: d.periodos.Madrugada * 100,
       repeteco: d.repeticao_dia.plays, fa: d.participacao_artista_vida * 100,
       paciencia: d.habitos.pulos === null ? null : d.habitos.pulos * 100,
-      ...medidasNovas(c, d, contagens),
+      ...medidasNovas(c, d, contagens, antes),
     },
     contagens: new Map([...contagens].sort(([a], [b]) => compararTexto(a, b))),
     primeiros,

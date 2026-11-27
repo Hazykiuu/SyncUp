@@ -7,7 +7,7 @@
 //   os números de um tema (capturas com números plausíveis).
 // Medalhas, campeão, título e resenha são refeitos sobre as rodadas forçadas.
 import {
-  alertaPaciencia, campeoes, decididoNoDetalhe, destaqueRodada, medalhas, montarBatalha, numerosDoLutador, recortar, resenha, rodadas, tituloCampeao,
+  alertaPaciencia, campeoes, decididoNoDetalhe, destaqueRodada, medalhas, montarBatalha, numerosDoLutador, resenha, rodadas, tituloCampeao,
 } from './js/batalha.js';
 import { numerosDoGrupo } from './js/batalha-medidas.js';
 import { TEMAS } from './js/batalha-temas.js';
@@ -56,9 +56,8 @@ self.onmessage = async ({ data: { fase, arquivos, nomes, opcoes, janela, semente
     else {
       lutadores = [];
       for (let i = 0; i < arquivos.length; i++) {
-        let c = await ler(arquivos[i], opcoes);
-        if (janela) c = recortar(c, janela[0], janela[1]);
-        lutadores.push({ nome: nomes[i], ...numerosDoLutador(c, nomes[i], opcoes.fuso || 'America/Sao_Paulo') });
+        const c = await ler(arquivos[i], opcoes);
+        lutadores.push({ nome: nomes[i], ...numerosDoLutador(c, nomes[i], opcoes.fuso || 'America/Sao_Paulo', janela) });
       }
       const grupo = numerosDoGrupo(lutadores);
       lutadores = lutadores.map((l, i) => ({ ...l, numeros: { ...l.numeros, ...grupo[i] } }));

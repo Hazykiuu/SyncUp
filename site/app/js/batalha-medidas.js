@@ -15,8 +15,9 @@ const pct = (parte, total) => (parte * 100) / total;
 const maximo = (valores) => { let m = 0; for (const v of valores) if (v > m) m = v; return m; };
 const vezes100 = (v) => (v === null ? null : v * 100);
 
-// `d`: o calcularWrapped do mesmo recorte; `contagens`: plays por artista.
-export function medidasNovas(c, d, contagens) {
+// `d`: o calcularWrapped do mesmo recorte; `contagens`: plays por artista; `antes`: artista → { local (primeira vez),
+// ultimo (início do último play) } do que a pessoa já tinha ouvido antes do recorte.
+export function medidasNovas(c, d, contagens, antes = new Map()) {
   const n = c.utc.length, plays = d.plays;
   const datas = new Map(); // dia local → [mês corrido (ano * 12 + mês), mês, dia do mês], uma conta por dia
   const data = (dia) => {
@@ -38,6 +39,11 @@ export function medidasNovas(c, d, contagens) {
     inicio[i] = c.utc[i] - c.ms[i];
   }
 
+  const diaDe = (ano, mes, dia) => Date.UTC(ano, mes - 1, dia) / DIA;
+  const cobre = (de, ate) => de >= primeiroDia && ate <= ultimoDia; // o período passa pela data inteira
+  const cobreNatal = (ano) => cobre(diaDe(ano, 12, 24), diaDe(ano, 12, 26));
+  const cobreVirada = (ano) => cobre(diaDe(ano, 12, 31), diaDe(ano + 1, 1, 1));
+
   // Plays: por dia, por música, por artista, dia da semana e datas especiais.
   const playsDia = new Map(), artistasDia = new Map(), pares = new Map(), playsPar = [], parDe = new Int32Array(n).fill(-1);
   const artistas = new Map(); // artista → { primeiro, ultimo (local), meses, musicas }
@@ -58,15 +64,16 @@ export function medidasNovas(c, d, contagens) {
     playsPar[id]++;
     parDe[i] = id;
     let a = artistas.get(art);
-    if (!a) artistas.set(art, (a = { primeiro: l, ultimo: l, meses: new Set(), musicas: new Set() }));
+    if (!a) artistas.set(art, (a = { primeiro: antes.get(art)?.local ?? l, ultimo: l, meses: new Set(), musicas: new Set() }));
     if (l < a.primeiro) a.primeiro = l;
     if (l > a.ultimo) a.ultimo = l;
     a.meses.add(mesCorrido);
     a.musicas.add(id);
     if (semana === 4 && hora >= 18) sextou++;
     if (semana === 0) segunda++;
-    if (mes === 12 && diaMes >= 24 && diaMes <= 26) natal++;
-    if ((mes === 12 && diaMes === 31) || (mes === 1 && diaMes === 1)) virada++;
+    const ano = (mesCorrido - mes + 1) / 12; // mesCorrido conta os meses a partir do 0
+    if (mes === 12 && diaMes >= 24 && diaMes <= 26 && cobreNatal(ano)) natal++;
+    if (((mes === 12 && diaMes === 31) && cobreVirada(ano)) || ((mes === 1 && diaMes === 1) && cobreVirada(ano - 1))) virada++;
     if (l < pMin) pMin = l;
     if (l > pMax) pMax = l;
   }
@@ -89,18 +96,16 @@ export function medidasNovas(c, d, contagens) {
     seguidas = parDe[i] === parAnterior ? seguidas + 1 : 1;
     parAnterior = parDe[i];
     if (seguidas > maisSeguidas) maisSeguidas = seguidas;
-    const art = c.artista[i], antes = ultimoPlay.get(art);
-    if (antes !== undefined && inicio[i] - antes >= SEIS_MESES) reencontrados.add(art);
+    const art = c.artista[i], anterior = ultimoPlay.get(art) ?? antes.get(art)?.ultimo;
+    if (anterior !== undefined && inicio[i] - anterior >= SEIS_MESES) reencontrados.add(art);
     ultimoPlay.set(art, inicio[i]);
   }
   maiorSessao = Math.max(maiorSessao, fim - comecoSessao);
 
-  // O período passa pelas datas: de 24 a 26/12 inteiros, ou 31/12 e 1º/1 do ano seguinte.
-  const diaDe = (ano, mes, dia) => Date.UTC(ano, mes - 1, dia) / DIA;
+  // Natal e virada só valem se o período passa por pelo menos um inteiro: de 24 a 26/12, ou 31/12 e 1º/1 seguinte.
   const anos = [];
   for (let ano = new Date(primeiroDia * DIA).getUTCFullYear(); ano <= new Date(ultimoDia * DIA).getUTCFullYear(); ano++) anos.push(ano);
-  const temNatal = anos.some((ano) => diaDe(ano, 12, 24) >= primeiroDia && diaDe(ano, 12, 26) <= ultimoDia);
-  const temVirada = anos.some((ano) => diaDe(ano, 12, 31) >= primeiroDia && diaDe(ano + 1, 1, 1) <= ultimoDia);
+  const temNatal = anos.some(cobreNatal), temVirada = anos.some(cobreVirada);
 
   const porHora = d.plays_por_hora;
   const entropia = porHora.reduce((s, v) => (v ? s - (v / plays) * Math.log(v / plays) : s), 0);
@@ -118,6 +123,8 @@ export function medidasNovas(c, d, contagens) {
   const top10 = [...contagens.values()].sort((x, y) => y - x).slice(0, 10).reduce((s, v) => s + v, 0);
   // Aparelho: um play perdido (menos de 1% do que tem aparelho) não conta como mais um tipo.
   const comAparelhos = comAparelho / n >= MINIMO_CONHECIDOS;
+  const tipos = new Map(); // celular e computador juntam os sistemas; TV e "Outro" contam sozinhos
+  for (const [k, v] of aparelhos) somar(tipos, CELULAR.has(k) ? 'celular' : COMPUTADOR.has(k) ? 'computador' : k, v);
   const fatia = (grupo) => pct([...aparelhos].reduce((s, [k, v]) => s + (grupo.has(k) ? v : 0), 0), comAparelho);
   const h = d.habitos;
   const diasComMusica = msDia.size;
@@ -158,7 +165,7 @@ export function medidasNovas(c, d, contagens) {
     offline: vezes100(h.offline),
     bolso: comAparelhos ? fatia(CELULAR) : null,
     mesa: comAparelhos ? fatia(COMPUTADOR) : null,
-    aparelhos: comAparelhos ? [...aparelhos.values()].filter((v) => v * 100 >= comAparelho).length : null,
+    aparelhos: comAparelhos ? [...tipos.values()].filter((v) => v * 100 >= comAparelho).length : null,
     novidades: meses > 0 ? novos / meses : null, // o 1º mês fica de fora: nele tudo é novo
     antigo,
     fidelidade,

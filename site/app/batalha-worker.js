@@ -5,7 +5,7 @@
 // `semente` e `evitar` (temas da batalha anterior) ficam na tela: este Worker é recriado a cada batalha.
 // Durante a leitura: {etapa: 'Lendo Ana (2 de 4)…'}. Erro: {ok: false, erro}.
 // Memória: só os bytes e as colunas de uma pessoa por vez, mais os números já guardados.
-import { montarBatalha, numerosDoLutador, recortar } from './js/batalha.js';
+import { montarBatalha, numerosDoLutador } from './js/batalha.js';
 import { lerHistorico } from './js/historico.js';
 
 async function ler(lista, opcoes) {
@@ -33,9 +33,8 @@ self.onmessage = async ({ data: { fase, arquivos, nomes, opcoes, janela, semente
     const lutadores = [];
     for (let i = 0; i < arquivos.length; i++) {
       self.postMessage({ etapa: `Lendo ${rotulo(i)}…` });
-      let c = await ler(arquivos[i], opcoes);
-      if (janela) c = recortar(c, janela[0], janela[1]);
-      lutadores.push({ nome: nomes[i], ...numerosDoLutador(c, nomes[i], opcoes.fuso || 'America/Sao_Paulo') });
+      const c = await ler(arquivos[i], opcoes);
+      lutadores.push({ nome: nomes[i], ...numerosDoLutador(c, nomes[i], opcoes.fuso || 'America/Sao_Paulo', janela) });
     }
     self.postMessage({ ok: true, dados: montarBatalha(lutadores, { semente, evitar }) });
   } catch (e) {

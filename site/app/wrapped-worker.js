@@ -3,6 +3,7 @@
 // Resposta: {ok: true, dados: {nome, dados, trilha}} ou {ok: false, erro}. Um Worker por montagem.
 import { calcularWrapped, trilha } from './js/calculo.js';
 import { lerHistorico } from './js/historico.js';
+import { mensagemDeErro } from './js/worker.js';
 
 self.onmessage = async ({ data: { arquivos, nome, opcoes } }) => {
   try {
@@ -10,8 +11,7 @@ self.onmessage = async ({ data: { arquivos, nome, opcoes } }) => {
     const dados = calcularWrapped(colunas, nome, opcoes.fuso || 'America/Sao_Paulo');
     self.postMessage({ ok: true, dados: { nome: dados.nome, dados, trilha: trilha(dados) } });
   } catch (e) {
-    // Nossas mensagens são Error em português; TypeError, RangeError (memória) e afins viram texto genérico.
-    const nosso = e?.constructor === Error && e.message;
-    self.postMessage({ ok: false, erro: nosso || 'Algo deu errado ao processar os arquivos. Confira se são ZIPs do Histórico Estendido.' });
+    console.error(e);
+    self.postMessage({ ok: false, erro: mensagemDeErro(e) });
   }
 };

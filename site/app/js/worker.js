@@ -2,6 +2,13 @@
 // {etapa} são progresso e não encerram a requisição; {ok} encerra. Usado também no Node pelos testes.
 export const SEM_RESPOSTA = 'o SyncUp parou de responder, provavelmente por falta de memória. Recarregue a página e tente com menos arquivos.';
 const SEM_LEITURA = 'não deu para receber o resultado do processamento. Recarregue a página e tente de novo.';
+// Nossas mensagens são Error em português; TypeError, RangeError (memória) e afins ganham o texto genérico
+// com o erro original no fim, para uma captura de tela bastar para achar a causa.
+export function mensagemDeErro(e) {
+  if (e?.constructor === Error && e.message) return e.message;
+  const detalhe = (e?.name ? `${e.name}: ${e.message}` : String(e)).slice(0, 200);
+  return `Algo deu errado ao processar os arquivos. Confira se são ZIPs do Histórico Estendido. Detalhe técnico: ${detalhe}`;
+}
 const abortado = () => new DOMException('Processamento cancelado.', 'AbortError');
 
 // terminate() não gera evento: quem cancela é que rejeita a requisição pendente (AbortError).

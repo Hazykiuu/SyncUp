@@ -7,6 +7,7 @@
 // Memória: só os bytes e as colunas de uma pessoa por vez, mais os números já guardados.
 import { montarBatalha, numerosDoLutador } from './js/batalha.js';
 import { lerHistorico } from './js/historico.js';
+import { mensagemDeErro } from './js/worker.js';
 
 async function ler(lista, opcoes) {
   const partes = [];
@@ -38,8 +39,7 @@ self.onmessage = async ({ data: { fase, arquivos, nomes, opcoes, janela, semente
     }
     self.postMessage({ ok: true, dados: montarBatalha(lutadores, { semente, evitar }) });
   } catch (e) {
-    // Nossas mensagens são Error em português; TypeError, RangeError (memória) e afins viram texto genérico.
-    const nosso = e?.constructor === Error && e.message;
-    self.postMessage({ ok: false, erro: nosso || 'Algo deu errado ao processar os arquivos. Confira se são ZIPs do Histórico Estendido.' });
+    console.error(e);
+    self.postMessage({ ok: false, erro: mensagemDeErro(e) });
   }
 };

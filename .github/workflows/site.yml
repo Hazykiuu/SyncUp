@@ -31,6 +31,8 @@ jobs:
           python-version: '3.12'
       - name: Gerar as demos do app no navegador
         run: python tools/empacotar_web.py
+      - name: Marcar a versão no endereço dos arquivos do app (o cache não mistura deploys)
+        run: python tools/versionar_site.py site/app "${GITHUB_SHA::7}"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

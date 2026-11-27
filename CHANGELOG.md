@@ -1,5 +1,11 @@
 # Changelog — SyncUp
 
+## [Não lançado]
+
+### Corrigido
+- **Erro logo depois de uma atualização do site:** por até 10 minutos o navegador podia juntar um arquivo novo do app com um antigo guardado em cache (o Match falhou assim na 1.28.0; recarregar com Ctrl+F5 resolvia). A publicação agora marca a versão no endereço dos arquivos.
+- **Erro inesperado nos cálculos:** a mensagem passa a terminar com o erro original ("Detalhe técnico: …"), e ele também vai para o console do navegador.
+
 ## [1.28.0] — 2026-11-26
 
 A Batalha passa a sortear 10 de 56 temas a cada cálculo, e esta versão junta as correções da auditoria do app.

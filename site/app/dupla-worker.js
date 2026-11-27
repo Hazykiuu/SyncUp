@@ -5,6 +5,7 @@
 import { compararDupla, csvPlaylist, identificar, respostaDupla } from './js/dupla.js';
 import { graficosDupla } from './js/graficos-dupla.js';
 import { lerHistorico } from './js/historico.js';
+import { mensagemDeErro } from './js/worker.js';
 
 self.onmessage = async ({ data: { a, b, nomes, opcoes } }) => {
   try {
@@ -14,8 +15,7 @@ self.onmessage = async ({ data: { a, b, nomes, opcoes } }) => {
     const r = compararDupla(ca, cb, nomes[0], nomes[1], opcoes, ids);
     self.postMessage({ ok: true, dados: { ...respostaDupla(r), graficos: graficosDupla(r), csv: csvPlaylist(r) } });
   } catch (e) {
-    // Nossas mensagens são Error em português; TypeError, RangeError (memória) e afins viram texto genérico.
-    const nosso = e?.constructor === Error && e.message;
-    self.postMessage({ ok: false, erro: nosso || 'Algo deu errado ao processar os arquivos. Confira se são ZIPs do Histórico Estendido.' });
+    console.error(e);
+    self.postMessage({ ok: false, erro: mensagemDeErro(e) });
   }
 };

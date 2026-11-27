@@ -5,6 +5,7 @@
 import { gerarConvite, lerConvite, separarConvites } from './js/convite.js';
 import { lerHistorico } from './js/historico.js';
 import { conciliar, MAXIMO_PESSOAS, perfilDeHistorico } from './js/match.js';
+import { mensagemDeErro } from './js/worker.js';
 
 async function perfil(lista, nome, opcoes) {
   const partes = [];
@@ -42,7 +43,7 @@ self.onmessage = async ({ data: { tipo, arquivos, nomes, nome, convites, opcoes 
     fora.push(...r.sem_dados.map((n) => `${n}: sem artistas comparáveis nos rankings`));
     self.postMessage({ ok: true, dados: { r, fontes, fora } });
   } catch (e) {
-    const nosso = e?.constructor === Error && e.message;
-    self.postMessage({ ok: false, erro: nosso || 'Algo deu errado ao processar os arquivos. Confira se são ZIPs do Histórico Estendido.' });
+    console.error(e);
+    self.postMessage({ ok: false, erro: mensagemDeErro(e) });
   }
 };
